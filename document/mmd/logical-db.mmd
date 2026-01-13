@@ -1,0 +1,79 @@
+---
+id: 8084dc0c-c4a8-4248-80c7-3f5b2ccdcf87
+---
+erDiagram
+    %% ENTITIES (Updated)
+
+    USER {
+        id BIGINT
+        username VARCHAR
+        password VARCHAR
+        system_role ENUM
+    }
+
+    QUIZ {
+        id BIGINT
+        title VARCHAR
+        description VARCHAR
+        proctor_pin VARCHAR
+        is_live_session BOOLEAN
+        status ENUM
+    }
+
+    TEAM {
+        id BIGINT
+        name VARCHAR
+        access_code VARCHAR
+        total_score INT
+        quiz_id BIGINT
+    }
+
+    QUESTION {
+        id BIGINT
+        quiz_id BIGINT
+        text TEXT
+        type ENUM
+        difficulty ENUM
+        correct_key VARCHAR
+        points INT
+        time_limit INT
+        order_index INT
+    }
+
+    QUESTION_OPTION {
+        question_id BIGINT
+        option_text VARCHAR
+    }
+
+    SUBMISSION {
+        id BIGINT
+        team_id BIGINT
+        question_id BIGINT
+        submitted_answer VARCHAR
+        is_correct BOOLEAN
+        awarded_points INT
+        submitted_at DATETIME
+        is_graded BOOLEAN
+    }
+
+    QUIZ_ASSIGNMENT {
+        id BIGINT
+        user_id BIGINT
+        quiz_id BIGINT
+    }
+
+    ASSIGNMENT_PERMISSION {
+        assignment_id BIGINT
+        permission ENUM
+    }
+
+    %% RELATIONSHIPS (Updated)
+
+    USER ||--o{ QUIZ_ASSIGNMENT : assigns
+    QUIZ ||--o{ QUIZ_ASSIGNMENT : assigned
+    QUIZ ||--o{ TEAM : has
+    QUIZ ||--o{ QUESTION : contains
+    TEAM ||--o{ SUBMISSION : submits
+    QUESTION ||--o{ SUBMISSION : receives
+    QUESTION ||--o{ QUESTION_OPTION : has
+    QUIZ_ASSIGNMENT ||--o{ ASSIGNMENT_PERMISSION : grants

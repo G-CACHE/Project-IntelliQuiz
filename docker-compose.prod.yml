@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Container
+  db:
+    image: postgres:18-alpine
+    container_name: intelliquiz_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: intelliquiz
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - intelliquiz_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend Container (pulled from Docker Hub)
+  backend:
+    image: gm1026/intelliquiz-backend:latest
+    container_name: intelliquiz_backend
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/intelliquiz
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: mysecretpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
+      DISABLE_DOTENV: "true"
+    ports:
+      - "8090:8082"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - intelliquiz_network
+
+volumes:
+  postgres_data:
+
+networks:
+  intelliquiz_network:
+    driver: bridge

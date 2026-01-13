@@ -1,0 +1,73 @@
+erDiagram
+    USER {
+        bigint id PK
+        varchar username
+        varchar password
+        enum system_role
+    }
+
+    QUIZ {
+        bigint id PK
+        varchar title
+        varchar description
+        varchar proctor_pin
+        boolean is_live_session
+        enum status
+    }
+
+    TEAM {
+        bigint id PK
+        varchar name
+        varchar access_code
+        int total_score
+        bigint quiz_id FK
+    }
+
+    QUESTION {
+        bigint id PK
+        bigint quiz_id FK
+        text text
+        enum type
+        enum difficulty
+        varchar correct_key
+        int points
+        int time_limit
+        int order_index
+    }
+
+    QUESTION_OPTION {
+        bigint question_id FK
+        varchar option_text
+    }
+
+    SUBMISSION {
+        bigint id PK
+        bigint team_id FK
+        bigint question_id FK
+        varchar submitted_answer
+        boolean is_correct
+        int awarded_points
+        timestamp submitted_at
+        boolean is_graded
+    }
+
+    QUIZ_ASSIGNMENT {
+        bigint id PK
+        bigint user_id FK
+        bigint quiz_id FK
+    }
+
+    ASSIGNMENT_PERMISSION {
+        bigint assignment_id FK
+        enum permission
+    }
+
+    %% Relationships
+    USER ||--o{ QUIZ_ASSIGNMENT : assigns
+    QUIZ ||--o{ QUIZ_ASSIGNMENT : assigned
+    QUIZ ||--o{ TEAM : has
+    QUIZ ||--o{ QUESTION : contains
+    TEAM ||--o{ SUBMISSION : submits
+    QUESTION ||--o{ SUBMISSION : receives
+    QUESTION ||--o{ QUESTION_OPTION : has
+    QUIZ_ASSIGNMENT ||--o{ ASSIGNMENT_PERMISSION : grants

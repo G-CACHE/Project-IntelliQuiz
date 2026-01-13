@@ -1,0 +1,80 @@
+erDiagram
+    %% =========================
+    %% TABLE DEFINITIONS (Updated)
+    %% =========================
+
+    USER {
+        BIGSERIAL id PK
+        VARCHAR username
+        VARCHAR password
+        ENUM system_role
+    }
+
+    QUIZ {
+        BIGSERIAL id PK
+        VARCHAR title
+        VARCHAR description
+        VARCHAR proctor_pin
+        BOOLEAN is_live_session
+        ENUM status
+    }
+
+    TEAM {
+        BIGSERIAL id PK
+        VARCHAR name
+        VARCHAR access_code
+        INT total_score
+        BIGINT quiz_id FK
+    }
+
+    QUESTION {
+        BIGSERIAL id PK
+        BIGINT quiz_id FK
+        TEXT text
+        ENUM type
+        ENUM difficulty
+        VARCHAR correct_key
+        INT points
+        INT time_limit
+        INT order_index
+    }
+
+    QUESTION_OPTION {
+        BIGINT question_id FK
+        VARCHAR option_text
+    }
+
+    SUBMISSION {
+        BIGSERIAL id PK
+        BIGINT team_id FK
+        BIGINT question_id FK
+        VARCHAR submitted_answer
+        BOOLEAN is_correct
+        INT awarded_points
+        TIMESTAMP submitted_at
+        BOOLEAN is_graded
+    }
+
+    QUIZ_ASSIGNMENT {
+        BIGSERIAL id PK
+        BIGINT user_id FK
+        BIGINT quiz_id FK
+    }
+
+    ASSIGNMENT_PERMISSION {
+        BIGINT assignment_id FK
+        ENUM permission
+    }
+
+    %% =========================
+    %% RELATIONSHIPS (Updated)
+    %% =========================
+
+    USER ||--o{ QUIZ_ASSIGNMENT : assigns
+    QUIZ ||--o{ QUIZ_ASSIGNMENT : assigned
+    QUIZ ||--o{ TEAM : has
+    QUIZ ||--o{ QUESTION : contains
+    TEAM ||--o{ SUBMISSION : submits
+    QUESTION ||--o{ SUBMISSION : receives
+    QUESTION ||--o{ QUESTION_OPTION : has
+    QUIZ_ASSIGNMENT ||--o{ ASSIGNMENT_PERMISSION : grants

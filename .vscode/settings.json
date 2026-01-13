@@ -1,0 +1,16 @@
+{
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "intelliquiz",
+            "database": "intelliquizdb",
+            "username": "postgres",
+            "password": "Qazplm891251"
+        }
+    ]
+}

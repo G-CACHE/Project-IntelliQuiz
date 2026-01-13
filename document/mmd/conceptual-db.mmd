@@ -1,0 +1,24 @@
+---
+id: 840799c3-f19d-485e-8bd5-0219a4e69739
+---
+erDiagram
+    %% Conceptual ERD - IntelliQuiz (IQ) - Updated
+
+    USER
+    QUIZ
+    TEAM
+    QUESTION
+    QUESTION_OPTION
+    SUBMISSION
+    QUIZ_ASSIGNMENT
+    ASSIGNMENT_PERMISSION
+
+    %% Relationships
+    USER ||--o{ QUIZ_ASSIGNMENT : assigns
+    QUIZ ||--o{ QUIZ_ASSIGNMENT : assigned
+    QUIZ ||--o{ TEAM : has
+    QUIZ ||--o{ QUESTION : contains
+    TEAM ||--o{ SUBMISSION : submits
+    QUESTION ||--o{ SUBMISSION : receives
+    QUESTION ||--o{ QUESTION_OPTION : has
+    QUIZ_ASSIGNMENT ||--o{ ASSIGNMENT_PERMISSION : grants
