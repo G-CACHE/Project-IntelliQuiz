@@ -16,10 +16,11 @@ import {
   BiBookOpen,
 } from 'react-icons/bi';
 import { usersApi, quizzesApi, type User, type Quiz } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import './PermissionsPage.css';
 
 interface Permission { key: string; label: string; description: string; icon: React.ReactNode; color: string; }
-interface QuizAssignment { id: number; adminId: number; adminUsername: string; quizId: number; quizTitle: string; permissions: string[]; assignedAt: string; }
+interface QuizAssignmentDisplay { id: number; adminId: number; adminUsername: string; quizId: number; quizTitle: string; permissions: string[]; assignedAt: string; }
 
 const PERMISSIONS: Permission[] = [
   { key: 'CAN_VIEW_DETAILS', label: 'View Details', description: 'Read-only access to quiz configuration', icon: <BiShow size={22} />, color: '#1368ce' },
@@ -31,16 +32,18 @@ const PERMISSIONS: Permission[] = [
 export default function PermissionsPage() {
   const [searchParams] = useSearchParams();
   const preselectedUserId = searchParams.get('userId');
-  const [assignments, setAssignments] = useState<QuizAssignment[]>([]);
+  const [assignments, setAssignments] = useState<QuizAssignmentDisplay[]>([]);
   const [admins, setAdmins] = useState<User[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<QuizAssignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<QuizAssignmentDisplay | null>(null);
   const [formData, setFormData] = useState({ adminId: preselectedUserId ? parseInt(preselectedUserId) : 0, quizId: 0, permissions: [] as string[] });
   const [submitting, setSubmitting] = useState(false);
+  
+  const { addAssignmentForUser, removeAssignmentForUser } = useAuth();
 
   useEffect(() => { loadData(); }, []);
   useEffect(() => { if (preselectedUserId) setFormData((p) => ({ ...p, adminId: parseInt(preselectedUserId) })); }, [preselectedUserId]);
@@ -71,6 +74,16 @@ export default function PermissionsPage() {
       await usersApi.assignPermissions(formData.adminId, { quizId: formData.quizId, permissions: formData.permissions });
       const admin = admins.find((a) => a.id === formData.adminId);
       const quiz = quizzes.find((q) => q.id === formData.quizId);
+      
+      // Update the global context for the admin user
+      if (admin) {
+        addAssignmentForUser(admin.username, {
+          quizId: formData.quizId,
+          quizTitle: quiz?.title || '',
+          permissions: formData.permissions,
+        });
+      }
+      
       setAssignments((p) => [...p, { 
         id: Date.now(), 
         adminId: formData.adminId, 
@@ -94,6 +107,10 @@ export default function PermissionsPage() {
     setSubmitting(true);
     try {
       await usersApi.revokePermissions(selectedAssignment.adminId, selectedAssignment.quizId);
+      
+      // Update the global context for the admin user
+      removeAssignmentForUser(selectedAssignment.adminUsername, selectedAssignment.quizId);
+      
       setAssignments((p) => p.filter((a) => a.id !== selectedAssignment.id));
       setShowDeleteModal(false);
       setSelectedAssignment(null);
@@ -109,7 +126,7 @@ export default function PermissionsPage() {
   };
 
   const selectAllPermissions = () => {
-    setFormData((p) => ({ ...p, permissions: PERMISSIONS.map(p => p.key) }));
+    setFormData((p) => ({ ...p, permissions: PERMISSIONS.map(perm => perm.key) }));
   };
 
   const resetForm = () => { 
@@ -127,6 +144,7 @@ export default function PermissionsPage() {
       </div>
     );
   }
+
 
   return (
     <div className="permissions-kahoot">
@@ -216,15 +234,15 @@ export default function PermissionsPage() {
                   </div>
                   
                   <div className="assignment-permissions">
-                    {a.permissions.map((p) => {
-                      const perm = PERMISSIONS.find((x) => x.key === p);
+                    {a.permissions.map((pKey) => {
+                      const perm = PERMISSIONS.find((x) => x.key === pKey);
                       return (
                         <span 
-                          key={p} 
+                          key={pKey} 
                           className="perm-badge"
                           style={{ background: perm?.color || '#6b7280' }}
                         >
-                          {perm?.label || p}
+                          {perm?.label || pKey}
                         </span>
                       );
                     })}

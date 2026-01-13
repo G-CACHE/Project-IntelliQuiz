@@ -17,11 +17,11 @@ export const TeamGrid: React.FC<TeamGridProps> = ({ teams }) => {
       {teams.map((team) => (
         <div
           key={team.id}
-          className="bg-gray-900 border border-[#f8c107]/30 rounded-lg p-6 hover:border-[#f8c107]"
+          className="bg-gray-900 border border-accent/30 rounded-lg p-6 hover:border-accent"
         >
-          <h3 className="text-xl font-bold text-[#f8c107] mb-2">{team.name}</h3>
+          <h3 className="text-xl font-bold text-accent mb-2">{team.name}</h3>
           <p className="text-gray-300">Members: {team.memberCount}</p>
-          <p className="text-2xl font-bold text-[#f8c107] mt-2">Score: {team.score}</p>
+          <p className="text-2xl font-bold text-accent mt-2">Score: {team.score}</p>
         </div>
       ))}
     </div>

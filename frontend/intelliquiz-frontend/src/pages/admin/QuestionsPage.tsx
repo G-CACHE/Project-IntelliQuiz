@@ -9,8 +9,10 @@ import {
   BiX,
   BiErrorCircle,
   BiCheck,
+  BiLock,
 } from 'react-icons/bi';
 import { questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 
 const initialForm: CreateQuestionRequest = {
@@ -22,6 +24,7 @@ export default function AdminQuestionsPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
   const quizIdNum = quizId ? parseInt(quizId) : 0;
+  const { canEditQuiz, canViewQuiz, isSuperAdmin } = useAuth();
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -32,6 +35,9 @@ export default function AdminQuestionsPage() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CreateQuestionRequest>(initialForm);
+  
+  const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum);
+  const hasViewPermission = isSuperAdmin() || canViewQuiz(quizIdNum) || canEditQuiz(quizIdNum);
 
   useEffect(() => { if (quizIdNum) loadData(); }, [quizIdNum]);
 
@@ -53,6 +59,7 @@ export default function AdminQuestionsPage() {
   };
 
   const handleSave = async () => {
+    if (!hasEditPermission) return setError('You do not have permission to edit this quiz');
     if (!formData.text.trim()) return setError('Question text is required');
     const hasCorrect = formData.answers.some((a) => a.isCorrect && a.text.trim());
     if (!hasCorrect) return setError('At least one correct answer is required');
@@ -134,12 +141,14 @@ export default function AdminQuestionsPage() {
             <div className="admin-page-icon"><BiFile size={26} /></div>
             <div>
               <h1 className="admin-page-title">Questions</h1>
-              <p className="admin-page-subtitle">{quiz?.title || 'Quiz'} • {questions.length} questions</p>
+              <p className="admin-page-subtitle">{quiz?.title || 'Quiz'} • {questions.length} questions {!hasEditPermission && <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}><BiLock size={12} style={{ verticalAlign: 'middle' }} /> View only</span>}</p>
             </div>
           </div>
-          <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-            <BiPlus size={18} /> Add Question
-          </button>
+          {hasEditPermission && (
+            <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+              <BiPlus size={18} /> Add Question
+            </button>
+          )}
         </div>
       </div>
 
@@ -186,8 +195,12 @@ export default function AdminQuestionsPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <button className="admin-btn-icon" onClick={() => openEditModal(q)} title="Edit"><BiEdit size={16} /></button>
-                  <button className="admin-btn-icon danger" onClick={() => { setSelectedQuestion(q); setShowDeleteModal(true); }} title="Delete"><BiTrash size={16} /></button>
+                  {hasEditPermission && (
+                    <>
+                      <button className="admin-btn-icon" onClick={() => openEditModal(q)} title="Edit"><BiEdit size={16} /></button>
+                      <button className="admin-btn-icon danger" onClick={() => { setSelectedQuestion(q); setShowDeleteModal(true); }} title="Delete"><BiTrash size={16} /></button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -197,10 +210,12 @@ export default function AdminQuestionsPage() {
             <div className="admin-empty-state">
               <div className="admin-empty-icon"><BiFile size={32} /></div>
               <h3 className="admin-empty-title">No questions yet</h3>
-              <p className="admin-empty-text">Add questions to make your quiz complete</p>
-              <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                <BiPlus size={16} /> Add First Question
-              </button>
+              <p className="admin-empty-text">{hasEditPermission ? 'Add questions to make your quiz complete' : 'No questions have been added to this quiz yet'}</p>
+              {hasEditPermission && (
+                <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                  <BiPlus size={16} /> Add First Question
+                </button>
+              )}
             </div>
           </div>
         )}

@@ -37,11 +37,11 @@ html, body {
 /* Selection */
 ::selection {
   background: rgba(248, 193, 7, 0.3);
-  color: #880015;
+  color: var(--color-primary);
 }
 
 /* Focus styles */
 *:focus-visible {
-  outline: 2px solid #f8c107;
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }

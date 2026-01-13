@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBookOpen,
@@ -15,15 +15,14 @@ import {
   BiGroup,
   BiCalendar,
   BiTime,
+  BiLock,
 } from 'react-icons/bi';
-import { quizzesApi, type Quiz, type CreateQuizRequest } from '../../services/api';
+import { useQuizzes, useCreateQuiz, useUpdateQuiz, useDeleteQuiz, useQuizStatusChange } from '../../hooks';
+import { useAuth } from '../../contexts/AuthContext';
+import type { Quiz, CreateQuizRequest } from '../../services/api';
 import '../../styles/admin.css';
 
 export default function AdminQuizzesPage() {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [filteredQuizzes, setFilteredQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -32,11 +31,26 @@ export default function AdminQuizzesPage() {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [formData, setFormData] = useState<CreateQuizRequest>({ title: '', description: '' });
   const navigate = useNavigate();
+  
+  const { assignments, isSuperAdmin, canEditQuiz, canManageTeams, canHostGame, canViewQuiz } = useAuth();
+  
+  // React Query hooks
+  const { data: quizzes = [], isLoading, error } = useQuizzes();
+  const createQuiz = useCreateQuiz();
+  const updateQuiz = useUpdateQuiz();
+  const deleteQuiz = useDeleteQuiz();
+  const statusChange = useQuizStatusChange();
 
-  useEffect(() => { loadQuizzes(); }, []);
-
-  useEffect(() => {
+  // Filter quizzes based on permissions and search/status
+  const filteredQuizzes = useMemo(() => {
     let filtered = quizzes;
+    
+    // Filter based on user's assigned permissions (unless super admin)
+    if (!isSuperAdmin()) {
+      const assignedQuizIds = assignments.map(a => a.quizId);
+      filtered = filtered.filter(q => assignedQuizIds.includes(q.id));
+    }
+    
     if (searchQuery) {
       filtered = filtered.filter((q) =>
         q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,79 +60,59 @@ export default function AdminQuizzesPage() {
     if (statusFilter !== 'ALL') {
       filtered = filtered.filter((q) => q.status === statusFilter);
     }
-    setFilteredQuizzes(filtered);
-  }, [quizzes, searchQuery, statusFilter]);
-
-  const loadQuizzes = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await quizzesApi.getAll();
-      setQuizzes(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load quizzes');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return filtered;
+  }, [quizzes, searchQuery, statusFilter, assignments, isSuperAdmin]);
 
   const handleCreate = async () => {
-    if (!formData.title.trim()) return setError('Title is required');
+    if (!formData.title.trim()) return;
     try {
-      await quizzesApi.create(formData);
+      await createQuiz.mutateAsync(formData);
       setShowCreateModal(false);
       resetForm();
-      loadQuizzes();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create quiz');
+      console.error('Failed to create quiz:', err);
     }
   };
 
   const handleUpdate = async () => {
-    if (!selectedQuiz || !formData.title.trim()) return setError('Title is required');
+    if (!selectedQuiz || !formData.title.trim()) return;
     try {
-      await quizzesApi.update(selectedQuiz.id, formData);
+      await updateQuiz.mutateAsync({ id: selectedQuiz.id, data: formData });
       setShowEditModal(false);
       setSelectedQuiz(null);
       resetForm();
-      loadQuizzes();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update quiz');
+      console.error('Failed to update quiz:', err);
     }
   };
 
   const handleDelete = async () => {
     if (!selectedQuiz) return;
     try {
-      await quizzesApi.delete(selectedQuiz.id);
+      await deleteQuiz.mutateAsync(selectedQuiz.id);
       setShowDeleteModal(false);
       setSelectedQuiz(null);
-      loadQuizzes();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete quiz');
+      console.error('Failed to delete quiz:', err);
     }
   };
 
   const handleStatusChange = async (quizId: number, action: 'ready' | 'activate' | 'deactivate' | 'archive') => {
     try {
-      if (action === 'ready') await quizzesApi.markReady(quizId);
-      else if (action === 'activate') await quizzesApi.activate(quizId);
-      else if (action === 'deactivate') await quizzesApi.deactivate(quizId);
-      else if (action === 'archive') await quizzesApi.archive(quizId);
-      loadQuizzes();
+      await statusChange.mutateAsync({ id: quizId, action });
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to ${action} quiz`);
+      console.error(`Failed to ${action} quiz:`, err);
     }
   };
 
-  const resetForm = () => { setFormData({ title: '', description: '' }); setError(null); };
+  const resetForm = () => { setFormData({ title: '', description: '' }); };
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'active', ARCHIVED: 'archived' };
     return map[status] || 'draft';
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="admin-loading">
         <div className="admin-loading-spinner" />
@@ -153,8 +147,8 @@ export default function AdminQuizzesPage() {
       {/* Error Alert */}
       {error && (
         <div className="admin-alert admin-alert-error">
-          <div className="admin-alert-content"><BiErrorCircle size={18} /><span>{error}</span></div>
-          <button onClick={() => setError(null)} className="admin-btn-icon" style={{ width: 32, height: 32 }}><BiX size={18} /></button>
+          <div className="admin-alert-content"><BiErrorCircle size={18} /><span>{error instanceof Error ? error.message : 'An error occurred'}</span></div>
+          <button className="admin-btn-icon" style={{ width: 32, height: 32 }}><BiX size={18} /></button>
         </div>
       )}
 
@@ -208,35 +202,48 @@ export default function AdminQuizzesPage() {
               </div>
               <div className="admin-quiz-footer">
                 <div className="admin-quiz-actions">
-                  <button className="admin-btn-icon" onClick={() => navigate(`/admin/quizzes/${quiz.id}/questions`)} title="Questions">
-                    <BiFile size={16} />
-                  </button>
-                  <button className="admin-btn-icon" onClick={() => navigate(`/admin/teams?quizId=${quiz.id}`)} title="Teams">
-                    <BiGroup size={16} />
-                  </button>
+                  {canEditQuiz(quiz.id) && (
+                    <button className="admin-btn-icon" onClick={() => navigate(`/admin/quizzes/${quiz.id}/questions`)} title="Questions">
+                      <BiFile size={16} />
+                    </button>
+                  )}
+                  {canManageTeams(quiz.id) && (
+                    <button className="admin-btn-icon" onClick={() => navigate(`/admin/teams?quizId=${quiz.id}`)} title="Teams">
+                      <BiGroup size={16} />
+                    </button>
+                  )}
                 </div>
                 <div className="admin-quiz-actions">
-                  {quiz.status === 'DRAFT' && (
+                  {quiz.status === 'DRAFT' && canEditQuiz(quiz.id) && (
                     <button className="admin-btn-icon success" onClick={() => handleStatusChange(quiz.id, 'ready')} title="Mark Ready">
                       <BiCheckCircle size={16} />
                     </button>
                   )}
-                  {quiz.status === 'READY' && (
+                  {quiz.status === 'READY' && canHostGame(quiz.id) && (
                     <button className="admin-btn-icon success" onClick={() => handleStatusChange(quiz.id, 'activate')} title="Go Live">
                       <BiPlay size={16} />
                     </button>
                   )}
-                  {quiz.status === 'ACTIVE' && (
+                  {quiz.status === 'ACTIVE' && canHostGame(quiz.id) && (
                     <button className="admin-btn-icon" onClick={() => handleStatusChange(quiz.id, 'deactivate')} title="Stop">
                       <BiPause size={16} />
                     </button>
                   )}
-                  <button className="admin-btn-icon" onClick={() => { setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '' }); setShowEditModal(true); }} title="Edit">
-                    <BiEdit size={16} />
-                  </button>
-                  <button className="admin-btn-icon danger" onClick={() => { setSelectedQuiz(quiz); setShowDeleteModal(true); }} title="Delete">
-                    <BiTrash size={16} />
-                  </button>
+                  {canEditQuiz(quiz.id) && (
+                    <button className="admin-btn-icon" onClick={() => { setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '' }); setShowEditModal(true); }} title="Edit">
+                      <BiEdit size={16} />
+                    </button>
+                  )}
+                  {canEditQuiz(quiz.id) && (
+                    <button className="admin-btn-icon danger" onClick={() => { setSelectedQuiz(quiz); setShowDeleteModal(true); }} title="Delete">
+                      <BiTrash size={16} />
+                    </button>
+                  )}
+                  {!canViewQuiz(quiz.id) && !canEditQuiz(quiz.id) && !canManageTeams(quiz.id) && !canHostGame(quiz.id) && (
+                    <span style={{ color: '#94a3b8', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <BiLock size={14} /> View only
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -247,8 +254,14 @@ export default function AdminQuizzesPage() {
               <div className="admin-empty-state">
                 <div className="admin-empty-icon"><BiBookOpen size={32} /></div>
                 <h3 className="admin-empty-title">No quizzes found</h3>
-                <p className="admin-empty-text">{searchQuery || statusFilter !== 'ALL' ? 'Try different filters' : 'Create your first quiz to get started'}</p>
-                {!searchQuery && statusFilter === 'ALL' && (
+                <p className="admin-empty-text">
+                  {searchQuery || statusFilter !== 'ALL' 
+                    ? 'Try different filters' 
+                    : isSuperAdmin() 
+                      ? 'Create your first quiz to get started'
+                      : 'No quizzes have been assigned to you yet. Contact your super admin to get access.'}
+                </p>
+                {!searchQuery && statusFilter === 'ALL' && isSuperAdmin() && (
                   <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowCreateModal(true); }}>
                     <BiPlus size={16} /> Create Quiz
                   </button>
@@ -258,6 +271,7 @@ export default function AdminQuizzesPage() {
           </div>
         )}
       </div>
+
 
       {/* Create Modal */}
       {showCreateModal && (
@@ -296,7 +310,9 @@ export default function AdminQuizzesPage() {
             </div>
             <div className="admin-modal-footer">
               <button onClick={() => setShowCreateModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              <button onClick={handleCreate} className="admin-btn admin-btn-primary">Create Quiz</button>
+              <button onClick={handleCreate} className="admin-btn admin-btn-primary" disabled={createQuiz.isPending}>
+                {createQuiz.isPending ? 'Creating...' : 'Create Quiz'}
+              </button>
             </div>
           </div>
         </div>
@@ -334,7 +350,9 @@ export default function AdminQuizzesPage() {
             </div>
             <div className="admin-modal-footer">
               <button onClick={() => setShowEditModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              <button onClick={handleUpdate} className="admin-btn admin-btn-primary">Update Quiz</button>
+              <button onClick={handleUpdate} className="admin-btn admin-btn-primary" disabled={updateQuiz.isPending}>
+                {updateQuiz.isPending ? 'Updating...' : 'Update Quiz'}
+              </button>
             </div>
           </div>
         </div>
@@ -367,7 +385,9 @@ export default function AdminQuizzesPage() {
             </div>
             <div className="admin-modal-footer">
               <button onClick={() => setShowDeleteModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              <button onClick={handleDelete} className="admin-btn admin-btn-danger">Delete Quiz</button>
+              <button onClick={handleDelete} className="admin-btn admin-btn-danger" disabled={deleteQuiz.isPending}>
+                {deleteQuiz.isPending ? 'Deleting...' : 'Delete Quiz'}
+              </button>
             </div>
           </div>
         </div>

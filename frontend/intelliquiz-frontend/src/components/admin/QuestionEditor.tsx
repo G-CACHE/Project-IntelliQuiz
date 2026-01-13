@@ -14,7 +14,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({ onSave }) => {
 
   return (
     <div className="bg-gray-900 p-6 rounded-lg">
-      <h2 className="text-2xl font-bold text-[#f8c107] mb-4">Question Editor</h2>
+      <h2 className="text-2xl font-bold text-accent mb-4">Question Editor</h2>
       <textarea
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
@@ -36,7 +36,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({ onSave }) => {
           />
         ))}
       </div>
-      <button onClick={handleSave} className="bg-[#f8c107] text-black px-6 py-2 rounded-lg font-bold">
+      <button onClick={handleSave} className="bg-accent text-black px-6 py-2 rounded-lg font-bold">
         Save Question
       </button>
     </div>

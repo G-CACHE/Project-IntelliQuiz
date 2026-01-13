@@ -11,17 +11,17 @@ const UniversalLogin: React.FC = () => {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-6xl font-black text-[#f8c107] mb-8">IntelliQuiz</h1>
+        <h1 className="text-6xl font-black text-accent mb-8">IntelliQuiz</h1>
         <div className="flex gap-4">
           <button
             onClick={() => handleLogin('admin')}
-            className="px-6 py-3 bg-[#f8c107] text-black font-bold rounded-lg"
+            className="px-6 py-3 bg-accent text-black font-bold rounded-lg"
           >
             Admin Login
           </button>
           <button
             onClick={() => handleLogin('host')}
-            className="px-6 py-3 bg-[#880015] text-white font-bold rounded-lg"
+            className="px-6 py-3 bg-primary text-white font-bold rounded-lg"
           >
             Host Login
           </button>

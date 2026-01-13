@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BiTrophy, BiRefresh, BiX, BiErrorCircle, BiMedal, BiCrown } from 'react-icons/bi';
 import { scoreboardApi, quizzesApi, type ScoreboardEntry, type Quiz } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 
 export default function AdminScoreboardPage() {
@@ -10,6 +11,7 @@ export default function AdminScoreboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const { assignments, isSuperAdmin } = useAuth();
 
   useEffect(() => { loadQuizzes(); }, []);
   useEffect(() => { if (selectedQuizId) loadScoreboard(); else setScoreboard([]); }, [selectedQuizId]);
@@ -21,9 +23,17 @@ export default function AdminScoreboardPage() {
 
   const loadQuizzes = async () => {
     try {
-      const data = await quizzesApi.getAll();
-      setQuizzes(data);
-      const active = data.find((q) => q.status === 'ACTIVE');
+      const allQuizzes = await quizzesApi.getAll();
+      
+      // Filter quizzes based on user's assignments (unless super admin)
+      let filteredQuizzes = allQuizzes;
+      if (!isSuperAdmin()) {
+        const assignedQuizIds = assignments.map(a => a.quizId);
+        filteredQuizzes = allQuizzes.filter(q => assignedQuizIds.includes(q.id));
+      }
+      
+      setQuizzes(filteredQuizzes);
+      const active = filteredQuizzes.find((q) => q.status === 'ACTIVE');
       if (active) setSelectedQuizId(active.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load quizzes');
