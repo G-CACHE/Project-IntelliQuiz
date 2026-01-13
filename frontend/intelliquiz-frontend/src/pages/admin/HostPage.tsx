@@ -13,6 +13,7 @@ import {
   BiCheck,
 } from 'react-icons/bi';
 import { quizzesApi, teamsApi, scoreboardApi, type Quiz, type Team, type ScoreboardEntry } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 
 export default function AdminHostPage() {
@@ -24,6 +25,7 @@ export default function AdminHostPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { assignments, isSuperAdmin } = useAuth();
 
   useEffect(() => { loadQuizzes(); }, []);
   useEffect(() => {
@@ -40,10 +42,20 @@ export default function AdminHostPage() {
 
   const loadQuizzes = async () => {
     try {
-      const data = await quizzesApi.getAll();
-      setQuizzes(data);
-      const active = data.find((q) => q.status === 'ACTIVE');
-      const ready = data.find((q) => q.status === 'READY');
+      const allQuizzes = await quizzesApi.getAll();
+      
+      // Filter quizzes based on user's CAN_HOST_GAME permission (unless super admin)
+      let filteredQuizzes = allQuizzes;
+      if (!isSuperAdmin()) {
+        const quizIdsWithHostPermission = assignments
+          .filter(a => a.permissions.includes('CAN_HOST_GAME'))
+          .map(a => a.quizId);
+        filteredQuizzes = allQuizzes.filter(q => quizIdsWithHostPermission.includes(q.id));
+      }
+      
+      setQuizzes(filteredQuizzes);
+      const active = filteredQuizzes.find((q) => q.status === 'ACTIVE');
+      const ready = filteredQuizzes.find((q) => q.status === 'READY');
       if (active) setSelectedQuizId(active.id);
       else if (ready) setSelectedQuizId(ready.id);
     } catch (err) {

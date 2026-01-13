@@ -7,7 +7,7 @@ interface ErrorBannerProps {
 
 export const ErrorBanner: React.FC<ErrorBannerProps> = ({ message, onClose }) => {
   return (
-    <div className="bg-[#880015]/20 border border-[#880015] text-white px-4 py-3 rounded-lg flex justify-between items-center">
+    <div className="bg-primary/20 border border-primary text-white px-4 py-3 rounded-lg flex justify-between items-center">
       <span>{message}</span>
       {onClose && (
         <button onClick={onClose} className="text-xl font-bold">

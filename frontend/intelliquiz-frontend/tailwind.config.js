@@ -7,36 +7,38 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Using CSS variables for easy theming
         primary: {
-          DEFAULT: '#880015',
-          light: '#a30018',
-          dark: '#6b0012',
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
-          400: '#f87171',
-          500: '#880015',
-          600: '#6b0012',
-          700: '#5a0010',
-          800: '#450010',
-          900: '#350010',
+          DEFAULT: 'var(--color-primary)',
+          light: 'var(--color-primary-light)',
+          dark: 'var(--color-primary-dark)',
+          darker: 'var(--color-primary-darker)',
         },
         accent: {
-          DEFAULT: '#f8c107',
-          light: '#ffd23d',
-          dark: '#e0a800',
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#f8c107',
-          500: '#e0a800',
-          600: '#c99700',
-          700: '#a16207',
-          800: '#854d0e',
-          900: '#713f12',
+          DEFAULT: 'var(--color-accent)',
+          light: 'var(--color-accent-light)',
+          dark: 'var(--color-accent-dark)',
         },
+        // Semantic colors
+        success: {
+          DEFAULT: 'var(--color-success)',
+          light: 'var(--color-success-light)',
+        },
+        warning: {
+          DEFAULT: 'var(--color-warning)',
+          light: 'var(--color-warning-light)',
+        },
+        error: {
+          DEFAULT: 'var(--color-error)',
+          light: 'var(--color-error-light)',
+        },
+        info: {
+          DEFAULT: 'var(--color-info)',
+          light: 'var(--color-info-light)',
+        },
+      },
+      borderColor: {
+        'accent-30': 'rgba(248, 193, 7, 0.3)',
       },
       fontFamily: {
         montserrat: ['Montserrat', 'sans-serif'],

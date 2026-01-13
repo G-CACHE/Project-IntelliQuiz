@@ -11,7 +11,7 @@ export const HostControls: React.FC<HostControlsProps> = ({ onStart, onPause, on
     <div className="flex gap-4">
       <button
         onClick={onStart}
-        className="px-6 py-3 bg-[#f8c107] text-black font-bold rounded-lg hover:bg-[#e0ad06]"
+        className="px-6 py-3 bg-accent text-black font-bold rounded-lg hover:bg-accent-dark"
       >
         Start Game
       </button>
@@ -23,7 +23,7 @@ export const HostControls: React.FC<HostControlsProps> = ({ onStart, onPause, on
       </button>
       <button
         onClick={onEnd}
-        className="px-6 py-3 bg-[#880015] text-white font-bold rounded-lg hover:bg-[#6b000f]"
+        className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark"
       >
         End Game
       </button>

@@ -10,7 +10,7 @@ export const Input: React.FC<InputProps> = ({ label, error, className = '', ...p
     <div className="w-full">
       {label && <label className="block text-white mb-2 font-semibold">{label}</label>}
       <input
-        className={`w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-[#f8c107] ${className}`}
+        className={`w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent ${className}`}
         {...props}
       />
       {error && <span className="text-red-500 text-sm mt-1">{error}</span>}
