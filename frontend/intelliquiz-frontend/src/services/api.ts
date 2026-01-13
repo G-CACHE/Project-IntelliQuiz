@@ -384,31 +384,33 @@ export interface UpdateQuizRequest {
 export interface Question {
   id: number;
   text: string;
-  type: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  position: number;
-  answers: Answer[];
-}
-
-export interface Answer {
-  id: number;
-  text: string;
-  isCorrect: boolean;
-  position: number;
+  correctKey: string;
+  points: number;
+  timeLimit: number;
+  orderIndex: number;
+  options: string[];
 }
 
 export interface CreateQuestionRequest {
   text: string;
-  type: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  answers: { text: string; isCorrect: boolean }[];
+  correctKey: string;
+  points: number;
+  timeLimit: number;
+  options: string[];
 }
 
 export interface UpdateQuestionRequest {
   text?: string;
-  type?: string;
+  type?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-  answers?: { text: string; isCorrect: boolean }[];
+  correctKey?: string;
+  points?: number;
+  timeLimit?: number;
+  options?: string[];
 }
 
 export interface Team {
