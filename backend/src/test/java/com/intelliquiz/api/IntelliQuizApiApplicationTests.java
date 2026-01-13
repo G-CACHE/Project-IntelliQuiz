@@ -2,10 +2,10 @@ package com.intelliquiz.api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ContextConfiguration(initializers = EnvInitializer.class)
+@ActiveProfiles("test")
 class IntelliQuizApiApplicationTests {
 
 	@Test
