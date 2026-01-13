@@ -8,6 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: intelliquiz
+      TZ: Asia/Manila
     ports:
       - "5434:5432"
     volumes:
@@ -34,6 +35,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: docker
       DISABLE_DOTENV: "true"
+      TZ: Asia/Manila
       # Backup Configuration
       DB_URL: jdbc:postgresql://db:5432/intelliquiz
       DB_HOST: db
