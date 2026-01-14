@@ -10,6 +10,8 @@ import com.intelliquiz.api.presentation.dto.request.UpdateUserRequest;
 import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.QuizAssignmentResponse;
 import com.intelliquiz.api.presentation.dto.response.UserResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -71,6 +73,50 @@ public class UserController {
                 .map(UserResponse::from)
                 .toList();
         return ResponseEntity.ok(users);
+    }
+
+    /**
+     * Gets the current user's quiz assignments.
+     */
+    @GetMapping("/me/assignments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Operation(
+            summary = "Get my quiz assignments",
+            description = "Retrieves the authenticated user's quiz assignments. Requires ADMIN or SUPER_ADMIN role."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Assignments retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = QuizAssignmentResponse[].class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - ADMIN or SUPER_ADMIN role required",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public ResponseEntity<java.util.List<QuizAssignmentResponse>> getMyAssignments() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        User user = userManagementService.getAdminByUsername(username);
+        java.util.List<QuizAssignmentResponse> assignments = userManagementService
+                .getUserAssignments(user.getId())
+                .stream()
+                .map(QuizAssignmentResponse::from)
+                .toList();
+        return ResponseEntity.ok(assignments);
     }
 
     /**
