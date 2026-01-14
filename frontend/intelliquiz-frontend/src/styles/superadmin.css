@@ -481,7 +481,8 @@
   width: 100%;
   max-width: 440px;
   max-height: 90vh;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-shadow: 
     0 0 0 1px rgba(255, 255, 255, 0.1),
     0 25px 60px rgba(0, 0, 0, 0.35),
@@ -502,6 +503,7 @@
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .modal-header::before {
@@ -554,7 +556,8 @@
 .modal-body {
   padding: 32px 40px;
   overflow-y: auto;
-  max-height: 60vh;
+  flex: 1;
+  min-height: 0;
   background: linear-gradient(180deg, #fff 0%, #fafbfc 100%);
 }
 
@@ -565,6 +568,7 @@
   gap: 14px;
   justify-content: flex-end;
   border-top: 1px solid #e8eaed;
+  flex-shrink: 0;
 }
 
 /* ==================== EMPTY STATE ==================== */
@@ -692,7 +696,6 @@
   transition: all 0.3s ease;
   border-left: 4px solid transparent;
   position: relative;
-  overflow: hidden;
 }
 
 .data-card::before {
@@ -704,6 +707,13 @@
   height: 100px;
   background: linear-gradient(135deg, rgba(248, 193, 7, 0.1) 0%, transparent 100%);
   border-radius: 0 0 0 100px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.data-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .data-card:hover {

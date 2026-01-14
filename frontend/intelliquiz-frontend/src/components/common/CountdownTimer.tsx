@@ -19,7 +19,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ seconds, onCompl
   }, [timeLeft, onComplete]);
 
   return (
-    <div className="text-3xl font-bold text-[#f8c107]">
+    <div className="text-3xl font-bold text-accent">
       {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
     </div>
   );

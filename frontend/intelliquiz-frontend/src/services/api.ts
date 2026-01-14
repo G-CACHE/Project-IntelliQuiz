@@ -29,7 +29,7 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    return handleResponse<{ token: string; role: string; userId: number }>(response);
+    return handleResponse<{ token: string; role: string; username: string }>(response);
   },
 
   resolveAccess: async (accessCode: string) => {
@@ -384,31 +384,33 @@ export interface UpdateQuizRequest {
 export interface Question {
   id: number;
   text: string;
-  type: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  position: number;
-  answers: Answer[];
-}
-
-export interface Answer {
-  id: number;
-  text: string;
-  isCorrect: boolean;
-  position: number;
+  correctKey: string;
+  points: number;
+  timeLimit: number;
+  orderIndex: number;
+  options: string[];
 }
 
 export interface CreateQuestionRequest {
   text: string;
-  type: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  answers: { text: string; isCorrect: boolean }[];
+  correctKey: string;
+  points: number;
+  timeLimit: number;
+  options: string[];
 }
 
 export interface UpdateQuestionRequest {
   text?: string;
-  type?: string;
+  type?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-  answers?: { text: string; isCorrect: boolean }[];
+  correctKey?: string;
+  points?: number;
+  timeLimit?: number;
+  options?: string[];
 }
 
 export interface Team {
@@ -456,3 +458,24 @@ export interface BackupRecord {
   lastRestoredAt: string | null;
   createdByUsername: string | null;
 }
+
+export interface QuizAssignment {
+  quizId: number;
+  quizTitle: string;
+  permissions: string[];
+}
+
+export interface CurrentUser {
+  id: number;
+  username: string;
+  role: 'ADMIN' | 'SUPER_ADMIN';
+  assignments: QuizAssignment[];
+}
+
+// Permission constants
+export const PERMISSIONS = {
+  CAN_VIEW_DETAILS: 'CAN_VIEW_DETAILS',
+  CAN_EDIT_CONTENT: 'CAN_EDIT_CONTENT',
+  CAN_MANAGE_TEAMS: 'CAN_MANAGE_TEAMS',
+  CAN_HOST_GAME: 'CAN_HOST_GAME',
+} as const;

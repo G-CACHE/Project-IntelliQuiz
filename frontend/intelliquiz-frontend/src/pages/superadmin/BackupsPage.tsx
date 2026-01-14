@@ -282,7 +282,26 @@ export default function BackupsPage() {
                       </div>
                     </div>
                   </td>
-                  <td>{getStatusBadge(backup.status)}</td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {getStatusBadge(backup.status)}
+                      {backup.status === 'FAILED' && backup.errorMessage && (
+                        <span style={{ 
+                          fontSize: '11px', 
+                          color: '#dc2626', 
+                          maxWidth: 200, 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'help',
+                        }} title={backup.errorMessage}>
+                          {backup.errorMessage.length > 50 
+                            ? backup.errorMessage.substring(0, 50) + '...' 
+                            : backup.errorMessage}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td style={{ color: 'var(--text-secondary)' }}>{formatFileSize(backup.fileSizeBytes)}</td>
                   <td style={{ color: 'var(--text-secondary)' }}>{backup.createdByUsername || '-'}</td>
                   <td style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>

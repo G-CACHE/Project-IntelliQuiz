@@ -16,7 +16,7 @@ export const QuizTable: React.FC<QuizTableProps> = ({ quizzes }) => {
     <div className="overflow-x-auto">
       <table className="w-full text-white">
         <thead>
-          <tr className="border-b border-[#f8c107]/30">
+          <tr className="border-b border-accent/30">
             <th className="px-4 py-2 text-left">Title</th>
             <th className="px-4 py-2 text-left">Questions</th>
             <th className="px-4 py-2 text-left">Created</th>
@@ -30,7 +30,7 @@ export const QuizTable: React.FC<QuizTableProps> = ({ quizzes }) => {
               <td className="px-4 py-2">{quiz.questions}</td>
               <td className="px-4 py-2">{quiz.createdAt}</td>
               <td className="px-4 py-2 text-center">
-                <button className="text-[#f8c107] hover:underline">Edit</button>
+                <button className="text-accent hover:underline">Edit</button>
               </td>
             </tr>
           ))}

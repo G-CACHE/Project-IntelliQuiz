@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBookOpen,
@@ -11,48 +11,33 @@ import {
   BiTrophy,
   BiTargetLock,
 } from 'react-icons/bi';
-import { quizzesApi, type Quiz } from '../../services/api';
+import { useQuizzes } from '../../hooks';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 
-interface DashboardStats {
-  totalQuizzes: number;
-  activeQuizzes: number;
-  totalTeams: number;
-  readyQuizzes: number;
-}
-
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalQuizzes: 0, activeQuizzes: 0, totalTeams: 0, readyQuizzes: 0,
-  });
-  const [recentQuizzes, setRecentQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState('');
   const navigate = useNavigate();
+  const { assignments, isSuperAdmin, canEditQuiz } = useAuth();
+  const username = localStorage.getItem('username') || 'Admin';
+  
+  // React Query hook
+  const { data: allQuizzes = [], isLoading } = useQuizzes();
 
-  useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) setUsername(storedUsername);
-    loadDashboardData();
-  }, []);
+  // Filter quizzes based on permissions
+  const quizzes = useMemo(() => {
+    if (isSuperAdmin()) return allQuizzes;
+    const assignedQuizIds = assignments.map(a => a.quizId);
+    return allQuizzes.filter(q => assignedQuizIds.includes(q.id));
+  }, [allQuizzes, assignments, isSuperAdmin]);
 
-  const loadDashboardData = async () => {
-    setLoading(true);
-    try {
-      const quizzes = await quizzesApi.getAll();
-      setStats({
-        totalQuizzes: quizzes.length,
-        activeQuizzes: quizzes.filter(q => q.status === 'ACTIVE').length,
-        readyQuizzes: quizzes.filter(q => q.status === 'READY').length,
-        totalTeams: 0,
-      });
-      setRecentQuizzes(quizzes.slice(0, 5));
-    } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const stats = useMemo(() => ({
+    totalQuizzes: quizzes.length,
+    activeQuizzes: quizzes.filter(q => q.status === 'ACTIVE').length,
+    readyQuizzes: quizzes.filter(q => q.status === 'READY').length,
+    totalTeams: 0,
+  }), [quizzes]);
+
+  const recentQuizzes = useMemo(() => quizzes.slice(0, 5), [quizzes]);
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = {
@@ -61,7 +46,7 @@ export default function AdminDashboardPage() {
     return map[status] || 'draft';
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="admin-loading">
         <div className="admin-loading-spinner" />
@@ -83,7 +68,7 @@ export default function AdminDashboardPage() {
           <div className="admin-page-header-left">
             <div className="admin-page-icon"><BiRocket size={26} /></div>
             <div>
-              <h1 className="admin-page-title">Welcome back, {username || 'Admin'}!</h1>
+              <h1 className="admin-page-title">Welcome back, {username}!</h1>
               <p className="admin-page-subtitle">Here's what's happening with your quizzes</p>
             </div>
           </div>
@@ -176,7 +161,7 @@ export default function AdminDashboardPage() {
                 <div 
                   key={quiz.id} 
                   className="admin-recent-item"
-                  onClick={() => navigate(`/admin/quizzes/${quiz.id}/questions`)}
+                  onClick={() => canEditQuiz(quiz.id) ? navigate(`/admin/quizzes/${quiz.id}/questions`) : navigate('/admin/quizzes')}
                 >
                   <div className="admin-recent-item-left">
                     <div className="admin-recent-item-icon"><BiBookOpen size={16} /></div>
@@ -195,10 +180,14 @@ export default function AdminDashboardPage() {
               <div className="admin-empty-state" style={{ padding: 32 }}>
                 <div className="admin-empty-icon" style={{ width: 56, height: 56 }}><BiBookOpen size={24} /></div>
                 <p className="admin-empty-title" style={{ fontSize: 15 }}>No quizzes yet</p>
-                <p className="admin-empty-text" style={{ marginBottom: 16 }}>Create your first quiz to get started</p>
-                <button className="admin-btn admin-btn-primary" style={{ padding: '10px 20px' }} onClick={() => navigate('/admin/quizzes')}>
-                  <BiPlus size={16} /> Create Quiz
-                </button>
+                <p className="admin-empty-text" style={{ marginBottom: 16 }}>
+                  {isSuperAdmin() ? 'Create your first quiz to get started' : 'No quizzes have been assigned to you yet'}
+                </p>
+                {isSuperAdmin() && (
+                  <button className="admin-btn admin-btn-primary" style={{ padding: '10px 20px' }} onClick={() => navigate('/admin/quizzes')}>
+                    <BiPlus size={16} /> Create Quiz
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BiGroup, BiPlus, BiTrash, BiRefresh, BiSearch, BiX, BiErrorCircle, BiCopy, BiCheck } from 'react-icons/bi';
 import { teamsApi, quizzesApi, type Team, type Quiz } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import CustomSelect from '../../components/common/CustomSelect';
 import '../../styles/admin.css';
 
@@ -20,14 +21,25 @@ export default function AdminTeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [teamName, setTeamName] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const { assignments, isSuperAdmin, canManageTeams } = useAuth();
 
   useEffect(() => { loadQuizzes(); }, []);
   useEffect(() => { if (selectedQuizId) loadTeams(); else setTeams([]); }, [selectedQuizId]);
 
   const loadQuizzes = async () => {
     try {
-      const data = await quizzesApi.getAll();
-      setQuizzes(data);
+      const allQuizzes = await quizzesApi.getAll();
+      
+      // Filter quizzes based on user's CAN_MANAGE_TEAMS permission (unless super admin)
+      let filteredQuizzes = allQuizzes;
+      if (!isSuperAdmin()) {
+        const quizIdsWithTeamPermission = assignments
+          .filter(a => a.permissions.includes('CAN_MANAGE_TEAMS'))
+          .map(a => a.quizId);
+        filteredQuizzes = allQuizzes.filter(q => quizIdsWithTeamPermission.includes(q.id));
+      }
+      
+      setQuizzes(filteredQuizzes);
       if (preselectedQuizId) setSelectedQuizId(parseInt(preselectedQuizId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load quizzes');
