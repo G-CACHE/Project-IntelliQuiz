@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type QuizAssignment, PERMISSIONS } from '../services/api';
+import { type QuizAssignment, PERMISSIONS, currentUserApi } from '../services/api';
 
 interface AuthContextType {
   role: string | null;
   username: string | null;
   assignments: QuizAssignment[];
   loading: boolean;
+  refreshAuth: () => Promise<void>;
   setAssignmentsForUser: (username: string, assignments: QuizAssignment[]) => void;
   addAssignmentForUser: (username: string, assignment: QuizAssignment) => void;
   removeAssignmentForUser: (username: string, quizId: number) => void;
@@ -30,20 +31,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [assignments, setAssignments] = useState<QuizAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load current user's role and username from localStorage (just auth info, not permissions)
-  useEffect(() => {
-    const storedRole = localStorage.getItem('role');
-    const storedUsername = localStorage.getItem('username');
-    
-    setRole(storedRole);
-    setUsername(storedUsername);
-    
-    // Load assignments for current user from global store
-    if (storedUsername) {
-      const userAssignments = globalUserAssignments.get(storedUsername) || [];
-      setAssignments(userAssignments);
+  // Function to refresh auth state from backend
+  const refreshAuth = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setRole(null);
+      setUsername(null);
+      setAssignments([]);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    try {
+      // Fetch current user info from backend (authoritative source)
+      const user = await currentUserApi.getMe();
+      console.log('[AuthContext] User info from backend:', user);
+      setRole(user.role);
+      setUsername(user.username);
+      localStorage.setItem('role', user.role);
+      localStorage.setItem('username', user.username);
+
+      // Fetch assignments if user is ADMIN
+      if (user.role === 'ADMIN') {
+        const freshAssignments = await currentUserApi.getMyAssignments();
+        console.log('[AuthContext] Assignments from backend:', freshAssignments);
+        setAssignments(freshAssignments);
+        localStorage.setItem('assignments', JSON.stringify(freshAssignments));
+      } else {
+        // Super admins don't need assignments - they have full access
+        setAssignments([]);
+        localStorage.removeItem('assignments');
+      }
+    } catch (err) {
+      console.error('[AuthContext] Failed to fetch user info:', err);
+      // Token might be invalid, clear auth state
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('username');
+      localStorage.removeItem('assignments');
+      setRole(null);
+      setUsername(null);
+      setAssignments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load auth state on mount
+  useEffect(() => {
+    const loadAuthState = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // Always fetch fresh data from backend to ensure role is correct
+      await refreshAuth();
+    };
+
+    loadAuthState();
+
+    // Listen for storage changes (e.g., when user logs in/out in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token') {
+        refreshAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Set all assignments for a specific user (used by super admin)
@@ -121,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       username,
       assignments,
       loading,
+      refreshAuth,
       setAssignmentsForUser,
       addAssignmentForUser,
       removeAssignmentForUser,

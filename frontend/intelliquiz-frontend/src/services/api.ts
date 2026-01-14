@@ -1,5 +1,5 @@
 // IntelliQuiz API Service
-const API_BASE_URL = 'http://localhost:8090';
+const API_BASE_URL = 'http://localhost:8082';
 
 const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('token');
@@ -42,6 +42,23 @@ export const authApi = {
   },
 };
 
+// Current User API (for fetching own info and assignments)
+export const currentUserApi = {
+  getMe: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<User>(response);
+  },
+
+  getMyAssignments: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/users/me/assignments`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<QuizAssignment[]>(response);
+  },
+};
+
 // Users API (SUPER_ADMIN only)
 export const usersApi = {
   getAll: async () => {
@@ -56,6 +73,13 @@ export const usersApi = {
       headers: getAuthHeaders(),
     });
     return handleResponse<User>(response);
+  },
+
+  getUserAssignments: async (userId: number) => {
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/assignments`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<QuizAssignment[]>(response);
   },
 
   create: async (data: CreateUserRequest) => {
@@ -460,6 +484,7 @@ export interface BackupRecord {
 }
 
 export interface QuizAssignment {
+  id: number;
   quizId: number;
   quizTitle: string;
   permissions: string[];

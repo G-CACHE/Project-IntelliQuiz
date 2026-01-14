@@ -21,6 +21,7 @@ import AdminQuestionsPage from '../pages/admin/QuestionsPage';
 import AdminTeamsPage from '../pages/admin/TeamsPage';
 import AdminScoreboardPage from '../pages/admin/ScoreboardPage';
 import AdminHostPage from '../pages/admin/HostPage';
+import AdminNoPermissionsPage from '../pages/admin/NoPermissionsPage';
 
 // Auth Pages
 import LoginPage from '../pages/auth/LoginPage';
@@ -74,6 +75,10 @@ export const router = createBrowserRouter([
     ],
   },
   // Admin Routes
+  {
+    path: '/admin/no-permissions',
+    element: <AdminNoPermissionsPage />,
+  },
   {
     path: '/admin',
     element: <AdminLayout />,
