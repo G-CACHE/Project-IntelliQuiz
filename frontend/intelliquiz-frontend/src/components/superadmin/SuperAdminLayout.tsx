@@ -32,14 +32,28 @@ const navItems: NavItem[] = [
 export default function SuperAdminLayout() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
+    
+    // Redirect non-super-admins to their appropriate page
+    if (storedRole !== 'SUPER_ADMIN') {
+      if (storedRole === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/login');
+      }
+      return;
+    }
+    
     if (storedUsername) setUsername(storedUsername);
-  }, []);
+    setLoading(false);
+  }, [navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -55,6 +69,7 @@ export default function SuperAdminLayout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
+    localStorage.removeItem('assignments');
     navigate('/login');
   };
 
@@ -62,6 +77,33 @@ export default function SuperAdminLayout() {
     if (path === '/superadmin') return location.pathname === path;
     return location.pathname.startsWith(path);
   };
+
+  // Show loading while checking role
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f5f5f5',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            border: '4px solid #e5e7eb',
+            borderTopColor: '#880015',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px',
+          }} />
+          <p style={{ color: '#6b7280', fontFamily: "'Montserrat', sans-serif" }}>Loading...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: "'Montserrat', sans-serif" }}>

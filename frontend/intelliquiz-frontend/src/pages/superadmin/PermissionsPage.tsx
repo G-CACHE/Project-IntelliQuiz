@@ -55,8 +55,31 @@ export default function PermissionsPage() {
         usersApi.getAll().catch(() => []),
         quizzesApi.getAll()
       ]);
-      setAdmins(usersData.filter((u) => u.role === 'ADMIN'));
+      const adminUsers = usersData.filter((u) => u.role === 'ADMIN');
+      setAdmins(adminUsers);
       setQuizzes(quizzesData);
+      
+      // Fetch assignments for all admin users
+      const allAssignments: QuizAssignmentDisplay[] = [];
+      for (const admin of adminUsers) {
+        try {
+          const userAssignments = await usersApi.getUserAssignments(admin.id);
+          for (const assignment of userAssignments) {
+            allAssignments.push({
+              id: assignment.id,
+              adminId: admin.id,
+              adminUsername: admin.username,
+              quizId: assignment.quizId,
+              quizTitle: assignment.quizTitle,
+              permissions: assignment.permissions,
+              assignedAt: new Date().toISOString(), // Backend doesn't return this, use current time
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to fetch assignments for user ${admin.id}:`, err);
+        }
+      }
+      setAssignments(allAssignments);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
@@ -75,9 +98,12 @@ export default function PermissionsPage() {
       const admin = admins.find((a) => a.id === formData.adminId);
       const quiz = quizzes.find((q) => q.id === formData.quizId);
       
+      const newAssignmentId = Date.now();
+      
       // Update the global context for the admin user
       if (admin) {
         addAssignmentForUser(admin.username, {
+          id: newAssignmentId,
           quizId: formData.quizId,
           quizTitle: quiz?.title || '',
           permissions: formData.permissions,
@@ -85,7 +111,7 @@ export default function PermissionsPage() {
       }
       
       setAssignments((p) => [...p, { 
-        id: Date.now(), 
+        id: newAssignmentId, 
         adminId: formData.adminId, 
         adminUsername: admin?.username || '', 
         quizId: formData.quizId, 

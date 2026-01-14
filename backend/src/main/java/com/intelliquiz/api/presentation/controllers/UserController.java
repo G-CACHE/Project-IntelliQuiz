@@ -76,6 +76,40 @@ public class UserController {
     }
 
     /**
+     * Gets the current user's info (role and username).
+     */
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Operation(
+            summary = "Get current user info",
+            description = "Retrieves the authenticated user's info including role. Requires ADMIN or SUPER_ADMIN role."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User info retrieved successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        User user = userManagementService.getAdminByUsername(username);
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
+
+    /**
      * Gets the current user's quiz assignments.
      */
     @GetMapping("/me/assignments")

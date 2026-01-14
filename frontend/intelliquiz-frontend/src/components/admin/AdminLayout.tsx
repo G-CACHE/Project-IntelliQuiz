@@ -10,32 +10,70 @@ import {
   BiPlay,
 } from 'react-icons/bi';
 import '../../styles/admin.css';
+import { currentUserApi } from '../../services/api';
 
 interface NavItem {
   path: string;
   label: string;
   icon: React.ReactNode;
+  requiresPermission?: string;
 }
-
-const navItems: NavItem[] = [
-  { path: '/admin', label: 'Dashboard', icon: <BiHomeAlt size={18} /> },
-  { path: '/admin/quizzes', label: 'My Quizzes', icon: <BiBookOpen size={18} /> },
-  { path: '/admin/teams', label: 'Teams', icon: <BiGroup size={18} /> },
-  { path: '/admin/scoreboard', label: 'Scoreboard', icon: <BiTrophy size={18} /> },
-  { path: '/admin/host', label: 'Host Game', icon: <BiPlay size={18} /> },
-];
 
 export default function AdminLayout() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Build nav items based on user's permissions
+  const navItems: NavItem[] = [
+    { path: '/admin', label: 'Dashboard', icon: <BiHomeAlt size={18} /> },
+    { path: '/admin/quizzes', label: 'Assigned Quizzes', icon: <BiBookOpen size={18} /> },
+    { path: '/admin/teams', label: 'Teams', icon: <BiGroup size={18} /> },
+    { path: '/admin/scoreboard', label: 'Scoreboard', icon: <BiTrophy size={18} /> },
+    { path: '/admin/host', label: 'Host Game', icon: <BiPlay size={18} /> },
+  ];
+
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
+    
     if (storedUsername) setUsername(storedUsername);
-  }, []);
+    
+    // Redirect super admins to their dashboard
+    if (storedRole === 'SUPER_ADMIN') {
+      navigate('/superadmin');
+      return;
+    }
+    
+    // Redirect unauthenticated users to login
+    if (!storedRole || storedRole !== 'ADMIN') {
+      navigate('/login');
+      return;
+    }
+    
+    // Check if admin user has permissions
+    const checkPermissions = async () => {
+      try {
+        const assignments = await currentUserApi.getMyAssignments();
+        localStorage.setItem('assignments', JSON.stringify(assignments));
+        
+        if (assignments.length === 0) {
+          navigate('/admin/no-permissions');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch assignments:', error);
+        navigate('/admin/no-permissions');
+        return;
+      }
+      setLoading(false);
+    };
+    
+    checkPermissions();
+  }, [navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,8 +89,35 @@ export default function AdminLayout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
+    localStorage.removeItem('assignments');
     navigate('/login');
   };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f8fafc',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            border: '4px solid #e5e7eb',
+            borderTopColor: '#880015',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px',
+          }} />
+          <p style={{ color: '#6b7280', fontFamily: "'Montserrat', sans-serif" }}>Loading...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   const isActive = (path: string) => {
     if (path === '/admin') return location.pathname === path;

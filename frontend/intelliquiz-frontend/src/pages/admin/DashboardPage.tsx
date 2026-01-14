@@ -4,7 +4,6 @@ import {
   BiBookOpen,
   BiGroup,
   BiPlay,
-  BiPlus,
   BiRightArrowAlt,
   BiTime,
   BiRocket,
@@ -17,18 +16,17 @@ import '../../styles/admin.css';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { assignments, isSuperAdmin, canEditQuiz } = useAuth();
+  const { assignments, canEditQuiz } = useAuth();
   const username = localStorage.getItem('username') || 'Admin';
   
   // React Query hook
   const { data: allQuizzes = [], isLoading } = useQuizzes();
 
-  // Filter quizzes based on permissions
+  // Filter quizzes to only show assigned quizzes
   const quizzes = useMemo(() => {
-    if (isSuperAdmin()) return allQuizzes;
     const assignedQuizIds = assignments.map(a => a.quizId);
     return allQuizzes.filter(q => assignedQuizIds.includes(q.id));
-  }, [allQuizzes, assignments, isSuperAdmin]);
+  }, [allQuizzes, assignments]);
 
   const stats = useMemo(() => ({
     totalQuizzes: quizzes.length,
@@ -72,9 +70,7 @@ export default function AdminDashboardPage() {
               <p className="admin-page-subtitle">Here's what's happening with your quizzes</p>
             </div>
           </div>
-          <button className="admin-btn admin-btn-primary" onClick={() => navigate('/admin/quizzes')}>
-            <BiPlus size={18} /> Create Quiz
-          </button>
+
         </div>
       </div>
 
@@ -108,14 +104,6 @@ export default function AdminDashboardPage() {
         <div className="admin-card">
           <h2 className="admin-card-title"><BiRocket size={18} /> Quick Actions</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/quizzes')}>
-              <div className="admin-quick-action-icon purple"><BiPlus size={20} /></div>
-              <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">Create New Quiz</p>
-                <p className="admin-quick-action-desc">Start building a new quiz</p>
-              </div>
-              <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
-            </div>
             <div className="admin-quick-action" onClick={() => navigate('/admin/host')}>
               <div className="admin-quick-action-icon green"><BiPlay size={20} /></div>
               <div className="admin-quick-action-text">
@@ -181,13 +169,8 @@ export default function AdminDashboardPage() {
                 <div className="admin-empty-icon" style={{ width: 56, height: 56 }}><BiBookOpen size={24} /></div>
                 <p className="admin-empty-title" style={{ fontSize: 15 }}>No quizzes yet</p>
                 <p className="admin-empty-text" style={{ marginBottom: 16 }}>
-                  {isSuperAdmin() ? 'Create your first quiz to get started' : 'No quizzes have been assigned to you yet'}
+                  No quizzes have been assigned to you yet
                 </p>
-                {isSuperAdmin() && (
-                  <button className="admin-btn admin-btn-primary" style={{ padding: '10px 20px' }} onClick={() => navigate('/admin/quizzes')}>
-                    <BiPlus size={16} /> Create Quiz
-                  </button>
-                )}
               </div>
             )}
           </div>
