@@ -135,21 +135,13 @@ class DockerAutomation:
         self.logger = self._setup_logging()
     
     def _setup_logging(self) -> logging.Logger:
-        """Setup logging to file"""
+        """Setup logging (console only, no file)"""
         logger = logging.getLogger("docker_automation")
         logger.setLevel(logging.DEBUG)
         
-        log_path = self.project_root / self.config.log_file
-        handler = logging.FileHandler(log_path, encoding="utf-8")
-        handler.setLevel(logging.DEBUG)
-        
-        formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        handler.setFormatter(formatter)
-        
+        # Only log to console if needed for debugging
         if not logger.handlers:
+            handler = logging.NullHandler()
             logger.addHandler(handler)
         
         return logger
