@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiBrain, BiUser, BiLock } from 'react-icons/bi';
-import { authApi } from '../../services/api';
+import { authApi, currentUserApi } from '../../services/api';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -21,13 +21,39 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login(username, password);
+      // Clear all previous auth data before setting new values
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('role');
+      localStorage.removeItem('assignments');
+      
+      // Set new auth data
       localStorage.setItem('token', response.token);
       localStorage.setItem('username', username);
       localStorage.setItem('role', response.role);
 
-      if (response.role === 'SUPER_ADMIN') navigate('/superadmin');
-      else if (response.role === 'ADMIN') navigate('/admin');
-      else setError('Invalid role');
+      if (response.role === 'SUPER_ADMIN') {
+        navigate('/superadmin');
+      } else if (response.role === 'ADMIN') {
+        // Fetch assignments to check if admin has any permissions
+        try {
+          const assignments = await currentUserApi.getMyAssignments();
+          localStorage.setItem('assignments', JSON.stringify(assignments));
+          
+          if (assignments.length === 0) {
+            // No permissions assigned yet - redirect to waiting page
+            navigate('/admin/no-permissions');
+          } else {
+            navigate('/admin');
+          }
+        } catch {
+          // If fetching assignments fails, still allow login but show no permissions
+          localStorage.setItem('assignments', JSON.stringify([]));
+          navigate('/admin/no-permissions');
+        }
+      } else {
+        setError('Invalid role');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
