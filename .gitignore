@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.hypothesis/
+htmlcov/
+.coverage
+*.cover
+
+# Logs
+*.log
+docker_automation.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
