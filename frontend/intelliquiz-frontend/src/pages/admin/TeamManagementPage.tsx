@@ -9,7 +9,7 @@ interface Team {
   id: number;
   name: string;
   accessCode: string;
-  score: number;
+  totalScore: number;
   memberCount: number;
   quizId: number;
 }
@@ -208,7 +208,7 @@ export default function TeamManagementPage({ quizId }: { quizId: number }) {
                     {team.memberCount} members
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-900 font-semibold">{team.score}</td>
+                <td className="px-6 py-4 text-sm text-gray-900 font-semibold">{team.totalScore}</td>
                 <td className="px-6 py-4 text-sm space-x-2">
                   <button
                     onClick={() => openDeleteConfirm(team)}

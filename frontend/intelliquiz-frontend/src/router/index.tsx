@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 
 // Layouts
 import SuperAdminLayout from '../components/superadmin/SuperAdminLayout';
@@ -25,15 +25,64 @@ import AdminNoPermissionsPage from '../pages/admin/NoPermissionsPage';
 
 // Auth Pages
 import LoginPage from '../pages/auth/LoginPage';
+import UniversalLogin from '../pages/auth/UniversalLogin';
+
+// Proctor Pages
+import ProctorLogin from '../pages/proctor/ProctorLogin';
+import HostLobby from '../pages/host/HostLobby';
+import HostGame from '../pages/host/HostGame';
+import HostScoreboard from '../pages/host/HostScoreboard';
+
+// Participant Pages
+import ParticipantLogin from '../pages/participant/ParticipantLogin';
+import PlayerLobby from '../pages/player/PlayerLobby';
+import PlayerGame from '../pages/player/PlayerGame';
+import PlayerScoreboard from '../pages/player/PlayerScoreboard';
 
 export const router = createBrowserRouter([
+  // Universal Landing Page
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <UniversalLogin />,
   },
+  // Admin Login (existing)
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  // Proctor Routes
+  {
+    path: '/proctor/login',
+    element: <ProctorLogin />,
+  },
+  {
+    path: '/host/lobby',
+    element: <HostLobby />,
+  },
+  {
+    path: '/host/game',
+    element: <HostGame />,
+  },
+  {
+    path: '/host/scoreboard',
+    element: <HostScoreboard />,
+  },
+  // Participant Routes
+  {
+    path: '/participant/login',
+    element: <ParticipantLogin />,
+  },
+  {
+    path: '/player/lobby',
+    element: <PlayerLobby />,
+  },
+  {
+    path: '/player/game',
+    element: <PlayerGame />,
+  },
+  {
+    path: '/player/scoreboard',
+    element: <PlayerScoreboard />,
   },
   // Super Admin Routes
   {

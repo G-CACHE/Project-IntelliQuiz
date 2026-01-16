@@ -3,6 +3,8 @@ package com.intelliquiz.api.infrastructure.config;
 import com.intelliquiz.api.application.services.AccessResolutionResult;
 import com.intelliquiz.api.application.services.AccessResolutionService;
 import com.intelliquiz.api.application.services.RouteType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -20,6 +22,7 @@ import java.security.Principal;
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthInterceptor.class);
     private static final String ACCESS_CODE_HEADER = "accessCode";
 
     private final AccessResolutionService accessResolutionService;
@@ -35,19 +38,33 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String accessCode = accessor.getFirstNativeHeader(ACCESS_CODE_HEADER);
             
+            logger.info("WebSocket CONNECT attempt with accessCode: {}", accessCode != null ? accessCode : "null");
+            
             if (accessCode == null || accessCode.isBlank()) {
+                logger.warn("WebSocket CONNECT rejected: Access code is required");
                 throw new IllegalArgumentException("Access code is required");
             }
             
-            AccessResolutionResult result = accessResolutionService.resolve(accessCode);
-            
-            if (result.routeType() == RouteType.INVALID) {
-                throw new IllegalArgumentException("Invalid access code: " + result.errorMessage());
+            try {
+                AccessResolutionResult result = accessResolutionService.resolve(accessCode);
+                
+                logger.info("Access resolution result for '{}': routeType={}, errorMessage={}", 
+                        accessCode, result.routeType(), result.errorMessage());
+                
+                if (result.routeType() == RouteType.INVALID) {
+                    logger.warn("WebSocket CONNECT rejected: Invalid access code '{}' - {}", accessCode, result.errorMessage());
+                    throw new IllegalArgumentException("Invalid access code: " + result.errorMessage());
+                }
+                
+                // Create principal based on access type
+                QuizPrincipal principal = createPrincipal(result);
+                accessor.setUser(principal);
+                
+                logger.info("WebSocket CONNECT accepted: {} for quiz {}", principal.getName(), principal.quizId());
+            } catch (Exception e) {
+                logger.error("WebSocket CONNECT error for accessCode '{}': {}", accessCode, e.getMessage(), e);
+                throw e;
             }
-            
-            // Create principal based on access type
-            QuizPrincipal principal = createPrincipal(result);
-            accessor.setUser(principal);
         }
         
         return message;

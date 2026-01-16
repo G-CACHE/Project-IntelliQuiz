@@ -43,43 +43,46 @@ public class AccessResolutionPropertyTest {
     }
 
     /**
-     * Property 1: Proctor PINs for active quizzes return HOST route with correct Quiz
+     * Property 1: Proctor PINs for any quiz return HOST route with correct Quiz
      */
     @Property(tries = 20)
-    void proctorPinsForActiveQuizzesReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
+    void proctorPinsForAnyQuizReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
         TeamRepository teamRepository = mock(TeamRepository.class);
         QuizRepository quizRepository = mock(QuizRepository.class);
         
-        Quiz activeQuiz = createActiveQuiz(proctorPin);
+        Quiz quiz = createActiveQuiz(proctorPin);
         
         when(teamRepository.findByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
-        when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of(activeQuiz));
+        when(quizRepository.findAll()).thenReturn(List.of(quiz));
         
         AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
         AccessResolutionResult result = service.resolve(proctorPin);
         
         assertThat(result.routeType()).isEqualTo(RouteType.HOST);
-        assertThat(result.quiz()).isEqualTo(activeQuiz);
+        assertThat(result.quiz()).isEqualTo(quiz);
         assertThat(result.team()).isNull();
     }
 
     /**
-     * Property 1: Proctor PINs for inactive quizzes return INVALID route
+     * Property 1: Proctor PINs for inactive (draft) quizzes also return HOST route
+     * Proctors should be able to access the lobby to start the quiz
      */
     @Property(tries = 20)
-    void proctorPinsForInactiveQuizzesReturnInvalidRoute(@ForAll("proctorPins") String proctorPin) {
+    void proctorPinsForInactiveQuizzesReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
         TeamRepository teamRepository = mock(TeamRepository.class);
         QuizRepository quizRepository = mock(QuizRepository.class);
         
-        // No active quizzes
+        Quiz inactiveQuiz = createInactiveQuiz(proctorPin);
+        
         when(teamRepository.findByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
-        when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of());
+        when(quizRepository.findAll()).thenReturn(List.of(inactiveQuiz));
         
         AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
         AccessResolutionResult result = service.resolve(proctorPin);
         
-        assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
-        assertThat(result.errorMessage()).isNotNull();
+        assertThat(result.routeType()).isEqualTo(RouteType.HOST);
+        assertThat(result.quiz()).isEqualTo(inactiveQuiz);
+        assertThat(result.team()).isNull();
     }
 
     /**
@@ -91,7 +94,7 @@ public class AccessResolutionPropertyTest {
         QuizRepository quizRepository = mock(QuizRepository.class);
         
         when(teamRepository.findByAccessCode(unknownCode.toUpperCase())).thenReturn(Optional.empty());
-        when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of());
+        when(quizRepository.findAll()).thenReturn(List.of());
         
         AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
         AccessResolutionResult result = service.resolve(unknownCode);
@@ -101,15 +104,15 @@ public class AccessResolutionPropertyTest {
     }
 
     /**
-     * Property 1: Team codes for inactive quiz sessions return INVALID
+     * Property 1: Team codes for DRAFT quiz sessions return INVALID
      */
     @Property(tries = 20)
-    void teamCodesForInactiveQuizReturnInvalid(@ForAll("accessCodes") String accessCode) {
+    void teamCodesForDraftQuizReturnInvalid(@ForAll("accessCodes") String accessCode) {
         TeamRepository teamRepository = mock(TeamRepository.class);
         QuizRepository quizRepository = mock(QuizRepository.class);
         
-        Quiz inactiveQuiz = createInactiveQuiz("999-999");
-        Team team = new Team(inactiveQuiz, "Test Team", accessCode);
+        Quiz draftQuiz = createInactiveQuiz("999-999");
+        Team team = new Team(draftQuiz, "Test Team", accessCode);
         
         when(teamRepository.findByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
         
@@ -118,6 +121,27 @@ public class AccessResolutionPropertyTest {
         
         assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
         assertThat(result.errorMessage()).contains("not active");
+    }
+
+    /**
+     * Property 1: Team codes for READY quiz (lobby phase) return PARTICIPANT
+     * This allows participants to join the lobby before the quiz starts
+     */
+    @Property(tries = 20)
+    void teamCodesForReadyQuizReturnParticipant(@ForAll("accessCodes") String accessCode) {
+        TeamRepository teamRepository = mock(TeamRepository.class);
+        QuizRepository quizRepository = mock(QuizRepository.class);
+        
+        Quiz readyQuiz = createReadyQuiz("999-999");
+        Team team = new Team(readyQuiz, "Test Team", accessCode);
+        
+        when(teamRepository.findByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
+        
+        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionResult result = service.resolve(accessCode);
+        
+        assertThat(result.routeType()).isEqualTo(RouteType.PARTICIPANT);
+        assertThat(result.team()).isEqualTo(team);
     }
 
     /**
@@ -168,6 +192,13 @@ public class AccessResolutionPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", proctorPin, QuizStatus.DRAFT);
         quiz.setId(1L);
         quiz.setLiveSession(false);
+        return quiz;
+    }
+
+    private Quiz createReadyQuiz(String proctorPin) {
+        Quiz quiz = new Quiz("Test Quiz", "Description", proctorPin, QuizStatus.READY);
+        quiz.setId(1L);
+        quiz.setLiveSession(false);  // Not live yet, but READY for lobby
         return quiz;
     }
 }
