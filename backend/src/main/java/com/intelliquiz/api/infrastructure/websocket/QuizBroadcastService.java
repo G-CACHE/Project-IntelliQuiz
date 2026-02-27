@@ -1,8 +1,7 @@
-package com.intelliquiz.api.infrastructure.config;
+package com.intelliquiz.api.infrastructure.websocket;
 
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.domain.ports.TeamRepository;
-import com.intelliquiz.api.infrastructure.websocket.GameState;
 import com.intelliquiz.api.infrastructure.websocket.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

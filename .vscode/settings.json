@@ -13,5 +13,9 @@
             "password": "Qazplm891251"
         }
     ],
-    "typescript.autoClosingTags": false
+    "typescript.autoClosingTags": false,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "chat.tools.terminal.autoApprove": {
+        "./mvnw": true
+    }
 }

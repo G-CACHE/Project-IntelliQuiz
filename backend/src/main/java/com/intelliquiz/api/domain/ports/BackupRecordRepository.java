@@ -1,16 +1,19 @@
 package com.intelliquiz.api.domain.ports;
 
 import com.intelliquiz.api.domain.entities.BackupRecord;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Repository for BackupRecord entity operations.
+ * Outbound port for BackupRecord persistence operations.
+ * Clean domain port — no Spring Data dependency.
  */
-@Repository
-public interface BackupRecordRepository extends JpaRepository<BackupRecord, Long> {
+public interface BackupRecordRepository {
+
+    BackupRecord save(BackupRecord record);
+
+    Optional<BackupRecord> findById(Long id);
 
     /**
      * Find all backup records ordered by creation timestamp descending (newest first).
@@ -18,4 +21,6 @@ public interface BackupRecordRepository extends JpaRepository<BackupRecord, Long
      * @return list of backup records ordered by createdAt descending
      */
     List<BackupRecord> findAllByOrderByCreatedAtDesc();
+
+    void delete(BackupRecord record);
 }

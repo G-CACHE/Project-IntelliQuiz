@@ -1,6 +1,5 @@
-package com.intelliquiz.api.infrastructure.config;
+package com.intelliquiz.api.infrastructure.websocket;
 
-import com.intelliquiz.api.infrastructure.websocket.GameState;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

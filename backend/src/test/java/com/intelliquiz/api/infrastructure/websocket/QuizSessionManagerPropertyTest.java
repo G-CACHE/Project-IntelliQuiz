@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.websocket;
 
-import com.intelliquiz.api.infrastructure.config.QuizSessionManager;
+import com.intelliquiz.api.infrastructure.websocket.QuizSessionManager;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.Positive;

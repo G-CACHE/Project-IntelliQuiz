@@ -1,7 +1,7 @@
 package com.intelliquiz.api.infrastructure.websocket;
 
-import com.intelliquiz.api.infrastructure.config.QuizBroadcastService;
-import com.intelliquiz.api.infrastructure.config.QuizSessionManager;
+import com.intelliquiz.api.infrastructure.websocket.QuizBroadcastService;
+import com.intelliquiz.api.infrastructure.websocket.QuizSessionManager;
 import net.jqwik.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;

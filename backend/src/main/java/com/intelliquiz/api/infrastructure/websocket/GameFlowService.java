@@ -9,8 +9,6 @@ import com.intelliquiz.api.domain.ports.QuestionRepository;
 import com.intelliquiz.api.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
-import com.intelliquiz.api.infrastructure.config.QuizBroadcastService;
-import com.intelliquiz.api.infrastructure.config.QuizSessionManager;
 import com.intelliquiz.api.infrastructure.websocket.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

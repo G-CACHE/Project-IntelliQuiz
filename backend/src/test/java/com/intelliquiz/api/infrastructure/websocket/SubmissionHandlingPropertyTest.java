@@ -10,8 +10,8 @@ import com.intelliquiz.api.domain.ports.QuestionRepository;
 import com.intelliquiz.api.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
-import com.intelliquiz.api.infrastructure.config.QuizBroadcastService;
-import com.intelliquiz.api.infrastructure.config.QuizSessionManager;
+import com.intelliquiz.api.infrastructure.websocket.QuizBroadcastService;
+import com.intelliquiz.api.infrastructure.websocket.QuizSessionManager;
 import net.jqwik.api.*;
 import org.mockito.ArgumentCaptor;
 
