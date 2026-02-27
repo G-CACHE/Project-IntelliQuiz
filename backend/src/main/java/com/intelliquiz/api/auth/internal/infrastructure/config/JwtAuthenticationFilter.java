@@ -1,4 +1,4 @@
-package com.intelliquiz.api.infrastructure.config;
+package com.intelliquiz.api.auth.internal.infrastructure.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,4 +1,4 @@
-package com.intelliquiz.api.application.services;
+package com.intelliquiz.api.auth.internal.application.services;
 
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;

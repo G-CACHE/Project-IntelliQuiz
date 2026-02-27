@@ -1,10 +1,10 @@
-package com.intelliquiz.api.presentation.controllers;
+package com.intelliquiz.api.auth.internal.presentation.controllers;
 
-import com.intelliquiz.api.application.services.AccessResolutionResult;
-import com.intelliquiz.api.application.services.AccessResolutionService;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.shared.enums.RouteType;
-import com.intelliquiz.api.presentation.dto.request.AccessCodeRequest;
-import com.intelliquiz.api.presentation.dto.response.AccessResolutionResponse;
+import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
+import com.intelliquiz.api.auth.internal.presentation.dto.response.AccessResolutionResponse;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.QuizResponse;
 import com.intelliquiz.api.presentation.dto.response.TeamResponse;

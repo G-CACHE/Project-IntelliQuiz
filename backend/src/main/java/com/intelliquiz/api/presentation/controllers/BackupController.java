@@ -1,6 +1,6 @@
 package com.intelliquiz.api.presentation.controllers;
 
-import com.intelliquiz.api.application.services.AuthorizationService;
+import com.intelliquiz.api.auth.internal.application.services.AuthorizationService;
 import com.intelliquiz.api.application.services.BackupService;
 import com.intelliquiz.api.domain.entities.BackupRecord;
 import com.intelliquiz.api.domain.entities.User;

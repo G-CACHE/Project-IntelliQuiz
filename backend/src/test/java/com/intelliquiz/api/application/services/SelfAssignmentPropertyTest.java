@@ -9,7 +9,7 @@ import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.domain.ports.QuizAssignmentRepository;
 import com.intelliquiz.api.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.UserRepository;
-import com.intelliquiz.api.domain.ports.PasswordHashingService;
+import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.presentation.dto.response.QuizAssignmentResponse;
 import net.jqwik.api.*;
 

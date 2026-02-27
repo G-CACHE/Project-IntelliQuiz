@@ -1,4 +1,4 @@
-package com.intelliquiz.api.infrastructure.config;
+package com.intelliquiz.api.auth.internal.infrastructure.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

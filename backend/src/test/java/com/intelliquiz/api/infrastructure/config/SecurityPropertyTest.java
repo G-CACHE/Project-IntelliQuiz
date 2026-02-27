@@ -1,5 +1,6 @@
 package com.intelliquiz.api.infrastructure.config;
 
+import com.intelliquiz.api.auth.internal.infrastructure.config.JwtConfig;
 import net.jqwik.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;

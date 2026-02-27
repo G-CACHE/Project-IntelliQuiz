@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.ports;
+package com.intelliquiz.api.auth.internal.domain.ports;
 
 /**
  * Port interface for password hashing operations.

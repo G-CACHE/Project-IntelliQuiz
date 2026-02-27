@@ -1,5 +1,7 @@
 package com.intelliquiz.api.application.services;
 
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;

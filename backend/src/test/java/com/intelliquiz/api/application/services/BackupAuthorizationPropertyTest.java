@@ -1,5 +1,6 @@
 package com.intelliquiz.api.application.services;
 
+import com.intelliquiz.api.auth.internal.application.services.AuthorizationService;
 import com.intelliquiz.api.domain.entities.User;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.shared.exceptions.AuthorizationException;

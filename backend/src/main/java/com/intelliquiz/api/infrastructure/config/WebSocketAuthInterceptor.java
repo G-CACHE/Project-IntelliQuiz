@@ -1,7 +1,7 @@
 package com.intelliquiz.api.infrastructure.config;
 
-import com.intelliquiz.api.application.services.AccessResolutionResult;
-import com.intelliquiz.api.application.services.AccessResolutionService;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.shared.enums.RouteType;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;

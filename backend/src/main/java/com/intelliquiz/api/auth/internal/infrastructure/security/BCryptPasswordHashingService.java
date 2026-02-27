@@ -1,6 +1,6 @@
-package com.intelliquiz.api.infrastructure.adapters.security;
+package com.intelliquiz.api.auth.internal.infrastructure.security;
 
-import com.intelliquiz.api.domain.ports.PasswordHashingService;
+import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 

@@ -27,16 +27,16 @@
 > **Goal:** Create the `shared` module containing all cross-cutting types (exceptions, enums, services).  
 > **Commit:** `modulith(phase-1): extract shared module`
 
-- [ ] **1.1** Create shared package structure: `shared/{exceptions,enums,services,dto,exception}`
-- [ ] **1.2** Create `shared/package-info.java` with `@ApplicationModule(type = OPEN)`
-- [ ] **1.3** Move all 11 exception classes from `domain/exceptions/` → `shared/exceptions/`
-- [ ] **1.4** Move all 6 enums from `domain/enums/` → `shared/enums/`
-- [ ] **1.5** Move `RouteType.java` from `application/services/` → `shared/enums/`
-- [ ] **1.6** Move `CodeGenerationService` from `domain/services/` → `shared/services/`
-- [ ] **1.7** Move `GlobalExceptionHandler` from `presentation/exception/` → `shared/exception/`
-- [ ] **1.8** Extract `ErrorResponse` record into `shared/dto/ErrorResponse.java`
-- [ ] **1.9** Update all import statements across the codebase (`grep -r "old.path" src/`)
-- [ ] **1.10** Run `mvn clean test` — all tests pass
+- [x] **1.1** Create shared package structure: `shared/{exceptions,enums,services,dto,exception}`
+- [x] **1.2** Create `shared/package-info.java` with `@ApplicationModule(type = OPEN)`
+- [x] **1.3** Move all 11 exception classes from `domain/exceptions/` → `shared/exceptions/`
+- [x] **1.4** Move all 6 enums from `domain/enums/` → `shared/enums/`
+- [x] **1.5** Move `RouteType.java` from `application/services/` → `shared/enums/`
+- [x] **1.6** Move `CodeGenerationService` from `domain/services/` → `shared/services/`
+- [x] **1.7** Move `GlobalExceptionHandler` from `presentation/exception/` → `shared/exception/`
+- [x] **1.8** Extract `ErrorResponse` record into `shared/dto/ErrorResponse.java`
+- [x] **1.9** Update all import statements across the codebase (`grep -r "old.path" src/`)
+- [x] **1.10** Run `mvn clean test` — all tests pass
 
 ---
 
@@ -327,7 +327,7 @@
 | Phase | Module | Status | Duration |
 |---|---|---|---|
 | 0 | Pre-cleanup | **Done** ✓ | ~2h |
-| 1 | shared | Not started | ~1h |
+| 1 | shared | **Done** ✓ | ~1h |
 | 2 | auth | Not started | ~2h |
 | 3 | quiz | Not started | ~3h |
 | 4 | user | Not started | ~2h |

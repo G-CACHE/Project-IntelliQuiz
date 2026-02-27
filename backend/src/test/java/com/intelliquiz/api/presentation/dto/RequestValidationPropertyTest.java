@@ -1,5 +1,7 @@
 package com.intelliquiz.api.presentation.dto;
 
+import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
+import com.intelliquiz.api.auth.internal.presentation.dto.request.LoginRequest;
 import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.SystemRole;
