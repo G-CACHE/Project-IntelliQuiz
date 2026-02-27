@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.exceptions;
+package com.intelliquiz.api.shared.exceptions;
 
 /**
  * Thrown when a requested entity cannot be found in the system.

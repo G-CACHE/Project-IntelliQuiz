@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.websocket.dto;
 
-import com.intelliquiz.api.domain.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuestionType;
 
 import java.util.List;
 

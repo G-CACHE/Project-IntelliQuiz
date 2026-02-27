@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.services;
+package com.intelliquiz.api.shared.services;
 
 import org.springframework.stereotype.Service;
 

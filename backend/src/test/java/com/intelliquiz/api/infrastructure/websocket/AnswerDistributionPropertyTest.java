@@ -4,7 +4,7 @@ import com.intelliquiz.api.domain.entities.Question;
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Submission;
 import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.domain.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.domain.ports.QuestionRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.infrastructure.websocket.dto.AnswerDistribution;

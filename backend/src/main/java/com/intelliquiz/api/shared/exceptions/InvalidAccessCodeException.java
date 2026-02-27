@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.exceptions;
+package com.intelliquiz.api.shared.exceptions;
 
 /**
  * Thrown when an access code does not match any known team code or proctor PIN.

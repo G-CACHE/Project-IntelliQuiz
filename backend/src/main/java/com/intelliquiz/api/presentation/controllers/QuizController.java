@@ -7,7 +7,7 @@ import com.intelliquiz.api.application.services.QuizSessionService;
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.presentation.dto.request.CreateQuizRequest;
 import com.intelliquiz.api.presentation.dto.request.UpdateQuizRequest;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.QuizResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

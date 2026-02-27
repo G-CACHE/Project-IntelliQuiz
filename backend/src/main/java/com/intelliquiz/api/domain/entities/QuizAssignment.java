@@ -1,7 +1,7 @@
 package com.intelliquiz.api.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.intelliquiz.api.domain.enums.AdminPermission;
+import com.intelliquiz.api.shared.enums.AdminPermission;
 import jakarta.persistence.*;
 
 import java.util.EnumSet;

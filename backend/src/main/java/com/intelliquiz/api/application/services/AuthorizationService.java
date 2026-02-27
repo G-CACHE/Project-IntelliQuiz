@@ -2,8 +2,8 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.enums.AdminPermission;
-import com.intelliquiz.api.domain.exceptions.AuthorizationException;
+import com.intelliquiz.api.shared.enums.AdminPermission;
+import com.intelliquiz.api.shared.exceptions.AuthorizationException;
 import com.intelliquiz.api.domain.ports.QuizRepository;
 import org.springframework.stereotype.Service;
 

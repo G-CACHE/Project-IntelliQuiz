@@ -1,5 +1,6 @@
 package com.intelliquiz.api.domain.services;
 
+import com.intelliquiz.api.shared.services.CodeGenerationService;
 import net.jqwik.api.*;
 
 import java.util.HashSet;

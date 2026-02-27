@@ -1,7 +1,7 @@
 package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.enums.SystemRole;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.domain.ports.UserRepository;
 import net.jqwik.api.*;

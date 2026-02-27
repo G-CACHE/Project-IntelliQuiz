@@ -7,7 +7,7 @@ import com.intelliquiz.api.domain.entities.User;
 import com.intelliquiz.api.presentation.dto.request.AssignPermissionsRequest;
 import com.intelliquiz.api.presentation.dto.request.CreateUserRequest;
 import com.intelliquiz.api.presentation.dto.request.UpdateUserRequest;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.QuizAssignmentResponse;
 import com.intelliquiz.api.presentation.dto.response.UserResponse;
 import org.springframework.security.core.Authentication;

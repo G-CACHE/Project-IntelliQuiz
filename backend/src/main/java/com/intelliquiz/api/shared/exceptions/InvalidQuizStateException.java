@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.exceptions;
+package com.intelliquiz.api.shared.exceptions;
 
 /**
  * Thrown when a quiz state transition is invalid (e.g., transitioning to READY without questions).

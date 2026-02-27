@@ -1,10 +1,10 @@
-package com.intelliquiz.api.presentation.exception;
+package com.intelliquiz.api.shared.exception;
 
-import com.intelliquiz.api.domain.exceptions.*;
-import com.intelliquiz.api.domain.exceptions.BackupException;
-import com.intelliquiz.api.domain.exceptions.BackupFileNotFoundException;
-import com.intelliquiz.api.domain.exceptions.BackupNotFoundException;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.exceptions.*;
+import com.intelliquiz.api.shared.exceptions.BackupException;
+import com.intelliquiz.api.shared.exceptions.BackupFileNotFoundException;
+import com.intelliquiz.api.shared.exceptions.BackupNotFoundException;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

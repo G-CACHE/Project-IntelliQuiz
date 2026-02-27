@@ -1,7 +1,7 @@
 package com.intelliquiz.api.application.commands;
 
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
 
 import java.util.List;
 

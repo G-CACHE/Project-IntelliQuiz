@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.adapters;
 
-import com.intelliquiz.api.domain.exceptions.BackupException;
+import com.intelliquiz.api.shared.exceptions.BackupException;
 import com.intelliquiz.api.domain.ports.PostgresBackupExecutor;
 import com.intelliquiz.api.infrastructure.config.BackupProperties;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.exceptions;
+package com.intelliquiz.api.shared.exceptions;
 
 /**
  * Thrown when a user attempts to perform an action they are not authorized to perform.

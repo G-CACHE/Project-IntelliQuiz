@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.websocket;
 
-import com.intelliquiz.api.domain.exceptions.EntityNotFoundException;
+import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.infrastructure.websocket.dto.ErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

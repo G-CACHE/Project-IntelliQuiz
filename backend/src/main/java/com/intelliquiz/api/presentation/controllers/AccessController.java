@@ -2,10 +2,10 @@ package com.intelliquiz.api.presentation.controllers;
 
 import com.intelliquiz.api.application.services.AccessResolutionResult;
 import com.intelliquiz.api.application.services.AccessResolutionService;
-import com.intelliquiz.api.application.services.RouteType;
+import com.intelliquiz.api.shared.enums.RouteType;
 import com.intelliquiz.api.presentation.dto.request.AccessCodeRequest;
 import com.intelliquiz.api.presentation.dto.response.AccessResolutionResponse;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.QuizResponse;
 import com.intelliquiz.api.presentation.dto.response.TeamResponse;
 import io.swagger.v3.oas.annotations.Operation;

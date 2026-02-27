@@ -2,7 +2,7 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.domain.exceptions.EntityNotFoundException;
+import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;

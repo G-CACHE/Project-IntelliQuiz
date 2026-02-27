@@ -1,8 +1,8 @@
 package com.intelliquiz.api.presentation.dto;
 
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.SystemRole;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.presentation.dto.request.*;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;

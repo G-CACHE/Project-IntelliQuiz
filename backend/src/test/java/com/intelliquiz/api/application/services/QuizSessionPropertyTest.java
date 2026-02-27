@@ -2,9 +2,9 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.Question;
 import com.intelliquiz.api.domain.entities.Quiz;
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.QuizStatus;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.domain.ports.QuizRepository;
 import net.jqwik.api.*;
 

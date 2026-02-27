@@ -1,4 +1,4 @@
-package com.intelliquiz.api.domain.exceptions;
+package com.intelliquiz.api.shared.exceptions;
 
 /**
  * Thrown when authentication fails due to invalid credentials.

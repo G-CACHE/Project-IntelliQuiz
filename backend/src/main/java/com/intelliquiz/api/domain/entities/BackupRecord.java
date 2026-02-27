@@ -1,6 +1,6 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.BackupStatus;
+import com.intelliquiz.api.shared.enums.BackupStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

@@ -2,6 +2,7 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.shared.enums.RouteType;
 
 /**
  * Result object for access code resolution.

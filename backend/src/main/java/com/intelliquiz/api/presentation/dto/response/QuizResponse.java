@@ -1,7 +1,7 @@
 package com.intelliquiz.api.presentation.dto.response;
 
 import com.intelliquiz.api.domain.entities.Quiz;
-import com.intelliquiz.api.domain.enums.QuizStatus;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**

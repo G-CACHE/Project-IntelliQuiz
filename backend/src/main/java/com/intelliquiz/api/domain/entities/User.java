@@ -2,8 +2,8 @@ package com.intelliquiz.api.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.intelliquiz.api.domain.enums.AdminPermission;
-import com.intelliquiz.api.domain.enums.SystemRole;
+import com.intelliquiz.api.shared.enums.AdminPermission;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

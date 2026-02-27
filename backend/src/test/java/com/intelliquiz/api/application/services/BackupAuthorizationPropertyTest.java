@@ -1,8 +1,8 @@
 package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.enums.SystemRole;
-import com.intelliquiz.api.domain.exceptions.AuthorizationException;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.shared.exceptions.AuthorizationException;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.*;
 

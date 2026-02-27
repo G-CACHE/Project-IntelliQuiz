@@ -1,6 +1,6 @@
 package com.intelliquiz.api.presentation.dto.request;
 
-import com.intelliquiz.api.domain.enums.AdminPermission;
+import com.intelliquiz.api.shared.enums.AdminPermission;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

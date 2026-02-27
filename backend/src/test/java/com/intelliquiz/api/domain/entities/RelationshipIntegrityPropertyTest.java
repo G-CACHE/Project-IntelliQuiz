@@ -1,6 +1,6 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.*;
+import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
 import org.springframework.beans.factory.annotation.Autowired;

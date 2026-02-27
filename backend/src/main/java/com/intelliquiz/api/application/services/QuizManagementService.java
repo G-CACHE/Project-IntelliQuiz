@@ -3,10 +3,10 @@ package com.intelliquiz.api.application.services;
 import com.intelliquiz.api.application.commands.CreateQuizCommand;
 import com.intelliquiz.api.application.commands.UpdateQuizCommand;
 import com.intelliquiz.api.domain.entities.Quiz;
-import com.intelliquiz.api.domain.enums.QuizStatus;
-import com.intelliquiz.api.domain.exceptions.EntityNotFoundException;
+import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.services.CodeGenerationService;
+import com.intelliquiz.api.shared.services.CodeGenerationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

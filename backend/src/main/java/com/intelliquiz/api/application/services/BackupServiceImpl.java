@@ -2,10 +2,10 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.BackupRecord;
 import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.enums.BackupStatus;
-import com.intelliquiz.api.domain.exceptions.BackupException;
-import com.intelliquiz.api.domain.exceptions.BackupFileNotFoundException;
-import com.intelliquiz.api.domain.exceptions.BackupNotFoundException;
+import com.intelliquiz.api.shared.enums.BackupStatus;
+import com.intelliquiz.api.shared.exceptions.BackupException;
+import com.intelliquiz.api.shared.exceptions.BackupFileNotFoundException;
+import com.intelliquiz.api.shared.exceptions.BackupNotFoundException;
 import com.intelliquiz.api.domain.ports.BackupRecordRepository;
 import com.intelliquiz.api.domain.ports.PostgresBackupExecutor;
 import com.intelliquiz.api.infrastructure.config.BackupProperties;

@@ -1,7 +1,7 @@
 package com.intelliquiz.api.presentation.dto;
 
 import com.intelliquiz.api.domain.entities.BackupRecord;
-import com.intelliquiz.api.domain.enums.BackupStatus;
+import com.intelliquiz.api.shared.enums.BackupStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;

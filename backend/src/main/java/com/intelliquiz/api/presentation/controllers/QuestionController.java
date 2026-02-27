@@ -7,7 +7,7 @@ import com.intelliquiz.api.domain.entities.Question;
 import com.intelliquiz.api.presentation.dto.request.CreateQuestionRequest;
 import com.intelliquiz.api.presentation.dto.request.ReorderQuestionsRequest;
 import com.intelliquiz.api.presentation.dto.request.UpdateQuestionRequest;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.QuestionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

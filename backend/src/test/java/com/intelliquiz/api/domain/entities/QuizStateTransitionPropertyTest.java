@@ -1,10 +1,10 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.QuizStatus;
-import com.intelliquiz.api.domain.exceptions.InvalidQuizStateException;
-import com.intelliquiz.api.domain.exceptions.QuizNotReadyException;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.exceptions.InvalidQuizStateException;
+import com.intelliquiz.api.shared.exceptions.QuizNotReadyException;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.NotBlank;
 

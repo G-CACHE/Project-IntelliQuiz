@@ -12,7 +12,7 @@ public interface PostgresBackupExecutor {
      *
      * @param outputPath the path where the dump file will be created
      * @return the size of the created file in bytes
-     * @throws com.intelliquiz.api.domain.exceptions.BackupException if the dump operation fails
+     * @throws com.intelliquiz.api.shared.exceptions.BackupException if the dump operation fails
      */
     long createDump(Path outputPath);
 
@@ -20,7 +20,7 @@ public interface PostgresBackupExecutor {
      * Restores the database from a dump file.
      *
      * @param backupPath the path to the backup file
-     * @throws com.intelliquiz.api.domain.exceptions.BackupException if the restore operation fails
+     * @throws com.intelliquiz.api.shared.exceptions.BackupException if the restore operation fails
      */
     void restoreFromDump(Path backupPath);
 }

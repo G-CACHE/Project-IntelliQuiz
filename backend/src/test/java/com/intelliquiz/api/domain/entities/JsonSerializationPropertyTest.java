@@ -3,7 +3,7 @@ package com.intelliquiz.api.domain.entities;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.intelliquiz.api.domain.enums.*;
+import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
 import org.springframework.beans.factory.annotation.Autowired;

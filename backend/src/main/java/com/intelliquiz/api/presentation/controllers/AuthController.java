@@ -2,11 +2,11 @@ package com.intelliquiz.api.presentation.controllers;
 
 import com.intelliquiz.api.application.services.AuthenticationResult;
 import com.intelliquiz.api.application.services.AuthenticationService;
-import com.intelliquiz.api.domain.exceptions.AuthenticationFailedException;
+import com.intelliquiz.api.shared.exceptions.AuthenticationFailedException;
 import com.intelliquiz.api.infrastructure.config.JwtConfig;
 import com.intelliquiz.api.presentation.dto.request.LoginRequest;
 import com.intelliquiz.api.presentation.dto.response.AuthResponse;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

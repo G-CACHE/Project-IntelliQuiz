@@ -1,6 +1,6 @@
 package com.intelliquiz.api.presentation.dto.request;
 
-import com.intelliquiz.api.domain.enums.SystemRole;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

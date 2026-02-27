@@ -1,10 +1,11 @@
 package com.intelliquiz.api.presentation.controllers;
 
 import com.intelliquiz.api.application.services.*;
+import com.intelliquiz.api.shared.enums.RouteType;
 import com.intelliquiz.api.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.domain.enums.QuizStatus;
-import com.intelliquiz.api.domain.exceptions.EntityNotFoundException;
+import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.presentation.dto.request.AccessCodeRequest;
 import com.intelliquiz.api.presentation.dto.response.AccessResolutionResponse;
 import net.jqwik.api.*;

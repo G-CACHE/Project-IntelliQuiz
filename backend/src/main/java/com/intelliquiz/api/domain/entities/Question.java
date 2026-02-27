@@ -1,8 +1,8 @@
 package com.intelliquiz.api.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

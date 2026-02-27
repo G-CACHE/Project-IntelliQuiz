@@ -1,7 +1,7 @@
 package com.intelliquiz.api.presentation.controllers;
 
 import com.intelliquiz.api.application.services.ScoreboardService;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
 import com.intelliquiz.api.presentation.dto.response.ScoreboardResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

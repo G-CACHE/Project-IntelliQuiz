@@ -2,7 +2,7 @@ package com.intelliquiz.api.infrastructure.config;
 
 import com.intelliquiz.api.application.services.AccessResolutionResult;
 import com.intelliquiz.api.application.services.AccessResolutionService;
-import com.intelliquiz.api.application.services.RouteType;
+import com.intelliquiz.api.shared.enums.RouteType;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;

@@ -1,7 +1,7 @@
 package com.intelliquiz.api.presentation.dto.response;
 
 import com.intelliquiz.api.domain.entities.QuizAssignment;
-import com.intelliquiz.api.domain.enums.AdminPermission;
+import com.intelliquiz.api.shared.enums.AdminPermission;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Set;

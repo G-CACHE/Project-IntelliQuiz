@@ -1,6 +1,6 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.QuizStatus;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 import net.jqwik.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
