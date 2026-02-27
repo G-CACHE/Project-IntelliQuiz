@@ -45,18 +45,18 @@
 > **Goal:** Create the `auth` module with JWT, security config, and authentication/authorization.  
 > **Commit:** `modulith(phase-2): extract auth module`
 
-- [ ] **2.1** Create auth package structure: `auth/{events,dto}` + `auth/internal/{domain/ports,application/services,infrastructure/{security,config},presentation/{controllers,dto/{request,response}}}`
-- [ ] **2.2** Create `auth/package-info.java` with `@ApplicationModule(allowedDependencies = {"shared"})`
-- [ ] **2.3** Move `AuthenticationService`, `AuthorizationService`, `AccessResolutionService` + result records → `auth/internal/application/services/`
-- [ ] **2.4** Move `PasswordHashingService` port → `auth/internal/domain/ports/`
-- [ ] **2.5** Move `BCryptPasswordHashingService` → `auth/internal/infrastructure/security/`
-- [ ] **2.6** Move `JwtConfig`, `JwtAuthenticationFilter`, `SecurityConfig`, `CorsConfig`, `OpenApiConfig` → `auth/internal/infrastructure/config/`
-- [ ] **2.7** Move `AuthController`, `AccessController` → `auth/internal/presentation/controllers/`
-- [ ] **2.8** Move related request/response DTOs → `auth/internal/presentation/dto/`
-- [ ] **2.9** Create `AuthFacade.java` (public API: `authenticate`, `hasPermission`, `resolveAccessCode`)
-- [ ] **2.10** Create public DTOs: `AuthenticationResultDto`, `AccessResolutionResultDto`
-- [ ] **2.11** Update all imports across the codebase
-- [ ] **2.12** Run `mvn clean test` — all tests pass
+- [x] **2.1** Create auth package structure: `auth/{events,dto}` + `auth/internal/{domain/ports,application/services,infrastructure/{security,config},presentation/{controllers,dto/{request,response}}}`
+- [x] **2.2** Create `auth/package-info.java` with `@ApplicationModule(allowedDependencies = {"shared"})`
+- [x] **2.3** Move `AuthenticationService`, `AuthorizationService`, `AccessResolutionService` + result records → `auth/internal/application/services/`
+- [x] **2.4** Move `PasswordHashingService` port → `auth/internal/domain/ports/`
+- [x] **2.5** Move `BCryptPasswordHashingService` → `auth/internal/infrastructure/security/`
+- [x] **2.6** Move `JwtConfig`, `JwtAuthenticationFilter`, `SecurityConfig`, `CorsConfig`, `OpenApiConfig` → `auth/internal/infrastructure/config/`
+- [x] **2.7** Move `AuthController`, `AccessController` → `auth/internal/presentation/controllers/`
+- [x] **2.8** Move related request/response DTOs → `auth/internal/presentation/dto/`
+- [x] **2.9** Create `AuthFacade.java` (public API: `authenticate`, `hasPermission`, `resolveAccessCode`)
+- [x] **2.10** Create public DTOs: `AuthenticationResultDto`, `AccessResolutionResultDto`
+- [x] **2.11** Update all imports across the codebase
+- [x] **2.12** Run `mvn clean test` — all 216 tests pass ✓
 
 ---
 
