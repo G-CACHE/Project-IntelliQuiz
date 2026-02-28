@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Application service for submission operations.
@@ -153,5 +154,27 @@ public class SubmissionService {
     public boolean haveAllTeamsSubmitted(Long quizId, Long questionId, int totalTeams) {
         int submissionCount = submissionRepository.findByQuestionId(questionId).size();
         return submissionCount >= totalTeams;
+    }
+
+    /**
+     * Find a submission by team and question IDs.
+     */
+    public Optional<Submission> findByTeamAndQuestion(Long teamId, Long questionId) {
+        return submissionRepository.findByTeamIdAndQuestionId(teamId, questionId);
+    }
+
+    /**
+     * Grade a submission for a team/question using the provided correct answer and points.
+     * Does NOT update team score — that is the caller's responsibility via TeamFacade.
+     */
+    public Submission gradeSubmission(Long teamId, Long questionId,
+                                       String correctKey, int points) {
+        Submission submission = submissionRepository.findByTeamIdAndQuestionId(teamId, questionId)
+                .orElseThrow(() -> new EntityNotFoundException("Submission", 0L));
+        if (!submission.isGraded()) {
+            submission.grade(correctKey, points);
+            submission = submissionRepository.save(submission);
+        }
+        return submission;
     }
 }

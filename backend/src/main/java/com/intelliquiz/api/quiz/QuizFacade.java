@@ -45,8 +45,7 @@ public class QuizFacade {
      */
     public QuestionInfoDto getQuestionForGrading(Long questionId) {
         Question q = questionManagementService.getQuestion(questionId);
-        return new QuestionInfoDto(q.getId(), q.getCorrectKey(), q.getPoints(),
-                                   q.getType(), q.getTimeLimit());
+        return toDto(q);
     }
 
     /**
@@ -55,8 +54,7 @@ public class QuizFacade {
     public List<QuestionInfoDto> getOrderedQuestions(Long quizId) {
         return questionManagementService.getQuestionsByQuiz(quizId).stream()
                 .sorted(Comparator.comparingInt(Question::getOrderIndex))
-                .map(q -> new QuestionInfoDto(q.getId(), q.getCorrectKey(),
-                                               q.getPoints(), q.getType(), q.getTimeLimit()))
+                .map(this::toDto)
                 .toList();
     }
 
@@ -96,5 +94,13 @@ public class QuizFacade {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private QuestionInfoDto toDto(Question q) {
+        return new QuestionInfoDto(
+                q.getId(), q.getText(), q.getType(), q.getOptions(),
+                q.getCorrectKey(), q.getPoints(), q.getTimeLimit(),
+                q.getOrderIndex(),
+                q.getDifficulty() != null ? q.getDifficulty().name() : null);
     }
 }

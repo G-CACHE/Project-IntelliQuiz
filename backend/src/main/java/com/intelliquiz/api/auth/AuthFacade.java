@@ -84,8 +84,23 @@ public class AuthFacade {
 
     /**
      * Resolve an access code to determine the route type (participant/host/invalid).
+     * Returns a public DTO with only IDs — no internal entity leakage.
      */
-    public AccessResolutionResult resolveAccessCode(String accessCode) {
-        return accessResolutionService.resolve(accessCode);
+    public AccessResolutionResultDto resolveAccessCode(String accessCode) {
+        AccessResolutionResult result = accessResolutionService.resolve(accessCode);
+        Long quizId = null;
+        Long teamId = null;
+
+        if (result.quiz() != null) {
+            quizId = result.quiz().getId();
+        }
+        if (result.team() != null) {
+            teamId = result.team().getId();
+            // For participants, resolve quizId from the team
+            if (quizId == null) {
+                quizId = result.team().getQuizId();
+            }
+        }
+        return new AccessResolutionResultDto(result.routeType(), quizId, teamId, result.errorMessage());
     }
 }

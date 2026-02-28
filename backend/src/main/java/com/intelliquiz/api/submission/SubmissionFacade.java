@@ -6,6 +6,7 @@ import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Public facade for the Submission module.
@@ -57,6 +58,33 @@ public class SubmissionFacade {
         return submissionService.getSubmissionsByTeam(teamId).stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    /**
+     * Find a submission by team and question.
+     */
+    public Optional<SubmissionInfoDto> findByTeamAndQuestion(Long teamId, Long questionId) {
+        return submissionService.findByTeamAndQuestion(teamId, questionId)
+                .map(this::toDto);
+    }
+
+    /**
+     * Get all submissions for a question.
+     */
+    public List<SubmissionInfoDto> getSubmissionsByQuestion(Long questionId) {
+        return submissionService.getSubmissionsByQuestion(questionId).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    /**
+     * Grade a specific submission given the correct answer and point value.
+     * Returns the updated submission info.
+     */
+    public SubmissionInfoDto gradeSubmission(Long teamId, Long questionId,
+                                              String correctKey, int points) {
+        Submission s = submissionService.gradeSubmission(teamId, questionId, correctKey, points);
+        return toDto(s);
     }
 
     private SubmissionInfoDto toDto(Submission s) {
