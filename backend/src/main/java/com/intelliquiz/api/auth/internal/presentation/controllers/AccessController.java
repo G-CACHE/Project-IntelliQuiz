@@ -2,12 +2,13 @@ package com.intelliquiz.api.auth.internal.presentation.controllers;
 
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
-import com.intelliquiz.api.shared.enums.RouteType;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
 import com.intelliquiz.api.auth.internal.presentation.dto.response.AccessResolutionResponse;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.quiz.dto.QuizInfoDto;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
-import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuizResponse;
-import com.intelliquiz.api.team.internal.presentation.dto.response.TeamResponse;
+import com.intelliquiz.api.team.TeamFacade;
+import com.intelliquiz.api.team.dto.TeamInfoDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,9 +29,15 @@ import org.springframework.web.bind.annotation.*;
 public class AccessController {
 
     private final AccessResolutionService accessResolutionService;
+    private final TeamFacade teamFacade;
+    private final QuizFacade quizFacade;
 
-    public AccessController(AccessResolutionService accessResolutionService) {
+    public AccessController(AccessResolutionService accessResolutionService,
+                            TeamFacade teamFacade,
+                            QuizFacade quizFacade) {
         this.accessResolutionService = accessResolutionService;
+        this.teamFacade = teamFacade;
+        this.quizFacade = quizFacade;
     }
 
     /**
@@ -61,12 +68,21 @@ public class AccessController {
         AccessResolutionResult result = accessResolutionService.resolve(request.code());
         
         AccessResolutionResponse response = switch (result.routeType()) {
-            case PARTICIPANT -> AccessResolutionResponse.participant(
-                    TeamResponse.from(result.team())
-            );
-            case HOST -> AccessResolutionResponse.host(
-                    QuizResponse.from(result.quiz())
-            );
+            case PARTICIPANT -> {
+                TeamInfoDto team = teamFacade.getTeamInfo(result.teamId()).orElse(null);
+                yield AccessResolutionResponse.participant(
+                        result.teamId(),
+                        team != null ? team.name() : null,
+                        result.quizId()
+                );
+            }
+            case HOST -> {
+                QuizInfoDto quiz = quizFacade.findQuizInfo(result.quizId()).orElse(null);
+                yield AccessResolutionResponse.host(
+                        result.quizId(),
+                        quiz != null ? quiz.title() : null
+                );
+            }
             case INVALID -> AccessResolutionResponse.invalid(result.errorMessage());
         };
         

@@ -2,12 +2,12 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.quiz.dto.QuizInfoDto;
+import com.intelliquiz.api.team.TeamFacade;
+import com.intelliquiz.api.team.dto.TeamInfoDto;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.enums.RouteType;
-import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import net.jqwik.api.*;
 
 import java.util.List;
@@ -25,46 +25,46 @@ import static org.mockito.Mockito.*;
 public class AccessResolutionPropertyTest {
 
     /**
-     * Property 1: Team access codes return PARTICIPANT route with correct Team
+     * Property 1: Team access codes return PARTICIPANT route with correct team/quiz IDs
      */
     @Property(tries = 20)
     void teamAccessCodesReturnParticipantRoute(@ForAll("accessCodes") String accessCode) {
-        TeamRepository teamRepository = mock(TeamRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         
-        Quiz activeQuiz = createActiveQuiz("999-999");
-        Team team = new Team(activeQuiz.getId(), "Test Team", accessCode);
+        TeamInfoDto team = new TeamInfoDto(1L, "Test Team", accessCode.toUpperCase(), 0, 10L);
+        QuizInfoDto quiz = new QuizInfoDto(10L, "Test Quiz", QuizStatus.READY, true, "999-999");
         
-        when(teamRepository.findByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
-        when(quizRepository.findById(activeQuiz.getId())).thenReturn(Optional.of(activeQuiz));
+        when(teamFacade.getTeamByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
+        when(quizFacade.findQuizInfo(10L)).thenReturn(Optional.of(quiz));
         
-        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(accessCode);
         
         assertThat(result.routeType()).isEqualTo(RouteType.PARTICIPANT);
-        assertThat(result.team()).isEqualTo(team);
-        assertThat(result.quiz()).isNull();
+        assertThat(result.teamId()).isEqualTo(1L);
+        assertThat(result.quizId()).isEqualTo(10L);
     }
 
     /**
-     * Property 1: Proctor PINs for active quizzes return HOST route with correct Quiz
+     * Property 1: Proctor PINs for active quizzes return HOST route with correct quiz ID
      */
     @Property(tries = 20)
     void proctorPinsForActiveQuizzesReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
-        TeamRepository teamRepository = mock(TeamRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         
-        Quiz activeQuiz = createActiveQuiz(proctorPin);
+        QuizInfoDto activeQuiz = new QuizInfoDto(1L, "Test Quiz", QuizStatus.READY, true, proctorPin.toUpperCase());
         
-        when(teamRepository.findByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
-        when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of(activeQuiz));
+        when(teamFacade.getTeamByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
+        when(quizFacade.findActiveLiveQuizzes()).thenReturn(List.of(activeQuiz));
         
-        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(proctorPin);
         
         assertThat(result.routeType()).isEqualTo(RouteType.HOST);
-        assertThat(result.quiz()).isEqualTo(activeQuiz);
-        assertThat(result.team()).isNull();
+        assertThat(result.quizId()).isEqualTo(1L);
+        assertThat(result.teamId()).isNull();
     }
 
     /**
@@ -72,14 +72,14 @@ public class AccessResolutionPropertyTest {
      */
     @Property(tries = 20)
     void proctorPinsForInactiveQuizzesReturnInvalidRoute(@ForAll("proctorPins") String proctorPin) {
-        TeamRepository teamRepository = mock(TeamRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         
         // No active quizzes
-        when(teamRepository.findByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
-        when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of());
+        when(teamFacade.getTeamByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
+        when(quizFacade.findActiveLiveQuizzes()).thenReturn(List.of());
         
-        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(proctorPin);
         
         assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
@@ -91,13 +91,13 @@ public class AccessResolutionPropertyTest {
      */
     @Property(tries = 20)
     void unknownCodesReturnInvalidRoute(@ForAll("accessCodes") String unknownCode) {
-        TeamRepository teamRepository = mock(TeamRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         
-        when(teamRepository.findByAccessCode(unknownCode.toUpperCase())).thenReturn(Optional.empty());
-        when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of());
+        when(teamFacade.getTeamByAccessCode(unknownCode.toUpperCase())).thenReturn(Optional.empty());
+        when(quizFacade.findActiveLiveQuizzes()).thenReturn(List.of());
         
-        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(unknownCode);
         
         assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
@@ -109,16 +109,16 @@ public class AccessResolutionPropertyTest {
      */
     @Property(tries = 20)
     void teamCodesForInactiveQuizReturnInvalid(@ForAll("accessCodes") String accessCode) {
-        TeamRepository teamRepository = mock(TeamRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         
-        Quiz inactiveQuiz = createInactiveQuiz("999-999");
-        Team team = new Team(inactiveQuiz.getId(), "Test Team", accessCode);
+        TeamInfoDto team = new TeamInfoDto(1L, "Test Team", accessCode.toUpperCase(), 0, 10L);
+        QuizInfoDto inactiveQuiz = new QuizInfoDto(10L, "Test Quiz", QuizStatus.DRAFT, false, "999-999");
         
-        when(teamRepository.findByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
-        when(quizRepository.findById(inactiveQuiz.getId())).thenReturn(Optional.of(inactiveQuiz));
+        when(teamFacade.getTeamByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
+        when(quizFacade.findQuizInfo(10L)).thenReturn(Optional.of(inactiveQuiz));
         
-        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(accessCode);
         
         assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
@@ -130,10 +130,10 @@ public class AccessResolutionPropertyTest {
      */
     @Property(tries = 5)
     void nullOrBlankCodesReturnInvalid() {
-        TeamRepository teamRepository = mock(TeamRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         
-        AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         
         assertThat(service.resolve(null).routeType()).isEqualTo(RouteType.INVALID);
         assertThat(service.resolve("").routeType()).isEqualTo(RouteType.INVALID);
@@ -160,19 +160,5 @@ public class AccessResolutionPropertyTest {
                         .withCharRange('0', '9')
                         .ofLength(3)
                         .map(second -> first + "-" + second));
-    }
-
-    private Quiz createActiveQuiz(String proctorPin) {
-        Quiz quiz = new Quiz("Test Quiz", "Description", proctorPin, QuizStatus.READY);
-        quiz.setId(1L);
-        quiz.setLiveSession(true);
-        return quiz;
-    }
-
-    private Quiz createInactiveQuiz(String proctorPin) {
-        Quiz quiz = new Quiz("Test Quiz", "Description", proctorPin, QuizStatus.DRAFT);
-        quiz.setId(1L);
-        quiz.setLiveSession(false);
-        return quiz;
     }
 }

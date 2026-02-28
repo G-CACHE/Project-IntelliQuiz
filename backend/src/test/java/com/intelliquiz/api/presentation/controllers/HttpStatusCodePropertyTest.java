@@ -8,8 +8,9 @@ import com.intelliquiz.api.auth.internal.application.services.AccessResolutionRe
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.auth.internal.presentation.controllers.AccessController;
 import com.intelliquiz.api.shared.enums.RouteType;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.team.TeamFacade;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
@@ -36,18 +37,11 @@ class HttpStatusCodePropertyTest {
     void accessControllerReturns200ForValidAccessCode(@ForAll("validAccessCodes") String code) {
         // Given
         AccessResolutionService mockService = mock(AccessResolutionService.class);
-        AccessController controller = new AccessController(mockService);
+        TeamFacade mockTeamFacade = mock(TeamFacade.class);
+        QuizFacade mockQuizFacade = mock(QuizFacade.class);
+        AccessController controller = new AccessController(mockService, mockTeamFacade, mockQuizFacade);
         
-        Team team = new Team();
-        team.setId(1L);
-        team.setName("Test Team");
-        team.setAccessCode(code);
-        
-        Quiz quiz = new Quiz("Test Quiz", "Description", "1234", QuizStatus.READY);
-        quiz.setId(1L);
-        team.setQuizId(quiz.getId());
-        
-        when(mockService.resolve(code)).thenReturn(AccessResolutionResult.participant(team));
+        when(mockService.resolve(code)).thenReturn(AccessResolutionResult.participant(1L, 10L));
         
         // When
         ResponseEntity<AccessResolutionResponse> response = controller.resolveAccessCode(
@@ -64,7 +58,9 @@ class HttpStatusCodePropertyTest {
     void accessControllerReturns200ForInvalidAccessCode(@ForAll("invalidAccessCodes") String code) {
         // Given
         AccessResolutionService mockService = mock(AccessResolutionService.class);
-        AccessController controller = new AccessController(mockService);
+        TeamFacade mockTeamFacade = mock(TeamFacade.class);
+        QuizFacade mockQuizFacade = mock(QuizFacade.class);
+        AccessController controller = new AccessController(mockService, mockTeamFacade, mockQuizFacade);
         
         when(mockService.resolve(code)).thenReturn(AccessResolutionResult.invalid("Invalid access code"));
         

@@ -10,7 +10,7 @@ import com.intelliquiz.api.user.events.PermissionsAssignedEvent;
 import com.intelliquiz.api.user.events.PermissionsRevokedEvent;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
+import com.intelliquiz.api.shared.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.user.internal.domain.ports.QuizAssignmentRepository;
 import com.intelliquiz.api.quiz.QuizFacade;
 import com.intelliquiz.api.user.internal.domain.ports.UserRepository;

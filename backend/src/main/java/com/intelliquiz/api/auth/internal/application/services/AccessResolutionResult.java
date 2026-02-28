@@ -1,25 +1,23 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.RouteType;
 
 /**
  * Result object for access code resolution.
- * Contains the route type and the resolved entity (Team or Quiz).
+ * Uses IDs instead of entities — no cross-module internal access.
  */
 public record AccessResolutionResult(
     RouteType routeType,
-    Team team,
-    Quiz quiz,
+    Long teamId,
+    Long quizId,
     String errorMessage
 ) {
-    public static AccessResolutionResult participant(Team team) {
-        return new AccessResolutionResult(RouteType.PARTICIPANT, team, null, null);
+    public static AccessResolutionResult participant(Long teamId, Long quizId) {
+        return new AccessResolutionResult(RouteType.PARTICIPANT, teamId, quizId, null);
     }
 
-    public static AccessResolutionResult host(Quiz quiz) {
-        return new AccessResolutionResult(RouteType.HOST, null, quiz, null);
+    public static AccessResolutionResult host(Long quizId) {
+        return new AccessResolutionResult(RouteType.HOST, null, quizId, null);
     }
 
     public static AccessResolutionResult invalid(String errorMessage) {

@@ -1,10 +1,15 @@
 package com.intelliquiz.api.user;
 
+import com.intelliquiz.api.user.dto.UserCredentialsDto;
 import com.intelliquiz.api.user.dto.UserInfoDto;
 import com.intelliquiz.api.user.internal.application.services.UserManagementService;
 import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Public facade for the User module.
@@ -14,9 +19,12 @@ import org.springframework.stereotype.Service;
 public class UserFacade {
 
     private final UserManagementService userManagementService;
+    private final UserRepository userRepository;
 
-    public UserFacade(UserManagementService userManagementService) {
+    public UserFacade(UserManagementService userManagementService,
+                      UserRepository userRepository) {
         this.userManagementService = userManagementService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -61,5 +69,40 @@ public class UserFacade {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Find user credentials for authentication.
+     * Returns password hash + role info so auth module can verify passwords
+     * without accessing User entity directly.
+     */
+    public Optional<UserCredentialsDto> findCredentials(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> new UserCredentialsDto(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getPassword(),
+                        user.getSystemRole(),
+                        user.isSuperAdmin()));
+    }
+
+    /**
+     * Check if a user has access to a specific quiz (any assignment).
+     */
+    public boolean hasAccessToQuiz(Long userId, Long quizId) {
+        User user = userManagementService.getAdmin(userId);
+        if (user.isSuperAdmin()) {
+            return true;
+        }
+        return user.getAssignments().stream()
+                .anyMatch(a -> a.getQuizId() != null && a.getQuizId().equals(quizId));
+    }
+
+    /**
+     * Get all quiz IDs the user has access to.
+     */
+    public List<Long> getAccessibleQuizIds(Long userId) {
+        User user = userManagementService.getAdmin(userId);
+        return user.getAccessibleQuizIds();
     }
 }

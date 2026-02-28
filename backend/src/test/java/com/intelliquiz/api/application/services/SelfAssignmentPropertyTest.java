@@ -9,7 +9,7 @@ import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.user.internal.domain.ports.QuizAssignmentRepository;
 import com.intelliquiz.api.quiz.QuizFacade;
 import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
-import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
+import com.intelliquiz.api.shared.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.user.internal.presentation.dto.response.QuizAssignmentResponse;
 import com.intelliquiz.api.user.internal.application.services.UserManagementService;
 import org.springframework.context.ApplicationEventPublisher;

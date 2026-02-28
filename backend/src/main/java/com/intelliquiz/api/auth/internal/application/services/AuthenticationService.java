@@ -1,50 +1,44 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.user.internal.domain.entities.User;
-import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
-import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
+import com.intelliquiz.api.user.UserFacade;
+import com.intelliquiz.api.user.dto.UserCredentialsDto;
+import com.intelliquiz.api.shared.domain.ports.PasswordHashingService;
 import org.springframework.stereotype.Service;
 
 /**
  * Application service for user authentication.
- * Handles login verification with secure password comparison.
+ * Uses UserFacade for credential lookup — no direct access to User entity/repository.
  */
 @Service
 public class AuthenticationService {
 
-    // Generic error message to avoid revealing which credential was incorrect
     private static final String GENERIC_AUTH_ERROR = "Invalid username or password";
 
-    private final UserRepository userRepository;
+    private final UserFacade userFacade;
     private final PasswordHashingService passwordHashingService;
 
-    public AuthenticationService(UserRepository userRepository, 
+    public AuthenticationService(UserFacade userFacade,
                                   PasswordHashingService passwordHashingService) {
-        this.userRepository = userRepository;
+        this.userFacade = userFacade;
         this.passwordHashingService = passwordHashingService;
     }
 
     /**
      * Authenticates a user with username and password.
-     * Returns a generic error message for security (doesn't reveal which credential was wrong).
-     * 
-     * @param username the username to authenticate
-     * @param password the plain text password to verify
-     * @return AuthenticationResult with success status and user or error message
      */
     public AuthenticationResult authenticate(String username, String password) {
         if (username == null || username.isBlank() || password == null || password.isBlank()) {
             return AuthenticationResult.failure(GENERIC_AUTH_ERROR);
         }
 
-        return userRepository.findByUsername(username)
-                .map(user -> verifyPassword(user, password))
+        return userFacade.findCredentials(username)
+                .map(creds -> verifyPassword(creds, password))
                 .orElse(AuthenticationResult.failure(GENERIC_AUTH_ERROR));
     }
 
-    private AuthenticationResult verifyPassword(User user, String password) {
-        if (passwordHashingService.matches(password, user.getPassword())) {
-            return AuthenticationResult.success(user);
+    private AuthenticationResult verifyPassword(UserCredentialsDto creds, String password) {
+        if (passwordHashingService.matches(password, creds.passwordHash())) {
+            return AuthenticationResult.success(creds.userId(), creds.username(), creds.role());
         }
         return AuthenticationResult.failure(GENERIC_AUTH_ERROR);
     }

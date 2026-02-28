@@ -71,14 +71,14 @@ public class AuthController {
         }
         
         String token = jwtConfig.generateToken(
-                result.user().getUsername(),
-                result.user().getSystemRole().name()
+                result.username(),
+                result.role().name()
         );
         
         AuthResponse response = new AuthResponse(
                 token,
-                result.user().getUsername(),
-                result.user().getSystemRole()
+                result.username(),
+                result.role()
         );
         
         return ResponseEntity.ok(response);

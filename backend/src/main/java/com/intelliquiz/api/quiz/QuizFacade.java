@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Public facade for the Quiz module.
@@ -102,5 +103,36 @@ public class QuizFacade {
                 q.getCorrectKey(), q.getPoints(), q.getTimeLimit(),
                 q.getOrderIndex(),
                 q.getDifficulty() != null ? q.getDifficulty().name() : null);
+    }
+
+    /**
+     * Find all active live quizzes (used by access resolution for proctor PIN matching).
+     */
+    public List<QuizInfoDto> findActiveLiveQuizzes() {
+        return quizManagementService.getAllQuizzes().stream()
+                .filter(Quiz::isLiveSession)
+                .map(q -> new QuizInfoDto(q.getId(), q.getTitle(), q.getStatus(),
+                                          q.isLiveSession(), q.getProctorPin()))
+                .toList();
+    }
+
+    /**
+     * Get all quiz IDs.
+     */
+    public List<Long> getAllQuizIds() {
+        return quizManagementService.getAllQuizzes().stream()
+                .map(Quiz::getId)
+                .toList();
+    }
+
+    /**
+     * Get quiz info if it exists, returning empty if not found.
+     */
+    public Optional<QuizInfoDto> findQuizInfo(Long quizId) {
+        try {
+            return Optional.of(getQuizInfo(quizId));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 }

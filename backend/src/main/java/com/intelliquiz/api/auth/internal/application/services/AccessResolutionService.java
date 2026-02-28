@@ -1,39 +1,30 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
-import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.quiz.dto.QuizInfoDto;
+import com.intelliquiz.api.team.TeamFacade;
+import com.intelliquiz.api.team.dto.TeamInfoDto;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
  * Application service for resolving access codes at the universal gate.
- * Determines if an access code is a team code, proctor PIN, or invalid.
+ * Uses TeamFacade and QuizFacade — no direct entity/repository access.
  */
 @Service
 public class AccessResolutionService {
 
-    private final TeamRepository teamRepository;
-    private final QuizRepository quizRepository;
+    private final TeamFacade teamFacade;
+    private final QuizFacade quizFacade;
 
-    public AccessResolutionService(TeamRepository teamRepository, QuizRepository quizRepository) {
-        this.teamRepository = teamRepository;
-        this.quizRepository = quizRepository;
+    public AccessResolutionService(TeamFacade teamFacade, QuizFacade quizFacade) {
+        this.teamFacade = teamFacade;
+        this.quizFacade = quizFacade;
     }
 
     /**
      * Resolves an access code to determine the appropriate route.
-     * 
-     * Resolution order:
-     * 1. Check if code matches a team access code -> PARTICIPANT route
-     * 2. Check if code matches a proctor PIN for an active quiz -> HOST route
-     * 3. Otherwise -> INVALID route
-     * 
-     * @param accessCode the access code to resolve
-     * @return AccessResolutionResult with route type and entity
      */
     public AccessResolutionResult resolve(String accessCode) {
         if (accessCode == null || accessCode.isBlank()) {
@@ -43,26 +34,23 @@ public class AccessResolutionService {
         String normalizedCode = accessCode.trim().toUpperCase();
 
         // First, check if it's a team access code
-        Optional<Team> team = teamRepository.findByAccessCode(normalizedCode);
+        Optional<TeamInfoDto> team = teamFacade.getTeamByAccessCode(normalizedCode);
         if (team.isPresent()) {
-            // Verify the team's quiz is active
-            Long quizId = team.get().getQuizId();
-            Optional<Quiz> quiz = quizRepository.findById(quizId);
-            if (quiz.isPresent() && quiz.get().isLiveSession()) {
-                return AccessResolutionResult.participant(team.get());
+            Long quizId = team.get().quizId();
+            Optional<QuizInfoDto> quiz = quizFacade.findQuizInfo(quizId);
+            if (quiz.isPresent() && quiz.get().isLive()) {
+                return AccessResolutionResult.participant(team.get().id(), quizId);
             }
             return AccessResolutionResult.invalid("Quiz session is not active");
         }
 
         // Second, check if it's a proctor PIN for an active quiz
-        List<Quiz> activeQuizzes = quizRepository.findByIsLiveSessionTrue();
-        for (Quiz quiz : activeQuizzes) {
-            if (quiz.getProctorPin() != null && quiz.getProctorPin().equalsIgnoreCase(normalizedCode)) {
-                return AccessResolutionResult.host(quiz);
+        for (QuizInfoDto quiz : quizFacade.findActiveLiveQuizzes()) {
+            if (quiz.proctorPin() != null && quiz.proctorPin().equalsIgnoreCase(normalizedCode)) {
+                return AccessResolutionResult.host(quiz.id());
             }
         }
 
-        // No match found
         return AccessResolutionResult.invalid("Invalid access code");
     }
 }
