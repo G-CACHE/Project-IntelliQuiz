@@ -1,10 +1,8 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.impl;
+package com.intelliquiz.api.user.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.QuizAssignment;
-import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.ports.QuizAssignmentRepository;
-import com.intelliquiz.api.infrastructure.adapters.persistence.spring.SpringQuizAssignmentRepository;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.ports.QuizAssignmentRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -33,8 +31,8 @@ public class QuizAssignmentRepositoryImpl implements QuizAssignmentRepository {
     }
 
     @Override
-    public Optional<QuizAssignment> findByUserAndQuiz(User user, Quiz quiz) {
-        return springQuizAssignmentRepository.findByUserAndQuiz(user, quiz);
+    public Optional<QuizAssignment> findByUserAndQuizId(User user, Long quizId) {
+        return springQuizAssignmentRepository.findByUserAndQuizId(user, quizId);
     }
 
     @Override
@@ -43,8 +41,8 @@ public class QuizAssignmentRepositoryImpl implements QuizAssignmentRepository {
     }
 
     @Override
-    public List<QuizAssignment> findByQuiz(Quiz quiz) {
-        return springQuizAssignmentRepository.findByQuiz(quiz);
+    public List<QuizAssignment> findByQuizId(Long quizId) {
+        return springQuizAssignmentRepository.findByQuizId(quizId);
     }
 
     @Override

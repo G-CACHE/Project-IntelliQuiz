@@ -1,7 +1,7 @@
 package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.domain.entities.BackupRecord;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import org.springframework.core.io.Resource;
 
 import java.util.List;

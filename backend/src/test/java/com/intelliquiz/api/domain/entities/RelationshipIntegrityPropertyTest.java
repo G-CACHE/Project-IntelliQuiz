@@ -2,7 +2,8 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 
 import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
@@ -49,7 +50,7 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setPermissions(permissions);
         user.addAssignment(assignment);
         
@@ -215,10 +216,10 @@ public class RelationshipIntegrityPropertyTest {
 
     /**
      * Property 2: Relationship Integrity
-     * For any QuizAssignment, navigating to Quiz and back should maintain integrity.
+     * For any QuizAssignment, the stored quizId should match the original quiz.
      */
     @Property(tries = 20)
-    void quizAssignmentToQuizBidirectionalNavigation(
+    void quizAssignmentStoresCorrectQuizId(
             @ForAll("validUsernames") String username,
             @ForAll("validPasswords") String password,
             @ForAll SystemRole systemRole,
@@ -230,14 +231,14 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz(quizTitle, "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         
         entityManager.persistAndFlush(assignment);
         entityManager.clear();
         
-        // Navigate from QuizAssignment back to Quiz to verify relationship integrity
+        // Verify the stored quizId matches the original quiz ID
         QuizAssignment retrievedAssignment = entityManager.find(QuizAssignment.class, assignment.getId());
         assertThat(retrievedAssignment).isNotNull();
-        assertThat(retrievedAssignment.getQuiz().getId()).isEqualTo(quiz.getId());
+        assertThat(retrievedAssignment.getQuizId()).isEqualTo(quiz.getId());
     }
 }

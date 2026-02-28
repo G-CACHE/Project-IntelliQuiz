@@ -1,15 +1,15 @@
-package com.intelliquiz.api.presentation.controllers;
+package com.intelliquiz.api.user.internal.presentation.controllers;
 
-import com.intelliquiz.api.application.commands.CreateUserCommand;
-import com.intelliquiz.api.application.commands.UpdateUserCommand;
-import com.intelliquiz.api.application.services.UserManagementService;
-import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.presentation.dto.request.AssignPermissionsRequest;
-import com.intelliquiz.api.presentation.dto.request.CreateUserRequest;
-import com.intelliquiz.api.presentation.dto.request.UpdateUserRequest;
+import com.intelliquiz.api.user.internal.application.commands.CreateUserCommand;
+import com.intelliquiz.api.user.internal.application.commands.UpdateUserCommand;
+import com.intelliquiz.api.user.internal.application.services.UserManagementService;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.user.internal.presentation.dto.request.AssignPermissionsRequest;
+import com.intelliquiz.api.user.internal.presentation.dto.request.CreateUserRequest;
+import com.intelliquiz.api.user.internal.presentation.dto.request.UpdateUserRequest;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
-import com.intelliquiz.api.presentation.dto.response.QuizAssignmentResponse;
-import com.intelliquiz.api.presentation.dto.response.UserResponse;
+import com.intelliquiz.api.user.internal.presentation.dto.response.QuizAssignmentResponse;
+import com.intelliquiz.api.user.internal.presentation.dto.response.UserResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;

@@ -8,6 +8,7 @@ import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.presentation.dto.request.*;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
+import com.intelliquiz.api.user.internal.presentation.dto.request.CreateUserRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

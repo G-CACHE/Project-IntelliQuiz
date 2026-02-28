@@ -1,8 +1,7 @@
-package com.intelliquiz.api.domain.ports;
+package com.intelliquiz.api.user.internal.domain.ports;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.QuizAssignment;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,11 +15,11 @@ public interface QuizAssignmentRepository {
 
     Optional<QuizAssignment> findById(Long id);
 
-    Optional<QuizAssignment> findByUserAndQuiz(User user, Quiz quiz);
+    Optional<QuizAssignment> findByUserAndQuizId(User user, Long quizId);
 
     List<QuizAssignment> findByUser(User user);
 
-    List<QuizAssignment> findByQuiz(Quiz quiz);
+    List<QuizAssignment> findByQuizId(Long quizId);
 
     void delete(QuizAssignment assignment);
 

@@ -2,7 +2,8 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 
 import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
@@ -293,7 +294,7 @@ public class EntityPersistencePropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setPermissions(permissions);
         
         QuizAssignment persisted = entityManager.persistAndFlush(assignment);

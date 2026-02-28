@@ -1,6 +1,6 @@
-package com.intelliquiz.api.domain.ports;
+package com.intelliquiz.api.user.internal.domain.ports;
 
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 
 import java.util.List;
 import java.util.Optional;

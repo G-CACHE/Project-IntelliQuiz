@@ -1,6 +1,6 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 
 /**
  * Result object for authentication operations.

@@ -1,4 +1,4 @@
-package com.intelliquiz.api.application.commands;
+package com.intelliquiz.api.user.internal.application.commands;
 
 import com.intelliquiz.api.shared.enums.SystemRole;
 

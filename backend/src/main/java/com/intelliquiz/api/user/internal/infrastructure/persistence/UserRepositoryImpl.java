@@ -1,8 +1,8 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.impl;
+package com.intelliquiz.api.user.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.ports.UserRepository;
-import com.intelliquiz.api.infrastructure.adapters.persistence.spring.SpringUserRepository;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
+import com.intelliquiz.api.user.internal.infrastructure.persistence.SpringUserRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,6 +1,6 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.spring;
+package com.intelliquiz.api.user.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

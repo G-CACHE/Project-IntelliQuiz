@@ -1,6 +1,6 @@
-package com.intelliquiz.api.presentation.dto.response;
+package com.intelliquiz.api.user.internal.presentation.dto.response;
 
-import com.intelliquiz.api.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -25,12 +25,25 @@ public record QuizAssignmentResponse(
 ) {
     /**
      * Creates a QuizAssignmentResponse from a QuizAssignment entity.
+     * quizTitle must be resolved externally (via QuizFacade).
+     */
+    public static QuizAssignmentResponse from(QuizAssignment assignment, String quizTitle) {
+        return new QuizAssignmentResponse(
+            assignment.getId(),
+            assignment.getQuizId(),
+            quizTitle,
+            assignment.getPermissions()
+        );
+    }
+
+    /**
+     * Creates a QuizAssignmentResponse from a QuizAssignment entity without title.
      */
     public static QuizAssignmentResponse from(QuizAssignment assignment) {
         return new QuizAssignmentResponse(
             assignment.getId(),
-            assignment.getQuiz().getId(),
-            assignment.getQuiz().getTitle(),
+            assignment.getQuizId(),
+            null,
             assignment.getPermissions()
         );
     }

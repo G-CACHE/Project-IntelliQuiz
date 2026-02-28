@@ -1,6 +1,4 @@
-package com.intelliquiz.api.domain.entities;
-
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+package com.intelliquiz.api.user.internal.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.intelliquiz.api.shared.enums.AdminPermission;
@@ -15,6 +13,7 @@ import java.util.Set;
  * Maps to the "quiz_assignment" database table.
  * 
  * Rich domain entity with behavior methods for permission management.
+ * References Quiz by ID only (module-decoupled).
  */
 @Entity
 @Table(name = "quiz_assignment", uniqueConstraints = {
@@ -31,10 +30,8 @@ public class QuizAssignment {
     @JsonBackReference("user-assignments")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quiz_id", nullable = false)
-    @JsonBackReference("quiz-assignments")
-    private Quiz quiz;
+    @Column(name = "quiz_id", nullable = false)
+    private Long quizId;
 
     @ElementCollection(targetClass = AdminPermission.class)
     @CollectionTable(name = "assignment_permission",
@@ -46,9 +43,9 @@ public class QuizAssignment {
     public QuizAssignment() {
     }
 
-    public QuizAssignment(User user, Quiz quiz) {
+    public QuizAssignment(User user, Long quizId) {
         this.user = user;
-        this.quiz = quiz;
+        this.quizId = quizId;
     }
 
     public Long getId() {
@@ -67,12 +64,12 @@ public class QuizAssignment {
         this.user = user;
     }
 
-    public Quiz getQuiz() {
-        return quiz;
+    public Long getQuizId() {
+        return quizId;
     }
 
-    public void setQuiz(Quiz quiz) {
-        this.quiz = quiz;
+    public void setQuizId(Long quizId) {
+        this.quizId = quizId;
     }
 
     public Set<AdminPermission> getPermissions() {

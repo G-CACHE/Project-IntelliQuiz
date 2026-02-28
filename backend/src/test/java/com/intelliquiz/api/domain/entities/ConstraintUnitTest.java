@@ -1,7 +1,8 @@
 package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.enums.SystemRole;
@@ -58,11 +59,11 @@ public class ConstraintUnitTest {
         entityManager.persistAndFlush(quiz);
         
         // Create first assignment
-        QuizAssignment assignment1 = new QuizAssignment(user, quiz);
+        QuizAssignment assignment1 = new QuizAssignment(user, quiz.getId());
         entityManager.persistAndFlush(assignment1);
         
         // Attempt to create second assignment with same user+quiz
-        QuizAssignment assignment2 = new QuizAssignment(user, quiz);
+        QuizAssignment assignment2 = new QuizAssignment(user, quiz.getId());
         
         assertThatThrownBy(() -> entityManager.persistAndFlush(assignment2))
                 .isInstanceOf(ConstraintViolationException.class);
@@ -103,10 +104,10 @@ public class ConstraintUnitTest {
         Quiz quiz2 = new Quiz("Quiz 2", "Description", "654321", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz2);
         
-        QuizAssignment assignment1 = new QuizAssignment(user, quiz1);
+        QuizAssignment assignment1 = new QuizAssignment(user, quiz1.getId());
         entityManager.persistAndFlush(assignment1);
         
-        QuizAssignment assignment2 = new QuizAssignment(user, quiz2);
+        QuizAssignment assignment2 = new QuizAssignment(user, quiz2.getId());
         entityManager.persistAndFlush(assignment2);
         
         // Both assignments should exist

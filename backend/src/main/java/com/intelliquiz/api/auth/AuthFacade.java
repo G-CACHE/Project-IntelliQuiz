@@ -8,7 +8,7 @@ import com.intelliquiz.api.auth.internal.application.services.AuthenticationResu
 import com.intelliquiz.api.auth.internal.application.services.AuthenticationService;
 import com.intelliquiz.api.auth.internal.application.services.AuthorizationService;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import org.springframework.stereotype.Service;
 

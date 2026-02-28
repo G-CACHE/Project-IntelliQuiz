@@ -1,6 +1,6 @@
-package com.intelliquiz.api.presentation.dto.response;
+package com.intelliquiz.api.user.internal.presentation.dto.response;
 
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 

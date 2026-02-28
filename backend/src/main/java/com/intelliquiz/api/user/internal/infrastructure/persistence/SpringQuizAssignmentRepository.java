@@ -1,8 +1,7 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.spring;
+package com.intelliquiz.api.user.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.QuizAssignment;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,9 +14,9 @@ import java.util.Optional;
 @Repository
 public interface SpringQuizAssignmentRepository extends JpaRepository<QuizAssignment, Long> {
 
-    Optional<QuizAssignment> findByUserAndQuiz(User user, Quiz quiz);
+    Optional<QuizAssignment> findByUserAndQuizId(User user, Long quizId);
 
     List<QuizAssignment> findByUser(User user);
 
-    List<QuizAssignment> findByQuiz(Quiz quiz);
+    List<QuizAssignment> findByQuizId(Long quizId);
 }

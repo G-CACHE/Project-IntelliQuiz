@@ -2,10 +2,10 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.auth.internal.application.services.AuthenticationResult;
 import com.intelliquiz.api.auth.internal.application.services.AuthenticationService;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
-import com.intelliquiz.api.domain.ports.UserRepository;
+import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.NotBlank;
 

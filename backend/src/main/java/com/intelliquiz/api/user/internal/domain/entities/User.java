@@ -1,6 +1,4 @@
-package com.intelliquiz.api.domain.entities;
-
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+package com.intelliquiz.api.user.internal.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -63,33 +61,33 @@ public class User {
     }
 
     /**
-     * Checks if this user has a specific permission for a given quiz.
+     * Checks if this user has a specific permission for a given quiz (by ID).
      * Super admins automatically have all permissions for all quizzes.
      * Regular admins must have an explicit QuizAssignment with the permission.
      * 
-     * @param quiz the quiz to check permission for
+     * @param quizId the quiz ID to check permission for
      * @param permission the permission to check
      * @return true if the user has the specified permission for the quiz
      */
-    public boolean hasPermissionFor(Quiz quiz, AdminPermission permission) {
+    public boolean hasPermissionFor(Long quizId, AdminPermission permission) {
         if (isSuperAdmin()) {
             return true;
         }
         return assignments.stream()
-                .filter(a -> a.getQuiz() != null && a.getQuiz().getId().equals(quiz.getId()))
+                .filter(a -> a.getQuizId() != null && a.getQuizId().equals(quizId))
                 .anyMatch(a -> a.hasPermission(permission));
     }
 
     /**
-     * Returns the list of quizzes this user has access to via assignments.
+     * Returns the list of quiz IDs this user has access to via assignments.
      * Note: Super admins should be handled separately as they have access to all quizzes.
      * 
-     * @return list of quizzes the user is assigned to
+     * @return list of quiz IDs the user is assigned to
      */
     @JsonIgnore
-    public List<Quiz> getAccessibleQuizzes() {
+    public List<Long> getAccessibleQuizIds() {
         return assignments.stream()
-                .map(QuizAssignment::getQuiz)
+                .map(QuizAssignment::getQuizId)
                 .toList();
     }
 

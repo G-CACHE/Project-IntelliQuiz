@@ -1,7 +1,7 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import com.intelliquiz.api.shared.exceptions.AuthorizationException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
@@ -37,7 +37,7 @@ public class AuthorizationService {
         }
 
         boolean hasAccess = user.getAssignments().stream()
-                .anyMatch(a -> a.getQuiz() != null && a.getQuiz().getId().equals(quiz.getId()));
+                .anyMatch(a -> a.getQuizId() != null && a.getQuizId().equals(quiz.getId()));
 
         if (!hasAccess) {
             throw new AuthorizationException("User does not have access to this quiz");
@@ -54,7 +54,7 @@ public class AuthorizationService {
      * @throws AuthorizationException if the user doesn't have the permission
      */
     public void checkPermission(User user, Quiz quiz, AdminPermission permission) {
-        if (!user.hasPermissionFor(quiz, permission)) {
+        if (!user.hasPermissionFor(quiz.getId(), permission)) {
             throw new AuthorizationException(
                     "User does not have " + permission + " permission for this quiz");
         }
@@ -72,7 +72,10 @@ public class AuthorizationService {
         if (user.isSuperAdmin()) {
             return quizRepository.findAll();
         }
-        return user.getAccessibleQuizzes();
+        List<Long> quizIds = user.getAccessibleQuizIds();
+        return quizRepository.findAll().stream()
+                .filter(q -> quizIds.contains(q.getId()))
+                .toList();
     }
 
     /**

@@ -1,16 +1,20 @@
-package com.intelliquiz.api.application.services;
+package com.intelliquiz.api.user.internal.application.services;
 
-import com.intelliquiz.api.application.commands.CreateUserCommand;
-import com.intelliquiz.api.application.commands.UpdateUserCommand;
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.QuizAssignment;
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.application.commands.CreateUserCommand;
+import com.intelliquiz.api.user.internal.application.commands.UpdateUserCommand;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.user.events.UserCreatedEvent;
+import com.intelliquiz.api.user.events.UserDeletedEvent;
+import com.intelliquiz.api.user.events.PermissionsAssignedEvent;
+import com.intelliquiz.api.user.events.PermissionsRevokedEvent;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
-import com.intelliquiz.api.domain.ports.QuizAssignmentRepository;
-import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.UserRepository;
+import com.intelliquiz.api.user.internal.domain.ports.QuizAssignmentRepository;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,18 +30,21 @@ import java.util.Set;
 public class UserManagementService {
 
     private final UserRepository userRepository;
-    private final QuizRepository quizRepository;
+    private final QuizFacade quizFacade;
     private final QuizAssignmentRepository quizAssignmentRepository;
     private final PasswordHashingService passwordHashingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserManagementService(UserRepository userRepository,
-                                  QuizRepository quizRepository,
+                                  QuizFacade quizFacade,
                                   QuizAssignmentRepository quizAssignmentRepository,
-                                  PasswordHashingService passwordHashingService) {
+                                  PasswordHashingService passwordHashingService,
+                                  ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
-        this.quizRepository = quizRepository;
+        this.quizFacade = quizFacade;
         this.quizAssignmentRepository = quizAssignmentRepository;
         this.passwordHashingService = passwordHashingService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -52,7 +59,9 @@ public class UserManagementService {
         User user = new User(command.username(), hashedPassword, command.role());
         user.validateCredentials();
         
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        eventPublisher.publishEvent(new UserCreatedEvent(saved.getId(), saved.getUsername()));
+        return saved;
     }
 
     /**
@@ -86,8 +95,10 @@ public class UserManagementService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         
+        String username = user.getUsername();
         // Assignments are cascade deleted via orphanRemoval
         userRepository.delete(user);
+        eventPublisher.publishEvent(new UserDeletedEvent(userId, username));
     }
 
     /**
@@ -121,18 +132,21 @@ public class UserManagementService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
 
-        QuizAssignment assignment = quizAssignmentRepository.findByUserAndQuiz(user, quiz)
+        QuizAssignment assignment = quizAssignmentRepository.findByUserAndQuizId(user, quizId)
                 .orElseGet(() -> {
-                    QuizAssignment newAssignment = new QuizAssignment(user, quiz);
+                    QuizAssignment newAssignment = new QuizAssignment(user, quizId);
                     user.addAssignment(newAssignment);
                     return newAssignment;
                 });
 
         assignment.setPermissions(permissions);
-        return quizAssignmentRepository.save(assignment);
+        QuizAssignment saved = quizAssignmentRepository.save(assignment);
+        eventPublisher.publishEvent(new PermissionsAssignedEvent(userId, quizId, permissions));
+        return saved;
     }
 
     /**
@@ -142,13 +156,15 @@ public class UserManagementService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
 
-        quizAssignmentRepository.findByUserAndQuiz(user, quiz)
+        quizAssignmentRepository.findByUserAndQuizId(user, quizId)
                 .ifPresent(assignment -> {
                     user.removeAssignment(assignment);
                     quizAssignmentRepository.delete(assignment);
+                    eventPublisher.publishEvent(new PermissionsRevokedEvent(userId, quizId));
                 });
     }
 
@@ -168,12 +184,13 @@ public class UserManagementService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
 
-        QuizAssignment assignment = quizAssignmentRepository.findByUserAndQuiz(user, quiz)
+        QuizAssignment assignment = quizAssignmentRepository.findByUserAndQuizId(user, quizId)
                 .orElseGet(() -> {
-                    QuizAssignment newAssignment = new QuizAssignment(user, quiz);
+                    QuizAssignment newAssignment = new QuizAssignment(user, quizId);
                     user.addAssignment(newAssignment);
                     return newAssignment;
                 });
@@ -189,10 +206,11 @@ public class UserManagementService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
         
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
 
-        QuizAssignment assignment = quizAssignmentRepository.findByUserAndQuiz(user, quiz)
+        QuizAssignment assignment = quizAssignmentRepository.findByUserAndQuizId(user, quizId)
                 .orElseThrow(() -> new EntityNotFoundException("QuizAssignment for user " + userId + " and quiz " + quizId + " not found"));
 
         assignment.revokePermission(permission);

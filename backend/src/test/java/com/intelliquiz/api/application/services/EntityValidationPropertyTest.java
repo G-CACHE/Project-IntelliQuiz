@@ -3,6 +3,7 @@ package com.intelliquiz.api.application.services;
 import com.intelliquiz.api.domain.entities.*;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 

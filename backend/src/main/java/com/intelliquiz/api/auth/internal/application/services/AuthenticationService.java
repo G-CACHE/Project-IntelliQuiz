@@ -1,8 +1,8 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.domain.entities.User;
+import com.intelliquiz.api.user.internal.domain.entities.User;
 import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
-import com.intelliquiz.api.domain.ports.UserRepository;
+import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
 import org.springframework.stereotype.Service;
 
 /**

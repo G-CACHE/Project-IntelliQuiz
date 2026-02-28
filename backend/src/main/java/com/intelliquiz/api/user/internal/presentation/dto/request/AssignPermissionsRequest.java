@@ -1,4 +1,4 @@
-package com.intelliquiz.api.presentation.dto.request;
+package com.intelliquiz.api.user.internal.presentation.dto.request;
 
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import io.swagger.v3.oas.annotations.media.Schema;
