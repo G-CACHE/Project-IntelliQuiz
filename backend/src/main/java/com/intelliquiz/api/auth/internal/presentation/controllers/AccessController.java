@@ -70,17 +70,22 @@ public class AccessController {
         AccessResolutionResponse response = switch (result.routeType()) {
             case PARTICIPANT -> {
                 TeamInfoDto team = teamFacade.getTeamInfo(result.teamId()).orElse(null);
+                QuizInfoDto quiz = quizFacade.findQuizInfo(result.quizId()).orElse(null);
                 yield AccessResolutionResponse.participant(
-                        result.teamId(),
-                        team != null ? team.name() : null,
-                        result.quizId()
+                        team != null ? new AccessResolutionResponse.TeamResponse(
+                                team.id(), team.name(), team.accessCode(), team.totalScore(), team.quizId()
+                        ) : null,
+                        quiz != null ? new AccessResolutionResponse.QuizAccessResponse(
+                                quiz.id(), quiz.title(), quiz.proctorPin(), quiz.status()
+                        ) : null
                 );
             }
             case HOST -> {
                 QuizInfoDto quiz = quizFacade.findQuizInfo(result.quizId()).orElse(null);
                 yield AccessResolutionResponse.host(
-                        result.quizId(),
-                        quiz != null ? quiz.title() : null
+                        quiz != null ? new AccessResolutionResponse.QuizAccessResponse(
+                                quiz.id(), quiz.title(), quiz.proctorPin(), quiz.status()
+                        ) : null
                 );
             }
             case INVALID -> AccessResolutionResponse.invalid(result.errorMessage());
