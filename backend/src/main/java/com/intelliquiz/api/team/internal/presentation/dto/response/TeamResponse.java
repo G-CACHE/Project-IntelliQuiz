@@ -1,6 +1,6 @@
-package com.intelliquiz.api.presentation.dto.response;
+package com.intelliquiz.api.team.internal.presentation.dto.response;
 
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -32,7 +32,7 @@ public record TeamResponse(
             team.getName(),
             team.getAccessCode(),
             team.getTotalScore(),
-            team.getQuiz() != null ? team.getQuiz().getId() : null
+            team.getQuizId()
         );
     }
 }

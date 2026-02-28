@@ -1,13 +1,17 @@
-package com.intelliquiz.api.application.services;
+package com.intelliquiz.api.team.internal.application.services;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import com.intelliquiz.api.shared.services.CodeGenerationService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.intelliquiz.api.team.events.TeamRegisteredEvent;
+import com.intelliquiz.api.team.events.TeamRemovedEvent;
+import com.intelliquiz.api.team.events.TeamScoreResetEvent;
 
 import java.util.List;
 
@@ -20,28 +24,34 @@ import java.util.List;
 public class TeamRegistrationService {
 
     private final TeamRepository teamRepository;
-    private final QuizRepository quizRepository;
+    private final QuizFacade quizFacade;
     private final CodeGenerationService codeGenerationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public TeamRegistrationService(TeamRepository teamRepository,
-                                    QuizRepository quizRepository,
-                                    CodeGenerationService codeGenerationService) {
+                                    QuizFacade quizFacade,
+                                    CodeGenerationService codeGenerationService,
+                                    ApplicationEventPublisher eventPublisher) {
         this.teamRepository = teamRepository;
-        this.quizRepository = quizRepository;
+        this.quizFacade = quizFacade;
         this.codeGenerationService = codeGenerationService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
      * Registers a new team for a quiz with auto-generated access code.
      */
     public Team registerTeam(Long quizId, String teamName) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
 
         String accessCode = generateUniqueAccessCode();
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quizId, teamName, accessCode);
         
-        return teamRepository.save(team);
+        Team saved = teamRepository.save(team);
+        eventPublisher.publishEvent(new TeamRegisteredEvent(saved.getId(), saved.getName(), quizId));
+        return saved;
     }
 
     /**
@@ -51,7 +61,9 @@ public class TeamRegistrationService {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
         
+        Long quizId = team.getQuizId();
         teamRepository.delete(team);
+        eventPublisher.publishEvent(new TeamRemovedEvent(teamId, team.getName(), quizId));
     }
 
     /**
@@ -74,23 +86,26 @@ public class TeamRegistrationService {
      * Gets all teams for a quiz.
      */
     public List<Team> getTeamsByQuiz(Long quizId) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
-        return teamRepository.findByQuiz(quiz);
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
+        return teamRepository.findByQuizId(quizId);
     }
 
     /**
      * Resets scores for all teams in a quiz.
      */
     public void resetTeamScores(Long quizId) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
         
-        List<Team> teams = teamRepository.findByQuiz(quiz);
+        List<Team> teams = teamRepository.findByQuizId(quizId);
         for (Team team : teams) {
             team.resetScore();
             teamRepository.save(team);
         }
+        eventPublisher.publishEvent(new TeamScoreResetEvent(quizId));
     }
 
     /**

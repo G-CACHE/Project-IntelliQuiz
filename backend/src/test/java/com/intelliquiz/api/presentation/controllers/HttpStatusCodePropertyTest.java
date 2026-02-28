@@ -9,7 +9,7 @@ import com.intelliquiz.api.auth.internal.application.services.AccessResolutionSe
 import com.intelliquiz.api.auth.internal.presentation.controllers.AccessController;
 import com.intelliquiz.api.shared.enums.RouteType;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
@@ -45,7 +45,7 @@ class HttpStatusCodePropertyTest {
         
         Quiz quiz = new Quiz("Test Quiz", "Description", "1234", QuizStatus.READY);
         quiz.setId(1L);
-        team.setQuiz(quiz);
+        team.setQuizId(quiz.getId());
         
         when(mockService.resolve(code)).thenReturn(AccessResolutionResult.participant(team));
         

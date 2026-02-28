@@ -3,11 +3,11 @@ package com.intelliquiz.api.application.services;
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.enums.RouteType;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import net.jqwik.api.*;
 
 import java.util.List;
@@ -33,9 +33,10 @@ public class AccessResolutionPropertyTest {
         QuizRepository quizRepository = mock(QuizRepository.class);
         
         Quiz activeQuiz = createActiveQuiz("999-999");
-        Team team = new Team(activeQuiz, "Test Team", accessCode);
+        Team team = new Team(activeQuiz.getId(), "Test Team", accessCode);
         
         when(teamRepository.findByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
+        when(quizRepository.findById(activeQuiz.getId())).thenReturn(Optional.of(activeQuiz));
         
         AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
         AccessResolutionResult result = service.resolve(accessCode);
@@ -112,9 +113,10 @@ public class AccessResolutionPropertyTest {
         QuizRepository quizRepository = mock(QuizRepository.class);
         
         Quiz inactiveQuiz = createInactiveQuiz("999-999");
-        Team team = new Team(inactiveQuiz, "Test Team", accessCode);
+        Team team = new Team(inactiveQuiz.getId(), "Test Team", accessCode);
         
         when(teamRepository.findByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
+        when(quizRepository.findById(inactiveQuiz.getId())).thenReturn(Optional.of(inactiveQuiz));
         
         AccessResolutionService service = new AccessResolutionService(teamRepository, quizRepository);
         AccessResolutionResult result = service.resolve(accessCode);

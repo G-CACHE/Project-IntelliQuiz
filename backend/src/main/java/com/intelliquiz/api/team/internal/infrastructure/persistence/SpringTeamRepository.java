@@ -1,7 +1,6 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.spring;
+package com.intelliquiz.api.team.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +15,5 @@ public interface SpringTeamRepository extends JpaRepository<Team, Long> {
 
     Optional<Team> findByAccessCode(String accessCode);
 
-    List<Team> findByQuiz(Quiz quiz);
+    List<Team> findByQuizId(Long quizId);
 }

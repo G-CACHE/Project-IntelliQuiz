@@ -1,13 +1,6 @@
-package com.intelliquiz.api.domain.entities;
+package com.intelliquiz.api.team.internal.domain.entities;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Team entity representing a participant group registered for a specific quiz.
@@ -21,10 +14,8 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quiz_id", nullable = false)
-    @JsonBackReference("quiz-teams")
-    private Quiz quiz;
+    @Column(name = "quiz_id", nullable = false)
+    private Long quizId;
 
     @Column(nullable = false)
     private String name;
@@ -35,15 +26,11 @@ public class Team {
     @Column(name = "total_score")
     private int totalScore = 0;
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
-    @JsonManagedReference("team-submissions")
-    private List<Submission> submissions = new ArrayList<>();
-
     public Team() {
     }
 
-    public Team(Quiz quiz, String name, String accessCode) {
-        this.quiz = quiz;
+    public Team(Long quizId, String name, String accessCode) {
+        this.quizId = quizId;
         this.name = name;
         this.accessCode = accessCode;
         this.totalScore = 0;
@@ -57,12 +44,12 @@ public class Team {
         this.id = id;
     }
 
-    public Quiz getQuiz() {
-        return quiz;
+    public Long getQuizId() {
+        return quizId;
     }
 
-    public void setQuiz(Quiz quiz) {
-        this.quiz = quiz;
+    public void setQuizId(Long quizId) {
+        this.quizId = quizId;
     }
 
     public String getName() {
@@ -87,24 +74,6 @@ public class Team {
 
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
-    }
-
-    public List<Submission> getSubmissions() {
-        return submissions;
-    }
-
-    public void setSubmissions(List<Submission> submissions) {
-        this.submissions = submissions;
-    }
-
-    public void addSubmission(Submission submission) {
-        submissions.add(submission);
-        submission.setTeam(this);
-    }
-
-    public void removeSubmission(Submission submission) {
-        submissions.remove(submission);
-        submission.setTeam(null);
     }
 
     public void addPoints(int points) {

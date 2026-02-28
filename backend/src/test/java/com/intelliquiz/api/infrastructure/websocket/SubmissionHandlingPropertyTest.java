@@ -3,13 +3,13 @@ package com.intelliquiz.api.infrastructure.websocket;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Submission;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import com.intelliquiz.api.infrastructure.websocket.QuizBroadcastService;
 import com.intelliquiz.api.infrastructure.websocket.QuizSessionManager;
 import net.jqwik.api.*;
@@ -61,7 +61,7 @@ class SubmissionHandlingPropertyTest {
         Team team = new Team();
         team.setId(teamId);
         team.setName("Team Alpha");
-        team.setQuiz(quiz);
+        team.setQuizId(quiz.getId());
         
         Question question = new Question();
         question.setId(questionId);
@@ -128,7 +128,7 @@ class SubmissionHandlingPropertyTest {
         
         Team team = new Team();
         team.setId(teamId);
-        team.setQuiz(quiz);
+        team.setQuizId(quiz.getId());
         
         Question question = new Question();
         question.setId(questionId);
@@ -197,7 +197,7 @@ class SubmissionHandlingPropertyTest {
         
         Team team = new Team();
         team.setId(teamId);
-        team.setQuiz(quiz);
+        team.setQuizId(quiz.getId());
         
         Question question = new Question();
         question.setId(questionId);

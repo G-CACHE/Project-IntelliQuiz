@@ -1,10 +1,10 @@
-package com.intelliquiz.api.presentation.controllers;
+package com.intelliquiz.api.team.internal.presentation.controllers;
 
-import com.intelliquiz.api.application.services.TeamRegistrationService;
-import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.presentation.dto.request.CreateTeamRequest;
+import com.intelliquiz.api.team.internal.application.services.TeamRegistrationService;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.team.internal.presentation.dto.request.CreateTeamRequest;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
-import com.intelliquiz.api.presentation.dto.response.TeamResponse;
+import com.intelliquiz.api.team.internal.presentation.dto.response.TeamResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

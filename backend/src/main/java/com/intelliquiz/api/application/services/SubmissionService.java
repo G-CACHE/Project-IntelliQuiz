@@ -2,12 +2,12 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.domain.entities.Submission;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.DuplicateSubmissionException;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,9 +60,6 @@ public class SubmissionService {
         Submission submission = new Submission(team, question, answer);
         submission.validateSubmittedAt();
         
-        team.addSubmission(submission);
-        teamRepository.save(team);
-        
         return submissionRepository.save(submission);
     }
 
@@ -89,9 +86,6 @@ public class SubmissionService {
         Submission submission = new Submission(team, question, answer);
         submission.validateSubmittedAt();
         submission.grade();
-        
-        team.addSubmission(submission);
-        teamRepository.save(team);
         
         return submissionRepository.save(submission);
     }

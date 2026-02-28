@@ -1,7 +1,7 @@
 package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import net.jqwik.api.*;
@@ -23,7 +23,7 @@ public class TeamScorePropertyTest {
     @Property(tries = 20)
     void newTeamsInitializeWithZeroScore(@ForAll("teamNames") String teamName) {
         Quiz quiz = createQuiz();
-        Team team = new Team(quiz, teamName, "ABC-123");
+        Team team = new Team(quiz.getId(), teamName, "ABC-123");
         
         assertThat(team.getTotalScore()).isEqualTo(0);
     }
@@ -142,7 +142,7 @@ public class TeamScorePropertyTest {
 
     private Team createTeamWithScore(int score) {
         Quiz quiz = createQuiz();
-        Team team = new Team(quiz, "Test Team", "ABC-123");
+        Team team = new Team(quiz.getId(), "Test Team", "ABC-123");
         team.setTotalScore(score);
         return team;
     }

@@ -1,10 +1,10 @@
 package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +37,7 @@ public class ScoreboardService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
 
-        List<Team> teams = teamRepository.findByQuiz(quiz);
+        List<Team> teams = teamRepository.findByQuizId(quizId);
         
         // Sort teams by score descending
         List<Team> sortedTeams = teams.stream()
@@ -54,7 +54,7 @@ public class ScoreboardService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
 
-        List<Team> sortedTeams = teamRepository.findByQuiz(quiz).stream()
+        List<Team> sortedTeams = teamRepository.findByQuizId(quizId).stream()
                 .sorted(Comparator.comparingInt(Team::getTotalScore).reversed())
                 .toList();
         return assignRanks(sortedTeams);

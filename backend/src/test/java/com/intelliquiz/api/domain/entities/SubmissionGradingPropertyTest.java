@@ -2,7 +2,7 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 
 import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
@@ -166,7 +166,7 @@ public class SubmissionGradingPropertyTest {
 
     private SubmissionContext createSubmissionContext(String correctKey, int points) {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123-456", QuizStatus.READY);
-        Team team = new Team(quiz, "Test Team", "ABC-123");
+        Team team = new Team(quiz.getId(), "Test Team", "ABC-123");
         Question question = new Question(quiz, "What is the answer?", 
                 QuestionType.IDENTIFICATION, Difficulty.EASY, correctKey);
         question.setPoints(points);

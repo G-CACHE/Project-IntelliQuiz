@@ -77,7 +77,7 @@ public class Question {
         if (answer == null || correctKey == null) {
             return false;
         }
-        return correctKey.equalsIgnoreCase(answer.trim());
+        return correctKey.trim().equalsIgnoreCase(answer.trim());
     }
 
     /**

@@ -2,6 +2,7 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
 import com.intelliquiz.api.user.internal.domain.entities.User;
 
@@ -146,7 +147,7 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz(title, "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         
         entityManager.persistAndFlush(team);
         entityManager.clear();
@@ -154,7 +155,7 @@ public class RelationshipIntegrityPropertyTest {
         // Navigate from Team back to Quiz to verify relationship integrity
         Team retrievedTeam = entityManager.find(Team.class, team.getId());
         assertThat(retrievedTeam).isNotNull();
-        assertThat(retrievedTeam.getQuiz().getId()).isEqualTo(quiz.getId());
+        assertThat(retrievedTeam.getQuizId()).isEqualTo(quiz.getId());
     }
 
     @Provide
@@ -187,7 +188,7 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         
         Question question = new Question(quiz, "Test question?", QuestionType.MULTIPLE_CHOICE, 
@@ -195,16 +196,14 @@ public class RelationshipIntegrityPropertyTest {
         entityManager.persistAndFlush(question);
         
         Submission submission = new Submission(team, question, submittedAnswer);
-        team.addSubmission(submission);
         
         entityManager.persistAndFlush(submission);
         entityManager.clear();
         
-        Team retrievedTeam = entityManager.find(Team.class, team.getId());
-        
-        assertThat(retrievedTeam.getSubmissions()).isNotEmpty();
-        Submission retrievedSubmission = retrievedTeam.getSubmissions().get(0);
-        assertThat(retrievedSubmission.getTeam().getId()).isEqualTo(retrievedTeam.getId());
+        // Verify submission references the correct team via direct lookup
+        Submission retrievedSubmission = entityManager.find(Submission.class, submission.getId());
+        assertThat(retrievedSubmission).isNotNull();
+        assertThat(retrievedSubmission.getTeam().getId()).isEqualTo(team.getId());
     }
 
     @Provide

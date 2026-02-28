@@ -1,9 +1,9 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,8 +46,9 @@ public class AccessResolutionService {
         Optional<Team> team = teamRepository.findByAccessCode(normalizedCode);
         if (team.isPresent()) {
             // Verify the team's quiz is active
-            Quiz quiz = team.get().getQuiz();
-            if (quiz != null && quiz.isLiveSession()) {
+            Long quizId = team.get().getQuizId();
+            Optional<Quiz> quiz = quizRepository.findById(quizId);
+            if (quiz.isPresent() && quiz.get().isLiveSession()) {
                 return AccessResolutionResult.participant(team.get());
             }
             return AccessResolutionResult.invalid("Quiz session is not active");

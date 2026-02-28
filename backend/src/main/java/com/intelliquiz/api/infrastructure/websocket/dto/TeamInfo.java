@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.websocket.dto;
 
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 
 import java.time.Instant;
 

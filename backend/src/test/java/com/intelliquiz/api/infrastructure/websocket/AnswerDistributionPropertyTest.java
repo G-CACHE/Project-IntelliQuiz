@@ -3,7 +3,7 @@ package com.intelliquiz.api.infrastructure.websocket;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Submission;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;

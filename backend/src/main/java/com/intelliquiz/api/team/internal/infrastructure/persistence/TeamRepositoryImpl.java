@@ -1,9 +1,7 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.impl;
+package com.intelliquiz.api.team.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.domain.ports.TeamRepository;
-import com.intelliquiz.api.infrastructure.adapters.persistence.spring.SpringTeamRepository;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -37,8 +35,8 @@ public class TeamRepositoryImpl implements TeamRepository {
     }
 
     @Override
-    public List<Team> findByQuiz(Quiz quiz) {
-        return springTeamRepository.findByQuiz(quiz);
+    public List<Team> findByQuizId(Long quizId) {
+        return springTeamRepository.findByQuizId(quizId);
     }
 
     @Override

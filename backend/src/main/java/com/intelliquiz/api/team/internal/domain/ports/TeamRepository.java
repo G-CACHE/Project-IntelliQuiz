@@ -1,7 +1,6 @@
-package com.intelliquiz.api.domain.ports;
+package com.intelliquiz.api.team.internal.domain.ports;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +16,7 @@ public interface TeamRepository {
 
     Optional<Team> findByAccessCode(String accessCode);
 
-    List<Team> findByQuiz(Quiz quiz);
+    List<Team> findByQuizId(Long quizId);
 
     void delete(Team team);
 

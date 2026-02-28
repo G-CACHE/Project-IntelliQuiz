@@ -2,6 +2,7 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
 import com.intelliquiz.api.user.internal.domain.entities.User;
 
@@ -114,7 +115,7 @@ public class CascadeDeletePropertyTest {
         quiz.addQuestion(question);
         entityManager.persistAndFlush(question);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         
         Long quizId = quiz.getId();

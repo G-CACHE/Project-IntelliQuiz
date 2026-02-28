@@ -2,6 +2,7 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
 import com.intelliquiz.api.user.internal.domain.entities.User;
 
@@ -121,7 +122,7 @@ public class JsonSerializationPropertyTest {
         quiz.addQuestion(question);
         entityManager.persistAndFlush(question);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         entityManager.clear();
         
@@ -178,7 +179,7 @@ public class JsonSerializationPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         
         Question question = new Question(quiz, "Test question?", QuestionType.MULTIPLE_CHOICE, 
@@ -186,7 +187,6 @@ public class JsonSerializationPropertyTest {
         entityManager.persistAndFlush(question);
         
         Submission submission = new Submission(team, question, submittedAnswer);
-        team.addSubmission(submission);
         entityManager.persistAndFlush(submission);
         entityManager.clear();
         

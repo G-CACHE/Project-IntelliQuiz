@@ -63,7 +63,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             );
             case PARTICIPANT -> new QuizPrincipal(
                     "team-" + result.team().getId(),
-                    result.team().getQuiz().getId(),
+                    result.team().getQuizId(),
                     result.team().getId(),
                     false
             );

@@ -1,10 +1,10 @@
 package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.TeamRepository;
+import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import net.jqwik.api.*;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
+        when(teamRepository.findByQuizId(1L)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -68,7 +68,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
+        when(teamRepository.findByQuizId(1L)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -95,7 +95,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
+        when(teamRepository.findByQuizId(1L)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -117,7 +117,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
+        when(teamRepository.findByQuizId(1L)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -136,7 +136,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
+        when(teamRepository.findByQuizId(1L)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -164,7 +164,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
+        when(teamRepository.findByQuizId(1L)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -201,7 +201,7 @@ public class ScoreboardPropertyTest {
 
         List<Team> teams = new ArrayList<>();
         for (int i = 0; i < scores.size(); i++) {
-            Team team = new Team(quiz, "Team " + i, "CODE" + i);
+            Team team = new Team(quiz.getId(), "Team " + i, "CODE" + i);
             team.setId((long) (i + 1));
             team.setTotalScore(scores.get(i));
             teams.add(team);
