@@ -1,5 +1,9 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -117,7 +121,6 @@ public class JsonSerializationPropertyTest {
         entityManager.persistAndFlush(question);
         
         Team team = new Team(quiz, teamName, accessCode);
-        quiz.addTeam(team);
         entityManager.persistAndFlush(team);
         entityManager.clear();
         

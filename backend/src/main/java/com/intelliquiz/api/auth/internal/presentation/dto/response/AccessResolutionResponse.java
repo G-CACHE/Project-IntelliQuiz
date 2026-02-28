@@ -1,6 +1,6 @@
 package com.intelliquiz.api.auth.internal.presentation.dto.response;
 
-import com.intelliquiz.api.presentation.dto.response.QuizResponse;
+import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuizResponse;
 import com.intelliquiz.api.presentation.dto.response.TeamResponse;
 import com.intelliquiz.api.shared.enums.RouteType;
 import io.swagger.v3.oas.annotations.media.Schema;

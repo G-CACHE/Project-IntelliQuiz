@@ -1,6 +1,6 @@
 package com.intelliquiz.api.domain.ports;
 
-import com.intelliquiz.api.domain.entities.Question;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.domain.entities.Submission;
 import com.intelliquiz.api.domain.entities.Team;
 

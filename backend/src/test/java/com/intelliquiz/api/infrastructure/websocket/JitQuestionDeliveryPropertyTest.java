@@ -1,7 +1,7 @@
 package com.intelliquiz.api.infrastructure.websocket;
 
-import com.intelliquiz.api.domain.entities.Question;
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.infrastructure.websocket.dto.QuestionPayload;
 import net.jqwik.api.*;

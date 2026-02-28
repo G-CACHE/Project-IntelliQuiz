@@ -1,5 +1,7 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import jakarta.persistence.*;

@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.adapters.persistence.impl;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import com.intelliquiz.api.infrastructure.adapters.persistence.spring.SpringTeamRepository;

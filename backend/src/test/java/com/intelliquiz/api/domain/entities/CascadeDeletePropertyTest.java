@@ -1,5 +1,9 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+
+
 import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
@@ -90,7 +94,8 @@ public class CascadeDeletePropertyTest {
 
     /**
      * Property 3: Cascade Delete Behavior
-     * For any Quiz with Questions and Teams, deleting the Quiz should cascade delete all.
+     * For any Quiz with Questions and Teams, deleting the Quiz cascades to Questions.
+     * Teams must be deleted separately since Quiz no longer owns the teams collection.
      */
     @Property(tries = 20)
     void quizDeletionCascadesToQuestionsAndTeams(
@@ -109,7 +114,6 @@ public class CascadeDeletePropertyTest {
         entityManager.persistAndFlush(question);
         
         Team team = new Team(quiz, teamName, accessCode);
-        quiz.addTeam(team);
         entityManager.persistAndFlush(team);
         
         Long quizId = quiz.getId();
@@ -118,7 +122,12 @@ public class CascadeDeletePropertyTest {
         
         entityManager.clear();
         
-        // Delete quiz
+        // Delete team first (no longer cascaded from Quiz)
+        Team teamToDelete = entityManager.find(Team.class, teamId);
+        entityManager.remove(teamToDelete);
+        entityManager.flush();
+        
+        // Delete quiz — questions cascade via @OneToMany(cascade = ALL)
         Quiz quizToDelete = entityManager.find(Quiz.class, quizId);
         entityManager.remove(quizToDelete);
         entityManager.flush();

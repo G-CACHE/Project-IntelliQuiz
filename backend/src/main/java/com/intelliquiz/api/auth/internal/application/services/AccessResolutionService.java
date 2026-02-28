@@ -1,8 +1,8 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;
 

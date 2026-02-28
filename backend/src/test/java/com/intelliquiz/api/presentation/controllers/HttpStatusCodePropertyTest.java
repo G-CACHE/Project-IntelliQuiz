@@ -1,11 +1,14 @@
 package com.intelliquiz.api.presentation.controllers;
 
 import com.intelliquiz.api.application.services.*;
+import com.intelliquiz.api.quiz.internal.application.services.QuizManagementService;
+import com.intelliquiz.api.quiz.internal.application.services.QuizSessionService;
+import com.intelliquiz.api.quiz.internal.presentation.controllers.QuizController;
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.auth.internal.presentation.controllers.AccessController;
 import com.intelliquiz.api.shared.enums.RouteType;
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
@@ -125,7 +128,7 @@ class HttpStatusCodePropertyTest {
         
         // When
         ResponseEntity<?> response = controller.createQuiz(
-                new com.intelliquiz.api.presentation.dto.request.CreateQuizRequest(title, "Description")
+                new com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest(title, "Description")
         );
         
         // Then

@@ -1,13 +1,13 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.QuizAssignment;
 import com.intelliquiz.api.domain.entities.User;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.domain.ports.QuizAssignmentRepository;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.UserRepository;
 import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.presentation.dto.response.QuizAssignmentResponse;

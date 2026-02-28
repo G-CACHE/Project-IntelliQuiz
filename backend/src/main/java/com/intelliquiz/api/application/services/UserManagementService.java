@@ -2,14 +2,14 @@ package com.intelliquiz.api.application.services;
 
 import com.intelliquiz.api.application.commands.CreateUserCommand;
 import com.intelliquiz.api.application.commands.UpdateUserCommand;
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.QuizAssignment;
 import com.intelliquiz.api.domain.entities.User;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.auth.internal.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.domain.ports.QuizAssignmentRepository;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -128,7 +128,6 @@ public class UserManagementService {
                 .orElseGet(() -> {
                     QuizAssignment newAssignment = new QuizAssignment(user, quiz);
                     user.addAssignment(newAssignment);
-                    quiz.addAssignment(newAssignment);
                     return newAssignment;
                 });
 
@@ -149,7 +148,6 @@ public class UserManagementService {
         quizAssignmentRepository.findByUserAndQuiz(user, quiz)
                 .ifPresent(assignment -> {
                     user.removeAssignment(assignment);
-                    quiz.removeAssignment(assignment);
                     quizAssignmentRepository.delete(assignment);
                 });
     }
@@ -177,7 +175,6 @@ public class UserManagementService {
                 .orElseGet(() -> {
                     QuizAssignment newAssignment = new QuizAssignment(user, quiz);
                     user.addAssignment(newAssignment);
-                    quiz.addAssignment(newAssignment);
                     return newAssignment;
                 });
 

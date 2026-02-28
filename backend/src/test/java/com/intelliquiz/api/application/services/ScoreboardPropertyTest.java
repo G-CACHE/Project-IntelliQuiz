@@ -1,14 +1,16 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuizStatus;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import net.jqwik.api.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +24,8 @@ import static org.mockito.Mockito.*;
  */
 public class ScoreboardPropertyTest {
 
+    private final Map<Quiz, List<Team>> quizTeams = new HashMap<>();
+
     /**
      * Property 9: Scoreboard entries are sorted by score descending
      */
@@ -33,7 +37,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quiz.getTeams());
+        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -64,7 +68,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quiz.getTeams());
+        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -91,7 +95,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quiz.getTeams());
+        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -113,7 +117,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quiz.getTeams());
+        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -132,7 +136,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quiz.getTeams());
+        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -160,7 +164,7 @@ public class ScoreboardPropertyTest {
         Quiz quiz = createQuizWithTeams(scores);
         
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(teamRepository.findByQuiz(quiz)).thenReturn(quiz.getTeams());
+        when(teamRepository.findByQuiz(quiz)).thenReturn(quizTeams.get(quiz));
         
         ScoreboardService service = new ScoreboardService(quizRepository, teamRepository);
         List<ScoreboardService.ScoreboardEntry> scoreboard = service.getScoreboard(1L);
@@ -195,13 +199,16 @@ public class ScoreboardPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         quiz.setId(1L);
 
+        List<Team> teams = new ArrayList<>();
         for (int i = 0; i < scores.size(); i++) {
             Team team = new Team(quiz, "Team " + i, "CODE" + i);
             team.setId((long) (i + 1));
             team.setTotalScore(scores.get(i));
-            quiz.addTeam(team);
+            teams.add(team);
         }
         
+        // Store teams list for mock setup — accessed via teamRepository.findByQuiz()
+        quizTeams.put(quiz, teams);
         return quiz;
     }
 }

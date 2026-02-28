@@ -1,12 +1,18 @@
 package com.intelliquiz.api.presentation.dto;
 
-import com.intelliquiz.api.application.commands.CreateQuestionCommand;
-import com.intelliquiz.api.application.commands.CreateQuizCommand;
+import com.intelliquiz.api.quiz.internal.application.commands.CreateQuestionCommand;
+import com.intelliquiz.api.quiz.internal.application.commands.CreateQuizCommand;
 import com.intelliquiz.api.application.commands.CreateUserCommand;
 import com.intelliquiz.api.domain.entities.*;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.shared.enums.*;
 import com.intelliquiz.api.presentation.dto.request.*;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
 import com.intelliquiz.api.presentation.dto.response.*;
+import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuizResponse;
+import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuestionResponse;
 import net.jqwik.api.*;
 
 import java.time.LocalDateTime;

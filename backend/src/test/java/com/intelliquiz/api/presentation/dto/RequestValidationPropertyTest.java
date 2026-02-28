@@ -6,6 +6,8 @@ import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.presentation.dto.request.*;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

@@ -1,11 +1,11 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Question;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.domain.entities.Submission;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.DuplicateSubmissionException;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.domain.ports.QuestionRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;

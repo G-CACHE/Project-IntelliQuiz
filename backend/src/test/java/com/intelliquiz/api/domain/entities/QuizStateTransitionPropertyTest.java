@@ -1,5 +1,9 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+
+
 import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.QuizStatus;
@@ -117,37 +121,6 @@ public class QuizStateTransitionPropertyTest {
         
         // Should not throw
         quiz.validateTitle();
-    }
-
-    /**
-     * Property 3: getLeaderboard returns teams sorted by score descending
-     */
-    @Property(tries = 20)
-    void getLeaderboardReturnsSortedTeams(
-            @ForAll("positiveScores") int score1,
-            @ForAll("positiveScores") int score2,
-            @ForAll("positiveScores") int score3) {
-        Quiz quiz = createQuiz("Test Quiz", QuizStatus.READY);
-        
-        Team team1 = new Team(quiz, "Team 1", "AAA-111");
-        team1.setTotalScore(score1);
-        Team team2 = new Team(quiz, "Team 2", "BBB-222");
-        team2.setTotalScore(score2);
-        Team team3 = new Team(quiz, "Team 3", "CCC-333");
-        team3.setTotalScore(score3);
-        
-        quiz.addTeam(team1);
-        quiz.addTeam(team2);
-        quiz.addTeam(team3);
-        
-        var leaderboard = quiz.getLeaderboard();
-        
-        assertThat(leaderboard).hasSize(3);
-        // Verify descending order
-        for (int i = 0; i < leaderboard.size() - 1; i++) {
-            assertThat(leaderboard.get(i).getTotalScore())
-                    .isGreaterThanOrEqualTo(leaderboard.get(i + 1).getTotalScore());
-        }
     }
 
     @Provide

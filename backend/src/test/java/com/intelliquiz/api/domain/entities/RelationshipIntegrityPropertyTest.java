@@ -1,5 +1,9 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+
+
 import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
@@ -142,16 +146,14 @@ public class RelationshipIntegrityPropertyTest {
         entityManager.persistAndFlush(quiz);
         
         Team team = new Team(quiz, teamName, accessCode);
-        quiz.addTeam(team);
         
         entityManager.persistAndFlush(team);
         entityManager.clear();
         
-        Quiz retrievedQuiz = entityManager.find(Quiz.class, quiz.getId());
-        
-        assertThat(retrievedQuiz.getTeams()).isNotEmpty();
-        Team retrievedTeam = retrievedQuiz.getTeams().get(0);
-        assertThat(retrievedTeam.getQuiz().getId()).isEqualTo(retrievedQuiz.getId());
+        // Navigate from Team back to Quiz to verify relationship integrity
+        Team retrievedTeam = entityManager.find(Team.class, team.getId());
+        assertThat(retrievedTeam).isNotNull();
+        assertThat(retrievedTeam.getQuiz().getId()).isEqualTo(quiz.getId());
     }
 
     @Provide
@@ -229,15 +231,13 @@ public class RelationshipIntegrityPropertyTest {
         entityManager.persistAndFlush(quiz);
         
         QuizAssignment assignment = new QuizAssignment(user, quiz);
-        quiz.addAssignment(assignment);
         
         entityManager.persistAndFlush(assignment);
         entityManager.clear();
         
-        Quiz retrievedQuiz = entityManager.find(Quiz.class, quiz.getId());
-        
-        assertThat(retrievedQuiz.getAssignments()).isNotEmpty();
-        QuizAssignment retrievedAssignment = retrievedQuiz.getAssignments().get(0);
-        assertThat(retrievedAssignment.getQuiz().getId()).isEqualTo(retrievedQuiz.getId());
+        // Navigate from QuizAssignment back to Quiz to verify relationship integrity
+        QuizAssignment retrievedAssignment = entityManager.find(QuizAssignment.class, assignment.getId());
+        assertThat(retrievedAssignment).isNotNull();
+        assertThat(retrievedAssignment.getQuiz().getId()).isEqualTo(quiz.getId());
     }
 }

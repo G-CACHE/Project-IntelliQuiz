@@ -6,7 +6,7 @@ import com.intelliquiz.api.shared.enums.RouteType;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
 import com.intelliquiz.api.auth.internal.presentation.dto.response.AccessResolutionResponse;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
-import com.intelliquiz.api.presentation.dto.response.QuizResponse;
+import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuizResponse;
 import com.intelliquiz.api.presentation.dto.response.TeamResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

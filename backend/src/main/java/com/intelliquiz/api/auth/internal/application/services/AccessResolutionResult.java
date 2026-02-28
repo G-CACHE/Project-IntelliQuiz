@@ -1,6 +1,6 @@
 package com.intelliquiz.api.auth.internal.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.RouteType;
 

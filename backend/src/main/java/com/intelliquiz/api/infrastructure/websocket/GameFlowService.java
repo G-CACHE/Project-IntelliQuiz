@@ -1,12 +1,12 @@
 package com.intelliquiz.api.infrastructure.websocket;
 
-import com.intelliquiz.api.domain.entities.Question;
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Submission;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.domain.ports.QuestionRepository;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import com.intelliquiz.api.infrastructure.websocket.dto.*;
@@ -140,7 +140,7 @@ public class GameFlowService {
                 .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
         
         Quiz quiz = question.getQuiz();
-        List<Team> teams = quiz.getTeams();
+        List<Team> teams = teamRepository.findByQuiz(quiz);
         
         // Grade all submissions and calculate results
         List<TeamResult> results = new ArrayList<>();
@@ -244,10 +244,13 @@ public class GameFlowService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
         
-        List<TeamResult> scoreboard = quiz.getLeaderboard().stream()
+        List<Team> leaderboard = teamRepository.findByQuiz(quiz).stream()
+                .sorted(Comparator.comparingInt(Team::getTotalScore).reversed())
+                .toList();
+        List<TeamResult> scoreboard = leaderboard.stream()
                 .map(team -> {
-                    int rank = quiz.getLeaderboard().indexOf(team) + 1;
-                    boolean isTied = quiz.getLeaderboard().stream()
+                    int rank = leaderboard.indexOf(team) + 1;
+                    boolean isTied = leaderboard.stream()
                             .filter(t -> t.getTotalScore() == team.getTotalScore())
                             .count() > 1;
                     return new TeamResult(

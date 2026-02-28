@@ -1,6 +1,6 @@
 package com.intelliquiz.api.infrastructure.adapters.persistence.spring;
 
-import com.intelliquiz.api.domain.entities.Question;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.domain.entities.Submission;
 import com.intelliquiz.api.domain.entities.Team;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,9 +1,9 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import com.intelliquiz.api.shared.services.CodeGenerationService;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,6 @@ public class TeamRegistrationService {
         String accessCode = generateUniqueAccessCode();
         Team team = new Team(quiz, teamName, accessCode);
         
-        quiz.addTeam(team);
         return teamRepository.save(team);
     }
 
@@ -52,8 +51,6 @@ public class TeamRegistrationService {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
         
-        Quiz quiz = team.getQuiz();
-        quiz.removeTeam(team);
         teamRepository.delete(team);
     }
 

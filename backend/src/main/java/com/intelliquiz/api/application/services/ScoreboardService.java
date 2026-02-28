@@ -1,9 +1,9 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,13 +48,15 @@ public class ScoreboardService {
     }
 
     /**
-     * Gets the scoreboard using the Quiz entity's getLeaderboard() method.
+     * Gets the scoreboard using TeamRepository (replaces Quiz.getLeaderboard()).
      */
     public List<ScoreboardEntry> getLeaderboard(Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
 
-        List<Team> sortedTeams = quiz.getLeaderboard();
+        List<Team> sortedTeams = teamRepository.findByQuiz(quiz).stream()
+                .sorted(Comparator.comparingInt(Team::getTotalScore).reversed())
+                .toList();
         return assignRanks(sortedTeams);
     }
 
