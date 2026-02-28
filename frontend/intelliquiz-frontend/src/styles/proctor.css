@@ -1,0 +1,1711 @@
+/* IntelliQuiz Proctor - Modern UI Styles */
+/* Matches superadmin.css design system exactly */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+/* ==================== BASE STYLES ==================== */
+.proctor-root {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ==================== PAGE HEADER ==================== */
+.proctor-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(136, 0, 21, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.proctor-page-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: rgba(248, 193, 7, 0.15);
+  border-radius: 50%;
+}
+
+.proctor-page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: 10%;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.proctor-page-header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.proctor-page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  margin: 0;
+}
+
+
+.proctor-page-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==================== CARDS ==================== */
+.proctor-card {
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: visible;
+}
+
+.proctor-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.proctor-card-static {
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== BUTTONS ==================== */
+.proctor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+.proctor-btn-primary {
+  background: linear-gradient(145deg, #f8c107 0%, #ffd54f 50%, #f8c107 100%);
+  color: #1a1a2e;
+  box-shadow: 0 4px 15px rgba(248, 193, 7, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+}
+
+.proctor-btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(248, 193, 7, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(145deg, #ffd54f 0%, #f8c107 50%, #ffd54f 100%);
+}
+
+.proctor-btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.proctor-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+.proctor-btn-secondary {
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  color: #475569;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.proctor-btn-secondary:hover {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+.proctor-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.proctor-btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.proctor-btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.proctor-btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+}
+
+.proctor-btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.proctor-btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.proctor-btn-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.proctor-btn-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.proctor-btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.proctor-btn-icon:hover {
+  background: linear-gradient(135deg, #f8c107 0%, #ffdb4d 100%);
+  color: #1a1a2e;
+  transform: scale(1.1);
+}
+
+
+/* ==================== FORM ELEMENTS ==================== */
+.proctor-form-group {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.proctor-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.proctor-form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.proctor-form-label::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(180deg, #f8c107 0%, #ffd54f 100%);
+  border-radius: 2px;
+}
+
+.proctor-form-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  color: #1e293b;
+  font-family: var(--font-family);
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+}
+
+.proctor-form-input:hover {
+  border-color: #cbd5e1;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+}
+
+.proctor-form-input:focus {
+  outline: none;
+  border-color: #f8c107;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(248, 193, 7, 0.12), inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.proctor-form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.proctor-form-input.error {
+  border-color: #ef4444;
+  background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.proctor-form-input.error:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+
+/* ==================== BADGES ==================== */
+.proctor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.proctor-badge-primary {
+  background: linear-gradient(135deg, rgba(136, 0, 21, 0.15) 0%, rgba(136, 0, 21, 0.1) 100%);
+  color: #880015;
+  border: 1px solid rgba(136, 0, 21, 0.2);
+}
+
+.proctor-badge-accent {
+  background: linear-gradient(135deg, rgba(248, 193, 7, 0.2) 0%, rgba(248, 193, 7, 0.1) 100%);
+  color: #b45309;
+  border: 1px solid rgba(248, 193, 7, 0.3);
+}
+
+.proctor-badge-success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.proctor-badge-info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.proctor-badge-warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.proctor-badge-danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.proctor-badge-gray {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+/* ==================== MODALS ==================== */
+.proctor-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+  animation: proctorFadeIn 0.25s ease;
+}
+
+.proctor-modal-content {
+  background: #fff;
+  border-radius: 28px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 25px 60px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(136, 0, 21, 0.15);
+  animation: proctorSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+.proctor-modal-header {
+  padding: 32px 32px 28px;
+  background: linear-gradient(145deg, #880015 0%, #a8001c 50%, #6d0011 100%);
+  border-radius: 28px 28px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.proctor-modal-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(248, 193, 7, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.proctor-modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.proctor-modal-body {
+  padding: 32px 40px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  background: linear-gradient(180deg, #fff 0%, #fafbfc 100%);
+}
+
+.proctor-modal-footer {
+  padding: 24px 32px;
+  background: linear-gradient(180deg, #f8f9fc 0%, #f1f3f5 100%);
+  border-radius: 0 0 28px 28px;
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+  border-top: 1px solid #e8eaed;
+  flex-shrink: 0;
+}
+
+/* ==================== ALERTS ==================== */
+.proctor-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  animation: proctorSlideIn 0.3s ease;
+}
+
+.proctor-alert-error {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.proctor-alert-success {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
+  color: #059669;
+}
+
+.proctor-alert-info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+}
+
+.proctor-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+
+
+/* ==================== LOADING ==================== */
+.proctor-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.proctor-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f4f6;
+  border-top-color: #f8c107;
+  border-radius: 50%;
+  animation: proctorSpin 0.8s linear infinite;
+}
+
+.proctor-loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f4f6;
+  border-top-color: #f8c107;
+  border-radius: 50%;
+  animation: proctorSpin 0.8s linear infinite;
+}
+
+/* ==================== DATA CARDS ==================== */
+.proctor-data-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+  position: relative;
+}
+
+.proctor-data-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, rgba(248, 193, 7, 0.1) 0%, transparent 100%);
+  border-radius: 0 0 0 100px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.proctor-data-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.proctor-data-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-left-color: #f8c107;
+}
+
+.proctor-data-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.proctor-data-card-subtitle {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* ==================== STAT CARDS ==================== */
+.proctor-stat-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.proctor-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.proctor-stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.proctor-stat-icon.accent {
+  background: linear-gradient(135deg, rgba(248, 193, 7, 0.2) 0%, rgba(248, 193, 7, 0.1) 100%);
+  color: #d97706;
+}
+
+.proctor-stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.proctor-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+/* ==================== TABLES ==================== */
+.proctor-table-container {
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.proctor-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.proctor-table th {
+  background: linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%);
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.proctor-table td {
+  padding: 20px 24px;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.proctor-table tr:last-child td {
+  border-bottom: none;
+}
+
+.proctor-table tr {
+  transition: all 0.2s ease;
+}
+
+.proctor-table tr:hover td {
+  background: linear-gradient(90deg, rgba(248, 193, 7, 0.05) 0%, transparent 100%);
+}
+
+/* ==================== GRID LAYOUTS ==================== */
+.proctor-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.proctor-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.proctor-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.proctor-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ==================== STICKY HEADER ==================== */
+.proctor-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  box-shadow: 0 4px 20px rgba(136, 0, 21, 0.3);
+}
+
+.proctor-sticky-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.proctor-sticky-header-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+
+/* ==================== EMPTY STATE ==================== */
+.proctor-empty-state {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.proctor-empty-state-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.proctor-empty-state h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.proctor-empty-state p {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* ==================== BACK LINK ==================== */
+.proctor-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f8c107;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.proctor-back-link:hover {
+  color: #d97706;
+  transform: translateX(-4px);
+}
+
+/* ==================== KEYFRAME ANIMATIONS ==================== */
+@keyframes proctorFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes proctorSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes proctorSlideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes proctorSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== RESPONSIVE BREAKPOINTS ==================== */
+@media (max-width: 1200px) {
+  .proctor-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .proctor-grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .proctor-grid-2, .proctor-grid-3, .proctor-grid-4 { grid-template-columns: 1fr; }
+  .proctor-page-header { 
+    flex-direction: column; 
+    gap: 16px; 
+    text-align: center;
+    padding: 20px 24px;
+  }
+  .proctor-page-title {
+    font-size: 22px;
+    justify-content: center;
+  }
+  .proctor-modal-content {
+    max-width: 100%;
+    margin: 16px;
+  }
+  .proctor-modal-body {
+    padding: 24px;
+  }
+  .proctor-sticky-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+.proctor-text-center { text-align: center; }
+.proctor-text-muted { color: #9ca3af; }
+.proctor-text-primary { color: #880015; }
+.proctor-text-accent { color: #f8c107; }
+.proctor-mt-4 { margin-top: 16px; }
+.proctor-mb-4 { margin-bottom: 16px; }
+.proctor-mb-6 { margin-bottom: 24px; }
+.proctor-gap-4 { gap: 16px; }
+.proctor-flex { display: flex; }
+.proctor-flex-col { flex-direction: column; }
+.proctor-items-center { align-items: center; }
+.proctor-justify-center { justify-content: center; }
+.proctor-justify-between { justify-content: space-between; }
+
+
+/* ==================== PAGE LAYOUTS ==================== */
+.proctor-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.proctor-page-header {
+  flex-direction: column;
+  text-align: center;
+  gap: 8px;
+}
+
+.proctor-header-decoration {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.proctor-header-decoration-1 {
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: rgba(248, 193, 7, 0.15);
+}
+
+.proctor-header-decoration-2 {
+  bottom: -30%;
+  left: 10%;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.proctor-content {
+  padding: 32px;
+}
+
+.proctor-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.proctor-container-narrow {
+  max-width: 800px;
+}
+
+/* ==================== LOGIN PAGE ==================== */
+.proctor-login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 32px;
+}
+
+.proctor-card-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.proctor-card-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.proctor-pin-input {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.proctor-btn-full {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: 16px;
+}
+
+.proctor-btn-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.proctor-alert-icon {
+  font-size: 18px;
+}
+
+.proctor-back-link {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.proctor-back-link a {
+  color: #f8c107;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.proctor-back-link a:hover {
+  color: #d97706;
+}
+
+.proctor-help-text {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* ==================== LOBBY PAGE ==================== */
+.proctor-pin-card {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.proctor-pin-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.proctor-pin-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1f2937;
+  letter-spacing: 0.15em;
+}
+
+.proctor-connection-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.proctor-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.proctor-status-connected {
+  background: #10b981;
+  animation: pulse 2s infinite;
+}
+
+.proctor-status-connecting {
+  background: #f59e0b;
+  animation: pulse 1s infinite;
+}
+
+.proctor-status-disconnected {
+  background: #ef4444;
+}
+
+.proctor-status-text {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.proctor-btn-link {
+  background: none;
+  border: none;
+  color: #f8c107;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.proctor-btn-link:hover {
+  color: #d97706;
+}
+
+.proctor-section {
+  margin-bottom: 32px;
+}
+
+.proctor-section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.proctor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.proctor-btn-large {
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ==================== GAME PAGE ==================== */
+.proctor-game-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.proctor-game-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%);
+  box-shadow: 0 4px 20px rgba(136, 0, 21, 0.3);
+}
+
+.proctor-game-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.proctor-game-header-left {
+  color: #fff;
+}
+
+.proctor-game-question-info {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 4px;
+}
+
+.proctor-game-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.proctor-game-header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.proctor-connection-compact {
+  margin-bottom: 0;
+}
+
+.proctor-connection-compact .proctor-status-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.proctor-timer-container {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+.proctor-error-banner {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-bottom: 1px solid #fecaca;
+  padding: 16px 32px;
+}
+
+.proctor-error-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #dc2626;
+}
+
+.proctor-btn-small {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.proctor-game-content {
+  flex: 1;
+  padding: 32px;
+}
+
+.proctor-game-controls {
+  margin-top: 48px;
+  text-align: center;
+}
+
+/* ==================== BUFFER STATE ==================== */
+.proctor-buffer-state {
+  text-align: center;
+  padding: 48px 0;
+}
+
+.proctor-buffer-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 32px;
+}
+
+.proctor-stat-large {
+  display: inline-block;
+  padding: 32px 48px;
+  margin-bottom: 32px;
+}
+
+.proctor-stat-large .proctor-stat-value {
+  font-size: 64px;
+  color: #f8c107;
+}
+
+.proctor-submissions-list {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.proctor-submissions-title {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.proctor-submissions-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proctor-submission-item {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proctor-submission-team {
+  font-weight: 600;
+  color: #059669;
+}
+
+.proctor-submission-status {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.proctor-correct-answer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+/* ==================== SCOREBOARD PAGE ==================== */
+.proctor-connection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 50px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.proctor-scoreboard-controls {
+  margin-top: 48px;
+}
+
+.proctor-final-controls {
+  text-align: center;
+}
+
+.proctor-final-message {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+/* ==================== TEAM GRID ==================== */
+.proctor-empty-teams {
+  text-align: center;
+  padding: 48px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.proctor-empty-teams-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 16px;
+}
+
+.proctor-empty-teams-subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+.proctor-team-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 2px solid #10b981;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  animation: proctorFadeIn 0.3s ease;
+}
+
+.proctor-team-card-highlight {
+  border-color: #f8c107;
+  background: linear-gradient(135deg, rgba(248, 193, 7, 0.1) 0%, #fff 100%);
+}
+
+.proctor-team-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.proctor-team-status-text {
+  font-size: 11px;
+  color: #10b981;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.proctor-team-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==================== TIMER ==================== */
+.proctor-timer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.proctor-timer-large {
+  flex-direction: column;
+}
+
+.proctor-timer-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #f8c107;
+  font-variant-numeric: tabular-nums;
+}
+
+.proctor-timer-large .proctor-timer-value {
+  font-size: 64px;
+}
+
+.proctor-timer-unit {
+  font-size: 18px;
+}
+
+.proctor-timer-large .proctor-timer-unit {
+  font-size: 32px;
+}
+
+.proctor-timer-low .proctor-timer-value {
+  color: #f59e0b;
+  animation: pulse 1s infinite;
+}
+
+.proctor-timer-critical .proctor-timer-value {
+  color: #ef4444;
+  animation: pulse 0.5s infinite;
+}
+
+.proctor-timer-progress {
+  width: 100px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.proctor-timer-large .proctor-timer-progress {
+  width: 200px;
+}
+
+.proctor-timer-progress-fill {
+  height: 100%;
+  background: #f8c107;
+  transition: width 1s linear;
+}
+
+.proctor-timer-progress-low {
+  background: #f59e0b;
+}
+
+.proctor-timer-progress-critical {
+  background: #ef4444;
+}
+
+.proctor-timer-warning {
+  color: #ef4444;
+  animation: bounce 1s infinite;
+}
+
+.proctor-timer-warning-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.proctor-timer-large .proctor-timer-warning-icon {
+  width: 32px;
+  height: 32px;
+}
+
+/* ==================== QUESTION DISPLAY ==================== */
+.proctor-question-display {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.proctor-question-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.proctor-question-number {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.proctor-question-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 32px;
+}
+
+.proctor-question-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.proctor-answer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.proctor-answer-btn {
+  position: relative;
+  padding: 20px 24px 20px 56px;
+  border-radius: 16px;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.proctor-answer-btn-red { background: #ef4444; color: #fff; }
+.proctor-answer-btn-blue { background: #3b82f6; color: #fff; }
+.proctor-answer-btn-yellow { background: #f59e0b; color: #fff; }
+.proctor-answer-btn-green { background: #10b981; color: #fff; }
+
+.proctor-answer-btn:hover:not(.proctor-answer-btn-disabled) {
+  transform: scale(1.02);
+}
+
+.proctor-answer-btn-selected {
+  border-color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 4px rgba(248, 193, 7, 0.5);
+}
+
+.proctor-answer-btn-correct {
+  background: #10b981 !important;
+  border-color: #fff;
+  transform: scale(1.05);
+}
+
+.proctor-answer-btn-wrong {
+  background: #7f1d1d !important;
+  opacity: 0.75;
+}
+
+.proctor-answer-btn-faded {
+  opacity: 0.5;
+}
+
+.proctor-answer-btn-disabled {
+  cursor: default;
+}
+
+.proctor-answer-letter {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.proctor-answer-text {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.proctor-answer-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.proctor-answer-indicator-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.proctor-answer-selected-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proctor-answer-selected-icon {
+  width: 16px;
+  height: 16px;
+  color: #1f2937;
+}
+
+/* ==================== SCOREBOARD DISPLAY ==================== */
+.proctor-scoreboard {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.proctor-scoreboard-empty {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+.proctor-scoreboard-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.proctor-scoreboard-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #f8c107;
+  margin: 0 0 8px 0;
+}
+
+.proctor-scoreboard-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.proctor-podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.proctor-podium-item {
+  text-align: center;
+}
+
+.proctor-podium-first {
+  margin-top: -32px;
+}
+
+.proctor-podium-first .proctor-podium-icon {
+  width: 112px;
+  height: 112px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  font-size: 48px;
+}
+
+.proctor-podium-first .proctor-podium-info {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  padding: 16px;
+}
+
+.proctor-podium-first .proctor-podium-name {
+  color: #1f2937;
+  font-weight: 800;
+}
+
+.proctor-podium-first .proctor-podium-score {
+  color: #78350f;
+  font-weight: 700;
+}
+
+.proctor-podium-second .proctor-podium-icon {
+  width: 96px;
+  height: 80px;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  font-size: 40px;
+}
+
+.proctor-podium-second .proctor-podium-info {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.proctor-podium-third .proctor-podium-icon {
+  width: 96px;
+  height: 64px;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  font-size: 40px;
+}
+
+.proctor-podium-third .proctor-podium-info {
+  background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+}
+
+.proctor-podium-icon {
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proctor-podium-info {
+  padding: 12px;
+  border-radius: 0 0 12px 12px;
+}
+
+.proctor-podium-name {
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.proctor-podium-score {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
+}
+
+.proctor-rankings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proctor-ranking-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  animation: proctorFadeIn 0.3s ease;
+}
+
+.proctor-ranking-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1f2937;
+}
+
+.proctor-ranking-silver {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  color: #1f2937;
+}
+
+.proctor-ranking-bronze {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #fff;
+}
+
+.proctor-ranking-default {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.proctor-ranking-highlight {
+  box-shadow: 0 0 0 4px rgba(248, 193, 7, 0.5);
+  transform: scale(1.02);
+}
+
+.proctor-ranking-rank {
+  width: 64px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.proctor-ranking-rank-top {
+  font-size: 28px;
+}
+
+.proctor-ranking-team {
+  flex: 1;
+  margin-left: 16px;
+}
+
+.proctor-ranking-name {
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0;
+}
+
+.proctor-ranking-label {
+  font-size: 12px;
+  opacity: 0.75;
+  margin: 4px 0 0 0;
+}
+
+.proctor-ranking-score-container {
+  text-align: right;
+}
+
+.proctor-ranking-score {
+  font-weight: 800;
+  font-size: 24px;
+  margin: 0;
+}
+
+.proctor-ranking-score-top {
+  font-size: 32px;
+}
+
+.proctor-ranking-points-label {
+  font-size: 12px;
+  opacity: 0.75;
+  margin: 0;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .proctor-content {
+    padding: 16px;
+  }
+  
+  .proctor-game-header-content {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .proctor-answer-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .proctor-podium {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .proctor-podium-first {
+    margin-top: 0;
+    order: -1;
+  }
+}

@@ -11,9 +11,10 @@ import {
   BiErrorCircle,
   BiFile,
   BiGroup,
-  BiCalendar,
   BiTime,
   BiLock,
+  BiCopy,
+  BiKey,
 } from 'react-icons/bi';
 import { useQuizzes, useUpdateQuiz, useQuizStatusChange } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,6 +27,7 @@ export default function AdminQuizzesPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [formData, setFormData] = useState<CreateQuizRequest>({ title: '', description: '' });
+  const [copiedPin, setCopiedPin] = useState<number | null>(null);
   const navigate = useNavigate();
   
   const { assignments, canEditQuiz, canManageTeams, canHostGame, canViewQuiz } = useAuth();
@@ -34,6 +36,17 @@ export default function AdminQuizzesPage() {
   const { data: quizzes = [], isLoading, error } = useQuizzes();
   const updateQuiz = useUpdateQuiz();
   const statusChange = useQuizStatusChange();
+
+  // Copy proctor PIN to clipboard
+  const copyProctorPin = async (quizId: number, pin: string) => {
+    try {
+      await navigator.clipboard.writeText(pin);
+      setCopiedPin(quizId);
+      setTimeout(() => setCopiedPin(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   // Filter quizzes based on permissions and search/status
   const filteredQuizzes = useMemo(() => {
@@ -162,8 +175,52 @@ export default function AdminQuizzesPage() {
                   </div>
                   <span className={`admin-badge-status ${getStatusClass(quiz.status)}`}>{quiz.status}</span>
                 </div>
+                
+                {/* Proctor PIN - shown for users with Host Game permission */}
+                {canHostGame(quiz.id) && quiz.proctorPin && (
+                  <div 
+                    style={{ 
+                      background: 'linear-gradient(135deg, #e21b3c 0%, #ff6b6b 100%)',
+                      borderRadius: 8,
+                      padding: '12px 16px',
+                      marginTop: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                    }}
+                    onClick={() => copyProctorPin(quiz.id, quiz.proctorPin)}
+                    title="Click to copy Proctor PIN"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <BiKey size={20} style={{ color: 'rgba(255,255,255,0.9)' }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Proctor PIN
+                        </div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                          {quiz.proctorPin}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.9)' }}>
+                      {copiedPin === quiz.id ? (
+                        <>
+                          <BiCheckCircle size={16} />
+                          <span style={{ fontSize: 12, fontWeight: 500 }}>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <BiCopy size={16} />
+                          <span style={{ fontSize: 12, fontWeight: 500 }}>Copy</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="admin-quiz-meta">
-                  <div className="admin-quiz-meta-item"><BiCalendar size={14} /> {new Date(quiz.createdAt).toLocaleDateString()}</div>
                   <div className="admin-quiz-meta-item"><BiTime size={14} /> {quiz.questionCount || 0} questions</div>
                 </div>
               </div>

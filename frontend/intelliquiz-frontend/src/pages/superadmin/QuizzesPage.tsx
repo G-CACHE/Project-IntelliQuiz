@@ -14,8 +14,9 @@ import {
   BiErrorCircle,
   BiFile,
   BiGroup,
-  BiCalendar,
   BiTime,
+  BiCopy,
+  BiKey,
 } from 'react-icons/bi';
 import { quizzesApi, type Quiz, type CreateQuizRequest } from '../../services/api';
 
@@ -31,7 +32,19 @@ export default function QuizzesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [formData, setFormData] = useState<CreateQuizRequest>({ title: '', description: '' });
+  const [copiedPin, setCopiedPin] = useState<number | null>(null);
   const navigate = useNavigate();
+
+  // Copy proctor PIN to clipboard
+  const copyProctorPin = async (quizId: number, pin: string) => {
+    try {
+      await navigator.clipboard.writeText(pin);
+      setCopiedPin(quizId);
+      setTimeout(() => setCopiedPin(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   useEffect(() => { loadQuizzes(); }, []);
 
@@ -235,8 +248,52 @@ export default function QuizzesPage() {
                 </div>
                 <h4 className="data-card-title">{quiz.title}</h4>
                 <p className="data-card-subtitle">{quiz.description || 'No description'}</p>
+                
+                {/* Proctor PIN - clickable to copy */}
+                {quiz.proctorPin && (
+                  <div 
+                    style={{ 
+                      background: 'linear-gradient(135deg, #e21b3c 0%, #ff6b6b 100%)',
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      marginTop: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                    }}
+                    onClick={() => copyProctorPin(quiz.id, quiz.proctorPin)}
+                    title="Click to copy Proctor PIN"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <BiKey size={18} style={{ color: 'rgba(255,255,255,0.9)' }} />
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Proctor PIN
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                          {quiz.proctorPin}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.9)' }}>
+                      {copiedPin === quiz.id ? (
+                        <>
+                          <BiCheckCircle size={14} />
+                          <span style={{ fontSize: 11, fontWeight: 500 }}>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <BiCopy size={14} />
+                          <span style={{ fontSize: 11, fontWeight: 500 }}>Copy</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="data-card-meta">
-                  <div className="data-card-meta-item"><BiCalendar size={14} /> {new Date(quiz.createdAt).toLocaleDateString()}</div>
                   <div className="data-card-meta-item"><BiTime size={14} /> {quiz.questionCount || 0} questions</div>
                 </div>
                 <div className="data-card-footer">

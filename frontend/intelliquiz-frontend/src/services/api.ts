@@ -1,5 +1,5 @@
 // IntelliQuiz API Service
-const API_BASE_URL = 'http://localhost:8082';
+const API_BASE_URL = 'http://localhost:8090';
 
 const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('token');
@@ -31,14 +31,17 @@ export const authApi = {
     });
     return handleResponse<{ token: string; role: string; username: string }>(response);
   },
+};
 
-  resolveAccess: async (accessCode: string) => {
+// Access Code Resolution API (Public - no auth required)
+export const accessApi = {
+  resolveCode: async (code: string): Promise<AccessResolutionResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/access/resolve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessCode }),
+      body: JSON.stringify({ code }),
     });
-    return handleResponse<{ type: string; quizId: number }>(response);
+    return handleResponse<AccessResolutionResponse>(response);
   },
 };
 
@@ -390,8 +393,8 @@ export interface Quiz {
   id: number;
   title: string;
   description: string;
+  proctorPin: string;
   status: 'DRAFT' | 'READY' | 'ACTIVE' | 'ARCHIVED';
-  createdAt: string;
   questionCount?: number;
 }
 
@@ -442,8 +445,7 @@ export interface Team {
   name: string;
   accessCode: string;
   quizId: number;
-  score: number;
-  createdAt: string;
+  totalScore: number;
 }
 
 export interface RegisterTeamRequest {
@@ -504,3 +506,125 @@ export const PERMISSIONS = {
   CAN_MANAGE_TEAMS: 'CAN_MANAGE_TEAMS',
   CAN_HOST_GAME: 'CAN_HOST_GAME',
 } as const;
+
+// Access Resolution Types
+export type RouteType = 'PARTICIPANT' | 'HOST' | 'INVALID';
+
+export interface TeamResponse {
+  id: number;
+  name: string;
+  accessCode: string;
+  totalScore: number;
+  quizId: number;
+}
+
+export interface QuizAccessResponse {
+  id: number;
+  title: string;
+  proctorPin: string;
+  status: string;
+}
+
+export interface AccessResolutionResponse {
+  routeType: RouteType;
+  team?: TeamResponse;
+  quiz?: QuizAccessResponse;
+  errorMessage?: string;
+}
+
+// Game State Types
+export type GameState = 
+  | 'LOBBY' 
+  | 'BUFFER' 
+  | 'ACTIVE' 
+  | 'QUESTION' 
+  | 'GRADING' 
+  | 'REVEAL' 
+  | 'ANSWER_REVEAL' 
+  | 'ROUND_SUMMARY' 
+  | 'SCOREBOARD' 
+  | 'TIEBREAKER' 
+  | 'ENDED' 
+  | 'FINAL_RESULTS';
+
+export interface QuestionData {
+  id: number;
+  text: string;
+  options: string[];
+  timeLimit: number;
+  points: number;
+  correctAnswer?: string;
+}
+
+export interface GameStateMessage {
+  state: GameState;
+  quizId?: number;
+  currentQuestionIndex?: number;
+  totalQuestions?: number;
+  currentRound?: string;
+  message?: string;
+  currentQuestion?: QuestionData;
+  questionNumber?: number;
+  timeRemaining?: number;
+  rankings?: RankingEntry[];
+}
+
+export interface RankingEntry {
+  rank: number;
+  teamId: number;
+  teamName: string;
+  score: number;
+}
+
+export interface TimerMessage {
+  type: 'TIMER_UPDATE';
+  timeRemaining: number;
+  totalTime: number;
+}
+
+export interface TeamConnectionMessage {
+  type: 'TEAM_CONNECTED' | 'TEAM_DISCONNECTED';
+  teamId: number;
+  teamName: string;
+}
+
+export interface SubmissionNotification {
+  type: 'SUBMISSION_RECEIVED';
+  teamId: number;
+  teamName: string;
+  timestamp: string;
+}
+
+export interface AnswerRevealData {
+  type: 'ANSWER_REVEAL';
+  correctAnswer: string;
+  teamResults: Array<{
+    teamId: number;
+    teamName: string;
+    isCorrect: boolean;
+    pointsEarned: number;
+  }>;
+}
+
+// WebSocket Command Types
+export type CommandType = 
+  | 'START_ROUND' 
+  | 'NEXT_QUESTION' 
+  | 'VIEW_LEADERBOARD' 
+  | 'START_TIEBREAKER' 
+  | 'END_QUIZ' 
+  | 'PAUSE' 
+  | 'RESUME';
+
+export interface CommandMessage {
+  type: CommandType;
+  payload?: Record<string, unknown>;
+}
+
+export interface AnswerSubmissionMessage {
+  type: 'SUBMIT_ANSWER';
+  teamId: number;
+  questionId: number;
+  selectedOption: string;
+  timestamp: string;
+}

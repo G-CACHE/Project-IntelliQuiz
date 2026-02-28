@@ -40,6 +40,8 @@ public class SecurityConfig {
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/access/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                // WebSocket endpoints - authentication handled by WebSocket interceptor
+                .requestMatchers("/ws/**").permitAll()
                 // Swagger/OpenAPI endpoints
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // Health check

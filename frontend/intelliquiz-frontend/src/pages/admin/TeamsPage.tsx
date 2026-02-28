@@ -205,7 +205,6 @@ export default function AdminTeamsPage() {
                 <th>TEAM NAME</th>
                 <th>ACCESS CODE</th>
                 <th>SCORE</th>
-                <th>CREATED</th>
                 <th style={{ textAlign: 'right' }}>ACTIONS</th>
               </tr>
             </thead>
@@ -235,8 +234,7 @@ export default function AdminTeamsPage() {
                       </button>
                     </div>
                   </td>
-                  <td><span style={{ fontWeight: 800, color: 'var(--admin-accent)', fontSize: 18 }}>{t.score}</span></td>
-                  <td style={{ color: 'rgba(255,255,255,0.6)' }}>{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td><span style={{ fontWeight: 800, color: 'var(--admin-accent)', fontSize: 18 }}>{t.totalScore}</span></td>
                   <td style={{ textAlign: 'right' }}>
                     <button className="admin-btn-icon danger" onClick={() => { setSelectedTeam(t); setShowDeleteModal(true); }} title="Remove">
                       <BiTrash size={18} />
@@ -245,7 +243,7 @@ export default function AdminTeamsPage() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={4}>
                     <div className="admin-empty-state">
                       <div className="admin-empty-icon"><BiGroup size={40} /></div>
                       <h3 className="admin-empty-title">{searchQuery ? 'No teams match your search' : 'No teams registered yet'}</h3>
