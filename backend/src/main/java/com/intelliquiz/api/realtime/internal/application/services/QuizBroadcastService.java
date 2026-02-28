@@ -154,6 +154,18 @@ public class QuizBroadcastService {
             TeamInfo teamInfo = TeamInfo.connected(team.id(), team.name(), Instant.now());
             sendToHost(quizId, HostNotification.teamJoined(teamInfo));
             
+            // Broadcast team connection to all clients on the teams channel
+            TeamConnectionMessage connectionMessage = new TeamConnectionMessage(
+                    "TEAM_CONNECTED",
+                    teamId,
+                    team.name(),
+                    Instant.now().toString()
+            );
+            messagingTemplate.convertAndSend(
+                    "/topic/quiz/" + quizId + "/teams",
+                    connectionMessage
+            );
+            
             // Also broadcast updated team count
             int connectedCount = sessionManager.getConnectedTeamCount(quizId);
             sendToHost(quizId, new HostNotification("TEAM_COUNT", connectedCount));
@@ -165,6 +177,18 @@ public class QuizBroadcastService {
      */
     public void notifyTeamDisconnected(Long quizId, Long teamId) {
         sendToHost(quizId, HostNotification.teamDisconnected(teamId));
+        
+        // Broadcast team disconnection to all clients on the teams channel
+        TeamConnectionMessage connectionMessage = new TeamConnectionMessage(
+                "TEAM_DISCONNECTED",
+                teamId,
+                null,
+                Instant.now().toString()
+        );
+        messagingTemplate.convertAndSend(
+                "/topic/quiz/" + quizId + "/teams",
+                connectionMessage
+        );
         
         // Also broadcast updated team count
         int connectedCount = sessionManager.getConnectedTeamCount(quizId);

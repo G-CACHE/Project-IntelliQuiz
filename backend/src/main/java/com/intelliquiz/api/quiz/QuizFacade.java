@@ -117,6 +117,17 @@ public class QuizFacade {
     }
 
     /**
+     * Find all quizzes (used by access resolution for proctor PIN matching against all quizzes).
+     * Proctors should be able to access the lobby to start the quiz even if it's not live yet.
+     */
+    public List<QuizInfoDto> findAllQuizzes() {
+        return quizManagementService.getAllQuizzes().stream()
+                .map(q -> new QuizInfoDto(q.getId(), q.getTitle(), q.getStatus(),
+                                          q.isLiveSession(), q.getProctorPin()))
+                .toList();
+    }
+
+    /**
      * Get all quiz IDs.
      */
     public List<Long> getAllQuizIds() {

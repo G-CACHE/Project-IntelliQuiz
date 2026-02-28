@@ -47,17 +47,18 @@ public class AccessResolutionPropertyTest {
     }
 
     /**
-     * Property 1: Proctor PINs for active quizzes return HOST route with correct quiz ID
+     * Property 1: Proctor PINs for any quiz return HOST route with correct quiz ID.
+     * Proctors should be able to access any quiz, not just active ones.
      */
     @Property(tries = 20)
-    void proctorPinsForActiveQuizzesReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
+    void proctorPinsForAnyQuizReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
         TeamFacade teamFacade = mock(TeamFacade.class);
         QuizFacade quizFacade = mock(QuizFacade.class);
         
-        QuizInfoDto activeQuiz = new QuizInfoDto(1L, "Test Quiz", QuizStatus.READY, true, proctorPin.toUpperCase());
+        QuizInfoDto quiz = new QuizInfoDto(1L, "Test Quiz", QuizStatus.READY, true, proctorPin.toUpperCase());
         
         when(teamFacade.getTeamByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
-        when(quizFacade.findActiveLiveQuizzes()).thenReturn(List.of(activeQuiz));
+        when(quizFacade.findAllQuizzes()).thenReturn(List.of(quiz));
         
         AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(proctorPin);
@@ -68,22 +69,25 @@ public class AccessResolutionPropertyTest {
     }
 
     /**
-     * Property 1: Proctor PINs for inactive quizzes return INVALID route
+     * Property 1: Proctor PINs for inactive (draft) quizzes also return HOST route.
+     * Proctors should be able to access the lobby to start the quiz.
      */
     @Property(tries = 20)
-    void proctorPinsForInactiveQuizzesReturnInvalidRoute(@ForAll("proctorPins") String proctorPin) {
+    void proctorPinsForInactiveQuizzesReturnHostRoute(@ForAll("proctorPins") String proctorPin) {
         TeamFacade teamFacade = mock(TeamFacade.class);
         QuizFacade quizFacade = mock(QuizFacade.class);
         
-        // No active quizzes
+        QuizInfoDto inactiveQuiz = new QuizInfoDto(1L, "Test Quiz", QuizStatus.DRAFT, false, proctorPin.toUpperCase());
+        
         when(teamFacade.getTeamByAccessCode(proctorPin.toUpperCase())).thenReturn(Optional.empty());
-        when(quizFacade.findActiveLiveQuizzes()).thenReturn(List.of());
+        when(quizFacade.findAllQuizzes()).thenReturn(List.of(inactiveQuiz));
         
         AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(proctorPin);
         
-        assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
-        assertThat(result.errorMessage()).isNotNull();
+        assertThat(result.routeType()).isEqualTo(RouteType.HOST);
+        assertThat(result.quizId()).isEqualTo(1L);
+        assertThat(result.teamId()).isNull();
     }
 
     /**
@@ -95,7 +99,7 @@ public class AccessResolutionPropertyTest {
         QuizFacade quizFacade = mock(QuizFacade.class);
         
         when(teamFacade.getTeamByAccessCode(unknownCode.toUpperCase())).thenReturn(Optional.empty());
-        when(quizFacade.findActiveLiveQuizzes()).thenReturn(List.of());
+        when(quizFacade.findAllQuizzes()).thenReturn(List.of());
         
         AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
         AccessResolutionResult result = service.resolve(unknownCode);
@@ -105,10 +109,10 @@ public class AccessResolutionPropertyTest {
     }
 
     /**
-     * Property 1: Team codes for inactive quiz sessions return INVALID
+     * Property 1: Team codes for DRAFT quiz sessions return INVALID
      */
     @Property(tries = 20)
-    void teamCodesForInactiveQuizReturnInvalid(@ForAll("accessCodes") String accessCode) {
+    void teamCodesForDraftQuizReturnInvalid(@ForAll("accessCodes") String accessCode) {
         TeamFacade teamFacade = mock(TeamFacade.class);
         QuizFacade quizFacade = mock(QuizFacade.class);
         
@@ -123,6 +127,29 @@ public class AccessResolutionPropertyTest {
         
         assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
         assertThat(result.errorMessage()).contains("not active");
+    }
+
+    /**
+     * Property 1: Team codes for READY quiz (lobby phase) return PARTICIPANT.
+     * This allows participants to join the lobby before the quiz starts.
+     */
+    @Property(tries = 20)
+    void teamCodesForReadyQuizReturnParticipant(@ForAll("accessCodes") String accessCode) {
+        TeamFacade teamFacade = mock(TeamFacade.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
+        
+        TeamInfoDto team = new TeamInfoDto(1L, "Test Team", accessCode.toUpperCase(), 0, 10L);
+        QuizInfoDto readyQuiz = new QuizInfoDto(10L, "Test Quiz", QuizStatus.READY, false, "999-999");
+        
+        when(teamFacade.getTeamByAccessCode(accessCode.toUpperCase())).thenReturn(Optional.of(team));
+        when(quizFacade.findQuizInfo(10L)).thenReturn(Optional.of(readyQuiz));
+        
+        AccessResolutionService service = new AccessResolutionService(teamFacade, quizFacade);
+        AccessResolutionResult result = service.resolve(accessCode);
+        
+        assertThat(result.routeType()).isEqualTo(RouteType.PARTICIPANT);
+        assertThat(result.teamId()).isEqualTo(1L);
+        assertThat(result.quizId()).isEqualTo(10L);
     }
 
     /**

@@ -233,7 +233,6 @@ export default function TeamsPage() {
                 <th>TEAM NAME</th>
                 <th>ACCESS CODE</th>
                 <th>SCORE</th>
-                <th>CREATED</th>
                 <th style={{ textAlign: 'right' }}>ACTIONS</th>
               </tr>
             </thead>
@@ -273,8 +272,7 @@ export default function TeamsPage() {
                       </button>
                     </div>
                   </td>
-                  <td><span style={{ fontWeight: 700, color: 'var(--color-accent)', fontSize: 'var(--font-size-lg)' }}>{t.score}</span></td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td><span style={{ fontWeight: 700, color: 'var(--color-accent)', fontSize: 'var(--font-size-lg)' }}>{t.totalScore}</span></td>
                   <td style={{ textAlign: 'right' }}>
                     <button className="btn-icon danger" onClick={() => { setSelectedTeam(t); setShowDeleteModal(true); }} title="Remove">
                       <BiTrash size={18} />
@@ -283,7 +281,7 @@ export default function TeamsPage() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={4}>
                     <div className="empty-state">
                       <BiGroup size={56} className="empty-state-icon" />
                       <p style={{ fontWeight: 600, marginTop: 'var(--spacing-md)' }}>{searchQuery ? 'No teams match your search' : 'No teams registered yet'}</p>
