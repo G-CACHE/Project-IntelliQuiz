@@ -65,24 +65,24 @@
 > **Goal:** Create the `quiz` module — aggregate root with Quiz + Question entities, events, facade.  
 > **Commit:** `modulith(phase-3): extract quiz module`
 
-- [ ] **3.1** Create quiz package structure: `quiz/{events,dto}` + `quiz/internal/{domain/{entities,valueobjects,ports},application/{services,commands},infrastructure/persistence,presentation/{controllers,dto/{request,response}}}`
-- [ ] **3.2** Create `quiz/package-info.java` with `@ApplicationModule(allowedDependencies = {"shared", "auth"})`
-- [ ] **3.3** Move `Quiz.java`, `Question.java` → `quiz/internal/domain/entities/`
-- [ ] **3.4** Move `QuizRepository`, `QuestionRepository` ports → `quiz/internal/domain/ports/`
-- [ ] **3.5** Move `QuizManagementService`, `QuestionManagementService`, `QuizSessionService` → `quiz/internal/application/services/`
-- [ ] **3.6** Move quiz/question command records → `quiz/internal/application/commands/`
-- [ ] **3.7** Move persistence adapters (`QuizRepositoryImpl`, `SpringQuizRepository`, etc.) → `quiz/internal/infrastructure/persistence/`
-- [ ] **3.8** Move `QuizController`, `QuestionController` → `quiz/internal/presentation/controllers/`
-- [ ] **3.9** Move related request/response DTOs → `quiz/internal/presentation/dto/`
-- [ ] **3.10** Create 6 event records: `QuizCreatedEvent`, `QuizStatusChangedEvent`, `QuizSessionActivatedEvent`, `QuizSessionDeactivatedEvent`, `QuestionAddedEvent`, `QuestionDeletedEvent`
-- [ ] **3.11** Add `ApplicationEventPublisher` to `QuizManagementService` + `QuizSessionService` — publish events after state changes
-- [ ] **3.12** Create `QuizFacade.java` (public API: `getQuizInfo`, `getQuestionForGrading`, `getOrderedQuestions`, `quizExists`, `activateSession`, `deactivateSession`)
-- [ ] **3.13** Create public DTOs: `QuizInfoDto`, `QuestionInfoDto`
-- [ ] **3.14** Remove `@OneToMany teams` and `@OneToMany assignments` from `Quiz.java` (cross-module navigable collections)
-- [ ] **3.15** Remove `getLeaderboard()` from `Quiz.java` (scoreboard is a separate module now)
-- [ ] **3.16** Create `QuizSession` value object
-- [ ] **3.17** Update all imports across the codebase
-- [ ] **3.18** Run `mvn clean test` — all tests pass
+- [x] **3.1** Create quiz package structure: `quiz/{events,dto}` + `quiz/internal/{domain/{entities,valueobjects,ports},application/{services,commands},infrastructure/persistence,presentation/{controllers,dto/{request,response}}}`
+- [x] **3.2** Create `quiz/package-info.java` with `@ApplicationModule(allowedDependencies = {"shared", "auth"})`
+- [x] **3.3** Move `Quiz.java`, `Question.java` → `quiz/internal/domain/entities/`
+- [x] **3.4** Move `QuizRepository`, `QuestionRepository` ports → `quiz/internal/domain/ports/`
+- [x] **3.5** Move `QuizManagementService`, `QuestionManagementService`, `QuizSessionService` → `quiz/internal/application/services/`
+- [x] **3.6** Move quiz/question command records → `quiz/internal/application/commands/`
+- [x] **3.7** Move persistence adapters (`QuizRepositoryImpl`, `SpringQuizRepository`, etc.) → `quiz/internal/infrastructure/persistence/`
+- [x] **3.8** Move `QuizController`, `QuestionController` → `quiz/internal/presentation/controllers/`
+- [x] **3.9** Move related request/response DTOs → `quiz/internal/presentation/dto/`
+- [x] **3.10** Create 6 event records: `QuizCreatedEvent`, `QuizStatusChangedEvent`, `QuizSessionActivatedEvent`, `QuizSessionDeactivatedEvent`, `QuestionAddedEvent`, `QuestionDeletedEvent`
+- [x] **3.11** Add `ApplicationEventPublisher` to `QuizManagementService` + `QuizSessionService` — publish events after state changes
+- [x] **3.12** Create `QuizFacade.java` (public API: `getQuizInfo`, `getQuestionForGrading`, `getOrderedQuestions`, `quizExists`, `activateSession`, `deactivateSession`)
+- [x] **3.13** Create public DTOs: `QuizInfoDto`, `QuestionInfoDto`
+- [x] **3.14** Remove `@OneToMany teams` and `@OneToMany assignments` from `Quiz.java` (cross-module navigable collections)
+- [x] **3.15** Remove `getLeaderboard()` from `Quiz.java` (scoreboard is a separate module now)
+- [x] **3.16** Create `QuizSession` value object
+- [x] **3.17** Update all imports across the codebase
+- [x] **3.18** Run `mvn clean test` — all 215 tests pass ✅ (commit `ea1b48e`)
 
 ---
 
