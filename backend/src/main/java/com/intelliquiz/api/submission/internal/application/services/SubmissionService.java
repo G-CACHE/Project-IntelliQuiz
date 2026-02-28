@@ -1,13 +1,14 @@
-package com.intelliquiz.api.application.services;
+package com.intelliquiz.api.submission.internal.application.services;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-import com.intelliquiz.api.domain.entities.Submission;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import com.intelliquiz.api.shared.exceptions.DuplicateSubmissionException;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
-import com.intelliquiz.api.domain.ports.SubmissionRepository;
-import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.quiz.dto.QuestionInfoDto;
+import com.intelliquiz.api.team.TeamFacade;
+import com.intelliquiz.api.team.dto.TeamInfoDto;
+import com.intelliquiz.api.submission.internal.domain.ports.SubmissionRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,21 +17,25 @@ import java.util.List;
 /**
  * Application service for submission operations.
  * Handles answer submission with duplicate checking and grading.
+ * Uses QuizFacade and TeamFacade for cross-module lookups.
  */
 @Service
 @Transactional
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
-    private final TeamRepository teamRepository;
-    private final QuestionRepository questionRepository;
+    private final QuizFacade quizFacade;
+    private final TeamFacade teamFacade;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SubmissionService(SubmissionRepository submissionRepository,
-                              TeamRepository teamRepository,
-                              QuestionRepository questionRepository) {
+                              QuizFacade quizFacade,
+                              TeamFacade teamFacade,
+                              ApplicationEventPublisher eventPublisher) {
         this.submissionRepository = submissionRepository;
-        this.teamRepository = teamRepository;
-        this.questionRepository = questionRepository;
+        this.quizFacade = quizFacade;
+        this.teamFacade = teamFacade;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -39,14 +44,15 @@ public class SubmissionService {
      * Does NOT grade immediately - grading happens when timer expires.
      */
     public Submission submitAnswer(Long teamId, Long questionId, String answer) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
-        
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
+        if (!teamFacade.teamExists(teamId)) {
+            throw new EntityNotFoundException("Team", teamId);
+        }
+        if (!quizFacade.questionExists(questionId)) {
+            throw new EntityNotFoundException("Question", questionId);
+        }
 
         // Check for existing submission
-        var existingSubmission = submissionRepository.findByTeamAndQuestion(team, question);
+        var existingSubmission = submissionRepository.findByTeamIdAndQuestionId(teamId, questionId);
         
         if (existingSubmission.isPresent()) {
             // Update existing submission (answer change allowed)
@@ -57,7 +63,7 @@ public class SubmissionService {
         }
 
         // Create new submission (don't grade yet - wait for timer)
-        Submission submission = new Submission(team, question, answer);
+        Submission submission = new Submission(teamId, questionId, answer);
         submission.validateSubmittedAt();
         
         return submissionRepository.save(submission);
@@ -70,23 +76,32 @@ public class SubmissionService {
      * @throws DuplicateSubmissionException if the team has already submitted for this question
      */
     public Submission submitAnswerWithGrading(Long teamId, Long questionId, String answer) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
-        
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
+        TeamInfoDto teamInfo = teamFacade.getTeamInfo(teamId).orElse(null);
+        if (teamInfo == null) {
+            throw new EntityNotFoundException("Team", teamId);
+        }
+
+        QuestionInfoDto questionInfo = quizFacade.getQuestionForGrading(questionId);
+        if (questionInfo == null) {
+            throw new EntityNotFoundException("Question", questionId);
+        }
 
         // Check for duplicate submission
-        if (submissionRepository.findByTeamAndQuestion(team, question).isPresent()) {
+        if (submissionRepository.findByTeamIdAndQuestionId(teamId, questionId).isPresent()) {
             throw new DuplicateSubmissionException(
-                    "Team " + team.getName() + " has already submitted an answer for this question");
+                    "Team " + teamInfo.name() + " has already submitted an answer for this question");
         }
 
         // Create and grade the submission
-        Submission submission = new Submission(team, question, answer);
+        Submission submission = new Submission(teamId, questionId, answer);
         submission.validateSubmittedAt();
-        submission.grade();
-        
+        submission.grade(questionInfo.correctKey(), questionInfo.points());
+
+        // Update team score if correct
+        if (submission.isCorrect()) {
+            teamFacade.addPoints(teamId, submission.getAwardedPoints());
+        }
+
         return submissionRepository.save(submission);
     }
 
@@ -102,49 +117,41 @@ public class SubmissionService {
      * Gets all submissions for a team.
      */
     public List<Submission> getSubmissionsByTeam(Long teamId) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
-        return submissionRepository.findByTeam(team);
+        if (!teamFacade.teamExists(teamId)) {
+            throw new EntityNotFoundException("Team", teamId);
+        }
+        return submissionRepository.findByTeamId(teamId);
     }
 
     /**
      * Gets all submissions for a question.
      */
     public List<Submission> getSubmissionsByQuestion(Long questionId) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
-        return submissionRepository.findByQuestion(question);
+        if (!quizFacade.questionExists(questionId)) {
+            throw new EntityNotFoundException("Question", questionId);
+        }
+        return submissionRepository.findByQuestionId(questionId);
     }
 
     /**
      * Checks if a team has already submitted for a question.
      */
     public boolean hasSubmitted(Long teamId, Long questionId) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
-        
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
-        
-        return submissionRepository.findByTeamAndQuestion(team, question).isPresent();
+        return submissionRepository.findByTeamIdAndQuestionId(teamId, questionId).isPresent();
     }
 
     /**
      * Counts how many teams have submitted for a question.
      */
     public int countSubmissionsForQuestion(Long questionId) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
-        return submissionRepository.findByQuestion(question).size();
+        return submissionRepository.findByQuestionId(questionId).size();
     }
 
     /**
      * Checks if all teams in a quiz have submitted for a question.
      */
     public boolean haveAllTeamsSubmitted(Long quizId, Long questionId, int totalTeams) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
-        int submissionCount = submissionRepository.findByQuestion(question).size();
+        int submissionCount = submissionRepository.findByQuestionId(questionId).size();
         return submissionCount >= totalTeams;
     }
 }

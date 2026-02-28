@@ -2,13 +2,13 @@ package com.intelliquiz.api.infrastructure.websocket;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.SubmissionRepository;
+import com.intelliquiz.api.submission.internal.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import com.intelliquiz.api.infrastructure.websocket.QuizBroadcastService;
 import com.intelliquiz.api.infrastructure.websocket.QuizSessionManager;
@@ -77,7 +77,7 @@ class SubmissionHandlingPropertyTest {
         when(timerService.isTimerActive(quizId)).thenReturn(true);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByTeamAndQuestion(team, question)).thenReturn(Optional.empty());
+        when(submissionRepository.findByTeamIdAndQuestionId(team.getId(), question.getId())).thenReturn(Optional.empty());
         
         // Create service
         GameFlowService gameFlowService = new GameFlowService(
@@ -137,7 +137,7 @@ class SubmissionHandlingPropertyTest {
         question.setQuiz(quiz);
         
         // Existing submission
-        Submission existingSubmission = new Submission(team, question, "A");
+        Submission existingSubmission = new Submission(team.getId(), question.getId(), "A");
         existingSubmission.setId(1L);
         
         sessionManager.setCurrentState(quizId, GameState.ACTIVE);
@@ -146,7 +146,7 @@ class SubmissionHandlingPropertyTest {
         when(timerService.isTimerActive(quizId)).thenReturn(true);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByTeamAndQuestion(team, question)).thenReturn(Optional.of(existingSubmission));
+        when(submissionRepository.findByTeamIdAndQuestionId(team.getId(), question.getId())).thenReturn(Optional.of(existingSubmission));
         
         GameFlowService gameFlowService = new GameFlowService(
                 timerService, broadcastService, sessionManager,
@@ -211,7 +211,7 @@ class SubmissionHandlingPropertyTest {
         when(timerService.isTimerActive(quizId)).thenReturn(true);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByTeamAndQuestion(team, question)).thenReturn(Optional.empty());
+        when(submissionRepository.findByTeamIdAndQuestionId(team.getId(), question.getId())).thenReturn(Optional.empty());
         
         GameFlowService gameFlowService = new GameFlowService(
                 timerService, broadcastService, sessionManager,

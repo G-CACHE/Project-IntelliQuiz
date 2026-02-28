@@ -1,6 +1,6 @@
-package com.intelliquiz.api.presentation.dto.response;
+package com.intelliquiz.api.submission.internal.presentation.dto.response;
 
-import com.intelliquiz.api.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -37,8 +37,8 @@ public record SubmissionResponse(
     public static SubmissionResponse from(Submission submission) {
         return new SubmissionResponse(
             submission.getId(),
-            submission.getTeam() != null ? submission.getTeam().getId() : null,
-            submission.getQuestion() != null ? submission.getQuestion().getId() : null,
+            submission.getTeamId(),
+            submission.getQuestionId(),
             submission.getSubmittedAnswer(),
             submission.isCorrect(),
             submission.getAwardedPoints(),

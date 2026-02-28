@@ -2,11 +2,11 @@ package com.intelliquiz.api.infrastructure.websocket;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
-import com.intelliquiz.api.domain.ports.SubmissionRepository;
+import com.intelliquiz.api.submission.internal.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.infrastructure.websocket.dto.AnswerDistribution;
 import net.jqwik.api.*;
 
@@ -53,16 +53,16 @@ class AnswerDistributionPropertyTest {
         Team team4 = new Team(); team4.setId(4L); team4.setName("Team 4");
         Team team5 = new Team(); team5.setId(5L); team5.setName("Team 5");
         
-        Submission sub1 = new Submission(team1, question, "A");
-        Submission sub2 = new Submission(team2, question, "B"); // Correct
-        Submission sub3 = new Submission(team3, question, "B"); // Correct
-        Submission sub4 = new Submission(team4, question, "C");
-        Submission sub5 = new Submission(team5, question, "A");
+        Submission sub1 = new Submission(team1.getId(), question.getId(), "A");
+        Submission sub2 = new Submission(team2.getId(), question.getId(), "B"); // Correct
+        Submission sub3 = new Submission(team3.getId(), question.getId(), "B"); // Correct
+        Submission sub4 = new Submission(team4.getId(), question.getId(), "C");
+        Submission sub5 = new Submission(team5.getId(), question.getId(), "A");
         
         List<Submission> submissions = List.of(sub1, sub2, sub3, sub4, sub5);
         
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByQuestion(question)).thenReturn(submissions);
+        when(submissionRepository.findByQuestionId(question.getId())).thenReturn(submissions);
         
         AnswerDistributionService service = new AnswerDistributionService(
                 questionRepository, submissionRepository
@@ -114,7 +114,7 @@ class AnswerDistributionPropertyTest {
         question.setQuiz(quiz);
         
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByQuestion(question)).thenReturn(List.of());
+        when(submissionRepository.findByQuestionId(question.getId())).thenReturn(List.of());
         
         AnswerDistributionService service = new AnswerDistributionService(
                 questionRepository, submissionRepository
@@ -154,13 +154,13 @@ class AnswerDistributionPropertyTest {
         Team team3 = new Team(); team3.setId(3L);
         
         List<Submission> submissions = List.of(
-                new Submission(team1, question, "A"),
-                new Submission(team2, question, "C"),
-                new Submission(team3, question, "D")
+                new Submission(team1.getId(), question.getId(), "A"),
+                new Submission(team2.getId(), question.getId(), "C"),
+                new Submission(team3.getId(), question.getId(), "D")
         );
         
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByQuestion(question)).thenReturn(submissions);
+        when(submissionRepository.findByQuestionId(question.getId())).thenReturn(submissions);
         
         AnswerDistributionService service = new AnswerDistributionService(
                 questionRepository, submissionRepository
@@ -203,11 +203,11 @@ class AnswerDistributionPropertyTest {
         Team team1 = new Team(); team1.setId(1L);
         
         List<Submission> submissions = List.of(
-                new Submission(team1, question, "Paris")
+                new Submission(team1.getId(), question.getId(), "Paris")
         );
         
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
-        when(submissionRepository.findByQuestion(question)).thenReturn(submissions);
+        when(submissionRepository.findByQuestionId(question.getId())).thenReturn(submissions);
         
         AnswerDistributionService service = new AnswerDistributionService(
                 questionRepository, submissionRepository

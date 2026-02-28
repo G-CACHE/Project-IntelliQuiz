@@ -2,6 +2,7 @@ package com.intelliquiz.api.domain.entities;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
 import com.intelliquiz.api.user.internal.domain.entities.User;
@@ -195,7 +196,7 @@ public class RelationshipIntegrityPropertyTest {
                 Difficulty.EASY, "A");
         entityManager.persistAndFlush(question);
         
-        Submission submission = new Submission(team, question, submittedAnswer);
+        Submission submission = new Submission(team.getId(), question.getId(), submittedAnswer);
         
         entityManager.persistAndFlush(submission);
         entityManager.clear();
@@ -203,7 +204,7 @@ public class RelationshipIntegrityPropertyTest {
         // Verify submission references the correct team via direct lookup
         Submission retrievedSubmission = entityManager.find(Submission.class, submission.getId());
         assertThat(retrievedSubmission).isNotNull();
-        assertThat(retrievedSubmission.getTeam().getId()).isEqualTo(team.getId());
+        assertThat(retrievedSubmission.getTeamId()).isEqualTo(team.getId());
     }
 
     @Provide

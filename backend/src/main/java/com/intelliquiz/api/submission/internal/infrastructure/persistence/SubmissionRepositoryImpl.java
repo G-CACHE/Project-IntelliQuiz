@@ -1,11 +1,9 @@
-package com.intelliquiz.api.infrastructure.adapters.persistence.impl;
+package com.intelliquiz.api.submission.internal.infrastructure.persistence;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-import com.intelliquiz.api.domain.entities.Submission;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
-import com.intelliquiz.api.domain.ports.SubmissionRepository;
-import com.intelliquiz.api.infrastructure.adapters.persistence.spring.SpringSubmissionRepository;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.domain.ports.SubmissionRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,18 +31,18 @@ public class SubmissionRepositoryImpl implements SubmissionRepository {
     }
 
     @Override
-    public List<Submission> findByTeam(Team team) {
-        return springSubmissionRepository.findByTeam(team);
+    public List<Submission> findByTeamId(Long teamId) {
+        return springSubmissionRepository.findByTeamId(teamId);
     }
 
     @Override
-    public List<Submission> findByQuestion(Question question) {
-        return springSubmissionRepository.findByQuestion(question);
+    public List<Submission> findByQuestionId(Long questionId) {
+        return springSubmissionRepository.findByQuestionId(questionId);
     }
 
     @Override
-    public Optional<Submission> findByTeamAndQuestion(Team team, Question question) {
-        return springSubmissionRepository.findByTeamAndQuestion(team, question);
+    public Optional<Submission> findByTeamIdAndQuestionId(Long teamId, Long questionId) {
+        return springSubmissionRepository.findByTeamIdAndQuestionId(teamId, questionId);
     }
 
     @Override
@@ -55,5 +53,17 @@ public class SubmissionRepositoryImpl implements SubmissionRepository {
     @Override
     public void deleteById(Long id) {
         springSubmissionRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByQuestionId(Long questionId) {
+        springSubmissionRepository.deleteByQuestionId(questionId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByTeamId(Long teamId) {
+        springSubmissionRepository.deleteByTeamId(teamId);
     }
 }

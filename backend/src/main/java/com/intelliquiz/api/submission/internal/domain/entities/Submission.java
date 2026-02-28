@@ -1,9 +1,5 @@
-package com.intelliquiz.api.domain.entities;
+package com.intelliquiz.api.submission.internal.domain.entities;
 
-import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-import com.intelliquiz.api.team.internal.domain.entities.Team;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -11,6 +7,8 @@ import java.time.LocalDateTime;
 /**
  * Submission entity representing a team's answer submission with correctness and points.
  * Maps to the "submission" database table.
+ * 
+ * Decoupled from Team and Question entities — stores only foreign key IDs.
  */
 @Entity
 @Table(name = "submission")
@@ -20,14 +18,11 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "team_id", nullable = false)
-    @JsonBackReference("team-submissions")
-    private Team team;
+    @Column(name = "team_id", nullable = false)
+    private Long teamId;
 
-    @ManyToOne
-    @JoinColumn(name = "question_id", nullable = false)
-    private Question question;
+    @Column(name = "question_id", nullable = false)
+    private Long questionId;
 
     @Column(name = "submitted_answer")
     private String submittedAnswer;
@@ -47,9 +42,9 @@ public class Submission {
     public Submission() {
     }
 
-    public Submission(Team team, Question question, String submittedAnswer) {
-        this.team = team;
-        this.question = question;
+    public Submission(Long teamId, Long questionId, String submittedAnswer) {
+        this.teamId = teamId;
+        this.questionId = questionId;
         this.submittedAnswer = submittedAnswer;
         this.submittedAt = LocalDateTime.now();
     }
@@ -62,20 +57,20 @@ public class Submission {
         this.id = id;
     }
 
-    public Team getTeam() {
-        return team;
+    public Long getTeamId() {
+        return teamId;
     }
 
-    public void setTeam(Team team) {
-        this.team = team;
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
     }
 
-    public Question getQuestion() {
-        return question;
+    public Long getQuestionId() {
+        return questionId;
     }
 
-    public void setQuestion(Question question) {
-        this.question = question;
+    public void setQuestionId(Long questionId) {
+        this.questionId = questionId;
     }
 
     public String getSubmittedAnswer() {
@@ -121,20 +116,20 @@ public class Submission {
     // ==================== Rich Domain Behavior ====================
 
     /**
-     * Grades this submission by evaluating correctness and awarding points.
-     * Updates the team's total score if the answer is correct.
+     * Grades this submission by checking correctness against the provided correct answer
+     * and awarding points if correct.
      * 
-     * This method:
-     * 1. Checks if the submitted answer is correct using Question.isCorrectAnswer()
-     * 2. Sets awardedPoints to question.points if correct, 0 otherwise
-     * 3. Updates the team's totalScore via addPoints()
-     * 4. Marks the submission as graded
+     * Note: Team score update is handled by the service layer via TeamFacade.
+     *
+     * @param correctAnswer the correct answer key to compare against
+     * @param questionPoints the points to award if the answer is correct
      */
-    public void grade() {
-        this.isCorrect = question.isCorrectAnswer(this.submittedAnswer);
+    public void grade(String correctAnswer, int questionPoints) {
+        this.isCorrect = correctAnswer != null
+                && correctAnswer.trim().equalsIgnoreCase(
+                        this.submittedAnswer != null ? this.submittedAnswer.trim() : "");
         if (this.isCorrect) {
-            this.awardedPoints = question.getPoints();
-            team.addPoints(this.awardedPoints);
+            this.awardedPoints = questionPoints;
         } else {
             this.awardedPoints = 0;
         }

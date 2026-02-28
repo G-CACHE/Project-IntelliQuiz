@@ -2,12 +2,12 @@ package com.intelliquiz.api.infrastructure.websocket;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.SubmissionRepository;
+import com.intelliquiz.api.submission.internal.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import com.intelliquiz.api.infrastructure.websocket.dto.*;
 import org.slf4j.Logger;
@@ -146,14 +146,20 @@ public class GameFlowService {
         List<TeamResult> results = new ArrayList<>();
         
         for (Team team : teams) {
-            Optional<Submission> submissionOpt = submissionRepository.findByTeamAndQuestion(team, question);
+            Optional<Submission> submissionOpt = submissionRepository.findByTeamIdAndQuestionId(team.getId(), question.getId());
             
             if (submissionOpt.isPresent()) {
                 Submission submission = submissionOpt.get();
                 // Grade if not already graded
                 if (!submission.isGraded()) {
-                    submission.grade();
+                    submission.grade(question.getCorrectKey(), question.getPoints());
                     submissionRepository.save(submission);
+                    
+                    // Update team score if correct
+                    if (submission.isCorrect()) {
+                        team.addPoints(submission.getAwardedPoints());
+                        teamRepository.save(team);
+                    }
                 }
                 
                 results.add(new TeamResult(
@@ -314,7 +320,7 @@ public class GameFlowService {
                 .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
         
         // Check for existing submission and update or create
-        Optional<Submission> existingSubmission = submissionRepository.findByTeamAndQuestion(team, question);
+        Optional<Submission> existingSubmission = submissionRepository.findByTeamIdAndQuestionId(team.getId(), question.getId());
         
         Submission submission;
         if (existingSubmission.isPresent()) {
@@ -326,7 +332,7 @@ public class GameFlowService {
             logger.debug("Updated submission for team {} question {}", teamId, questionId);
         } else {
             // Create new submission
-            submission = new Submission(team, question, answer);
+            submission = new Submission(team.getId(), question.getId(), answer);
             submission.validateSubmittedAt();
             submissionRepository.save(submission);
             logger.debug("Created submission for team {} question {}", teamId, questionId);

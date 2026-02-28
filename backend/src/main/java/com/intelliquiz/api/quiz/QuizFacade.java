@@ -85,4 +85,16 @@ public class QuizFacade {
     public void deactivateSession(Long quizId) {
         quizSessionService.deactivateSession(quizId);
     }
+
+    /**
+     * Check question existence.
+     */
+    public boolean questionExists(Long questionId) {
+        try {
+            questionManagementService.getQuestion(questionId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

@@ -5,7 +5,7 @@ import com.intelliquiz.api.auth.internal.presentation.dto.request.LoginRequest;
 import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.SystemRole;
-import com.intelliquiz.api.presentation.dto.request.*;
+import com.intelliquiz.api.submission.internal.presentation.dto.request.SubmitAnswerRequest;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
 import com.intelliquiz.api.user.internal.presentation.dto.request.CreateUserRequest;

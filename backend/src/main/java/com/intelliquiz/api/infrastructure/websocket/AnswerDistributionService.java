@@ -1,10 +1,10 @@
 package com.intelliquiz.api.infrastructure.websocket;
 
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
-import com.intelliquiz.api.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
-import com.intelliquiz.api.domain.ports.SubmissionRepository;
+import com.intelliquiz.api.submission.internal.domain.ports.SubmissionRepository;
 import com.intelliquiz.api.infrastructure.websocket.dto.AnswerDistribution;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +41,7 @@ public class AnswerDistributionService {
             return AnswerDistribution.empty();
         }
 
-        List<Submission> submissions = submissionRepository.findByQuestion(question);
+        List<Submission> submissions = submissionRepository.findByQuestionId(question.getId());
         
         if (question.getType() == QuestionType.MULTIPLE_CHOICE) {
             return calculateMcqDistribution(question, submissions);

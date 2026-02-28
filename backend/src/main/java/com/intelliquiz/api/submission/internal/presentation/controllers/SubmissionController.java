@@ -1,10 +1,10 @@
-package com.intelliquiz.api.presentation.controllers;
+package com.intelliquiz.api.submission.internal.presentation.controllers;
 
-import com.intelliquiz.api.application.services.SubmissionService;
-import com.intelliquiz.api.domain.entities.Submission;
-import com.intelliquiz.api.presentation.dto.request.SubmitAnswerRequest;
+import com.intelliquiz.api.submission.internal.application.services.SubmissionService;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.submission.internal.presentation.dto.request.SubmitAnswerRequest;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
-import com.intelliquiz.api.presentation.dto.response.SubmissionResponse;
+import com.intelliquiz.api.submission.internal.presentation.dto.response.SubmissionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
