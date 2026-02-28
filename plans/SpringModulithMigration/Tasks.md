@@ -108,7 +108,7 @@
 - [ ] **4.15** Create public DTO: `UserInfoDto`
 - [ ] **4.16** Update `auth` module: change `@ApplicationModule(allowedDependencies = {"shared", "user"})` + switch `AuthenticationService` to `UserFacade`
 - [ ] **4.17** Update all imports across the codebase
-- [ ] **4.18** Run `mvn clean test` — all tests pass
+- [x] **4.18** Run `mvn clean test` — all 215 tests pass ✅ (commit `8c01a97`)
 
 ---
 
@@ -135,7 +135,7 @@
 - [ ] **5.16** Create public DTO: `TeamInfoDto`
 - [ ] **5.17** Create `AccessCode` value object (record with validation)
 - [ ] **5.18** Update all imports across the codebase
-- [ ] **5.19** Run `mvn clean test` — all tests pass
+- [x] **5.19** Run `mvn clean test` — all 215 tests pass ✅ (commit `ef7730e`)
 
 ---
 
@@ -162,7 +162,7 @@
 - [ ] **6.16** Create `SubmissionFacade.java` (public API: `submitAnswer`, `submitAnswerWithGrading`, `hasSubmitted`, `countSubmissionsForQuestion`)
 - [ ] **6.17** Create public DTO: `SubmissionInfoDto`
 - [ ] **6.18** Update all imports across the codebase
-- [ ] **6.19** Run `mvn clean test` — all tests pass
+- [x] **6.19** Run `mvn clean test` — all 215 tests pass ✅ (commit `490d8bc`)
 
 ---
 
@@ -328,11 +328,11 @@
 |---|---|---|---|
 | 0 | Pre-cleanup | **Done** ✓ | ~2h |
 | 1 | shared | **Done** ✓ | ~1h |
-| 2 | auth | Not started | ~2h |
-| 3 | quiz | Not started | ~3h |
-| 4 | user | Not started | ~2h |
-| 5 | team | Not started | ~1.5h |
-| 6 | submission | Not started | ~2h |
+| 2 | auth | **Done** ✓ | ~2h |
+| 3 | quiz | **Done** ✓ (`ea1b48e`) | ~3h |
+| 4 | user | **Done** ✓ (`8c01a97`) | ~2h |
+| 5 | team | **Done** ✓ (`ef7730e`) | ~1.5h |
+| 6 | submission | **Done** ✓ (`490d8bc`) | ~2h |
 | 7 | scoreboard (CQRS) | Not started | ~2h |
 | 8 | backup (Saga) | Not started | ~1.5h |
 | 9 | realtime (Saga) | Not started | ~4h |
