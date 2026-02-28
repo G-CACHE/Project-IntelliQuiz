@@ -1,8 +1,9 @@
-package com.intelliquiz.api.presentation.controllers;
+package com.intelliquiz.api.scoreboard.internal.presentation.controllers;
 
-import com.intelliquiz.api.application.services.ScoreboardService;
+import com.intelliquiz.api.scoreboard.internal.application.query.ScoreboardQueryService;
+import com.intelliquiz.api.scoreboard.internal.domain.entities.ScoreboardEntry;
+import com.intelliquiz.api.scoreboard.internal.presentation.dto.response.ScoreboardResponse;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
-import com.intelliquiz.api.presentation.dto.response.ScoreboardResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,7 +19,7 @@ import java.util.List;
 
 /**
  * REST controller for scoreboard operations.
- * Requires authentication for all endpoints.
+ * CQRS read-only endpoint — reads from denormalized scoreboard_entries table.
  */
 @RestController
 @RequestMapping("/api/quizzes/{quizId}/scoreboard")
@@ -26,10 +27,10 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class ScoreboardController {
 
-    private final ScoreboardService scoreboardService;
+    private final ScoreboardQueryService queryService;
 
-    public ScoreboardController(ScoreboardService scoreboardService) {
-        this.scoreboardService = scoreboardService;
+    public ScoreboardController(ScoreboardQueryService queryService) {
+        this.queryService = queryService;
     }
 
     /**
@@ -61,17 +62,17 @@ public class ScoreboardController {
     public ResponseEntity<ScoreboardResponse> getScoreboard(
             @Parameter(description = "Unique identifier of the quiz", required = true)
             @PathVariable Long quizId) {
-        List<ScoreboardService.ScoreboardEntry> entries = scoreboardService.getScoreboard(quizId);
-        
+        List<ScoreboardEntry> entries = queryService.getScoreboard(quizId);
+
         List<ScoreboardResponse.ScoreboardEntry> responseEntries = entries.stream()
                 .map(entry -> new ScoreboardResponse.ScoreboardEntry(
-                        entry.rank(),
-                        entry.teamName(),
-                        entry.score(),
-                        entry.teamId()
+                        entry.getRank(),
+                        entry.getTeamName(),
+                        entry.getScore(),
+                        entry.getTeamId()
                 ))
                 .toList();
-        
+
         ScoreboardResponse response = new ScoreboardResponse(quizId, responseEntries);
         return ResponseEntity.ok(response);
     }
