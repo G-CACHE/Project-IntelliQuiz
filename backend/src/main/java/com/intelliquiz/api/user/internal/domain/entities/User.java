@@ -2,9 +2,12 @@ package com.intelliquiz.api.user.internal.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import com.intelliquiz.api.shared.enums.AdminPermission;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,9 @@ import java.util.List;
  */
 @Entity
 @Table(name = "\"user\"")
-public class User {
+@SQLDelete(sql = "UPDATE \"user\" SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class User extends SoftDeletableEntity {
 
     private static final int MIN_PASSWORD_LENGTH = 8;
 

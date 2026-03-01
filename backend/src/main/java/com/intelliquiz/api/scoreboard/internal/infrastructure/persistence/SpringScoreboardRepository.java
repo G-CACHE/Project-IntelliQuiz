@@ -2,6 +2,9 @@ package com.intelliquiz.api.scoreboard.internal.infrastructure.persistence;
 
 import com.intelliquiz.api.scoreboard.internal.domain.entities.ScoreboardEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +20,11 @@ public interface SpringScoreboardRepository extends JpaRepository<ScoreboardEntr
 
     Optional<ScoreboardEntry> findByTeamId(Long teamId);
 
-    void deleteByTeamId(Long teamId);
+    @Modifying
+    @Query("UPDATE ScoreboardEntry s SET s.deleted = true WHERE s.teamId = :teamId")
+    void deleteByTeamId(@Param("teamId") Long teamId);
 
-    void deleteByQuizId(Long quizId);
+    @Modifying
+    @Query("UPDATE ScoreboardEntry s SET s.deleted = true WHERE s.quizId = :quizId")
+    void deleteByQuizId(@Param("quizId") Long quizId);
 }

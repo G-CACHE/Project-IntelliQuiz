@@ -1,6 +1,9 @@
 package com.intelliquiz.api.team.internal.domain.entities;
 
+import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * Team entity representing a participant group registered for a specific quiz.
@@ -8,7 +11,9 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "team")
-public class Team {
+@SQLDelete(sql = "UPDATE team SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class Team extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

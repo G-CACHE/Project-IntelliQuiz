@@ -10,6 +10,7 @@ import com.intelliquiz.api.shared.exceptions.BackupNotFoundException;
 import com.intelliquiz.api.backup.internal.domain.ports.BackupRecordRepository;
 import com.intelliquiz.api.backup.internal.domain.ports.PostgresBackupExecutor;
 import com.intelliquiz.api.backup.internal.infrastructure.config.BackupProperties;
+import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,15 +44,18 @@ public class BackupServiceImpl implements BackupService {
     private final PostgresBackupExecutor postgresBackupExecutor;
     private final BackupProperties backupProperties;
     private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
 
     public BackupServiceImpl(BackupRecordRepository backupRecordRepository,
                              PostgresBackupExecutor postgresBackupExecutor,
                              BackupProperties backupProperties,
-                             ApplicationEventPublisher eventPublisher) {
+                             ApplicationEventPublisher eventPublisher,
+                             EntityManager entityManager) {
         this.backupRecordRepository = backupRecordRepository;
         this.postgresBackupExecutor = postgresBackupExecutor;
         this.backupProperties = backupProperties;
         this.eventPublisher = eventPublisher;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -123,8 +127,8 @@ public class BackupServiceImpl implements BackupService {
     }
 
     @Override
-    @Transactional
     public BackupRecord restoreFromBackup(Long id, Long restoredByUserId) {
+        // Step 1: Validate backup exists and file is on disk
         BackupRecord record = backupRecordRepository.findById(id)
                 .orElseThrow(() -> new BackupNotFoundException(id));
 
@@ -134,33 +138,39 @@ public class BackupServiceImpl implements BackupService {
             throw new BackupFileNotFoundException(record.getFilename());
         }
 
-        // ── Saga: safety backup → try restore → compensate on failure ──
-        logger.info("Creating pre-restore safety backup before restoring from: {}", record.getFilename());
-        BackupRecord safetyBackup = createBackup(restoredByUserId);
+        // Step 2: Clear the Hibernate persistence context.
+        // The restore runs psql externally (outside JDBC), so all managed entities
+        // become stale once the DB is replaced.
+        entityManager.clear();
 
+        // Step 3: Execute the restore — drops all tables and recreates from dump
         try {
             postgresBackupExecutor.restoreFromDump(backupPath);
             logger.info("Database restored successfully from: {}", record.getFilename());
         } catch (Exception e) {
-            // Compensation: re-restore from the safety backup
-            logger.error("Restore failed, compensating by re-restoring safety backup: {}", safetyBackup.getFilename(), e);
-            try {
-                Path safetyPath = getBackupPath(safetyBackup.getFilename());
-                postgresBackupExecutor.restoreFromDump(safetyPath);
-                logger.info("Compensation successful — safety backup restored");
-            } catch (Exception compensationEx) {
-                logger.error("CRITICAL: Compensation also failed! Database may be inconsistent.", compensationEx);
-            }
-            throw new BackupException("Restore failed and was compensated from safety backup", e);
+            logger.error("Restore failed from: {}", record.getFilename(), e);
+            throw new BackupException("Restore failed: " + e.getMessage(), e);
         }
 
-        // Update record with restore timestamp
-        record.setLastRestoredAt(LocalDateTime.now());
-        record = backupRecordRepository.save(record);
+        // Step 4: Clear Hibernate again — the DB is now the restored state.
+        entityManager.clear();
 
-        eventPublisher.publishEvent(new BackupRestoredEvent(record.getId(), record.getFilename(), restoredByUserId));
+        // Step 5: Re-read the record from the restored DB (it may or may not exist
+        // depending on whether the dump was taken before or after this record was created).
+        BackupRecord restoredRecord = backupRecordRepository.findById(id).orElse(null);
+        if (restoredRecord != null) {
+            restoredRecord.setLastRestoredAt(LocalDateTime.now());
+            restoredRecord = backupRecordRepository.save(restoredRecord);
+        } else {
+            // The restored DB predates this backup record — re-insert it
+            record.setLastRestoredAt(LocalDateTime.now());
+            restoredRecord = backupRecordRepository.save(record);
+        }
 
-        return record;
+        eventPublisher.publishEvent(new BackupRestoredEvent(
+                restoredRecord.getId(), restoredRecord.getFilename(), restoredByUserId));
+
+        return restoredRecord;
     }
 
     @Override

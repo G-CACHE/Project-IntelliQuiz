@@ -1,9 +1,12 @@
 package com.intelliquiz.api.quiz.internal.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +19,9 @@ import java.util.List;
  */
 @Entity
 @Table(name = "question")
-public class Question {
+@SQLDelete(sql = "UPDATE question SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class Question extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

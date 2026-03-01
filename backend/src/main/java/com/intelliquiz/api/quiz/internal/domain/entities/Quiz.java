@@ -1,10 +1,13 @@
 package com.intelliquiz.api.quiz.internal.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.InvalidQuizStateException;
 import com.intelliquiz.api.shared.exceptions.QuizNotReadyException;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,9 @@ import java.util.List;
  */
 @Entity
 @Table(name = "quiz")
-public class Quiz {
+@SQLDelete(sql = "UPDATE quiz SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class Quiz extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +41,9 @@ public class Quiz {
 
     @Enumerated(EnumType.STRING)
     private QuizStatus status;
+
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
     @JsonManagedReference("quiz-questions")
@@ -155,6 +163,14 @@ public class Quiz {
 
     public void setStatus(QuizStatus status) {
         this.status = status;
+    }
+
+    public Long getCreatedByUserId() {
+        return createdByUserId;
+    }
+
+    public void setCreatedByUserId(Long createdByUserId) {
+        this.createdByUserId = createdByUserId;
     }
 
     public List<Question> getQuestions() {

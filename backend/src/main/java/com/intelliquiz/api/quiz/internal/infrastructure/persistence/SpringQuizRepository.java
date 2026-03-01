@@ -12,5 +12,7 @@ import java.util.List;
 @Repository
 public interface SpringQuizRepository extends JpaRepository<Quiz, Long> {
 
+    List<Quiz> findByCreatedByUserId(Long createdByUserId);
+
     List<Quiz> findByIsLiveSessionTrue();
 }

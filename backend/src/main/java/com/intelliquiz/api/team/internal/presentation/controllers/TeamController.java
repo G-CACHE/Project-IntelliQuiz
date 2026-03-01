@@ -1,9 +1,12 @@
 package com.intelliquiz.api.team.internal.presentation.controllers;
 
+import com.intelliquiz.api.quiz.QuizFacade;
 import com.intelliquiz.api.team.internal.application.services.TeamRegistrationService;
 import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.team.internal.presentation.dto.request.CreateTeamRequest;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.shared.security.SecurityUtils;
 import com.intelliquiz.api.team.internal.presentation.dto.response.TeamResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +20,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,9 +37,12 @@ import java.util.List;
 public class TeamController {
 
     private final TeamRegistrationService teamRegistrationService;
+    private final QuizFacade quizFacade;
 
-    public TeamController(TeamRegistrationService teamRegistrationService) {
+    public TeamController(TeamRegistrationService teamRegistrationService,
+                          QuizFacade quizFacade) {
         this.teamRegistrationService = teamRegistrationService;
+        this.quizFacade = quizFacade;
     }
 
     /**
@@ -64,7 +72,11 @@ public class TeamController {
     })
     public ResponseEntity<List<TeamResponse>> getTeams(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long quizId) {
+            @PathVariable Long quizId,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizFacade.verifyQuizAccess(quizId, userId, role);
         List<Team> teams = teamRegistrationService.getTeamsByQuiz(quizId);
         List<TeamResponse> responses = teams.stream()
                 .map(TeamResponse::from)
@@ -106,7 +118,11 @@ public class TeamController {
     public ResponseEntity<TeamResponse> registerTeam(
             @Parameter(description = "Unique identifier of the quiz", required = true)
             @PathVariable Long quizId,
-            @Valid @RequestBody CreateTeamRequest request) {
+            @Valid @RequestBody CreateTeamRequest request,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizFacade.verifyQuizAccess(quizId, userId, role);
         Team team = teamRegistrationService.registerTeam(quizId, request.name());
         return ResponseEntity.status(HttpStatus.CREATED).body(TeamResponse.from(team));
     }
@@ -168,7 +184,11 @@ public class TeamController {
     })
     public ResponseEntity<Void> resetTeamScores(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long quizId) {
+            @PathVariable Long quizId,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizFacade.verifyQuizAccess(quizId, userId, role);
         teamRegistrationService.resetTeamScores(quizId);
         return ResponseEntity.ok().build();
     }

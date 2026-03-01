@@ -41,8 +41,8 @@ public class CorsConfig {
                 "Access-Control-Request-Headers"
         ));
         
-        // Expose Authorization header to frontend
-        configuration.setExposedHeaders(List.of("Authorization"));
+        // Expose headers (cookie-based auth — no Authorization header needed)
+        configuration.setExposedHeaders(List.of("Set-Cookie"));
         
         // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);

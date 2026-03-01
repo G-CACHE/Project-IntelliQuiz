@@ -42,7 +42,7 @@ class DtoMappingPropertyTest {
         CreateQuizRequest request = new CreateQuizRequest(title, description);
         
         // When
-        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description());
+        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description(), 1L);
         
         // Then
         assertThat(command.title()).isEqualTo(title);

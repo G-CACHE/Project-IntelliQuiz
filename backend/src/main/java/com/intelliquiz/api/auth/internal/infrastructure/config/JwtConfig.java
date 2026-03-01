@@ -19,18 +19,19 @@ import java.util.function.Function;
 @Component
 public class JwtConfig {
 
-    @Value("${jwt.secret:defaultSecretKeyThatShouldBeChangedInProduction123456}")
+    @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration:86400000}")
-    private long expiration; // Default 24 hours in milliseconds
+    @Value("${jwt.expiration:1800000}")
+    private long expiration; // Default 30 minutes in milliseconds
 
     /**
-     * Generates a JWT token for the given username.
+     * Generates a JWT token for the given username, role, and user ID.
      */
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("uid", userId);
         return createToken(claims, username);
     }
 
@@ -64,6 +65,13 @@ public class JwtConfig {
      */
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    /**
+     * Extracts the user ID from a JWT token.
+     */
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("uid", Long.class));
     }
 
     /**

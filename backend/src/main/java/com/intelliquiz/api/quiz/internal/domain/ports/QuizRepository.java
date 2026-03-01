@@ -16,6 +16,8 @@ public interface QuizRepository {
 
     List<Quiz> findAll();
 
+    List<Quiz> findByCreatedByUserId(Long userId);
+
     List<Quiz> findByIsLiveSessionTrue();
 
     void delete(Quiz quiz);

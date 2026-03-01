@@ -16,6 +16,8 @@ public class BackupProperties {
     private String postgresDatabase = "intelliquiz";
     private String postgresUsername = "postgres";
     private String postgresPassword = "mysecretpassword";
+    private String dockerContainerName = "intelliquiz_db";
+    private boolean useDockerExec = true;
 
     public String getDirectory() {
         return directory;
@@ -63,5 +65,21 @@ public class BackupProperties {
 
     public void setPostgresPassword(String postgresPassword) {
         this.postgresPassword = postgresPassword;
+    }
+
+    public String getDockerContainerName() {
+        return dockerContainerName;
+    }
+
+    public void setDockerContainerName(String dockerContainerName) {
+        this.dockerContainerName = dockerContainerName;
+    }
+
+    public boolean isUseDockerExec() {
+        return useDockerExec;
+    }
+
+    public void setUseDockerExec(boolean useDockerExec) {
+        this.useDockerExec = useDockerExec;
     }
 }

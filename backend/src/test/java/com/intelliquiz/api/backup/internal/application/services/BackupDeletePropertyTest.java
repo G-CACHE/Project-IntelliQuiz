@@ -5,6 +5,7 @@ import com.intelliquiz.api.shared.enums.BackupStatus;
 import com.intelliquiz.api.backup.internal.domain.ports.BackupRecordRepository;
 import com.intelliquiz.api.backup.internal.domain.ports.PostgresBackupExecutor;
 import com.intelliquiz.api.backup.internal.infrastructure.config.BackupProperties;
+import jakarta.persistence.EntityManager;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.*;
 import org.junit.jupiter.api.io.TempDir;
@@ -60,7 +61,7 @@ class BackupDeletePropertyTest {
             
             when(repository.findById(backupId)).thenReturn(Optional.of(record));
             
-            BackupServiceImpl service = new BackupServiceImpl(repository, executor, properties, noOpPublisher());
+            BackupServiceImpl service = new BackupServiceImpl(repository, executor, properties, noOpPublisher(), mock(EntityManager.class));
             
             // Verify file exists before delete
             assert Files.exists(backupFile) : "File should exist before delete";
@@ -115,7 +116,7 @@ class BackupDeletePropertyTest {
             
             when(repository.findById(backupId)).thenReturn(Optional.of(record));
             
-            BackupServiceImpl service = new BackupServiceImpl(repository, executor, properties, noOpPublisher());
+            BackupServiceImpl service = new BackupServiceImpl(repository, executor, properties, noOpPublisher(), mock(EntityManager.class));
             
             // Act - should not throw even though file doesn't exist
             service.deleteBackup(backupId);

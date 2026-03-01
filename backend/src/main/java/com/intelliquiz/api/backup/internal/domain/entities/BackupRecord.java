@@ -1,7 +1,10 @@
 package com.intelliquiz.api.backup.internal.domain.entities;
 
+import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import com.intelliquiz.api.shared.enums.BackupStatus;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +14,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "backup_record")
-public class BackupRecord {
+@SQLDelete(sql = "UPDATE backup_record SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class BackupRecord extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

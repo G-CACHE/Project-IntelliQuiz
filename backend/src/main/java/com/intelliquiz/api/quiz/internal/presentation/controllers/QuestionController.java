@@ -3,11 +3,14 @@ package com.intelliquiz.api.quiz.internal.presentation.controllers;
 import com.intelliquiz.api.quiz.internal.application.commands.CreateQuestionCommand;
 import com.intelliquiz.api.quiz.internal.application.commands.UpdateQuestionCommand;
 import com.intelliquiz.api.quiz.internal.application.services.QuestionManagementService;
+import com.intelliquiz.api.quiz.internal.application.services.QuizManagementService;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.ReorderQuestionsRequest;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.UpdateQuestionRequest;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.shared.security.SecurityUtils;
 import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuestionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +24,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,15 +41,19 @@ import java.util.List;
 public class QuestionController {
 
     private final QuestionManagementService questionManagementService;
+    private final QuizManagementService quizManagementService;
 
-    public QuestionController(QuestionManagementService questionManagementService) {
+    public QuestionController(QuestionManagementService questionManagementService,
+                              QuizManagementService quizManagementService) {
         this.questionManagementService = questionManagementService;
+        this.quizManagementService = quizManagementService;
     }
 
     /**
      * Lists all questions for a quiz.
      */
     @GetMapping("/quizzes/{quizId}/questions")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "List questions for a quiz",
             description = "Retrieves all questions belonging to a specific quiz, ordered by their position."
@@ -68,7 +77,11 @@ public class QuestionController {
     })
     public ResponseEntity<List<QuestionResponse>> getQuestions(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long quizId) {
+            @PathVariable Long quizId,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(quizId, userId, role);
         List<Question> questions = questionManagementService.getQuestionsByQuiz(quizId);
         List<QuestionResponse> responses = questions.stream()
                 .map(QuestionResponse::from)
@@ -109,7 +122,11 @@ public class QuestionController {
     public ResponseEntity<QuestionResponse> addQuestion(
             @Parameter(description = "Unique identifier of the quiz", required = true)
             @PathVariable Long quizId,
-            @Valid @RequestBody CreateQuestionRequest request) {
+            @Valid @RequestBody CreateQuestionRequest request,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(quizId, userId, role);
         CreateQuestionCommand command = new CreateQuestionCommand(
                 request.text(),
                 request.type(),
@@ -119,7 +136,7 @@ public class QuestionController {
                 request.timeLimit(),
                 request.options()
         );
-        Question question = questionManagementService.addQuestion(quizId, command);
+        Question question = questionManagementService.addQuestion(quizId, command, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(QuestionResponse.from(question));
     }
 
@@ -234,7 +251,11 @@ public class QuestionController {
     public ResponseEntity<List<QuestionResponse>> reorderQuestions(
             @Parameter(description = "Unique identifier of the quiz", required = true)
             @PathVariable Long quizId,
-            @Valid @RequestBody ReorderQuestionsRequest request) {
+            @Valid @RequestBody ReorderQuestionsRequest request,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(quizId, userId, role);
         questionManagementService.reorderQuestions(quizId, request.questionIds());
         // Fetch the updated questions after reordering
         List<Question> questions = questionManagementService.getQuestionsByQuiz(quizId);

@@ -36,6 +36,11 @@ public class QuizRepositoryImpl implements QuizRepository {
     }
 
     @Override
+    public List<Quiz> findByCreatedByUserId(Long userId) {
+        return springQuizRepository.findByCreatedByUserId(userId);
+    }
+
+    @Override
     public List<Quiz> findByIsLiveSessionTrue() {
         return springQuizRepository.findByIsLiveSessionTrue();
     }

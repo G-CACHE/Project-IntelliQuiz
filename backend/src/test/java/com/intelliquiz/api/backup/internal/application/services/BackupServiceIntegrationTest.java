@@ -5,6 +5,7 @@ import com.intelliquiz.api.shared.enums.BackupStatus;
 import com.intelliquiz.api.backup.internal.domain.ports.BackupRecordRepository;
 import com.intelliquiz.api.backup.internal.domain.ports.PostgresBackupExecutor;
 import com.intelliquiz.api.backup.internal.infrastructure.config.BackupProperties;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -41,6 +42,7 @@ class BackupServiceIntegrationTest {
         backupRecordRepository = mock(BackupRecordRepository.class);
         postgresBackupExecutor = mock(PostgresBackupExecutor.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        EntityManager entityManager = mock(EntityManager.class);
         backupProperties = new BackupProperties();
         backupProperties.setDirectory(tempDir.toString());
 
@@ -48,7 +50,8 @@ class BackupServiceIntegrationTest {
                 backupRecordRepository,
                 postgresBackupExecutor,
                 backupProperties,
-                eventPublisher
+                eventPublisher,
+                entityManager
         );
     }
 
@@ -123,26 +126,26 @@ class BackupServiceIntegrationTest {
     }
 
     @Test
-    void restoreFromBackup_shouldCreatePreRestoreBackup() throws Exception {
+    void restoreFromBackup_shouldRestoreWithoutCreatingNewBackup() throws Exception {
         String filename = "test_backup.sql";
         Path backupFile = tempDir.resolve(filename);
         Files.createFile(backupFile);
         BackupRecord record = new BackupRecord(filename, LocalDateTime.now().minusHours(1), 1000L, BackupStatus.SUCCESS);
         record.setId(1L);
+        // findById is called twice: once initially, once post-restore
         when(backupRecordRepository.findById(1L)).thenReturn(Optional.of(record));
-        when(postgresBackupExecutor.createDump(any(Path.class))).thenReturn(2000L);
         when(backupRecordRepository.save(any(BackupRecord.class)))
-                .thenAnswer(invocation -> {
-                    BackupRecord r = invocation.getArgument(0);
-                    if (r.getId() == null) r.setId(2L);
-                    return r;
-                });
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         BackupRecord result = backupService.restoreFromBackup(1L, SUPER_ADMIN_USER_ID);
 
         assertNotNull(result.getLastRestoredAt());
-        verify(postgresBackupExecutor).createDump(any(Path.class));
+        // No safety dump should be created
+        verify(postgresBackupExecutor, never()).createDump(any(Path.class));
+        // Actual restore executed
         verify(postgresBackupExecutor).restoreFromDump(backupFile);
+        // save called only once for the restored record update
+        verify(backupRecordRepository, times(1)).save(any(BackupRecord.class));
     }
 
     @Test

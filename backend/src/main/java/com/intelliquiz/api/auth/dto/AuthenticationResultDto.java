@@ -2,9 +2,10 @@ package com.intelliquiz.api.auth.dto;
 
 /**
  * Public DTO for authentication results.
- * Exposes only the token and role name — no internal entity leakage.
+ * Exposes userId, username, and role — no token (token is HttpOnly cookie).
  */
 public record AuthenticationResultDto(
-    String token,
+    Long userId,
+    String username,
     String role
 ) {}

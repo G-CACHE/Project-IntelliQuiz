@@ -27,6 +27,9 @@ public record QuizResponse(
     @Schema(description = "Current status of the quiz (DRAFT, READY, ACTIVE, ARCHIVED)", example = "READY")
     QuizStatus status,
     
+    @Schema(description = "ID of the admin who created this quiz", example = "2")
+    Long createdByUserId,
+    
     @Schema(description = "Number of questions in the quiz", example = "10")
     int questionCount,
     
@@ -44,6 +47,7 @@ public record QuizResponse(
             quiz.getProctorPin(),
             quiz.isLiveSession(),
             quiz.getStatus(),
+            quiz.getCreatedByUserId(),
             quiz.getQuestions() != null ? quiz.getQuestions().size() : 0,
             0 // Team count resolved externally via TeamFacade after module extraction
         );

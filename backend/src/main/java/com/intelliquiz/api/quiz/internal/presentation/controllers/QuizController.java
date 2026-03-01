@@ -8,6 +8,8 @@ import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
 import com.intelliquiz.api.quiz.internal.presentation.dto.request.UpdateQuizRequest;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.shared.security.SecurityUtils;
 import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuizResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +23,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,9 +53,10 @@ public class QuizController {
      * Lists all quizzes.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "List all quizzes",
-            description = "Retrieves a list of all quizzes in the system."
+            description = "Retrieves quizzes accessible to the current user. Admins see their own quizzes; Super Admins see all."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -65,8 +70,10 @@ public class QuizController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    public ResponseEntity<List<QuizResponse>> getAllQuizzes() {
-        List<Quiz> quizzes = quizManagementService.getAllQuizzes();
+    public ResponseEntity<List<QuizResponse>> getAllQuizzes(Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        List<Quiz> quizzes = quizManagementService.getQuizzesForUser(userId, role);
         List<QuizResponse> responses = quizzes.stream()
                 .map(QuizResponse::from)
                 .toList();
@@ -77,9 +84,10 @@ public class QuizController {
      * Gets a quiz by ID.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "Get quiz by ID",
-            description = "Retrieves a specific quiz by its unique identifier."
+            description = "Retrieves a specific quiz by its unique identifier. Admins can only access their own quizzes."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -93,6 +101,11 @@ public class QuizController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not own this quiz",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "Quiz not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
@@ -100,8 +113,11 @@ public class QuizController {
     })
     public ResponseEntity<QuizResponse> getQuiz(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long id) {
-        Quiz quiz = quizManagementService.getQuiz(id);
+            @PathVariable Long id,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        Quiz quiz = quizManagementService.getQuizForUser(id, userId, role);
         return ResponseEntity.ok(QuizResponse.from(quiz));
     }
 
@@ -109,9 +125,10 @@ public class QuizController {
      * Creates a new quiz.
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "Create a new quiz",
-            description = "Creates a new quiz with the provided title and description. The quiz is created in DRAFT status."
+            description = "Creates a new quiz with the provided title and description. The quiz is created in DRAFT status and assigned to the current user."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -130,8 +147,11 @@ public class QuizController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    public ResponseEntity<QuizResponse> createQuiz(@Valid @RequestBody CreateQuizRequest request) {
-        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description());
+    public ResponseEntity<QuizResponse> createQuiz(
+            @Valid @RequestBody CreateQuizRequest request,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description(), userId);
         Quiz quiz = quizManagementService.createQuiz(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(QuizResponse.from(quiz));
     }
@@ -140,9 +160,10 @@ public class QuizController {
      * Updates an existing quiz.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "Update a quiz",
-            description = "Updates an existing quiz with the provided title and description."
+            description = "Updates an existing quiz with the provided title and description. Admins can only update their own quizzes."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -169,7 +190,11 @@ public class QuizController {
     public ResponseEntity<QuizResponse> updateQuiz(
             @Parameter(description = "Unique identifier of the quiz", required = true)
             @PathVariable Long id,
-            @Valid @RequestBody UpdateQuizRequest request) {
+            @Valid @RequestBody UpdateQuizRequest request,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(id, userId, role);
         UpdateQuizCommand command = new UpdateQuizCommand(request.title(), request.description());
         Quiz quiz = quizManagementService.updateQuiz(id, command);
         return ResponseEntity.ok(QuizResponse.from(quiz));
@@ -201,7 +226,11 @@ public class QuizController {
     })
     public ResponseEntity<Void> deleteQuiz(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(id, userId, role);
         quizManagementService.deleteQuiz(id);
         return ResponseEntity.noContent().build();
     }
@@ -238,7 +267,11 @@ public class QuizController {
     })
     public ResponseEntity<QuizResponse> transitionToReady(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(id, userId, role);
         Quiz quiz = quizManagementService.transitionToReady(id);
         return ResponseEntity.ok(QuizResponse.from(quiz));
     }
@@ -275,7 +308,11 @@ public class QuizController {
     })
     public ResponseEntity<QuizResponse> archiveQuiz(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(id, userId, role);
         Quiz quiz = quizManagementService.archiveQuiz(id);
         return ResponseEntity.ok(QuizResponse.from(quiz));
     }
@@ -312,7 +349,11 @@ public class QuizController {
     })
     public ResponseEntity<QuizResponse> activateSession(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(id, userId, role);
         Quiz quiz = quizSessionService.activateSession(id);
         return ResponseEntity.ok(QuizResponse.from(quiz));
     }
@@ -349,7 +390,11 @@ public class QuizController {
     })
     public ResponseEntity<QuizResponse> deactivateSession(
             @Parameter(description = "Unique identifier of the quiz", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        quizManagementService.verifyQuizAccess(id, userId, role);
         Quiz quiz = quizSessionService.deactivateSession(id);
         return ResponseEntity.ok(QuizResponse.from(quiz));
     }

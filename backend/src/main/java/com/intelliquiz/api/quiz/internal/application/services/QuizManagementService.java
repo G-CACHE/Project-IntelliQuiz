@@ -6,10 +6,12 @@ import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.events.QuizCreatedEvent;
 import com.intelliquiz.api.quiz.events.QuizStatusChangedEvent;
 import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import com.intelliquiz.api.shared.services.CodeGenerationService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,11 +48,61 @@ public class QuizManagementService {
     public Quiz createQuiz(CreateQuizCommand command) {
         String proctorPin = codeGenerationService.generateProctorPin();
         Quiz quiz = new Quiz(command.title(), command.description(), proctorPin, QuizStatus.DRAFT);
+        quiz.setCreatedByUserId(command.createdByUserId());
         quiz.validateTitle();
         Quiz saved = quizRepository.save(quiz);
         eventPublisher.publishEvent(new QuizCreatedEvent(
                 saved.getId(), saved.getTitle(), Instant.now()));
         return saved;
+    }
+
+    /**
+     * Gets quizzes filtered by ownership.
+     * SUPER_ADMIN sees all quizzes; ADMIN sees only their own.
+     *
+     * @param userId the current user's ID
+     * @param role   the current user's role
+     * @return list of accessible quizzes
+     */
+    public List<Quiz> getQuizzesForUser(Long userId, SystemRole role) {
+        if (role == SystemRole.SUPER_ADMIN) {
+            return quizRepository.findAll();
+        }
+        return quizRepository.findByCreatedByUserId(userId);
+    }
+
+    /**
+     * Gets a single quiz with ownership verification.
+     * SUPER_ADMIN can access any quiz; ADMIN can access only their own.
+     *
+     * @param quizId the quiz ID
+     * @param userId the current user's ID
+     * @param role   the current user's role
+     * @return the quiz
+     * @throws EntityNotFoundException if the quiz doesn't exist
+     * @throws AccessDeniedException   if the user doesn't own the quiz
+     */
+    public Quiz getQuizForUser(Long quizId, Long userId, SystemRole role) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (role != SystemRole.SUPER_ADMIN && !quiz.getCreatedByUserId().equals(userId)) {
+            throw new AccessDeniedException("You do not have access to this quiz");
+        }
+        return quiz;
+    }
+
+    /**
+     * Verifies the current user has access to the given quiz.
+     * Intended for sub-resource controllers (questions, teams) that need quiz ownership checks.
+     *
+     * @param quizId the quiz ID
+     * @param userId the current user's ID
+     * @param role   the current user's role
+     * @throws EntityNotFoundException if the quiz doesn't exist
+     * @throws AccessDeniedException   if the user doesn't own the quiz
+     */
+    public void verifyQuizAccess(Long quizId, Long userId, SystemRole role) {
+        getQuizForUser(quizId, userId, role);
     }
 
     /**

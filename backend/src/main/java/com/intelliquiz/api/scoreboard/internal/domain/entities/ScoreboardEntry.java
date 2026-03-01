@@ -1,6 +1,9 @@
 package com.intelliquiz.api.scoreboard.internal.domain.entities;
 
+import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * CQRS read model entity for the scoreboard.
@@ -11,7 +14,9 @@ import jakarta.persistence.*;
     @Index(name = "idx_scoreboard_quiz_id", columnList = "quizId"),
     @Index(name = "idx_scoreboard_team_id", columnList = "teamId")
 })
-public class ScoreboardEntry {
+@SQLDelete(sql = "UPDATE scoreboard_entries SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class ScoreboardEntry extends SoftDeletableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

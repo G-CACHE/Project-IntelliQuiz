@@ -5,5 +5,6 @@ package com.intelliquiz.api.quiz.internal.application.commands;
  */
 public record CreateQuizCommand(
     String title,
-    String description
+    String description,
+    Long createdByUserId
 ) {}

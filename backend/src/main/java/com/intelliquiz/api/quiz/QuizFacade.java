@@ -7,6 +7,7 @@ import com.intelliquiz.api.quiz.internal.application.services.QuizManagementServ
 import com.intelliquiz.api.quiz.internal.application.services.QuizSessionService;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -145,5 +146,16 @@ public class QuizFacade {
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Verifies that the given user has access to the quiz.
+     * SUPER_ADMIN can access any quiz; ADMIN can only access their own.
+     *
+     * @throws org.springframework.security.access.AccessDeniedException if access is denied
+     * @throws com.intelliquiz.api.shared.exceptions.EntityNotFoundException if quiz not found
+     */
+    public void verifyQuizAccess(Long quizId, Long userId, SystemRole role) {
+        quizManagementService.verifyQuizAccess(quizId, userId, role);
     }
 }

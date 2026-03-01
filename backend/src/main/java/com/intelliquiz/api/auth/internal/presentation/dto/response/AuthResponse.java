@@ -5,15 +5,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Response DTO for successful authentication.
+ * Token is delivered via HttpOnly cookie — NOT in the response body.
  */
-@Schema(description = "Response containing authentication result with JWT token")
+@Schema(description = "Response containing authentication result (token delivered via HttpOnly cookie)")
 public record AuthResponse(
-    @Schema(description = "JWT token for authenticating subsequent API requests", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    String token,
-    
     @Schema(description = "Username of the authenticated user", example = "admin")
     String username,
     
-    @Schema(description = "System role of the authenticated user (SUPER_ADMIN, ADMIN, PROCTOR)", example = "ADMIN")
+    @Schema(description = "System role of the authenticated user (SUPER_ADMIN, ADMIN)", example = "ADMIN")
     SystemRole role
 ) {}

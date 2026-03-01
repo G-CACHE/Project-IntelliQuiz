@@ -7,6 +7,7 @@ import com.intelliquiz.api.user.dto.UserInfoDto;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.shared.exceptions.AuthorizationException;
 import com.intelliquiz.api.shared.exceptions.BackupNotFoundException;
+import com.intelliquiz.api.shared.security.SecurityUtils;
 import com.intelliquiz.api.backup.internal.presentation.dto.BackupRecordDTO;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +37,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/backups")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 @Tag(name = "Database Backup", description = "Database backup and recovery operations (Super Admin only)")
 @SecurityRequirement(name = "bearerAuth")
 public class BackupController {
