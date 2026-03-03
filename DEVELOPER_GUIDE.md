@@ -671,6 +671,222 @@ docker push your-dockerhub-username/intelliquiz-backend:latest
 
 ---
 
+## Automation Scripts
+
+The project includes several Python automation scripts to simplify Docker operations and deployment workflows.
+
+### Prerequisites for Scripts
+
+```bash
+# Python 3.7+ required
+python --version
+
+# No additional dependencies needed (uses standard library)
+```
+
+### Available Scripts
+
+#### 1. `run_docker.py` - Quick Backend Setup for Frontend Developers
+
+**Purpose**: Simplified script for frontend developers to quickly start backend and database.
+
+**Usage**:
+```bash
+# Start backend and database
+python run_docker.py
+
+# Start and show logs
+python run_docker.py --logs
+
+# Restart containers
+python run_docker.py --restart
+
+# Stop containers
+python run_docker.py --stop
+```
+
+**What it does**:
+- Checks Docker installation
+- Pulls latest code from git
+- Builds and starts backend (port 8090) and database (port 5434)
+- Displays connection details
+
+**Best for**: Frontend developers who just need the backend API running.
+
+---
+
+#### 2. `run_docker_prod.py` - Production Setup from Docker Hub
+
+**Purpose**: Pull and run pre-built images from Docker Hub (no local building required).
+
+**Usage**:
+```bash
+python run_docker_prod.py
+```
+
+**What it does**:
+- Checks Docker installation
+- Pulls latest images from Docker Hub (`gm1026/intelliquiz-backend:latest`)
+- Starts containers using `docker-compose.prod.yml`
+- Waits for services to be ready
+- Displays connection information
+
+**Best for**: Team members who want to run the latest production build without building locally.
+
+---
+
+#### 3. `setup_and_run_docker.py` - Full Development Setup
+
+**Purpose**: Complete Docker Compose setup with all checks and options.
+
+**Usage**:
+```bash
+# Full setup and run
+python setup_and_run_docker.py
+
+# Pull latest code first
+python setup_and_run_docker.py --pull
+
+# Show logs after startup
+python setup_and_run_docker.py --logs
+
+# Don't rebuild images (use cached)
+python setup_and_run_docker.py --no-build
+
+# Stop all containers
+python setup_and_run_docker.py --stop
+```
+
+**What it does**:
+- Comprehensive Docker and Docker Compose checks
+- Optional git pull
+- Builds backend Docker image
+- Starts all services
+- Health checks for database and backend
+- Displays detailed service information
+
+**Best for**: Full development setup with all validation steps.
+
+---
+
+#### 4. `docker_automation.py` - Automated Rebuild on Git Pull
+
+**Purpose**: Automatically rebuild Docker containers when backend code changes are pulled from git.
+
+**Usage**:
+```bash
+# Manual rebuild
+python docker_automation.py --rebuild
+
+# Stop containers
+python docker_automation.py --stop
+
+# Force rebuild (ignore file checks)
+python docker_automation.py --force
+
+# Show logs after rebuild
+python docker_automation.py --logs
+
+# Install git hook for automatic rebuilds
+python docker_automation.py --install-hook
+
+# Remove git hook
+python docker_automation.py --uninstall-hook
+```
+
+**What it does**:
+- Detects changes in backend files after `git pull`
+- Automatically rebuilds containers if backend/Docker files changed
+- Skips rebuild if only frontend/docs changed
+- Can be triggered manually or via git post-merge hook
+
+**Smart Detection**:
+- **Triggers rebuild** for: `backend/**`, `Dockerfile`, `docker-compose.yml`, `pom.xml`
+- **Skips rebuild** for: `frontend/**`, `*.md`, `document/**`, `script/**`
+
+**Git Hook Installation**:
+```bash
+# Install the hook (runs automatically after git pull)
+python docker_automation.py --install-hook
+
+# Now every git pull will check if rebuild is needed
+git pull
+```
+
+**Environment Variable Override**:
+```bash
+# Skip rebuild even if changes detected
+SKIP_DOCKER_REBUILD=1 git pull
+```
+
+**Best for**: Developers who want automatic container rebuilds after pulling backend changes.
+
+---
+
+#### 5. `push_to_docker_hub.py` - Publish to Docker Hub
+
+**Purpose**: Build and push the backend image to Docker Hub for team distribution.
+
+**Usage**:
+```bash
+python push_to_docker_hub.py
+```
+
+**What it does**:
+- Checks if local image exists
+- Logs into Docker Hub (prompts for credentials)
+- Tags image as `gm1026/intelliquiz-backend:latest`
+- Pushes to Docker Hub
+- Provides pull command for team members
+
+**Prerequisites**:
+- Docker Hub account
+- Local backend image built (`docker compose build backend`)
+- Docker Hub credentials
+
+**Best for**: Maintainers publishing new backend versions for the team.
+
+---
+
+#### 6. `test_docker_automation.py` - Property-Based Tests
+
+**Purpose**: Test suite for docker automation pattern matching logic.
+
+**Usage**:
+```bash
+# Install pytest and hypothesis (first time only)
+pip install pytest hypothesis
+
+# Run tests
+pytest test_docker_automation.py -v
+
+# Run with coverage
+pytest test_docker_automation.py --cov=docker_automation
+```
+
+**What it tests**:
+- Pattern matching for rebuild triggers
+- Skip pattern exclusivity
+- Environment variable overrides
+- Force flag behavior
+
+**Best for**: Developers modifying automation scripts or verifying behavior.
+
+---
+
+### Quick Reference Table
+
+| Script | Use Case | Build Required | Internet Required |
+|--------|----------|----------------|-------------------|
+| `run_docker.py` | Frontend dev quick start | Yes | Yes (git pull) |
+| `run_docker_prod.py` | Run production images | No | Yes (Docker Hub) |
+| `setup_and_run_docker.py` | Full dev setup | Yes | Optional |
+| `docker_automation.py` | Auto-rebuild on pull | Yes | Optional |
+| `push_to_docker_hub.py` | Publish to Docker Hub | Yes | Yes (Docker Hub) |
+| `test_docker_automation.py` | Test automation | No | No |
+
+---
+
 ## Additional Resources
 
 - **Spring Boot Documentation**: https://spring.io/projects/spring-boot
