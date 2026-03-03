@@ -22,14 +22,56 @@ docker_automation.log
 
 # IDE
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
 
 # Environment
+.env
 .env.local
 *.local
+.env.local.json
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Docker & Database
+database/pg_data/
+**/pg_data/
+docker-compose.override.yml
+
+# Backend (Java/Maven)
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+*.class
+*.jar
+*.war
+*.ear
+.settings/
+.classpath
+.project
+
+# Frontend (Node/React)
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/build/
+frontend/**/.vite/
+frontend/**/.cache/
+frontend/**/coverage/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.DS_Store
+
+# Generated files
+GenerateHash.java
+generate_hash.py
+generate-bcrypt.sh
