@@ -34,6 +34,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: mysecretpassword
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+      SSL_ENABLED: "false"
       DISABLE_DOTENV: "true"
       TZ: Asia/Manila
       # Backup Configuration
