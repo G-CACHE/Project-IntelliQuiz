@@ -20,10 +20,17 @@ public class EnvInitializer implements ApplicationContextInitializer<Configurabl
             String dbUrl = dotenv.get("DB_URL");
             String dbUsername = dotenv.get("DB_USERNAME");
             String dbPassword = dotenv.get("DB_PASSWORD");
+
+            // Also load SERVER_PORT and JWT_SECRET from .env
+            String serverPort = dotenv.get("SERVER_PORT");
+            String jwtSecret = dotenv.get("JWT_SECRET");
             
             if (dbUrl != null) System.setProperty("DB_URL", dbUrl);
             if (dbUsername != null) System.setProperty("DB_USERNAME", dbUsername);
             if (dbPassword != null) System.setProperty("DB_PASSWORD", dbPassword);
+
+            if (serverPort != null) System.setProperty("SERVER_PORT", serverPort);
+            if (jwtSecret != null) System.setProperty("JWT_SECRET", jwtSecret);
         } catch (Exception e) {
             // Silently ignore if .env not found (in Docker it's not needed)
             System.err.println("Warning: Could not load .env file: " + e.getMessage());
