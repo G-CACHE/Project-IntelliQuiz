@@ -82,26 +82,39 @@ cd Project-IntelliQuiz
 ### 2. Configure Environment Variables
 
 #### Backend Configuration (`backend/.env`)
+
+⚠️ **SECURITY WARNING**: Never commit this file to git! It contains sensitive credentials.
+
 ```properties
 # Database Configuration
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/intelliquiz
 SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=mysecretpassword
+SPRING_DATASOURCE_PASSWORD=YOUR_DB_PASSWORD_HERE
 
 # Server Configuration
 SERVER_PORT=8090
 SSL_ENABLED=false
 
-# JWT Secret (generate your own for production)
-JWT_SECRET=zvjnKxyRnopy0pOSNceHHKO1BUn1r/968YbNaFmaVBg=
+# JWT Secret - MUST be changed for production!
+# Generate with: openssl rand -base64 32
+JWT_SECRET=GENERATE_YOUR_OWN_SECRET_HERE
 
 # Database Backup Configuration
 DB_HOST=localhost
 DB_PORT=5434
 DB_NAME=intelliquiz
 DB_USERNAME=postgres
-DB_PASSWORD=mysecretpassword
+DB_PASSWORD=YOUR_DB_PASSWORD_HERE
 BACKUP_DIR=./backups
+```
+
+**How to generate secrets**:
+```bash
+# Generate JWT Secret
+openssl rand -base64 32
+
+# Or using Python
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
 #### Frontend Configuration (`frontend/intelliquiz-frontend/.env`)
@@ -232,11 +245,14 @@ SELECT * FROM "user";
 
 ### Database Credentials
 
+**For Local Development**:
 - **Host**: `localhost`
 - **Port**: `5434` (external) / `5432` (internal to Docker)
 - **Database**: `intelliquiz`
 - **Username**: `postgres`
-- **Password**: `mysecretpassword`
+- **Password**: Set in your `backend/.env` file
+
+⚠️ **SECURITY NOTE**: The default Docker Compose setup uses a development password. Change this for production deployments!
 
 ### Creating a Superadmin User
 
@@ -244,7 +260,7 @@ SELECT * FROM "user";
 -- Connect to database first
 docker exec -it intelliquiz_db psql -U postgres -d intelliquiz
 
--- Create superadmin account
+-- Create superadmin account with BCrypt hashed password
 INSERT INTO "user" (id, username, password, system_role, deleted) 
 VALUES (
   nextval('user_id_seq'),
@@ -255,18 +271,28 @@ VALUES (
 );
 ```
 
-**Default Credentials:**
+**Default Credentials** (for development only):
 - Username: `superadmin`
 - Password: `password`
+
+⚠️ **SECURITY WARNING**: Change this password immediately after first login in production!
+
+**To generate your own BCrypt hash**:
+```bash
+# Using Python
+python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()).decode())"
+```
 
 ### Updating User Password
 
 ```sql
--- Update existing user password
+-- Update existing user password (use your own BCrypt hash)
 UPDATE "user" 
 SET password = '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
 WHERE username = 'superadmin';
 ```
+
+**Note**: The hash above is for the password `password`. Generate your own hash for security.
 
 ### Database Backup and Restore
 
@@ -668,6 +694,75 @@ docker build -t your-dockerhub-username/intelliquiz-backend:latest .
 # Push to Docker Hub
 docker push your-dockerhub-username/intelliquiz-backend:latest
 ```
+
+---
+
+---
+
+## Security Best Practices
+
+### Environment Variables and Secrets
+
+⚠️ **CRITICAL**: Never commit `.env` files or secrets to git!
+
+#### Protected Files (Never Commit)
+- `backend/.env` - Contains JWT secrets and database passwords
+- `frontend/intelliquiz-frontend/.env` - Contains API endpoints
+- `.env.local.json` - Contains database credentials
+- Any file with actual passwords, API keys, or tokens
+
+#### Safe to Commit
+- `.env.example` - Template files with placeholder values
+- `docker-compose.yml` - Development configuration with default passwords
+- Documentation with `YOUR_SECRET_HERE` placeholders
+
+### Secret Management Checklist
+
+- [ ] All `.env` files are in `.gitignore`
+- [ ] No real secrets in documentation
+- [ ] Production uses unique, strong secrets
+- [ ] JWT secrets are randomly generated (32+ bytes)
+- [ ] Database passwords are strong (16+ characters)
+- [ ] Secrets are rotated regularly
+- [ ] Team members don't share secrets via chat/email
+
+### Generating Secure Secrets
+
+```bash
+# Generate JWT Secret (32 bytes, base64 encoded)
+openssl rand -base64 32
+
+# Generate Strong Password (16 bytes)
+openssl rand -base64 16
+
+# Generate BCrypt Hash for User Password
+python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()).decode())"
+```
+
+### Production Deployment Security
+
+1. **Change ALL default passwords**
+   - Database passwords
+   - Admin user passwords
+   - JWT secrets
+
+2. **Use environment variables**
+   - Never hardcode secrets in code
+   - Use platform-specific secret management (AWS Secrets Manager, Azure Key Vault, etc.)
+
+3. **Enable HTTPS/TLS**
+   - Set `SSL_ENABLED=true` in production
+   - Use valid SSL certificates (not self-signed)
+
+4. **Restrict database access**
+   - Don't expose database port publicly
+   - Use firewall rules
+   - Enable SSL for database connections
+
+5. **Regular security audits**
+   - Review access logs
+   - Update dependencies
+   - Rotate secrets periodically
 
 ---
 
