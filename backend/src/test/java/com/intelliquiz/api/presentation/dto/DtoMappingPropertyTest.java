@@ -1,12 +1,22 @@
 package com.intelliquiz.api.presentation.dto;
 
-import com.intelliquiz.api.application.commands.CreateQuestionCommand;
-import com.intelliquiz.api.application.commands.CreateQuizCommand;
-import com.intelliquiz.api.application.commands.CreateUserCommand;
-import com.intelliquiz.api.domain.entities.*;
-import com.intelliquiz.api.domain.enums.*;
-import com.intelliquiz.api.presentation.dto.request.*;
-import com.intelliquiz.api.presentation.dto.response.*;
+import com.intelliquiz.api.quiz.internal.application.commands.CreateQuestionCommand;
+import com.intelliquiz.api.quiz.internal.application.commands.CreateQuizCommand;
+import com.intelliquiz.api.user.internal.application.commands.CreateUserCommand;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.shared.enums.*;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
+import com.intelliquiz.api.user.internal.presentation.dto.request.CreateUserRequest;
+import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuizResponse;
+import com.intelliquiz.api.quiz.internal.presentation.dto.response.QuestionResponse;
+import com.intelliquiz.api.team.internal.presentation.dto.response.TeamResponse;
+import com.intelliquiz.api.user.internal.presentation.dto.response.UserResponse;
+import com.intelliquiz.api.submission.internal.presentation.dto.response.SubmissionResponse;
 import net.jqwik.api.*;
 
 import java.time.LocalDateTime;
@@ -32,7 +42,7 @@ class DtoMappingPropertyTest {
         CreateQuizRequest request = new CreateQuizRequest(title, description);
         
         // When
-        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description());
+        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description(), 1L);
         
         // Then
         assertThat(command.title()).isEqualTo(title);

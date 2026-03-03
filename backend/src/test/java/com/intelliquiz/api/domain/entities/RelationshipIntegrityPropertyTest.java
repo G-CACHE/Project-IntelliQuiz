@@ -1,6 +1,13 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.*;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+
+import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +52,7 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setPermissions(permissions);
         user.addAssignment(assignment);
         
@@ -141,17 +148,15 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz(title, "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, teamName, accessCode);
-        quiz.addTeam(team);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         
         entityManager.persistAndFlush(team);
         entityManager.clear();
         
-        Quiz retrievedQuiz = entityManager.find(Quiz.class, quiz.getId());
-        
-        assertThat(retrievedQuiz.getTeams()).isNotEmpty();
-        Team retrievedTeam = retrievedQuiz.getTeams().get(0);
-        assertThat(retrievedTeam.getQuiz().getId()).isEqualTo(retrievedQuiz.getId());
+        // Navigate from Team back to Quiz to verify relationship integrity
+        Team retrievedTeam = entityManager.find(Team.class, team.getId());
+        assertThat(retrievedTeam).isNotNull();
+        assertThat(retrievedTeam.getQuizId()).isEqualTo(quiz.getId());
     }
 
     @Provide
@@ -184,24 +189,22 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         
         Question question = new Question(quiz, "Test question?", QuestionType.MULTIPLE_CHOICE, 
                 Difficulty.EASY, "A");
         entityManager.persistAndFlush(question);
         
-        Submission submission = new Submission(team, question, submittedAnswer);
-        team.addSubmission(submission);
+        Submission submission = new Submission(team.getId(), question.getId(), submittedAnswer);
         
         entityManager.persistAndFlush(submission);
         entityManager.clear();
         
-        Team retrievedTeam = entityManager.find(Team.class, team.getId());
-        
-        assertThat(retrievedTeam.getSubmissions()).isNotEmpty();
-        Submission retrievedSubmission = retrievedTeam.getSubmissions().get(0);
-        assertThat(retrievedSubmission.getTeam().getId()).isEqualTo(retrievedTeam.getId());
+        // Verify submission references the correct team via direct lookup
+        Submission retrievedSubmission = entityManager.find(Submission.class, submission.getId());
+        assertThat(retrievedSubmission).isNotNull();
+        assertThat(retrievedSubmission.getTeamId()).isEqualTo(team.getId());
     }
 
     @Provide
@@ -213,10 +216,10 @@ public class RelationshipIntegrityPropertyTest {
 
     /**
      * Property 2: Relationship Integrity
-     * For any QuizAssignment, navigating to Quiz and back should maintain integrity.
+     * For any QuizAssignment, the stored quizId should match the original quiz.
      */
     @Property(tries = 20)
-    void quizAssignmentToQuizBidirectionalNavigation(
+    void quizAssignmentStoresCorrectQuizId(
             @ForAll("validUsernames") String username,
             @ForAll("validPasswords") String password,
             @ForAll SystemRole systemRole,
@@ -228,16 +231,14 @@ public class RelationshipIntegrityPropertyTest {
         Quiz quiz = new Quiz(quizTitle, "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
-        quiz.addAssignment(assignment);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         
         entityManager.persistAndFlush(assignment);
         entityManager.clear();
         
-        Quiz retrievedQuiz = entityManager.find(Quiz.class, quiz.getId());
-        
-        assertThat(retrievedQuiz.getAssignments()).isNotEmpty();
-        QuizAssignment retrievedAssignment = retrievedQuiz.getAssignments().get(0);
-        assertThat(retrievedAssignment.getQuiz().getId()).isEqualTo(retrievedQuiz.getId());
+        // Verify the stored quizId matches the original quiz ID
+        QuizAssignment retrievedAssignment = entityManager.find(QuizAssignment.class, assignment.getId());
+        assertThat(retrievedAssignment).isNotNull();
+        assertThat(retrievedAssignment.getQuizId()).isEqualTo(quiz.getId());
     }
 }

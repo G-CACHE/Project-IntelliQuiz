@@ -1,5 +1,6 @@
 package com.intelliquiz.api.infrastructure.config;
 
+import com.intelliquiz.api.auth.internal.infrastructure.config.JwtConfig;
 import net.jqwik.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +26,7 @@ class SecurityPropertyTest {
         setField(jwtConfig, "expiration", 86400000L);
         
         // When
-        String token = jwtConfig.generateToken(username, role);
+        String token = jwtConfig.generateToken(username, role, 1L);
         
         // Then
         assertThat(token).isNotBlank();
@@ -42,7 +43,7 @@ class SecurityPropertyTest {
         setField(jwtConfig, "secret", "testSecretKeyThatIsLongEnoughForHS256Algorithm123456");
         setField(jwtConfig, "expiration", 86400000L);
         
-        String token = jwtConfig.generateToken(username, role);
+        String token = jwtConfig.generateToken(username, role, 1L);
         
         // When/Then
         assertThat(jwtConfig.validateToken(token, username)).isTrue();
@@ -58,7 +59,7 @@ class SecurityPropertyTest {
         setField(jwtConfig, "secret", "testSecretKeyThatIsLongEnoughForHS256Algorithm123456");
         setField(jwtConfig, "expiration", 86400000L);
         
-        String token = jwtConfig.generateToken(username, role);
+        String token = jwtConfig.generateToken(username, role, 1L);
         
         // When
         var expiration = jwtConfig.extractExpiration(token);

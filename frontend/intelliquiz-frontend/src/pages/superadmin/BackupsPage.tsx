@@ -90,7 +90,8 @@ export default function BackupsPage() {
 
   const handleDownload = (backup: BackupRecord) => {
     const token = localStorage.getItem('token');
-    const url = `http://localhost:8090/api/backups/${backup.id}/download`;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const url = `${baseUrl}/api/backups/${backup.id}/download`;
     
     fetch(url, {
       headers: { Authorization: `Bearer ${token}` },

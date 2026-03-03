@@ -1,7 +1,8 @@
 package com.intelliquiz.api.presentation.exception;
 
-import com.intelliquiz.api.domain.exceptions.*;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.exceptions.*;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
+import com.intelliquiz.api.shared.exception.GlobalExceptionHandler;
 import net.jqwik.api.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

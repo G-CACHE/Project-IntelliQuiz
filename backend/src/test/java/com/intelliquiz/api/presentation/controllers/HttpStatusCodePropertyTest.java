@@ -1,15 +1,29 @@
 package com.intelliquiz.api.presentation.controllers;
 
 import com.intelliquiz.api.application.services.*;
-import com.intelliquiz.api.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.Team;
-import com.intelliquiz.api.domain.enums.QuizStatus;
-import com.intelliquiz.api.domain.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.presentation.dto.request.AccessCodeRequest;
-import com.intelliquiz.api.presentation.dto.response.AccessResolutionResponse;
+import com.intelliquiz.api.quiz.internal.application.services.QuizManagementService;
+import com.intelliquiz.api.quiz.internal.application.services.QuizSessionService;
+import com.intelliquiz.api.quiz.internal.presentation.controllers.QuizController;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionResult;
+import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
+import com.intelliquiz.api.auth.internal.presentation.controllers.AccessController;
+import com.intelliquiz.api.shared.enums.RouteType;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.team.TeamFacade;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
+import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
+import com.intelliquiz.api.auth.internal.presentation.dto.response.AccessResolutionResponse;
 import net.jqwik.api.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,18 +43,11 @@ class HttpStatusCodePropertyTest {
     void accessControllerReturns200ForValidAccessCode(@ForAll("validAccessCodes") String code) {
         // Given
         AccessResolutionService mockService = mock(AccessResolutionService.class);
-        AccessController controller = new AccessController(mockService);
+        TeamFacade mockTeamFacade = mock(TeamFacade.class);
+        QuizFacade mockQuizFacade = mock(QuizFacade.class);
+        AccessController controller = new AccessController(mockService, mockTeamFacade, mockQuizFacade);
         
-        Team team = new Team();
-        team.setId(1L);
-        team.setName("Test Team");
-        team.setAccessCode(code);
-        
-        Quiz quiz = new Quiz("Test Quiz", "Description", "1234", QuizStatus.READY);
-        quiz.setId(1L);
-        team.setQuiz(quiz);
-        
-        when(mockService.resolve(code)).thenReturn(AccessResolutionResult.participant(team));
+        when(mockService.resolve(code)).thenReturn(AccessResolutionResult.participant(1L, 10L));
         
         // When
         ResponseEntity<AccessResolutionResponse> response = controller.resolveAccessCode(
@@ -57,7 +64,9 @@ class HttpStatusCodePropertyTest {
     void accessControllerReturns200ForInvalidAccessCode(@ForAll("invalidAccessCodes") String code) {
         // Given
         AccessResolutionService mockService = mock(AccessResolutionService.class);
-        AccessController controller = new AccessController(mockService);
+        TeamFacade mockTeamFacade = mock(TeamFacade.class);
+        QuizFacade mockQuizFacade = mock(QuizFacade.class);
+        AccessController controller = new AccessController(mockService, mockTeamFacade, mockQuizFacade);
         
         when(mockService.resolve(code)).thenReturn(AccessResolutionResult.invalid("Invalid access code"));
         
@@ -74,17 +83,27 @@ class HttpStatusCodePropertyTest {
 
     // ==================== QuizController Tests ====================
 
+    private Authentication mockAuth() {
+        Authentication auth = mock(Authentication.class);
+        when(auth.getDetails()).thenReturn(Map.of("uid", 1L));
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))).when(auth).getAuthorities();
+        when(auth.getName()).thenReturn("testadmin");
+        return auth;
+    }
+
     @Property(tries = 10)
     void quizControllerReturns404ForNonExistentQuiz(@ForAll("positiveIds") Long quizId) {
         // Given
         QuizManagementService mockQuizService = mock(QuizManagementService.class);
         QuizSessionService mockSessionService = mock(QuizSessionService.class);
         QuizController controller = new QuizController(mockQuizService, mockSessionService);
+        Authentication auth = mockAuth();
         
-        when(mockQuizService.getQuiz(quizId)).thenThrow(new EntityNotFoundException("Quiz", quizId));
+        when(mockQuizService.getQuizForUser(eq(quizId), anyLong(), any(SystemRole.class)))
+                .thenThrow(new EntityNotFoundException("Quiz", quizId));
         
         // When/Then
-        assertThatThrownBy(() -> controller.getQuiz(quizId))
+        assertThatThrownBy(() -> controller.getQuiz(quizId, auth))
                 .isInstanceOf(EntityNotFoundException.class);
     }
 
@@ -94,14 +113,16 @@ class HttpStatusCodePropertyTest {
         QuizManagementService mockQuizService = mock(QuizManagementService.class);
         QuizSessionService mockSessionService = mock(QuizSessionService.class);
         QuizController controller = new QuizController(mockQuizService, mockSessionService);
+        Authentication auth = mockAuth();
         
         Quiz quiz = new Quiz("Test Quiz", "Description", "1234", QuizStatus.DRAFT);
         quiz.setId(quizId);
         
-        when(mockQuizService.getQuiz(quizId)).thenReturn(quiz);
+        when(mockQuizService.getQuizForUser(eq(quizId), anyLong(), any(SystemRole.class)))
+                .thenReturn(quiz);
         
         // When
-        ResponseEntity<?> response = controller.getQuiz(quizId);
+        ResponseEntity<?> response = controller.getQuiz(quizId, auth);
         
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -113,6 +134,7 @@ class HttpStatusCodePropertyTest {
         QuizManagementService mockQuizService = mock(QuizManagementService.class);
         QuizSessionService mockSessionService = mock(QuizSessionService.class);
         QuizController controller = new QuizController(mockQuizService, mockSessionService);
+        Authentication auth = mockAuth();
         
         Quiz quiz = new Quiz(title, "Description", "1234", QuizStatus.DRAFT);
         quiz.setId(1L);
@@ -121,7 +143,8 @@ class HttpStatusCodePropertyTest {
         
         // When
         ResponseEntity<?> response = controller.createQuiz(
-                new com.intelliquiz.api.presentation.dto.request.CreateQuizRequest(title, "Description")
+                new com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest(title, "Description"),
+                auth
         );
         
         // Then
@@ -134,11 +157,12 @@ class HttpStatusCodePropertyTest {
         QuizManagementService mockQuizService = mock(QuizManagementService.class);
         QuizSessionService mockSessionService = mock(QuizSessionService.class);
         QuizController controller = new QuizController(mockQuizService, mockSessionService);
+        Authentication auth = mockAuth();
         
         doNothing().when(mockQuizService).deleteQuiz(quizId);
         
         // When
-        ResponseEntity<?> response = controller.deleteQuiz(quizId);
+        ResponseEntity<?> response = controller.deleteQuiz(quizId, auth);
         
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);

@@ -1,5 +1,6 @@
 package com.intelliquiz.api.infrastructure.config;
 
+import com.intelliquiz.api.auth.internal.infrastructure.config.OpenApiConfig;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.tags.Tag;
 import net.jqwik.api.*;

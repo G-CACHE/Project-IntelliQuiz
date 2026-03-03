@@ -1,8 +1,10 @@
 // WebSocket Configuration Constants
 
+const WS_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 export const WS_CONFIG = {
   // Base WebSocket URL - must match backend endpoint /ws/quiz
-  BASE_URL: 'http://localhost:8090/ws/quiz',
+  BASE_URL: `${WS_BASE}/ws/quiz`,
   
   // STOMP endpoints
   ENDPOINTS: {

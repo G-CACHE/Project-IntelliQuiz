@@ -1,6 +1,13 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.*;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+
+import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -197,7 +204,7 @@ public class EntityPersistencePropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, name, accessCode);
+        Team team = new Team(quiz.getId(), name, accessCode);
         
         Team persisted = entityManager.persistAndFlush(team);
         entityManager.clear();
@@ -239,7 +246,7 @@ public class EntityPersistencePropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, "TestTeam", "ABC12345");
+        Team team = new Team(quiz.getId(), "TestTeam", "ABC12345");
         entityManager.persistAndFlush(team);
         
         Question question = new Question(quiz, "Test question?", QuestionType.MULTIPLE_CHOICE, 
@@ -247,7 +254,7 @@ public class EntityPersistencePropertyTest {
         entityManager.persistAndFlush(question);
         
         LocalDateTime submittedAt = LocalDateTime.now();
-        Submission submission = new Submission(team, question, submittedAnswer);
+        Submission submission = new Submission(team.getId(), question.getId(), submittedAnswer);
         submission.setCorrect(isCorrect);
         submission.setAwardedPoints(awardedPoints);
         submission.setSubmittedAt(submittedAt);
@@ -289,7 +296,7 @@ public class EntityPersistencePropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setPermissions(permissions);
         
         QuizAssignment persisted = entityManager.persistAndFlush(assignment);

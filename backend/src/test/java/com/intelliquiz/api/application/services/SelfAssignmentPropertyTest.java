@@ -1,16 +1,18 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Quiz;
-import com.intelliquiz.api.domain.entities.QuizAssignment;
-import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.enums.AdminPermission;
-import com.intelliquiz.api.domain.enums.QuizStatus;
-import com.intelliquiz.api.domain.enums.SystemRole;
-import com.intelliquiz.api.domain.ports.QuizAssignmentRepository;
-import com.intelliquiz.api.domain.ports.QuizRepository;
-import com.intelliquiz.api.domain.ports.UserRepository;
-import com.intelliquiz.api.domain.ports.PasswordHashingService;
-import com.intelliquiz.api.presentation.dto.response.QuizAssignmentResponse;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.shared.enums.AdminPermission;
+import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.user.internal.domain.ports.QuizAssignmentRepository;
+import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.user.internal.domain.ports.UserRepository;
+import com.intelliquiz.api.shared.domain.ports.PasswordHashingService;
+import com.intelliquiz.api.user.internal.presentation.dto.response.QuizAssignmentResponse;
+import com.intelliquiz.api.user.internal.application.services.UserManagementService;
+import org.springframework.context.ApplicationEventPublisher;
 import net.jqwik.api.*;
 
 import java.util.*;
@@ -39,9 +41,10 @@ public class SelfAssignmentPropertyTest {
         
         // Setup mocks
         UserRepository userRepository = mock(UserRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         QuizAssignmentRepository quizAssignmentRepository = mock(QuizAssignmentRepository.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         
         // Link assignments to user
         for (QuizAssignment assignment : expectedAssignments) {
@@ -53,7 +56,7 @@ public class SelfAssignmentPropertyTest {
         when(quizAssignmentRepository.findByUser(user)).thenReturn(expectedAssignments);
         
         UserManagementService service = new UserManagementService(
-                userRepository, quizRepository, quizAssignmentRepository, passwordHashingService);
+                userRepository, quizFacade, quizAssignmentRepository, passwordHashingService, eventPublisher);
         
         // Act
         List<QuizAssignment> actualAssignments = service.getUserAssignments(user.getId());
@@ -72,8 +75,8 @@ public class SelfAssignmentPropertyTest {
      */
     @Property(tries = 20)
     void responseContainsAllRequiredFields(@ForAll("completeAssignments") QuizAssignment assignment) {
-        // Act
-        QuizAssignmentResponse response = QuizAssignmentResponse.from(assignment);
+        // Act — use from(assignment, title) to include quiz title
+        QuizAssignmentResponse response = QuizAssignmentResponse.from(assignment, "Test Quiz");
         
         // Assert - all required fields are present
         assertThat(response.id()).isNotNull();
@@ -97,7 +100,7 @@ public class SelfAssignmentPropertyTest {
         // Create assignment with specific permissions
         Quiz quiz = createQuiz(1L, "Test Quiz");
         User user = createUser(1L, "testuser", SystemRole.ADMIN);
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setId(1L);
         assignment.setPermissions(permissions);
         
@@ -133,9 +136,10 @@ public class SelfAssignmentPropertyTest {
         
         // Setup mocks
         UserRepository userRepository = mock(UserRepository.class);
-        QuizRepository quizRepository = mock(QuizRepository.class);
+        QuizFacade quizFacade = mock(QuizFacade.class);
         QuizAssignmentRepository quizAssignmentRepository = mock(QuizAssignmentRepository.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         
         // Link assignments to respective users
         for (QuizAssignment assignment : assignmentsA) {
@@ -151,7 +155,7 @@ public class SelfAssignmentPropertyTest {
         when(quizAssignmentRepository.findByUser(userB)).thenReturn(assignmentsB);
         
         UserManagementService service = new UserManagementService(
-                userRepository, quizRepository, quizAssignmentRepository, passwordHashingService);
+                userRepository, quizFacade, quizAssignmentRepository, passwordHashingService, eventPublisher);
         
         // Act - get assignments for user A
         List<QuizAssignment> resultA = service.getUserAssignments(userA.getId());
@@ -196,7 +200,7 @@ public class SelfAssignmentPropertyTest {
         ).as((assignmentId, quizId, quizTitle, permissions) -> {
             Quiz quiz = createQuiz(quizId, quizTitle);
             User user = createUser(1L, "testuser", SystemRole.ADMIN);
-            QuizAssignment assignment = new QuizAssignment(user, quiz);
+            QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
             assignment.setId(assignmentId);
             assignment.setPermissions(permissions);
             return assignment;
