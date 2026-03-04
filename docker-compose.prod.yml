@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database Container
+  # PostgreSQL Database Container (with pre-populated data)
   db:
-    image: postgres:18-alpine
+    image: gm1026/intelliquiz-db:latest
     container_name: intelliquiz_db
     restart: always
     environment:

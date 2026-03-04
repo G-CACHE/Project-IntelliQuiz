@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
-Push IntelliQuiz Backend Docker image to Docker Hub
+Push IntelliQuiz Docker images to Docker Hub (Backend + Database)
 Usage: python push_to_docker_hub.py
 """
 
 import subprocess
 import sys
 import os
+from pathlib import Path
 
 DOCKER_USERNAME = "gm1026"
-IMAGE_NAME = "intelliquiz-backend"
-LOCAL_IMAGE = "project-cache-in-backend:latest"
-DOCKER_HUB_IMAGE = f"{DOCKER_USERNAME}/{IMAGE_NAME}:latest"
+BACKEND_IMAGE_NAME = "intelliquiz-backend"
+DB_IMAGE_NAME = "intelliquiz-db"
+LOCAL_BACKEND_IMAGE = "project-cache-in-backend:latest"
+DOCKER_HUB_BACKEND_IMAGE = f"{DOCKER_USERNAME}/{BACKEND_IMAGE_NAME}:latest"
+DOCKER_HUB_DB_IMAGE = f"{DOCKER_USERNAME}/{DB_IMAGE_NAME}:latest"
 
 def run_command(cmd, description):
     """Run a shell command and handle errors"""
@@ -32,13 +35,15 @@ def run_command(cmd, description):
 
 def main():
     print("=" * 70)
-    print("  IntelliQuiz Backend - Push to Docker Hub")
+    print("  IntelliQuiz - Push to Docker Hub (Backend + Database)")
     print("=" * 70)
     print(f"\nConfiguration:")
     print(f"  Docker Hub Username: {DOCKER_USERNAME}")
-    print(f"  Image Name: {IMAGE_NAME}")
-    print(f"  Docker Hub Image: {DOCKER_HUB_IMAGE}")
-    print(f"  Local Image: {LOCAL_IMAGE}")
+    print(f"  Backend Image: {DOCKER_HUB_BACKEND_IMAGE}")
+    print(f"  Database Image: {DOCKER_HUB_DB_IMAGE}")
+    
+    # Get project root
+    project_root = Path(__file__).parent.absolute()
     
     # Step 1: Check if Docker is running
     print("\n[1] Checking Docker daemon...")
@@ -47,18 +52,18 @@ def main():
         print("  Please start Docker Desktop and try again.")
         sys.exit(1)
     
-    # Step 2: Check if local image exists
-    print("\n[2] Checking if local image exists...")
+    # Step 2: Check if local backend image exists
+    print("\n[2] Checking if local backend image exists...")
     try:
         result = subprocess.run(
-            ["docker", "image", "inspect", LOCAL_IMAGE],
+            ["docker", "image", "inspect", LOCAL_BACKEND_IMAGE],
             capture_output=True,
             text=True,
             check=True
         )
-        print(f"✓ Found local image: {LOCAL_IMAGE}")
+        print(f"✓ Found local image: {LOCAL_BACKEND_IMAGE}")
     except subprocess.CalledProcessError:
-        print(f"✗ Local image not found: {LOCAL_IMAGE}")
+        print(f"✗ Local backend image not found: {LOCAL_BACKEND_IMAGE}")
         print("\n  Please run 'python setup_and_run_docker.py' first to build the image.")
         sys.exit(1)
     
@@ -72,33 +77,68 @@ def main():
         print("  Make sure you have a Docker Hub account and correct credentials.")
         sys.exit(1)
     
-    # Step 4: Tag the image
-    print(f"\n[4] Tagging image as {DOCKER_HUB_IMAGE}...")
+    # Step 4: Build and push database image
+    print("\n" + "=" * 70)
+    print("  Building and Pushing Database Image")
+    print("=" * 70)
+    
+    db_dockerfile = project_root / "database" / "Dockerfile"
+    if not db_dockerfile.exists():
+        print(f"✗ Database Dockerfile not found: {db_dockerfile}")
+        sys.exit(1)
+    
+    print(f"\n[4] Building database image from {db_dockerfile}...")
     if not run_command(
-        ["docker", "tag", LOCAL_IMAGE, DOCKER_HUB_IMAGE],
-        "Tagging image"
+        ["docker", "build", "-t", DOCKER_HUB_DB_IMAGE, str(project_root / "database")],
+        "Building database image"
     ):
         sys.exit(1)
     
-    # Step 5: Push to Docker Hub
-    print(f"\n[5] Pushing image to Docker Hub...")
+    print(f"\n[5] Pushing database image to Docker Hub...")
     print("  (This may take a few minutes depending on image size and internet speed)")
     if not run_command(
-        ["docker", "push", DOCKER_HUB_IMAGE],
-        "Pushing to Docker Hub"
+        ["docker", "push", DOCKER_HUB_DB_IMAGE],
+        "Pushing database image to Docker Hub"
     ):
-        print("\n✗ Push failed!")
-        print("  Make sure you are logged in and have internet connection.")
+        print("\n✗ Database push failed!")
         sys.exit(1)
     
-    # Step 6: Verify on Docker Hub
-    print("\n[6] Image successfully pushed!")
+    # Step 6: Tag and push backend image
+    print("\n" + "=" * 70)
+    print("  Tagging and Pushing Backend Image")
     print("=" * 70)
-    print("\n✓ Success! Your image is now on Docker Hub")
-    print(f"\nImage URL: https://hub.docker.com/r/{DOCKER_USERNAME}/{IMAGE_NAME}")
-    print(f"\nYour team can now pull it with:")
-    print(f"  docker pull {DOCKER_HUB_IMAGE}")
-    print(f"\nOr use the updated docker-compose.yml which pulls from Docker Hub automatically.")
+    
+    print(f"\n[6] Tagging backend image as {DOCKER_HUB_BACKEND_IMAGE}...")
+    if not run_command(
+        ["docker", "tag", LOCAL_BACKEND_IMAGE, DOCKER_HUB_BACKEND_IMAGE],
+        "Tagging backend image"
+    ):
+        sys.exit(1)
+    
+    print(f"\n[7] Pushing backend image to Docker Hub...")
+    print("  (This may take a few minutes depending on image size and internet speed)")
+    if not run_command(
+        ["docker", "push", DOCKER_HUB_BACKEND_IMAGE],
+        "Pushing backend image to Docker Hub"
+    ):
+        print("\n✗ Backend push failed!")
+        sys.exit(1)
+    
+    # Step 8: Success summary
+    print("\n" + "=" * 70)
+    print("✓ Success! Both images are now on Docker Hub")
+    print("=" * 70)
+    print(f"\nBackend Image:")
+    print(f"  URL: https://hub.docker.com/r/{DOCKER_USERNAME}/{BACKEND_IMAGE_NAME}")
+    print(f"  Pull: docker pull {DOCKER_HUB_BACKEND_IMAGE}")
+    
+    print(f"\nDatabase Image (with pre-populated data):")
+    print(f"  URL: https://hub.docker.com/r/{DOCKER_USERNAME}/{DB_IMAGE_NAME}")
+    print(f"  Pull: docker pull {DOCKER_HUB_DB_IMAGE}")
+    
+    print(f"\nYour team can now run:")
+    print(f"  python run_docker_prod.py")
+    print(f"\nThis will pull both images and start the complete stack with all data!")
     print("\n" + "=" * 70)
 
 if __name__ == "__main__":

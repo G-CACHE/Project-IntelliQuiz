@@ -143,6 +143,7 @@ def main():
    User:     postgres
    Password: mysecretpassword
    Database: intelliquiz
+   Status:   ✓ Pre-populated with all data (users, quizzes, teams, etc.)
 
 🚀 Spring Boot Backend:
    URL:      http://localhost:8090
@@ -154,6 +155,7 @@ def main():
    Database logs:   docker-compose -f docker-compose.prod.yml logs -f db
    Stop containers: docker-compose -f docker-compose.prod.yml down
    Check tables:    docker-compose -f docker-compose.prod.yml exec db psql -U postgres -d intelliquiz -c "\\dt"
+   Verify setup:    python verify_db_setup.py
 
 ✓ Setup complete! You're ready to develop.
     """)
