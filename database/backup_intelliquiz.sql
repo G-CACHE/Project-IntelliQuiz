@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict sYNGGRPQTtGiQ2L3lcATLcoHhOCVZkHoIfPwJyPT9CkfAnVkTzhzftHfZTbxMGy
-
 -- Dumped from database version 16.11
 -- Dumped by pg_dump version 16.11
 
@@ -637,6 +635,3 @@ ALTER TABLE ONLY public.quiz_assignment
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict sYNGGRPQTtGiQ2L3lcATLcoHhOCVZkHoIfPwJyPT9CkfAnVkTzhzftHfZTbxMGy
-

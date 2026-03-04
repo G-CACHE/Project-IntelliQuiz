@@ -213,6 +213,80 @@ The frontend will be available at `https://localhost:5174`
 
 ## Database Management
 
+### Database Initialization Process
+
+The database initialization is a critical part of the setup process. Understanding how it works helps troubleshoot issues when they arise.
+
+#### How Database Initialization Works
+
+When you run `docker compose up` or `python run_docker_prod.py`, the following happens:
+
+1. **Docker Image Build/Pull**
+   - The database Docker image is built or pulled from Docker Hub
+   - The image includes the PostgreSQL database engine and initialization scripts
+
+2. **Container Startup**
+   - PostgreSQL container starts and initializes the database
+   - The `database/Dockerfile` copies the backup file to `/docker-entrypoint-initdb.d/`
+
+3. **Backup File Loading**
+   - PostgreSQL automatically runs any `.sql` files in `/docker-entrypoint-initdb.d/`
+   - The `backup_intelliquiz.sql` file is executed
+   - This creates all tables, indexes, and loads any pre-existing data
+
+4. **Initialization Complete**
+   - Database is ready to accept connections
+   - All tables and schema are in place
+
+#### Database Files and Scripts
+
+**Key Files**:
+- `database/Dockerfile` - Defines the database container image
+- `database/backup_intelliquiz.sql` - PostgreSQL dump containing schema and data
+- `database/init-db.sh` - Optional initialization script (for advanced setup)
+
+**Dockerfile Role**:
+```dockerfile
+FROM postgres:18-alpine
+
+# Copy the backup SQL file into the initialization directory
+COPY backup_intelliquiz.sql /docker-entrypoint-initdb.d/
+
+# Set proper permissions
+RUN chmod 644 /docker-entrypoint-initdb.d/backup_intelliquiz.sql
+```
+
+The Dockerfile ensures the backup file is available when PostgreSQL starts.
+
+#### Verifying Database Initialization
+
+After starting the containers, verify the database initialized correctly:
+
+```bash
+# Run the verification script
+python verify_db_setup.py
+```
+
+This script checks:
+- ✓ Database container is running
+- ✓ Database is accessible
+- ✓ All required tables exist
+- ✓ game_session table is present
+- ✓ Data is present in tables
+- ✓ Backup was loaded successfully
+
+**Expected Output**:
+```
+✓ Database container is running
+✓ Database is accessible
+✓ User accounts (user): X rows
+✓ Quiz content (quiz): X rows
+✓ Quiz questions (question): X rows
+✓ Teams (team): X rows
+✓ Game sessions (game_session): X rows
+✓ Backup loaded successfully (8 tables found)
+```
+
 ### Accessing the Database
 
 #### Using Docker Exec (Recommended)
@@ -309,6 +383,63 @@ docker exec intelliquiz_db pg_dump -U postgres intelliquiz > backup_$(date +%Y%m
 # Restore to running container
 docker exec -i intelliquiz_db psql -U postgres -d intelliquiz < backup_file.sql
 ```
+
+#### Regenerating the Backup File
+
+If the backup file becomes corrupted or needs to be updated with new data:
+
+1. **Create a fresh backup from running database**:
+   ```bash
+   # Ensure database is running
+   docker compose up -d db
+   
+   # Wait for database to be ready
+   sleep 10
+   
+   # Create backup
+   docker exec intelliquiz_db pg_dump -U postgres intelliquiz > database/backup_intelliquiz.sql
+   ```
+
+2. **Verify the backup file**:
+   ```bash
+   # Check file size (should be > 1KB)
+   ls -lh database/backup_intelliquiz.sql
+   
+   # Check first few lines (should have valid headers)
+   head -20 database/backup_intelliquiz.sql
+   ```
+
+3. **Test the backup file**:
+   ```bash
+   # Run backup validity test
+   python database/test_backup_validity.py
+   ```
+
+4. **Rebuild Docker image with new backup**:
+   ```bash
+   # Rebuild database image
+   docker build -t intelliquiz-db:latest database/
+   
+   # Tag for Docker Hub (if pushing)
+   docker tag intelliquiz-db:latest gm1026/intelliquiz-db:latest
+   
+   # Push to Docker Hub
+   docker push gm1026/intelliquiz-db:latest
+   ```
+
+5. **Update docker-compose.prod.yml** (if needed):
+   ```yaml
+   db:
+     image: gm1026/intelliquiz-db:latest  # Updated image
+   ```
+
+6. **Verify with team**:
+   ```bash
+   # Team members can now pull the updated image
+   python run_docker_prod.py
+   ```
+
+**Important**: After regenerating the backup file, notify your team to pull the latest Docker image.
 
 ---
 
@@ -438,6 +569,161 @@ npm test -- --coverage
 ---
 
 ## Troubleshooting
+
+### Database Initialization Issues
+
+#### Issue: Database Tables Are Missing
+
+**Symptoms**:
+- `verify_db_setup.py` reports missing tables
+- Error: "Some tables are missing!"
+- Tables like `game_session` are not found
+
+**Root Causes**:
+1. Backup file is corrupted or incomplete
+2. PostgreSQL initialization didn't complete
+3. Backup file wasn't copied to container properly
+
+**Solutions**:
+
+1. **Check database logs**:
+   ```bash
+   docker compose logs db | tail -50
+   ```
+   Look for SQL errors or initialization failures.
+
+2. **Verify backup file integrity**:
+   ```bash
+   # Check if backup file exists and is valid
+   python database/test_backup_validity.py
+   ```
+
+3. **Restart with fresh database**:
+   ```bash
+   # Stop and remove containers (keeps data in volumes)
+   docker compose down
+   
+   # Remove volumes to start fresh
+   docker compose down -v
+   
+   # Start again
+   docker compose up
+   ```
+
+4. **Check backup file manually**:
+   ```bash
+   # View first 50 lines of backup file
+   head -50 database/backup_intelliquiz.sql
+   
+   # Should start with valid PostgreSQL dump headers:
+   -- PostgreSQL database dump
+   -- Dumped from database version 16.11
+   ```
+
+#### Issue: Database Connection Refused
+
+**Symptoms**:
+- Error: "could not connect to server"
+- Error: "Connection refused"
+- `verify_db_setup.py` fails at connectivity check
+
+**Solutions**:
+
+1. **Check if database container is running**:
+   ```bash
+   docker ps | grep intelliquiz_db
+   ```
+
+2. **Check database logs**:
+   ```bash
+   docker logs intelliquiz_db
+   ```
+
+3. **Wait for initialization**:
+   - PostgreSQL can take 10-15 seconds to initialize
+   - Run `verify_db_setup.py` again after waiting
+
+4. **Restart database**:
+   ```bash
+   docker compose restart db
+   ```
+
+5. **Check port availability**:
+   ```bash
+   # Windows
+   netstat -ano | findstr :5434
+   
+   # Linux/Mac
+   lsof -i :5434
+   ```
+
+#### Issue: Backup File Not Loading
+
+**Symptoms**:
+- Database starts but tables are empty
+- No data in tables
+- Backup file seems to be ignored
+
+**Solutions**:
+
+1. **Verify backup file is in correct location**:
+   ```bash
+   ls -la database/backup_intelliquiz.sql
+   ```
+
+2. **Check Docker image includes backup file**:
+   ```bash
+   # Inspect the database image
+   docker inspect gm1026/intelliquiz-db:latest
+   ```
+
+3. **Manually load backup file**:
+   ```bash
+   # Connect to database and load backup
+   docker exec -i intelliquiz_db psql -U postgres -d intelliquiz < database/backup_intelliquiz.sql
+   ```
+
+4. **Verify backup file syntax**:
+   ```bash
+   # Check for SQL syntax errors
+   psql -U postgres -d intelliquiz -f database/backup_intelliquiz.sql
+   ```
+
+#### Issue: Verification Script Fails
+
+**Symptoms**:
+- `verify_db_setup.py` reports errors
+- Script can't connect to database
+- Row counts are incorrect
+
+**Solutions**:
+
+1. **Run with verbose output**:
+   ```bash
+   python verify_db_setup.py 2>&1 | tee verify_output.log
+   ```
+
+2. **Check database manually**:
+   ```bash
+   # Connect to database
+   docker exec -it intelliquiz_db psql -U postgres -d intelliquiz
+   
+   # List tables
+   \dt
+   
+   # Check row counts
+   SELECT COUNT(*) FROM "user";
+   SELECT COUNT(*) FROM quiz;
+   ```
+
+3. **Verify docker-compose.prod.yml configuration**:
+   ```bash
+   # Check if file exists
+   ls -la docker-compose.prod.yml
+   
+   # Verify database service configuration
+   grep -A 10 "db:" docker-compose.prod.yml
+   ```
 
 ### Common Issues and Solutions
 
