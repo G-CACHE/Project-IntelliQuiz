@@ -16,15 +16,15 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://localhost:8090',
+        target: 'http://localhost:8090',
         changeOrigin: true,
-        secure: false, // Accept self-signed backend cert
+        secure: false,
       },
       '/ws': {
-        target: 'https://localhost:8090',
+        target: 'http://localhost:8090',
         changeOrigin: true,
         ws: true,
-        secure: false, // Accept self-signed backend cert
+        secure: false,
       },
     },
   },

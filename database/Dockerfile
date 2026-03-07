@@ -1,4 +1,4 @@
-FROM postgres:18-alpine
+FROM postgres:16-alpine
 
 # Copy the backup SQL file into the initialization directory
 COPY backup_intelliquiz.sql /docker-entrypoint-initdb.d/

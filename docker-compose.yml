@@ -1,7 +1,9 @@
 services:
   # PostgreSQL Database Container
   db:
-    image: postgres:16-alpine
+    build:
+      context: ./database
+      dockerfile: ./Dockerfile
     container_name: intelliquiz_db
     restart: always
     environment:

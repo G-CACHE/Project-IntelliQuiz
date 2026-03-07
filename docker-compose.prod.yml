@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # PostgreSQL Database Container (with pre-populated data)
   db:
-    image: gm1026/intelliquiz-db:latest
+    image: danielvictorioso/intelliquiz-db:latest
     container_name: intelliquiz_db
     restart: always
     environment:
@@ -24,7 +24,7 @@ services:
 
   # Spring Boot Backend Container (pulled from Docker Hub)
   backend:
-    image: gm1026/intelliquiz-backend:latest
+    image: danielvictorioso/intelliquiz-backend:latest
     container_name: intelliquiz_backend
     restart: always
     environment:
@@ -33,7 +33,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: mysecretpassword
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+      SSL_ENABLED: "false"
       DISABLE_DOTENV: "true"
+      TZ: Asia/Manila
     ports:
       - "8090:8082"
     depends_on:

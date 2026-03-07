@@ -9,10 +9,10 @@ import sys
 import os
 from pathlib import Path
 
-DOCKER_USERNAME = "gm1026"
+DOCKER_USERNAME = "danielvictorioso"
 BACKEND_IMAGE_NAME = "intelliquiz-backend"
 DB_IMAGE_NAME = "intelliquiz-db"
-LOCAL_BACKEND_IMAGE = "project-cache-in-backend:latest"
+LOCAL_BACKEND_IMAGE = "project-intelliquiz_backend:latest"
 DOCKER_HUB_BACKEND_IMAGE = f"{DOCKER_USERNAME}/{BACKEND_IMAGE_NAME}:latest"
 DOCKER_HUB_DB_IMAGE = f"{DOCKER_USERNAME}/{DB_IMAGE_NAME}:latest"
 
