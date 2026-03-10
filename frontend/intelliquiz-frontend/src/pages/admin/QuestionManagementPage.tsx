@@ -68,10 +68,10 @@ export default function QuestionManagementPage({
     try {
       const [questionsRes, quizRes] = await Promise.all([
         fetch(`/api/quizzes/${quizId}/questions`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch(`/api/quizzes/${quizId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
@@ -106,10 +106,8 @@ export default function QuestionManagementPage({
     try {
       const response = await fetch(`/api/questions/${selectedQuestion.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -129,9 +127,7 @@ export default function QuestionManagementPage({
     try {
       const response = await fetch(`/api/questions/${selectedQuestion.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to delete question');
