@@ -18,6 +18,9 @@ interface AuthContextType {
   canManageTeams: (quizId: number) => boolean;
   canHostGame: (quizId: number) => boolean;
   isSuperAdmin: () => boolean;
+  isExaminer: () => boolean;
+  isProctor: () => boolean;
+  isParticipant: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,17 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Function to refresh auth state from backend
   const refreshAuth = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setRole(null);
-      setUsername(null);
-      setAssignments([]);
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Fetch current user info from backend (authoritative source)
+      // Fetch current user info from backend (cookie sent automatically)
       const user = await currentUserApi.getMe();
       console.log('[AuthContext] User info from backend:', user);
       setRole(user.role);
@@ -52,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('username', user.username);
 
       // Fetch assignments if user is ADMIN
-      if (user.role === 'ADMIN') {
+      if (user.role === 'ADMIN' || user.role === 'EXAMINER') {
         const freshAssignments = await currentUserApi.getMyAssignments();
         console.log('[AuthContext] Assignments from backend:', freshAssignments);
         setAssignments(freshAssignments);
@@ -64,8 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error('[AuthContext] Failed to fetch user info:', err);
-      // Token might be invalid, clear auth state
-      localStorage.removeItem('token');
+      // Cookie might be invalid/expired, clear auth state
       localStorage.removeItem('role');
       localStorage.removeItem('username');
       localStorage.removeItem('assignments');
@@ -79,29 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load auth state on mount
   useEffect(() => {
-    const loadAuthState = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    // Always try to fetch from backend — cookie presence is determined server-side
+    refreshAuth();
 
-      // Always fetch fresh data from backend to ensure role is correct
-      await refreshAuth();
-    };
-
-    loadAuthState();
-
-    // Listen for storage changes (e.g., when user logs in/out in another tab)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'token') {
+    // Listen for visibility changes to re-check auth when tab becomes active
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
         refreshAuth();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Set all assignments for a specific user (used by super admin)
@@ -173,6 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return hasPermissionForQuiz(quizId, PERMISSIONS.CAN_HOST_GAME);
   };
 
+  const isExaminer = (): boolean => role === 'EXAMINER';
+  const isProctor = (): boolean => role === 'PROCTOR';
+  const isParticipant = (): boolean => role === 'PARTICIPANT';
+
   return (
     <AuthContext.Provider value={{
       role,
@@ -191,6 +177,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canManageTeams,
       canHostGame,
       isSuperAdmin,
+      isExaminer,
+      isProctor,
+      isParticipant,
     }}>
       {children}
     </AuthContext.Provider>
