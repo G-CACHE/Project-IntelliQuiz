@@ -29,6 +29,7 @@ import UniversalLogin from '../pages/auth/UniversalLogin';
 
 // Proctor Pages
 import ProctorLogin from '../pages/proctor/ProctorLogin';
+import ProctorDashboard from '../pages/proctor/ProctorDashboard';
 import HostLobby from '../pages/host/HostLobby';
 import HostGame from '../pages/host/HostGame';
 import HostScoreboard from '../pages/host/HostScoreboard';
@@ -38,6 +39,10 @@ import ParticipantLogin from '../pages/participant/ParticipantLogin';
 import PlayerLobby from '../pages/player/PlayerLobby';
 import PlayerGame from '../pages/player/PlayerGame';
 import PlayerScoreboard from '../pages/player/PlayerScoreboard';
+import SessionTerminated from '../pages/player/SessionTerminated';
+
+// Admin Extra Pages
+import QuestionBankPage from '../pages/admin/QuestionBankPage';
 
 export const router = createBrowserRouter([
   // Universal Landing Page
@@ -54,6 +59,10 @@ export const router = createBrowserRouter([
   {
     path: '/proctor/login',
     element: <ProctorLogin />,
+  },
+  {
+    path: '/proctor/dashboard',
+    element: <ProctorDashboard />,
   },
   {
     path: '/host/lobby',
@@ -83,6 +92,10 @@ export const router = createBrowserRouter([
   {
     path: '/player/scoreboard',
     element: <PlayerScoreboard />,
+  },
+  {
+    path: '/player/terminated',
+    element: <SessionTerminated />,
   },
   // Super Admin Routes
   {
@@ -121,6 +134,10 @@ export const router = createBrowserRouter([
         path: 'backups',
         element: <BackupsPage />,
       },
+      {
+        path: 'question-bank',
+        element: <QuestionBankPage />,
+      },
     ],
   },
   // Admin Routes
@@ -155,6 +172,10 @@ export const router = createBrowserRouter([
       {
         path: 'host',
         element: <AdminHostPage />,
+      },
+      {
+        path: 'question-bank',
+        element: <QuestionBankPage />,
       },
     ],
   },
