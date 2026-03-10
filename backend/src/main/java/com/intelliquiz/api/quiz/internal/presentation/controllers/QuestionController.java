@@ -53,7 +53,7 @@ public class QuestionController {
      * Lists all questions for a quiz.
      */
     @GetMapping("/quizzes/{quizId}/questions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
     @Operation(
             summary = "List questions for a quiz",
             description = "Retrieves all questions belonging to a specific quiz, ordered by their position."

@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Response DTO for successful authentication.
- * Token is delivered via HttpOnly cookie — NOT in the response body.
+ * JWT is delivered exclusively via HttpOnly cookie (SameSite=Lax).
  */
-@Schema(description = "Response containing authentication result (token delivered via HttpOnly cookie)")
+@Schema(description = "Response containing authentication result")
 public record AuthResponse(
     @Schema(description = "Username of the authenticated user", example = "admin")
     String username,

@@ -27,4 +27,8 @@ public interface QuestionBankRepository {
     void delete(QuestionBankItem item);
 
     void deleteById(Long id);
+
+    List<QuestionBankItem> findAllById(List<Long> ids);
+
+    List<QuestionBankItem> findBySourceQuizId(Long sourceQuizId);
 }

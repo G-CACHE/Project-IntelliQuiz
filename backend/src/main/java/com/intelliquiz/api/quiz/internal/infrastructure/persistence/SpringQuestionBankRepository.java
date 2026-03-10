@@ -19,4 +19,6 @@ public interface SpringQuestionBankRepository extends JpaRepository<QuestionBank
     List<QuestionBankItem> findByOwnerUserIdAndDifficulty(Long ownerUserId, Difficulty difficulty);
 
     List<QuestionBankItem> findByOwnerUserIdAndTextContainingIgnoreCase(Long ownerUserId, String search);
+
+    List<QuestionBankItem> findBySourceQuizId(Long sourceQuizId);
 }

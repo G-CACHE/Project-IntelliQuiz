@@ -9,7 +9,9 @@ import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,7 @@ public class QuizFacade {
     /**
      * Get question data for grading (used by submission module).
      */
+    @Transactional(readOnly = true)
     public QuestionInfoDto getQuestionForGrading(Long questionId) {
         Question q = questionManagementService.getQuestion(questionId);
         return toDto(q);
@@ -52,7 +55,11 @@ public class QuizFacade {
 
     /**
      * Get ordered questions for a quiz (used by realtime module).
+     * Must be @Transactional so lazy-loaded @ElementCollection (options) 
+     * can be accessed during DTO conversion, especially from timer threads
+     * where OSIV is not available.
      */
+    @Transactional(readOnly = true)
     public List<QuestionInfoDto> getOrderedQuestions(Long quizId) {
         return questionManagementService.getQuestionsByQuiz(quizId).stream()
                 .sorted(Comparator.comparingInt(Question::getOrderIndex))
@@ -99,8 +106,12 @@ public class QuizFacade {
     }
 
     private QuestionInfoDto toDto(Question q) {
+        // Eagerly copy options to detach from Hibernate PersistentBag.
+        // This prevents LazyInitializationException when the DTO is serialized
+        // outside the transaction boundary (e.g., on timer scheduler threads).
+        List<String> optionsCopy = (q.getOptions() != null) ? new ArrayList<>(q.getOptions()) : List.of();
         return new QuestionInfoDto(
-                q.getId(), q.getText(), q.getType(), q.getOptions(),
+                q.getId(), q.getText(), q.getType(), optionsCopy,
                 q.getCorrectKey(), q.getPoints(), q.getTimeLimit(),
                 q.getOrderIndex(),
                 q.getDifficulty() != null ? q.getDifficulty().name() : null);

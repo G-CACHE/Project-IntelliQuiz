@@ -60,4 +60,14 @@ public class QuestionBankRepositoryImpl implements QuestionBankRepository {
     public void deleteById(Long id) {
         springQuestionBankRepository.deleteById(id);
     }
+
+    @Override
+    public List<QuestionBankItem> findAllById(List<Long> ids) {
+        return springQuestionBankRepository.findAllById(ids);
+    }
+
+    @Override
+    public List<QuestionBankItem> findBySourceQuizId(Long sourceQuizId) {
+        return springQuestionBankRepository.findBySourceQuizId(sourceQuizId);
+    }
 }

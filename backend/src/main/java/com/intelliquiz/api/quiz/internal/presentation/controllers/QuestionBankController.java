@@ -35,7 +35,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
 @Tag(name = "Question Bank", description = "Personal question bank management for admins. Requires JWT authentication.")
 @SecurityRequirement(name = "bearerAuth")
 public class QuestionBankController {
@@ -203,5 +203,58 @@ public class QuestionBankController {
         SystemRole role = SecurityUtils.extractRole(auth);
         Question question = questionBankService.attachToQuiz(request.bankItemId(), quizId, userId, role);
         return ResponseEntity.status(HttpStatus.CREATED).body(QuestionResponse.from(question));
+    }
+
+    // ==================== Harvest & Import (Game Workflow) ====================
+
+    /**
+     * Harvests all instant questions from a completed quiz into the examiner's bank.
+     */
+    @PostMapping("/quizzes/{quizId}/harvest")
+    @Operation(
+            summary = "Harvest quiz questions into bank",
+            description = "Copies all questions from a completed quiz into the examiner's personal question bank. " +
+                          "Skips questions that already exist in the bank."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Questions harvested successfully"),
+            @ApiResponse(responseCode = "404", description = "Quiz not found")
+    })
+    public ResponseEntity<List<QuestionBankItemResponse>> harvestQuestions(
+            @PathVariable Long quizId,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        List<QuestionBankItem> harvested = questionBankService.harvestInstantQuestions(quizId, userId);
+        List<QuestionBankItemResponse> responses = harvested.stream()
+                .map(QuestionBankItemResponse::from)
+                .toList();
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Imports multiple bank items into a quiz as new questions (batch).
+     */
+    @PostMapping("/quizzes/{quizId}/questions/import-from-bank")
+    @Operation(
+            summary = "Batch import from bank to quiz",
+            description = "Copies multiple question bank items into a quiz. " +
+                          "Requires ownership of all bank items and the quiz."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Questions imported successfully"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - ownership check failed"),
+            @ApiResponse(responseCode = "404", description = "Quiz or bank items not found")
+    })
+    public ResponseEntity<List<QuestionResponse>> importFromBank(
+            @PathVariable Long quizId,
+            @RequestBody List<Long> bankItemIds,
+            Authentication auth) {
+        Long userId = SecurityUtils.extractUserId(auth);
+        SystemRole role = SecurityUtils.extractRole(auth);
+        List<Question> questions = questionBankService.importFromBank(bankItemIds, quizId, userId, role);
+        List<QuestionResponse> responses = questions.stream()
+                .map(QuestionResponse::from)
+                .toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(responses);
     }
 }

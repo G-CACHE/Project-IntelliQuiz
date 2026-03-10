@@ -5,7 +5,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 /**
- * Utility service for creating HttpOnly, Secure, SameSite=Strict cookies
+ * Utility service for creating HttpOnly, SameSite=Lax cookies
  * for JWT-based authentication.
  */
 @Component
@@ -16,14 +16,17 @@ public class CookieService {
     @Value("${jwt.expiration:1800000}")
     private long jwtExpirationMs;
 
+    @Value("${cookie.secure:false}")
+    private boolean secureCookie;
+
     /**
      * Creates an HttpOnly access-token cookie.
      */
     public ResponseCookie createAccessCookie(String token) {
         return ResponseCookie.from(ACCESS_COOKIE_NAME, token)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+                .secure(secureCookie)
+                .sameSite("Lax")
                 .path("/")
                 .maxAge(jwtExpirationMs / 1000) // seconds
                 .build();
@@ -35,8 +38,8 @@ public class CookieService {
     public ResponseCookie createClearCookie() {
         return ResponseCookie.from(ACCESS_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
+                .secure(secureCookie)
+                .sameSite("Lax")
                 .path("/")
                 .maxAge(0)
                 .build();

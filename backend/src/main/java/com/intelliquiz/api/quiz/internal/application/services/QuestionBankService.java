@@ -104,4 +104,57 @@ public class QuestionBankService {
         Question question = bankItem.toQuizQuestion(quiz, nextIndex);
         return questionRepository.save(question);
     }
+
+    // ==================== Harvest & Import (Game Workflow) ====================
+
+    /**
+     * Harvests all instant (ad-hoc) questions from a completed quiz into the examiner's bank.
+     * Skips questions already present in the bank (by sourceQuestionId).
+     */
+    public List<QuestionBankItem> harvestInstantQuestions(Long quizId, Long examinerId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+
+        // Get existing bank items sourced from this quiz to avoid duplicates
+        List<QuestionBankItem> existing = questionBankRepository.findBySourceQuizId(quizId);
+        java.util.Set<Long> existingSourceIds = existing.stream()
+                .map(QuestionBankItem::getSourceQuestionId)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+
+        List<QuestionBankItem> harvested = new java.util.ArrayList<>();
+        for (Question q : quiz.getQuestions()) {
+            if (existingSourceIds.contains(q.getId())) continue;
+            QuestionBankItem item = QuestionBankItem.fromQuestion(q, examinerId);
+            item.setHarvested(true);
+            item.setCategory(quiz.getTitle()); // default category = quiz title
+            harvested.add(questionBankRepository.save(item));
+        }
+        return harvested;
+    }
+
+    /**
+     * Imports multiple bank items into a quiz as new questions.
+     * Returns the list of created questions.
+     */
+    public List<Question> importFromBank(List<Long> bankItemIds, Long quizId, Long userId, SystemRole role) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (role != SystemRole.SUPER_ADMIN && !quiz.getCreatedByUserId().equals(userId)) {
+            throw new AccessDeniedException("You do not have access to this quiz");
+        }
+
+        List<QuestionBankItem> bankItems = questionBankRepository.findAllById(bankItemIds);
+        int nextIndex = quiz.getQuestions().size();
+
+        List<Question> created = new java.util.ArrayList<>();
+        for (QuestionBankItem bankItem : bankItems) {
+            if (!bankItem.getOwnerUserId().equals(userId)) {
+                throw new AccessDeniedException("You do not own bank item " + bankItem.getId());
+            }
+            Question question = bankItem.toQuizQuestion(quiz, nextIndex++);
+            created.add(questionRepository.save(question));
+        }
+        return created;
+    }
 }

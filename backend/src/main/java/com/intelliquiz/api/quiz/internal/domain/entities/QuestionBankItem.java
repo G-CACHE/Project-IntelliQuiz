@@ -56,6 +56,12 @@ public class QuestionBankItem {
     @Column(name = "source_question_id")
     private Long sourceQuestionId;
 
+    @Column(name = "category")
+    private String category;
+
+    @Column(name = "is_harvested", nullable = false)
+    private boolean isHarvested = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -200,5 +206,21 @@ public class QuestionBankItem {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public boolean isHarvested() {
+        return isHarvested;
+    }
+
+    public void setHarvested(boolean harvested) {
+        isHarvested = harvested;
     }
 }

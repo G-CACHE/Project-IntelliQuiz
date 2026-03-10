@@ -53,17 +53,19 @@ public class AnswerDistributionService {
 
     /**
      * Calculates distribution for MCQ questions.
-     * Counts submissions per option (A, B, C, D).
+     * Counts submissions per option (by option text).
      */
     private AnswerDistribution calculateMcqDistribution(QuestionInfoDto question, List<SubmissionInfoDto> submissions) {
         Map<String, Integer> optionCounts = new HashMap<>();
         
-        // Initialize all options with 0
+        // Initialize all options with 0 — use option TEXT as keys
         List<String> options = question.options();
         for (int i = 0; i < options.size() && i < 4; i++) {
-            String optionKey = String.valueOf((char) ('A' + i));
-            optionCounts.put(optionKey, 0);
+            optionCounts.put(options.get(i), 0);
         }
+        
+        // Resolve letter-based correctKey to option text
+        String resolvedCorrectAnswer = question.resolvedCorrectAnswer();
         
         int correctCount = 0;
         int incorrectCount = 0;
@@ -71,15 +73,15 @@ public class AnswerDistributionService {
         for (SubmissionInfoDto submission : submissions) {
             String answer = submission.submittedAnswer();
             if (answer != null && !answer.isBlank()) {
-                String normalizedAnswer = answer.toUpperCase().trim();
+                String trimmedAnswer = answer.trim();
                 
-                // Count the option
-                if (optionCounts.containsKey(normalizedAnswer)) {
-                    optionCounts.merge(normalizedAnswer, 1, Integer::sum);
+                // Count the option — submitted answers are option text
+                if (optionCounts.containsKey(trimmedAnswer)) {
+                    optionCounts.merge(trimmedAnswer, 1, Integer::sum);
                 }
                 
-                // Count correct/incorrect
-                if (isCorrectAnswer(answer, question.correctKey())) {
+                // Count correct/incorrect using resolved answer
+                if (isCorrectAnswer(trimmedAnswer, resolvedCorrectAnswer)) {
                     correctCount++;
                 } else {
                     incorrectCount++;
@@ -97,11 +99,12 @@ public class AnswerDistributionService {
      * Simply counts correct vs incorrect.
      */
     private AnswerDistribution calculateIdentificationDistribution(QuestionInfoDto question, List<SubmissionInfoDto> submissions) {
+        String resolvedCorrectAnswer = question.resolvedCorrectAnswer();
         int correctCount = 0;
         int incorrectCount = 0;
         
         for (SubmissionInfoDto submission : submissions) {
-            if (isCorrectAnswer(submission.submittedAnswer(), question.correctKey())) {
+            if (isCorrectAnswer(submission.submittedAnswer(), resolvedCorrectAnswer)) {
                 correctCount++;
             } else {
                 incorrectCount++;

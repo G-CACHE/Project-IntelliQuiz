@@ -1,19 +1,5 @@
-# Multi-stage build for IntelliQuiz Backend
-# Stage 1: Build the application
-FROM maven:3.9-eclipse-temurin-21 AS builder
-
-WORKDIR /app
-
-# Copy backend project files
-COPY pom.xml .
-COPY src ./src
-COPY .mvn ./.mvn
-COPY mvnw* ./
-
-# Build the application (skip tests for faster build)
-RUN chmod +x mvnw && ./mvnw clean package -DskipTests -q
-
-# Stage 2: Run the application
+# IntelliQuiz Backend
+# Pre-built JAR approach: run `./mvnw clean package -DskipTests` locally first
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
@@ -25,8 +11,8 @@ RUN apk add --no-cache postgresql16-client
 # Create backup directory
 RUN mkdir -p /app/backups
 
-# Copy the JAR file from builder stage
-COPY --from=builder /app/target/*.jar app.jar
+# Copy the pre-built JAR (build locally with: ./mvnw clean package -DskipTests)
+COPY target/*.jar app.jar
 
 # Copy .env file for environment variables
 COPY .env .

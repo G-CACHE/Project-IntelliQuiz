@@ -53,7 +53,7 @@ public class QuizController {
      * Lists all quizzes.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
     @Operation(
             summary = "List all quizzes",
             description = "Retrieves quizzes accessible to the current user. Admins see their own quizzes; Super Admins see all."
@@ -84,7 +84,7 @@ public class QuizController {
      * Gets a quiz by ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Get quiz by ID",
             description = "Retrieves a specific quiz by its unique identifier. Admins can only access their own quizzes."
@@ -125,7 +125,7 @@ public class QuizController {
      * Creates a new quiz.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Create a new quiz",
             description = "Creates a new quiz with the provided title and description. The quiz is created in DRAFT status and assigned to the current user."
@@ -160,7 +160,7 @@ public class QuizController {
      * Updates an existing quiz.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Update a quiz",
             description = "Updates an existing quiz with the provided title and description. Admins can only update their own quizzes."

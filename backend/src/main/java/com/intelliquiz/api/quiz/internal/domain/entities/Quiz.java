@@ -2,6 +2,7 @@ package com.intelliquiz.api.quiz.internal.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
+import com.intelliquiz.api.shared.enums.NavigationMode;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.InvalidQuizStateException;
 import com.intelliquiz.api.shared.exceptions.QuizNotReadyException;
@@ -44,6 +45,13 @@ public class Quiz extends SoftDeletableEntity {
 
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "navigation_mode", nullable = false)
+    private NavigationMode navigationMode = NavigationMode.LINEAR;
+
+    @Column(name = "global_time_limit_seconds", nullable = false)
+    private int globalTimeLimitSeconds = 0;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
     @JsonManagedReference("quiz-questions")
@@ -189,5 +197,21 @@ public class Quiz extends SoftDeletableEntity {
     public void removeQuestion(Question question) {
         questions.remove(question);
         question.setQuiz(null);
+    }
+
+    public NavigationMode getNavigationMode() {
+        return navigationMode;
+    }
+
+    public void setNavigationMode(NavigationMode navigationMode) {
+        this.navigationMode = navigationMode;
+    }
+
+    public int getGlobalTimeLimitSeconds() {
+        return globalTimeLimitSeconds;
+    }
+
+    public void setGlobalTimeLimitSeconds(int globalTimeLimitSeconds) {
+        this.globalTimeLimitSeconds = globalTimeLimitSeconds;
     }
 }

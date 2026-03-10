@@ -6,6 +6,7 @@ import com.intelliquiz.api.submission.SubmissionFacade;
 import com.intelliquiz.api.submission.dto.SubmissionInfoDto;
 import com.intelliquiz.api.team.TeamFacade;
 import com.intelliquiz.api.team.dto.TeamInfoDto;
+import com.intelliquiz.api.shared.enums.NavigationMode;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.realtime.internal.domain.enums.GameState;
 import com.intelliquiz.api.realtime.internal.presentation.dto.*;
@@ -35,6 +36,7 @@ public class GameFlowService {
     private final TeamFacade teamFacade;
     private final SubmissionFacade submissionFacade;
     private final AnswerDistributionService distributionService;
+    private final ProctorSessionService proctorSessionService;
 
     // Quiz ID -> Set of team IDs that have submitted for current question
     private final Map<Long, Set<Long>> submittedTeams = new ConcurrentHashMap<>();
@@ -46,7 +48,8 @@ public class GameFlowService {
             QuizFacade quizFacade,
             TeamFacade teamFacade,
             SubmissionFacade submissionFacade,
-            AnswerDistributionService distributionService
+            AnswerDistributionService distributionService,
+            ProctorSessionService proctorSessionService
     ) {
         this.timerService = timerService;
         this.broadcastService = broadcastService;
@@ -55,6 +58,7 @@ public class GameFlowService {
         this.teamFacade = teamFacade;
         this.submissionFacade = submissionFacade;
         this.distributionService = distributionService;
+        this.proctorSessionService = proctorSessionService;
     }
 
     /**
@@ -92,11 +96,10 @@ public class GameFlowService {
         // Clear submitted teams for new question
         submittedTeams.put(quizId, ConcurrentHashMap.newKeySet());
         
-        // Broadcast question (JIT - no correctKey)
+        // Broadcast combined game state + question (single message)
         QuestionPayload payload = QuestionPayload.fromDto(question);
-        broadcastService.broadcastQuestion(quizId, payload);
         broadcastService.broadcastGameState(quizId, GameStateMessage.active(
-                quizId, questionIndex, questions.size(), question.difficulty()
+                quizId, questionIndex, questions.size(), question.difficulty(), payload
         ));
         
         // Start question timer — capture quizId for callback
@@ -115,6 +118,9 @@ public class GameFlowService {
         QuestionInfoDto question = quizFacade.getQuestionForGrading(questionId);
         List<TeamInfoDto> teams = teamFacade.getTeamsByQuiz(quizId);
         
+        // Resolve letter-key (A/B/C/D) to actual option text for correct comparison
+        String resolvedCorrectAnswer = question.resolvedCorrectAnswer();
+        
         // Grade all submissions and calculate results
         List<TeamResult> results = new ArrayList<>();
         
@@ -124,10 +130,10 @@ public class GameFlowService {
             
             if (submissionOpt.isPresent()) {
                 SubmissionInfoDto sub = submissionOpt.get();
-                // Grade if not already graded
+                // Grade if not already graded — use resolved option text, not the letter key
                 if (!sub.isGraded()) {
                     sub = submissionFacade.gradeSubmission(team.id(), question.id(),
-                            question.correctKey(), question.points());
+                            resolvedCorrectAnswer, question.points());
                     // Update team score if correct
                     if (sub.isCorrect()) {
                         teamFacade.addPoints(team.id(), sub.awardedPoints());
@@ -192,10 +198,10 @@ public class GameFlowService {
         // Calculate answer distribution
         AnswerDistribution distribution = distributionService.calculateDistribution(questionId);
         
-        // Broadcast reveal
+        // Broadcast reveal — send resolved option text as correctAnswer
         AnswerRevealPayload reveal = AnswerRevealPayload.create(
                 questionId,
-                question.correctKey(),
+                resolvedCorrectAnswer,
                 question.type(),
                 distribution,
                 rankedResults
@@ -263,6 +269,12 @@ public class GameFlowService {
      */
     @Transactional
     public void handleSubmission(Long quizId, Long teamId, Long questionId, String answer, String sessionId) {
+        // Reject submissions from kicked teams
+        if (proctorSessionService.isKicked(quizId, teamId)) {
+            broadcastService.sendError(sessionId, new ErrorMessage("KICKED", "You have been removed from this session."));
+            return;
+        }
+
         // Validate game state
         GameState currentState = sessionManager.getCurrentState(quizId);
         if (currentState != GameState.ACTIVE) {
@@ -270,18 +282,21 @@ public class GameFlowService {
             return;
         }
         
-        // Validate timer is active
-        if (!timerService.isTimerActive(quizId)) {
-            broadcastService.sendError(sessionId, ErrorMessage.timeExpired());
-            return;
+        NavigationMode navMode = sessionManager.getNavigationMode(quizId);
+
+        if (navMode == NavigationMode.LINEAR) {
+            // LINEAR mode: validate timer and current question
+            if (!timerService.isTimerActive(quizId)) {
+                broadcastService.sendError(sessionId, ErrorMessage.timeExpired());
+                return;
+            }
+            Optional<Long> currentQuestionId = sessionManager.getCurrentQuestionId(quizId);
+            if (currentQuestionId.isEmpty() || !currentQuestionId.get().equals(questionId)) {
+                broadcastService.sendError(sessionId, ErrorMessage.invalidQuestion());
+                return;
+            }
         }
-        
-        // Validate question is current
-        Optional<Long> currentQuestionId = sessionManager.getCurrentQuestionId(quizId);
-        if (currentQuestionId.isEmpty() || !currentQuestionId.get().equals(questionId)) {
-            broadcastService.sendError(sessionId, ErrorMessage.invalidQuestion());
-            return;
-        }
+        // NON_LINEAR mode: no per-question timer validation, any question is valid
         
         // Validate team and question exist
         if (!teamFacade.teamExists(teamId)) {
@@ -301,6 +316,17 @@ public class GameFlowService {
         
         // Send confirmation to participant
         broadcastService.sendSubmissionConfirmation(quizId, teamId, questionId);
+
+        // Track answered questions for NON_LINEAR mode
+        if (navMode == NavigationMode.NON_LINEAR) {
+            List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+            for (int i = 0; i < questions.size(); i++) {
+                if (questions.get(i).id().equals(questionId)) {
+                    sessionManager.markQuestionAnswered(quizId, teamId, i);
+                    break;
+                }
+            }
+        }
         
         // Notify host (only on first submission, not updates)
         if (isFirstSubmission) {
@@ -315,12 +341,81 @@ public class GameFlowService {
     }
 
     /**
+     * Navigates a participant to a specific question (NON_LINEAR mode only).
+     * Returns the question payload for the requested index.
+     */
+    public QuestionPayload navigateToQuestion(Long quizId, Long teamId, int questionIndex, String sessionId) {
+        NavigationMode navMode = sessionManager.getNavigationMode(quizId);
+        if (navMode != NavigationMode.NON_LINEAR) {
+            broadcastService.sendError(sessionId, new ErrorMessage("NAV_ERROR", "Navigation only allowed in non-linear mode."));
+            return null;
+        }
+
+        if (proctorSessionService.isKicked(quizId, teamId)) {
+            broadcastService.sendError(sessionId, new ErrorMessage("KICKED", "You have been removed from this session."));
+            return null;
+        }
+
+        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+        if (questionIndex < 0 || questionIndex >= questions.size()) {
+            broadcastService.sendError(sessionId, ErrorMessage.invalidQuestion());
+            return null;
+        }
+
+        QuestionInfoDto question = questions.get(questionIndex);
+        return QuestionPayload.fromDto(question);
+    }
+
+    /**
+     * Starts a NON_LINEAR quiz session — sends all questions at once and starts global timer.
+     */
+    public void startNonLinearQuiz(Long quizId, int globalTimeLimitSeconds) {
+        sessionManager.setNavigationMode(quizId, NavigationMode.NON_LINEAR);
+        sessionManager.setCurrentState(quizId, GameState.ACTIVE);
+
+        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+
+        // Broadcast all questions (JIT — no correctKey)
+        List<QuestionPayload> allQuestions = questions.stream()
+                .map(QuestionPayload::fromDto)
+                .toList();
+        QuestionPayload firstQuestion = allQuestions.getFirst();
+        broadcastService.broadcastGameState(quizId, GameStateMessage.active(
+                quizId, 0, questions.size(), "NON_LINEAR", firstQuestion
+        ));
+        // TODO: broadcast full question list to /topic/quiz/{quizId}/questions for palette
+
+        // Start global timer
+        if (globalTimeLimitSeconds > 0) {
+            timerService.startGlobalTimer(quizId, globalTimeLimitSeconds, () -> {
+                // Auto-submit and grade all questions on global timeout
+                autoGradeAllQuestions(quizId);
+            });
+        }
+
+        logger.info("Started NON_LINEAR quiz {} with {} questions, global timer: {}s",
+                quizId, questions.size(), globalTimeLimitSeconds);
+    }
+
+    /**
+     * Auto-grades all questions for all teams (used when global timer expires in NON_LINEAR mode).
+     */
+    @Transactional
+    public void autoGradeAllQuestions(Long quizId) {
+        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+        for (QuestionInfoDto question : questions) {
+            calculateAndRevealResults(quizId, question.id());
+        }
+        showRoundSummary(quizId);
+    }
+
+    /**
      * Starts tiebreaker mode.
      */
     public void startTiebreaker(Long quizId) {
         sessionManager.setCurrentState(quizId, GameState.TIEBREAKER);
         broadcastService.broadcastGameState(quizId, new GameStateMessage(
-                GameState.TIEBREAKER, quizId, null, null, "TIEBREAKER", "Tiebreaker round!"
+                GameState.TIEBREAKER, quizId, null, null, "TIEBREAKER", "Tiebreaker round!", null
         ));
         logger.info("Started tiebreaker for quiz {}", quizId);
         // TODO: Implement full tiebreaker logic with spectator mode
@@ -331,11 +426,30 @@ public class GameFlowService {
      */
     public void endQuiz(Long quizId) {
         timerService.stopTimer(quizId);
+        
+        // Build and broadcast final scoreboard before clearing session
+        List<TeamInfoDto> leaderboard = teamFacade.getTeamsByQuiz(quizId).stream()
+                .sorted(Comparator.comparingInt(TeamInfoDto::totalScore).reversed())
+                .toList();
+        List<TeamResult> finalScoreboard = leaderboard.stream()
+                .map(team -> {
+                    int rank = leaderboard.indexOf(team) + 1;
+                    boolean isTied = leaderboard.stream()
+                            .filter(t -> t.totalScore() == team.totalScore()).count() > 1;
+                    return new TeamResult(
+                            team.id(), team.name(), null, false, 0,
+                            team.totalScore(), rank, isTied
+                    );
+                })
+                .toList();
+        
         sessionManager.setCurrentState(quizId, GameState.ENDED);
         broadcastService.broadcastGameState(quizId, GameStateMessage.ended(quizId));
+        broadcastService.broadcastScoreboard(quizId, finalScoreboard);
         
         // Clear session data
         sessionManager.clearQuizSession(quizId);
+        proctorSessionService.clearSession(quizId);
         submittedTeams.remove(quizId);
         
         logger.info("Ended quiz {}", quizId);
@@ -354,6 +468,19 @@ public class GameFlowService {
      */
     public void resumeGame(Long quizId) {
         timerService.resumeTimer(quizId, qId -> calculateAndRevealResults(quizId, qId));
+        
+        // Broadcast proper ACTIVE state with current question data
+        int questionIndex = sessionManager.getCurrentQuestionIndex(quizId);
+        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+        if (questionIndex < questions.size()) {
+            QuestionInfoDto question = questions.get(questionIndex);
+            QuestionPayload payload = QuestionPayload.fromDto(question);
+            sessionManager.setCurrentState(quizId, GameState.ACTIVE);
+            broadcastService.broadcastGameState(quizId, GameStateMessage.active(
+                    quizId, questionIndex, questions.size(), question.difficulty(), payload
+            ));
+        }
+        
         logger.info("Resumed quiz {}", quizId);
     }
 }
