@@ -21,14 +21,12 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login(username, password);
-      // Clear all previous auth data before setting new values
-      localStorage.removeItem('token');
+      // Clear previous cached data
       localStorage.removeItem('username');
       localStorage.removeItem('role');
       localStorage.removeItem('assignments');
       
-      // Set new auth data
-      localStorage.setItem('token', response.token);
+      // Cache username and role for UI (auth is via HttpOnly cookie)
       localStorage.setItem('username', username);
       localStorage.setItem('role', response.role);
 

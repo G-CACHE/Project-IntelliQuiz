@@ -10,7 +10,7 @@ import {
   BiPlay,
 } from 'react-icons/bi';
 import '../../styles/admin.css';
-import { currentUserApi } from '../../services/api';
+import { currentUserApi, authApi } from '../../services/api';
 
 interface NavItem {
   path: string;
@@ -85,8 +85,8 @@ export default function AdminLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    try { await authApi.logout(); } catch { /* ignore */ }
     localStorage.removeItem('username');
     localStorage.removeItem('role');
     localStorage.removeItem('assignments');
