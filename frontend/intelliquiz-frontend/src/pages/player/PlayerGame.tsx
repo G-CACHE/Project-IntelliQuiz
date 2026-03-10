@@ -5,6 +5,8 @@ import { getParticipantSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
+import AntiCheatWrapper from '../../components/game/AntiCheatWrapper';
+import QuestionPalette from '../../components/game/QuestionPalette';
 import '../../styles/participant.css';
 
 const PlayerGame: React.FC = () => {
@@ -16,6 +18,7 @@ const PlayerGame: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [lastQuestionNumber, setLastQuestionNumber] = useState(0);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
 
   // Get session data
   const [session] = useState(() => {
@@ -47,8 +50,12 @@ const PlayerGame: React.FC = () => {
     totalQuestions,
     timeRemaining,
     rankings,
+    kicked,
+    kickReason,
     submitAnswer,
     reconnect,
+    reportViolation,
+    navigateToQuestion,
   } = useWebSocket(
     session?.quizId || 0,
     'PARTICIPANT',
@@ -56,6 +63,9 @@ const PlayerGame: React.FC = () => {
     session?.teamName,
     session?.teamCode  // accessCode for WebSocket authentication
   );
+
+  // TODO: detect navigation mode from game state message; for now check URL param
+  const isNonLinear = searchParams.get('mode') === 'NON_LINEAR';
 
   // Redirect to login if no session
   useEffect(() => {
@@ -74,45 +84,98 @@ const PlayerGame: React.FC = () => {
     }
   }, [questionNumber, lastQuestionNumber]);
 
-  // Navigate to final scoreboard
+  // Also reset selection state whenever gameState transitions to QUESTION
+  // This catches edge cases where questionNumber hasn't updated yet
   useEffect(() => {
-    if (gameState === 'FINAL_RESULTS') {
-      navigate(`/player/scoreboard?quizId=${session?.quizId}&teamId=${session?.teamId}&final=true`);
+    if (gameState === 'QUESTION') {
+      setSubmitted(false);
+      setIsCorrect(null);
     }
-  }, [gameState, session, navigate]);
+  }, [gameState]);
+
+  // Redirect if kicked
+  useEffect(() => {
+    if (kicked) {
+      navigate(`/player/terminated?reason=${encodeURIComponent(kickReason || 'Removed by proctor')}`);
+    }
+  }, [kicked, kickReason, navigate]);
+
+  // Navigate to final scoreboard — show inline instead of navigating away
+  // (Removed: we now render FINAL_RESULTS inline in this component)
 
   // Check if answer was correct when answer is revealed
   useEffect(() => {
-    if (gameState === 'ANSWER_REVEAL' && currentQuestion?.correctAnswer && selectedOption) {
-      setIsCorrect(selectedOption === currentQuestion.correctAnswer);
+    if (gameState === 'ANSWER_REVEAL' && currentQuestion?.correctAnswer) {
+      if (selectedOption) {
+        setIsCorrect(selectedOption === currentQuestion.correctAnswer);
+      } else if (!submitted) {
+        setIsCorrect(null); // No answer submitted
+      }
     }
-  }, [gameState, currentQuestion?.correctAnswer, selectedOption]);
+  }, [gameState, currentQuestion?.correctAnswer, selectedOption, submitted]);
 
-  // Handle option selection
-  const handleSelectOption = useCallback((option: string) => {
-    if (!submitted && gameState === 'QUESTION' && timeRemaining > 0) {
-      setSelectedOption(option);
+  // Auto-submit when timer expires (LINEAR mode only)
+  useEffect(() => {
+    if (!isNonLinear && gameState === 'QUESTION' && timeRemaining <= 0 && !submitted && currentQuestion && session) {
+      if (selectedOption) {
+        // Auto-submit selected answer
+        submitAnswer({
+          teamId: session.teamId,
+          questionId: currentQuestion.id,
+          selectedOption,
+        });
+      }
+      setSubmitted(true);
     }
-  }, [submitted, gameState, timeRemaining]);
+  }, [isNonLinear, gameState, timeRemaining, submitted, currentQuestion, session, selectedOption, submitAnswer]);
+
+  // Handle option selection — click to select/change freely (submitted on timer expiry in LINEAR mode)
+  const handleSelectOption = useCallback((option: string) => {
+    if (!submitted && gameState === 'QUESTION') {
+      setSelectedOption(option);
+      // In NON_LINEAR mode, no auto-submit; user must explicitly click Submit
+      // In LINEAR mode, selection is stored and auto-submitted when timer expires
+    }
+  }, [submitted, gameState]);
 
   // Handle answer submission
   const handleSubmit = useCallback(() => {
-    if (selectedOption && !submitted && currentQuestion && session && timeRemaining > 0) {
+    if (selectedOption && !submitted && currentQuestion && session && (isNonLinear || timeRemaining > 0)) {
       submitAnswer({
         teamId: session.teamId,
         questionId: currentQuestion.id,
         selectedOption,
       });
       setSubmitted(true);
+      // Track answered questions for NON_LINEAR mode
+      if (isNonLinear) {
+        setAnsweredQuestions(prev => {
+          const next = new Set(prev);
+          next.add(questionNumber);
+          return next;
+        });
+      }
     }
-  }, [selectedOption, submitted, currentQuestion, session, timeRemaining, submitAnswer]);
+  }, [selectedOption, submitted, currentQuestion, session, timeRemaining, submitAnswer, isNonLinear, questionNumber]);
 
-  // Block submission when timer expires
-  const canSubmit = !submitted && selectedOption && timeRemaining > 0 && gameState === 'QUESTION';
+  // Handle NON_LINEAR question navigation
+  const handleNavigate = useCallback((questionIndex: number) => {
+    navigateToQuestion(questionIndex);
+    setSelectedOption(null);
+    setSubmitted(false);
+    setIsCorrect(null);
+  }, [navigateToQuestion]);
+
+  // Block submission when timer expires (NON_LINEAR has no per-question timer)
+  const canSubmit = !submitted && selectedOption && (isNonLinear || timeRemaining > 0) && gameState === 'QUESTION';
+
+  // Find current team score from rankings
+  const myTeamScore = rankings.find(r => r.teamId === session?.teamId)?.score;
 
   if (!session) return null;
 
   return (
+    <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION'}>
     <div className="participant-page participant-game-page">
       {/* Sticky Header */}
       <div className="participant-game-header">
@@ -125,11 +188,23 @@ const PlayerGame: React.FC = () => {
           </div>
           
           <div className="participant-game-header-right">
+            {/* Score Display */}
+            {myTeamScore !== undefined && (
+              <span style={{
+                fontWeight: 700,
+                fontSize: '14px',
+                color: '#f59e0b',
+                marginRight: '12px',
+              }}>
+                {myTeamScore} pts
+              </span>
+            )}
+            
             {/* Connection Status */}
             <span className={`participant-status-dot ${connected ? 'participant-status-connected' : 'participant-status-disconnected'}`}></span>
             
-            {/* Timer */}
-            {(gameState === 'QUESTION' || gameState === 'BUFFER') && (
+            {/* Timer — only show during active question, not buffer */}
+            {gameState === 'QUESTION' && (
               <div className="participant-timer-container">
                 <Timer 
                   timeRemaining={timeRemaining} 
@@ -157,6 +232,18 @@ const PlayerGame: React.FC = () => {
       {/* Main Content */}
       <div className="participant-game-content">
         <div className="participant-container">
+          {/* NON_LINEAR Question Palette */}
+          {isNonLinear && gameState === 'QUESTION' && (
+            <div style={{ marginBottom: '16px' }}>
+              <QuestionPalette
+                totalQuestions={totalQuestions}
+                currentQuestion={questionNumber}
+                answeredQuestions={answeredQuestions}
+                onNavigate={handleNavigate}
+              />
+            </div>
+          )}
+
           {/* QUESTION State */}
           {gameState === 'QUESTION' && currentQuestion && (
             <>
@@ -166,32 +253,52 @@ const PlayerGame: React.FC = () => {
                 totalQuestions={totalQuestions}
                 selectedOption={selectedOption}
                 onSelectOption={handleSelectOption}
-                disabled={submitted || timeRemaining <= 0}
+                disabled={submitted || (!isNonLinear && timeRemaining <= 0)}
               />
 
-              {/* Submit Button */}
+              {/* Submit Section */}
               <div className="participant-submit-section">
-                {!submitted ? (
-                  <>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={!canSubmit}
-                      className={`participant-btn-primary participant-btn-large ${!canSubmit ? 'participant-btn-disabled' : ''}`}
-                    >
-                      {timeRemaining <= 0 ? "Time's Up!" : 'Submit Answer'}
-                    </button>
-                    {selectedOption && timeRemaining > 0 && (
-                      <p className="participant-submit-hint">
-                        Click to lock in your answer
-                      </p>
-                    )}
-                  </>
+                {isNonLinear ? (
+                  // NON_LINEAR mode: explicit submit button
+                  !submitted ? (
+                    <>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!canSubmit}
+                        className={`participant-btn-primary participant-btn-large ${!canSubmit ? 'participant-btn-disabled' : ''}`}
+                      >
+                        Submit Answer
+                      </button>
+                      {selectedOption && (
+                        <p className="participant-submit-hint">
+                          Click to lock in your answer
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="participant-alert-success participant-submitted-alert">
+                      <div className="participant-submitted-icon">✓</div>
+                      <span className="participant-submitted-text">Answer Submitted!</span>
+                      <p className="participant-submitted-hint">Waiting for results...</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="participant-alert-success participant-submitted-alert">
-                    <div className="participant-submitted-icon">✓</div>
-                    <span className="participant-submitted-text">Answer Submitted!</span>
-                    <p className="participant-submitted-hint">Waiting for results...</p>
-                  </div>
+                  // LINEAR mode: select answer, auto-submitted on timer expiry
+                  submitted ? (
+                    <div className="participant-alert-success participant-submitted-alert">
+                      <div className="participant-submitted-icon">✓</div>
+                      <span className="participant-submitted-text">Answer Submitted!</span>
+                      <p className="participant-submitted-hint">Waiting for results...</p>
+                    </div>
+                  ) : selectedOption ? (
+                    <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
+                      ✓ Selected — you can change your answer before time runs out
+                    </p>
+                  ) : (
+                    <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
+                      Tap an answer to select it
+                    </p>
+                  )
                 )}
               </div>
             </>
@@ -201,11 +308,23 @@ const PlayerGame: React.FC = () => {
           {gameState === 'BUFFER' && (
             <div className="participant-buffer-state">
               <div className="participant-loading-spinner participant-spinner-large"></div>
-              <h2 className="participant-buffer-title">Time's Up!</h2>
+              <h2 className="participant-buffer-title">Get Ready!</h2>
               <p className="participant-buffer-text">
-                {submitted ? 'Your answer has been recorded.' : 'No answer submitted.'}
+                The quiz is about to begin...
               </p>
-              <p className="participant-buffer-hint">Waiting for the host to reveal the answer...</p>
+              
+              {/* Prominent countdown */}
+              <div style={{
+                fontSize: '72px',
+                fontWeight: 900,
+                color: '#f59e0b',
+                margin: '24px 0',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {timeRemaining > 0 ? timeRemaining : '...'}
+              </div>
+              
+              <p className="participant-buffer-hint">The first question will appear shortly.</p>
             </div>
           )}
 
@@ -258,8 +377,8 @@ const PlayerGame: React.FC = () => {
             </div>
           )}
 
-          {/* SCOREBOARD State */}
-          {gameState === 'SCOREBOARD' && (
+          {/* SCOREBOARD / ROUND_SUMMARY State */}
+          {(gameState === 'SCOREBOARD' || gameState === 'ROUND_SUMMARY') && (
             <div>
               <ScoreboardDisplay
                 rankings={rankings}
@@ -271,9 +390,109 @@ const PlayerGame: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* GRADING State */}
+          {gameState === 'GRADING' && (
+            <div className="participant-buffer-state">
+              <div className="participant-loading-spinner participant-spinner-large"></div>
+              <h2 className="participant-buffer-title">Time's Up!</h2>
+              <p className="participant-buffer-text">Grading answers...</p>
+            </div>
+          )}
+
+          {/* REVEAL State (brief transition before ANSWER_REVEAL) */}
+          {gameState === 'REVEAL' && currentQuestion && (
+            <div className="participant-buffer-state">
+              <div className="participant-loading-spinner participant-spinner-large"></div>
+              <h2 className="participant-buffer-title">Results Coming...</h2>
+            </div>
+          )}
+
+          {/* PAUSED State */}
+          {gameState === 'PAUSED' && (
+            <div className="participant-buffer-state">
+              <div style={{
+                fontSize: '64px',
+                marginBottom: '16px',
+              }}>⏸️</div>
+              <h2 className="participant-buffer-title">Quiz Paused</h2>
+              <p className="participant-buffer-text">Waiting for the host to resume...</p>
+            </div>
+          )}
+
+          {/* FINAL_RESULTS / ENDED State */}
+          {gameState === 'FINAL_RESULTS' && (
+            <div style={{ textAlign: 'center' }}>
+              {/* Celebration Header */}
+              <div style={{
+                padding: '32px 0 24px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #8b5cf6 100%)',
+                borderRadius: '16px',
+                marginBottom: '24px',
+                color: '#fff',
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉🏆🎉</div>
+                <h2 style={{ fontSize: '28px', fontWeight: 800, margin: 0 }}>Quiz Complete!</h2>
+                <p style={{ fontSize: '14px', opacity: 0.9, marginTop: '4px' }}>
+                  Great job, everyone!
+                </p>
+              </div>
+
+              {/* Player's Own Result Card */}
+              {(() => {
+                const myResult = rankings.find(r => r.teamId === session?.teamId);
+                return myResult ? (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                    border: '2px solid #f59e0b',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    marginBottom: '24px',
+                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+                  }}>
+                    <p style={{ fontSize: '14px', color: '#92400e', fontWeight: 600, margin: '0 0 4px' }}>
+                      Your Result
+                    </p>
+                    <p style={{ fontSize: '36px', fontWeight: 900, color: '#78350f', margin: '0 0 4px' }}>
+                      #{myResult.rank}
+                    </p>
+                    <p style={{ fontSize: '20px', fontWeight: 700, color: '#92400e', margin: 0 }}>
+                      {myResult.score} points
+                    </p>
+                  </div>
+                ) : null;
+              })()}
+
+              <ScoreboardDisplay
+                rankings={rankings}
+                highlightTeamId={session.teamId}
+                isFinal={true}
+              />
+
+              {/* Exit Button */}
+              <button
+                onClick={() => navigate('/participant/login')}
+                style={{
+                  marginTop: '24px',
+                  padding: '12px 32px',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: '#fff',
+                  backgroundColor: '#6366f1',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                }}
+              >
+                Back to Home
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
+    </AntiCheatWrapper>
   );
 };
 
