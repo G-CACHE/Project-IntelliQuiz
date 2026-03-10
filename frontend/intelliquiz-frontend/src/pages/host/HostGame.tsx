@@ -55,13 +55,6 @@ const HostGame: React.FC = () => {
     }
   }, [session, navigate]);
 
-  // Navigate to final scoreboard
-  useEffect(() => {
-    if (gameState === 'FINAL_RESULTS') {
-      navigate(`/host/scoreboard?quizId=${session?.quizId}&final=true`);
-    }
-  }, [gameState, session, navigate]);
-
   if (!session) return null;
 
   // Command handlers
@@ -77,12 +70,28 @@ const HostGame: React.FC = () => {
       case 'ACTIVE':
       case 'QUESTION':
         return (
+          <div className="proctor-actions">
+            <button
+              onClick={handlePause}
+              disabled={!connected}
+              className="proctor-btn-warning proctor-btn-large"
+            >
+              ⏸ Pause Quiz
+            </button>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px' }}>
+              {submissions.length} team(s) submitted
+            </p>
+          </div>
+        );
+      
+      case 'PAUSED':
+        return (
           <button
-            onClick={handlePause}
+            onClick={handleResume}
             disabled={!connected}
-            className="proctor-btn-warning proctor-btn-large"
+            className="proctor-btn-success proctor-btn-large"
           >
-            ⏸ Pause Quiz
+            ▶ Resume Quiz
           </button>
         );
       
@@ -91,6 +100,13 @@ const HostGame: React.FC = () => {
           <div className="proctor-buffer-info">
             <p>Buffer countdown in progress...</p>
             <p>Next question will start automatically</p>
+          </div>
+        );
+      
+      case 'GRADING':
+        return (
+          <div className="proctor-buffer-info">
+            <p>Grading answers...</p>
           </div>
         );
       
@@ -119,23 +135,27 @@ const HostGame: React.FC = () => {
       case 'SCOREBOARD':
         return (
           <div className="proctor-actions">
-            {questionNumber < totalQuestions ? (
-              <button
-                onClick={handleNextQuestion}
-                disabled={!connected}
-                className="proctor-btn-success proctor-btn-large"
-              >
-                Next Question →
-              </button>
-            ) : (
-              <button
-                onClick={handleEndQuiz}
-                disabled={!connected}
-                className="proctor-btn-primary proctor-btn-large"
-              >
-                🏆 End Quiz & Show Final Results
-              </button>
-            )}
+            <button
+              onClick={handleNextQuestion}
+              disabled={!connected}
+              className="proctor-btn-success proctor-btn-large"
+            >
+              Next Question →
+            </button>
+            <button
+              onClick={handleEndQuiz}
+              disabled={!connected}
+              className="proctor-btn-danger proctor-btn-large"
+            >
+              🏆 End Quiz
+            </button>
+          </div>
+        );
+      
+      case 'FINAL_RESULTS':
+        return (
+          <div className="proctor-buffer-info">
+            <p style={{ fontSize: '18px', fontWeight: 600 }}>Quiz Complete!</p>
           </div>
         );
       
@@ -165,8 +185,8 @@ const HostGame: React.FC = () => {
               </span>
             </div>
             
-            {/* Timer */}
-            {(gameState === 'QUESTION' || gameState === 'BUFFER') && (
+            {/* Timer — show during active question or paused */}
+            {(gameState === 'QUESTION' || gameState === 'PAUSED') && (
               <div className="proctor-timer-container">
                 <Timer 
                   timeRemaining={timeRemaining} 
@@ -205,17 +225,48 @@ const HostGame: React.FC = () => {
 
           {/* BUFFER State */}
           {gameState === 'BUFFER' && (
-            <div className="proctor-buffer-state">
-              <h2 className="proctor-buffer-title">Get Ready!</h2>
-              <p className="proctor-buffer-subtitle">Next question starting soon...</p>
+            <div className="proctor-buffer-state" style={{ textAlign: 'center', padding: '48px 0' }}>
+              <h2 className="proctor-buffer-title" style={{ fontSize: '36px', fontWeight: 800, marginBottom: '12px' }}>Get Ready!</h2>
+              <p className="proctor-buffer-subtitle" style={{ fontSize: '18px', color: '#374151', marginBottom: '24px' }}>Next question starting soon...</p>
               
-              {/* Timer Display */}
-              <div className="proctor-timer-container proctor-timer-large">
-                <Timer 
-                  timeRemaining={timeRemaining} 
-                  totalTime={10}
-                />
+              {/* Prominent countdown number */}
+              <div style={{
+                fontSize: '96px',
+                fontWeight: 900,
+                color: '#f59e0b',
+                margin: '16px 0',
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1,
+              }}>
+                {timeRemaining > 0 ? timeRemaining : '...'}
               </div>
+              
+              {/* Progress bar */}
+              <div style={{
+                maxWidth: '400px',
+                margin: '24px auto 0',
+                height: '8px',
+                backgroundColor: '#e5e7eb',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${(timeRemaining / 10) * 100}%`,
+                  height: '100%',
+                  backgroundColor: '#f59e0b',
+                  borderRadius: '4px',
+                  transition: 'width 0.5s ease',
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* GRADING State */}
+          {gameState === 'GRADING' && (
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+              <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#1f2937' }}>Time's Up!</h2>
+              <p style={{ fontSize: '16px', color: '#6b7280', marginTop: '8px' }}>Grading answers...</p>
             </div>
           )}
 
@@ -231,9 +282,52 @@ const HostGame: React.FC = () => {
                 disabled={true}
               />
               
-              <div className="proctor-correct-answer">
-                <p>Correct Answer: {currentQuestion.correctAnswer}</p>
-              </div>
+              {currentQuestion.correctAnswer && (
+                <div className="proctor-correct-answer">
+                  <p>Correct Answer: {currentQuestion.correctAnswer}</p>
+                </div>
+              )}
+              
+              {/* Team Results Summary */}
+              {rankings.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '12px', color: '#374151' }}>
+                    Results
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {rankings.slice(0, 10).map((team) => (
+                      <div key={team.teamId} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 16px',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                      }}>
+                        <span style={{ fontWeight: 500 }}>{team.rank}. {team.teamName}</span>
+                        <span style={{ fontWeight: 700, color: '#f59e0b' }}>{team.score} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PAUSED State */}
+          {gameState === 'PAUSED' && (
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>⏸️</div>
+              <h2 style={{ fontSize: '36px', fontWeight: 800, color: '#1f2937' }}>Quiz Paused</h2>
+              <p style={{ fontSize: '16px', color: '#6b7280', marginTop: '12px' }}>
+                The timer has been paused. Click Resume to continue.
+              </p>
+              {currentQuestion && (
+                <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '8px' }}>
+                  Question {questionNumber} of {totalQuestions} • {timeRemaining}s remaining
+                </p>
+              )}
             </div>
           )}
 
@@ -243,6 +337,54 @@ const HostGame: React.FC = () => {
               rankings={rankings}
               isFinal={false}
             />
+          )}
+
+          {/* FINAL_RESULTS / ENDED State */}
+          {gameState === 'FINAL_RESULTS' && (
+            <div>
+              {/* Celebration Header */}
+              <div style={{
+                textAlign: 'center',
+                padding: '32px 0 24px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #8b5cf6 100%)',
+                borderRadius: '16px',
+                marginBottom: '24px',
+                color: '#fff',
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉🏆🎉</div>
+                <h2 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>Quiz Complete!</h2>
+                <p style={{ fontSize: '16px', opacity: 0.9, marginTop: '8px' }}>
+                  {rankings.length} team{rankings.length !== 1 ? 's' : ''} competed • Final standings below
+                </p>
+              </div>
+
+              {/* Winner Spotlight */}
+              {rankings.length > 0 && rankings[0] && (
+                <div style={{
+                  textAlign: 'center',
+                  background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                  border: '2px solid #f59e0b',
+                  borderRadius: '16px',
+                  padding: '24px',
+                  marginBottom: '24px',
+                  boxShadow: '0 4px 16px rgba(245, 158, 11, 0.2)',
+                }}>
+                  <div style={{ fontSize: '40px', marginBottom: '4px' }}>👑</div>
+                  <p style={{ fontSize: '14px', color: '#92400e', fontWeight: 600, margin: '0 0 4px' }}>Winner</p>
+                  <p style={{ fontSize: '24px', fontWeight: 900, color: '#78350f', margin: '0 0 4px' }}>
+                    {rankings[0].teamName}
+                  </p>
+                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#92400e', margin: 0 }}>
+                    {rankings[0].score} points
+                  </p>
+                </div>
+              )}
+
+              <ScoreboardDisplay
+                rankings={rankings}
+                isFinal={true}
+              />
+            </div>
           )}
 
           {/* Controls */}
