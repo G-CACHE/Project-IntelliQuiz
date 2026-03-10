@@ -61,7 +61,11 @@ public class QuizTimerService {
                 stopTimer(quizId);
                 broadcastService.broadcastBufferTick(quizId, 0, roundName);
                 if (onComplete != null) {
-                    onComplete.run();
+                    try {
+                        onComplete.run();
+                    } catch (Exception e) {
+                        logger.error("Error executing buffer completion callback for quiz {}: {}", quizId, e.getMessage(), e);
+                    }
                 }
             } else {
                 // Update and broadcast
@@ -109,7 +113,11 @@ public class QuizTimerService {
                 broadcastService.broadcastGameState(quizId, GameStateMessage.grading(quizId));
                 
                 if (onExpired != null) {
-                    onExpired.accept(questionId);
+                    try {
+                        onExpired.accept(questionId);
+                    } catch (Exception e) {
+                        logger.error("Error executing timer expiry callback for quiz {} question {}: {}", quizId, questionId, e.getMessage(), e);
+                    }
                 }
             } else {
                 // Update and broadcast
@@ -165,14 +173,8 @@ public class QuizTimerService {
             TimerState newState = new TimerState(remaining, total, true, false, null);
             timers.put(quizId, newState);
             
-            // Broadcast resume
+            // Broadcast timer resume (game state broadcast is handled by GameFlowService)
             broadcastService.broadcastTimerTick(quizId, remaining, total);
-            broadcastService.broadcastGameState(quizId, GameStateMessage.active(
-                    quizId, 
-                    sessionManager.getCurrentQuestionIndex(quizId),
-                    0, // Will be set by caller
-                    null
-            ));
             
             // Schedule remaining ticks
             Long questionId = sessionManager.getCurrentQuestionId(quizId).orElse(null);
@@ -207,6 +209,44 @@ public class QuizTimerService {
     public boolean isTimerActive(Long quizId) {
         TimerState state = timers.get(quizId);
         return state != null && state.isActive() && !state.isPaused();
+    }
+
+    /**
+     * Starts a global timer for NON_LINEAR quiz mode.
+     * Broadcasts timer ticks and invokes onExpired when the global time runs out.
+     *
+     * @param quizId          the quiz ID
+     * @param durationSeconds total duration in seconds
+     * @param onExpired       callback when global timer expires
+     */
+    public void startGlobalTimer(Long quizId, int durationSeconds, Runnable onExpired) {
+        stopTimer(quizId);
+
+        TimerState state = new TimerState(durationSeconds, durationSeconds, true, false, null);
+        timers.put(quizId, state);
+
+        broadcastService.broadcastTimerTick(quizId, durationSeconds, durationSeconds);
+
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
+            TimerState current = timers.get(quizId);
+            if (current == null || current.isPaused()) return;
+
+            int remaining = current.remainingSeconds() - 1;
+
+            if (remaining <= 0) {
+                stopTimer(quizId);
+                broadcastService.broadcastTimerExpired(quizId, current.totalSeconds());
+                if (onExpired != null) {
+                    onExpired.run();
+                }
+            } else {
+                timers.put(quizId, current.withRemaining(remaining));
+                broadcastService.broadcastTimerTick(quizId, remaining, current.totalSeconds());
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+
+        timers.put(quizId, state.withFuture(future));
+        logger.info("Started global timer for quiz {} ({} seconds)", quizId, durationSeconds);
     }
 
     /**
