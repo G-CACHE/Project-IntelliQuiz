@@ -81,13 +81,13 @@ export default function PermissionManagementPage() {
     try {
       const [adminsRes, quizzesRes, assignmentsRes] = await Promise.all([
         fetch('/api/users', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch('/api/quizzes', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch('/api/users/assignments', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
@@ -121,10 +121,8 @@ export default function PermissionManagementPage() {
     try {
       const response = await fetch(`/api/users/${formData.adminId}/permissions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           quizId: formData.quizId,
           permissions: formData.permissions,
@@ -149,9 +147,7 @@ export default function PermissionManagementPage() {
         `/api/users/${selectedAssignment.adminId}/permissions/${selectedAssignment.quizId}`,
         {
           method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
+          credentials: 'include',
         }
       );
 
