@@ -59,9 +59,7 @@ export default function QuizEditorPage({ quizId }: { quizId: number }) {
     setError(null);
     try {
       const response = await fetch(`/api/quizzes/${quizId}/questions`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load questions');
       const data = await response.json();
@@ -88,10 +86,8 @@ export default function QuizEditorPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/quizzes/${quizId}/questions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -120,10 +116,8 @@ export default function QuizEditorPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/questions/${selectedQuestion.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -144,9 +138,7 @@ export default function QuizEditorPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/questions/${selectedQuestion.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to delete question');
