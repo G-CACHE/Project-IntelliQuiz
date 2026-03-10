@@ -1,10 +1,12 @@
 package com.intelliquiz.api.realtime.internal.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Buffer countdown message for "Get Ready" phase.
  */
 public record BufferMessage(
-        int remainingSeconds,
+        @JsonProperty("timeRemaining") int remainingSeconds,
         String roundName,
         String message
 ) {
