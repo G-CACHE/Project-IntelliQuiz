@@ -29,7 +29,7 @@ class AnswerDistributionPropertyTest {
     /**
      * Feature: websocket-realtime, Property 17: Answer Distribution Accuracy
      * For any MCQ question reveal, the AnswerDistribution SHALL accurately reflect
-     * the count of submissions for each option (A, B, C, D).
+     * the count of submissions for each option (by option text).
      * 
      * **Validates: Requirements 2.5**
      */
@@ -46,13 +46,13 @@ class AnswerDistributionPropertyTest {
                 "B", 10, 30, 1, "EASY"
         );
         
-        // Create submissions (team IDs 1-5, answers A, B, B, C, A)
+        // Submissions use option TEXT (what the frontend actually sends)
         List<SubmissionInfoDto> submissions = List.of(
-                submission(1L, questionId, "A"),
-                submission(2L, questionId, "B"),  // Correct
-                submission(3L, questionId, "B"),  // Correct
-                submission(4L, questionId, "C"),
-                submission(5L, questionId, "A")
+                submission(1L, questionId, "Option A"),
+                submission(2L, questionId, "Option B"),  // Correct (B → "Option B")
+                submission(3L, questionId, "Option B"),  // Correct
+                submission(4L, questionId, "Option C"),
+                submission(5L, questionId, "Option A")
         );
         
         when(quizFacade.getQuestionForGrading(questionId)).thenReturn(question);
@@ -62,23 +62,23 @@ class AnswerDistributionPropertyTest {
         
         AnswerDistribution distribution = service.calculateDistribution(questionId);
         
-        // Verify counts
-        assertThat(distribution.optionCounts().get("A"))
+        // Verify counts — keyed by option text
+        assertThat(distribution.optionCounts().get("Option A"))
                 .as("Option A should have 2 submissions")
                 .isEqualTo(2);
-        assertThat(distribution.optionCounts().get("B"))
+        assertThat(distribution.optionCounts().get("Option B"))
                 .as("Option B should have 2 submissions")
                 .isEqualTo(2);
-        assertThat(distribution.optionCounts().get("C"))
+        assertThat(distribution.optionCounts().get("Option C"))
                 .as("Option C should have 1 submission")
                 .isEqualTo(1);
-        assertThat(distribution.optionCounts().get("D"))
+        assertThat(distribution.optionCounts().get("Option D"))
                 .as("Option D should have 0 submissions")
                 .isEqualTo(0);
         
         // Verify correct/incorrect counts
         assertThat(distribution.correctCount())
-                .as("Correct count should be 2 (B is correct)")
+                .as("Correct count should be 2 (B → 'Option B' is correct)")
                 .isEqualTo(2);
         assertThat(distribution.incorrectCount())
                 .as("Incorrect count should be 3")
@@ -97,7 +97,7 @@ class AnswerDistributionPropertyTest {
         
         QuestionInfoDto question = new QuestionInfoDto(
                 questionId, "Test Question", QuestionType.MULTIPLE_CHOICE,
-                List.of("A", "B", "C", "D"), "A", 10, 30, 1, "EASY"
+                List.of("Alpha", "Beta", "Gamma", "Delta"), "A", 10, 30, 1, "EASY"
         );
         
         when(quizFacade.getQuestionForGrading(questionId)).thenReturn(question);
@@ -126,13 +126,14 @@ class AnswerDistributionPropertyTest {
         
         QuestionInfoDto question = new QuestionInfoDto(
                 questionId, "Test Question", QuestionType.MULTIPLE_CHOICE,
-                List.of("A", "B", "C", "D"), "C", 10, 30, 1, "EASY"
+                List.of("Alpha", "Beta", "Gamma", "Delta"), "C", 10, 30, 1, "EASY"
         );
         
+        // Submissions use option text (what the frontend sends)
         List<SubmissionInfoDto> submissions = List.of(
-                submission(1L, questionId, "A"),
-                submission(2L, questionId, "C"),
-                submission(3L, questionId, "D")
+                submission(1L, questionId, "Alpha"),
+                submission(2L, questionId, "Gamma"),
+                submission(3L, questionId, "Delta")
         );
         
         when(quizFacade.getQuestionForGrading(questionId)).thenReturn(question);
