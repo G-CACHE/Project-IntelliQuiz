@@ -139,7 +139,7 @@ class AutoTransitionsPropertyTest {
         // Test all factory methods
         assertThat(GameStateMessage.lobby(quizId, "Welcome").state()).isEqualTo(GameState.LOBBY);
         assertThat(GameStateMessage.buffer(quizId, "EASY", "Get Ready!").state()).isEqualTo(GameState.BUFFER);
-        assertThat(GameStateMessage.active(quizId, 0, 10, "EASY").state()).isEqualTo(GameState.ACTIVE);
+        assertThat(GameStateMessage.active(quizId, 0, 10, "EASY", null).state()).isEqualTo(GameState.ACTIVE);
         assertThat(GameStateMessage.grading(quizId).state()).isEqualTo(GameState.GRADING);
         assertThat(GameStateMessage.reveal(quizId).state()).isEqualTo(GameState.REVEAL);
         assertThat(GameStateMessage.roundSummary(quizId, "EASY").state()).isEqualTo(GameState.ROUND_SUMMARY);
