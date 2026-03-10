@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { BiLock, BiLogOut, BiRefresh } from 'react-icons/bi';
-import { currentUserApi } from '../../services/api';
+import { currentUserApi, authApi } from '../../services/api';
 import { useState } from 'react';
 
 export default function NoPermissionsPage() {
@@ -8,8 +8,8 @@ export default function NoPermissionsPage() {
   const [checking, setChecking] = useState(false);
   const username = localStorage.getItem('username') || 'Admin';
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    try { await authApi.logout(); } catch { /* ignore */ }
     localStorage.removeItem('username');
     localStorage.removeItem('role');
     localStorage.removeItem('assignments');
