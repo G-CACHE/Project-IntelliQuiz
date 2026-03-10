@@ -41,9 +41,7 @@ export default function UserManagementPage() {
     setError(null);
     try {
       const response = await fetch('/api/users', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load users');
       const data = await response.json();
@@ -64,10 +62,8 @@ export default function UserManagementPage() {
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -90,10 +86,8 @@ export default function UserManagementPage() {
     try {
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: formData.username,
           password: formData.password,
@@ -117,9 +111,7 @@ export default function UserManagementPage() {
     try {
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to delete user');
