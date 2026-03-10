@@ -37,10 +37,10 @@ export default function ScoreboardPage({ quizId }: { quizId: number }) {
     try {
       const [quizRes, scoreboardRes] = await Promise.all([
         fetch(`/api/quizzes/${quizId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch(`/api/quizzes/${quizId}/scoreboard`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
