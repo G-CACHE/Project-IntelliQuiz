@@ -1,13 +1,14 @@
 // IntelliQuiz API Service
+// Cookie-only auth: every request sends credentials (HttpOnly cookie) automatically.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-const getAuthHeaders = (): HeadersInit => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+const JSON_HEADERS: HeadersInit = { 'Content-Type': 'application/json' };
+
+/**
+ * Thin wrapper around fetch that always sends credentials (cookies).
+ */
+const apiFetch = (url: string, init?: RequestInit): Promise<Response> =>
+  fetch(url, { ...init, credentials: 'include' });
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
@@ -24,19 +25,26 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 // Auth API
 export const authApi = {
   login: async (username: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
       body: JSON.stringify({ username, password }),
     });
-    return handleResponse<{ token: string; role: string; username: string }>(response);
+    return handleResponse<{ role: string; username: string }>(response);
+  },
+
+  logout: async () => {
+    const response = await apiFetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error('Logout failed');
   },
 };
 
 // Access Code Resolution API (Public - no auth required)
 export const accessApi = {
   resolveCode: async (code: string): Promise<AccessResolutionResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/access/resolve`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/access/resolve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
@@ -48,15 +56,15 @@ export const accessApi = {
 // Current User API (for fetching own info and assignments)
 export const currentUserApi = {
   getMe: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/users/me`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<User>(response);
   },
 
   getMyAssignments: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/users/me/assignments`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/users/me/assignments`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<QuizAssignment[]>(response);
   },
@@ -65,65 +73,65 @@ export const currentUserApi = {
 // Users API (SUPER_ADMIN only)
 export const usersApi = {
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/users`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/users`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<User[]>(response);
   },
 
   getById: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/users/${id}`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<User>(response);
   },
 
   getUserAssignments: async (userId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/assignments`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/users/${userId}/assignments`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<QuizAssignment[]>(response);
   },
 
   create: async (data: CreateUserRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/users`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/users`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<User>(response);
   },
 
   update: async (id: number, data: UpdateUserRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/users/${id}`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<User>(response);
   },
 
   delete: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/users/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
 
   assignPermissions: async (userId: number, data: AssignPermissionsRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/permissions`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/users/${userId}/permissions`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<void>(response);
   },
 
   revokePermissions: async (userId: number, quizId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/permissions/${quizId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/users/${userId}/permissions/${quizId}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
@@ -132,80 +140,80 @@ export const usersApi = {
 // Quizzes API
 export const quizzesApi = {
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz[]>(response);
   },
 
   getById: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
   },
 
   getActive: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/active`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/active`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
   },
 
   create: async (data: CreateQuizRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<Quiz>(response);
   },
 
   update: async (id: number, data: UpdateQuizRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<Quiz>(response);
   },
 
   delete: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
 
   markReady: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}/ready`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}/ready`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
   },
 
   activate: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}/activate`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}/activate`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
   },
 
   deactivate: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}/deactivate`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}/deactivate`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
   },
 
   archive: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${id}/archive`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}/archive`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
   },
@@ -214,42 +222,42 @@ export const quizzesApi = {
 // Questions API
 export const questionsApi = {
   getByQuiz: async (quizId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<Question[]>(response);
   },
 
   create: async (quizId: number, data: CreateQuestionRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<Question>(response);
   },
 
   update: async (id: number, data: UpdateQuestionRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/questions/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/questions/${id}`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<Question>(response);
   },
 
   delete: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/questions/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/questions/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
 
   reorder: async (quizId: number, questionIds: number[]) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions/reorder`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions/reorder`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify({ questionIds }),
     });
     return handleResponse<void>(response);
@@ -259,33 +267,33 @@ export const questionsApi = {
 // Teams API
 export const teamsApi = {
   getByQuiz: async (quizId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/teams`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/teams`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<Team[]>(response);
   },
 
   register: async (quizId: number, data: RegisterTeamRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/teams`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/teams`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<Team>(response);
   },
 
   delete: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/teams/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/teams/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
 
   resetScores: async (quizId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/teams/reset-scores`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/teams/reset-scores`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
@@ -294,8 +302,8 @@ export const teamsApi = {
 // Scoreboard API
 export const scoreboardApi = {
   getByQuiz: async (quizId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/quizzes/${quizId}/scoreboard`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/scoreboard`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<ScoreboardEntry[]>(response);
   },
@@ -304,62 +312,63 @@ export const scoreboardApi = {
 // Backups API (SUPER_ADMIN only)
 export const backupsApi = {
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/backups`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/backups`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<BackupRecord[]>(response);
   },
 
   getById: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/backups/${id}`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/backups/${id}`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<BackupRecord>(response);
   },
 
   create: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/backups`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/backups`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<BackupRecord>(response);
   },
 
   restore: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/backups/${id}/restore`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/backups/${id}/restore`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<BackupRecord>(response);
   },
 
   delete: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/backups/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/backups/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
     });
     return handleResponse<void>(response);
   },
 
-  download: (id: number) => {
-    const token = localStorage.getItem('token');
-    return `${API_BASE_URL}/api/backups/${id}/download?token=${token}`;
+  download: async (id: number): Promise<Blob> => {
+    const response = await apiFetch(`${API_BASE_URL}/api/backups/${id}/download`);
+    if (!response.ok) throw new Error('Download failed');
+    return response.blob();
   },
 };
 
 // Submissions API
 export const submissionsApi = {
   getByTeam: async (teamId: number) => {
-    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}/submissions`, {
-      headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_BASE_URL}/api/teams/${teamId}/submissions`, {
+      headers: JSON_HEADERS,
     });
     return handleResponse<Submission[]>(response);
   },
 
   submit: async (data: SubmitAnswerRequest) => {
-    const response = await fetch(`${API_BASE_URL}/api/submissions`, {
+    const response = await apiFetch(`${API_BASE_URL}/api/submissions`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: JSON_HEADERS,
       body: JSON.stringify(data),
     });
     return handleResponse<Submission>(response);
@@ -367,16 +376,18 @@ export const submissionsApi = {
 };
 
 // Types
+export type SystemRole = 'ADMIN' | 'SUPER_ADMIN' | 'EXAMINER' | 'PROCTOR' | 'PARTICIPANT';
+
 export interface User {
   id: number;
   username: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: SystemRole;
 }
 
 export interface CreateUserRequest {
   username: string;
   password: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: SystemRole;
 }
 
 export interface UpdateUserRequest {
@@ -389,6 +400,8 @@ export interface AssignPermissionsRequest {
   permissions: string[];
 }
 
+export type NavigationMode = 'LINEAR' | 'NON_LINEAR';
+
 export interface Quiz {
   id: number;
   title: string;
@@ -396,6 +409,8 @@ export interface Quiz {
   proctorPin: string;
   status: 'DRAFT' | 'READY' | 'ACTIVE' | 'ARCHIVED';
   questionCount?: number;
+  navigationMode?: NavigationMode;
+  globalTimeLimitSeconds?: number;
 }
 
 export interface CreateQuizRequest {
@@ -495,7 +510,7 @@ export interface QuizAssignment {
 export interface CurrentUser {
   id: number;
   username: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: SystemRole;
   assignments: QuizAssignment[];
 }
 
@@ -545,7 +560,8 @@ export type GameState =
   | 'SCOREBOARD' 
   | 'TIEBREAKER' 
   | 'ENDED' 
-  | 'FINAL_RESULTS';
+  | 'FINAL_RESULTS'
+  | 'PAUSED';
 
 export interface QuestionData {
   id: number;
@@ -563,10 +579,29 @@ export interface GameStateMessage {
   totalQuestions?: number;
   currentRound?: string;
   message?: string;
-  currentQuestion?: QuestionData;
+  // Embedded question payload from backend (QuestionPayload record)
+  currentQuestion?: QuestionPayload | QuestionData;
   questionNumber?: number;
   timeRemaining?: number;
   rankings?: RankingEntry[];
+}
+
+/**
+ * Backend QuestionPayload record shape.
+ * Maps to com.intelliquiz.api.realtime.internal.presentation.dto.QuestionPayload
+ */
+export interface QuestionPayload {
+  questionId: number;
+  text: string;
+  type: string;
+  options: string[];
+  timeLimit: number;
+  points: number;
+  orderIndex: number;
+  round: string;
+  // These are added by frontend mapping
+  id?: number;
+  correctAnswer?: string;
 }
 
 export interface RankingEntry {
@@ -628,3 +663,92 @@ export interface AnswerSubmissionMessage {
   selectedOption: string;
   timestamp: string;
 }
+
+// ==================== Proctoring Types ====================
+
+export type ViolationType = 'TAB_SWITCH' | 'COPY_ATTEMPT' | 'RIGHT_CLICK' | 'PRINT_SCREEN';
+
+export interface ViolationReportMessage {
+  type: ViolationType;
+}
+
+export interface ViolationNotification {
+  teamId: number;
+  teamName: string;
+  totalCount: number;
+  lastType: ViolationType;
+  autoKicked: boolean;
+}
+
+export interface KickMessage {
+  teamId: number;
+  teamName: string;
+  reason: string;
+}
+
+export interface ThresholdMessage {
+  threshold: number;
+}
+
+export interface NavigateMessage {
+  questionIndex: number;
+}
+
+// ==================== Question Bank Types ====================
+
+export interface QuestionBankItem {
+  id: number;
+  text: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  correctKey: string;
+  points: number;
+  timeLimit: number;
+  options: string[];
+  category?: string;
+  isHarvested?: boolean;
+  sourceQuizId?: number;
+}
+
+// ==================== Question Bank API ====================
+
+export const questionBankApi = {
+  getAll: async () => {
+    const response = await apiFetch(`${API_BASE_URL}/api/question-bank`, {
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<QuestionBankItem[]>(response);
+  },
+
+  getById: async (id: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/question-bank/${id}`, {
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<QuestionBankItem>(response);
+  },
+
+  delete: async (id: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/question-bank/${id}`, {
+      method: 'DELETE',
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<void>(response);
+  },
+
+  harvestFromQuiz: async (quizId: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/harvest`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<QuestionBankItem[]>(response);
+  },
+
+  importToQuiz: async (quizId: number, bankItemIds: number[]) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/questions/import-from-bank`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify(bankItemIds),
+    });
+    return handleResponse<Question[]>(response);
+  },
+};
