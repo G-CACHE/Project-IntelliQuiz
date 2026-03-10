@@ -4,6 +4,8 @@ import com.intelliquiz.api.realtime.internal.domain.enums.GameState;
 
 /**
  * Game state broadcast message to all clients.
+ * Includes optional currentQuestion for ACTIVE state so clients
+ * receive game state + question data in a single message.
  */
 public record GameStateMessage(
         GameState state,
@@ -11,37 +13,38 @@ public record GameStateMessage(
         Integer currentQuestionIndex,
         Integer totalQuestions,
         String currentRound,
-        String message
+        String message,
+        QuestionPayload currentQuestion
 ) {
     public static GameStateMessage lobby(Long quizId, String message) {
-        return new GameStateMessage(GameState.LOBBY, quizId, null, null, null, message);
+        return new GameStateMessage(GameState.LOBBY, quizId, null, null, null, message, null);
     }
     
     public static GameStateMessage buffer(Long quizId, String roundName, String message) {
-        return new GameStateMessage(GameState.BUFFER, quizId, null, null, roundName, message);
+        return new GameStateMessage(GameState.BUFFER, quizId, null, null, roundName, message, null);
     }
     
-    public static GameStateMessage active(Long quizId, int questionIndex, int totalQuestions, String round) {
-        return new GameStateMessage(GameState.ACTIVE, quizId, questionIndex, totalQuestions, round, null);
+    public static GameStateMessage active(Long quizId, int questionIndex, int totalQuestions, String round, QuestionPayload question) {
+        return new GameStateMessage(GameState.ACTIVE, quizId, questionIndex, totalQuestions, round, null, question);
     }
     
     public static GameStateMessage grading(Long quizId) {
-        return new GameStateMessage(GameState.GRADING, quizId, null, null, null, "Processing answers...");
+        return new GameStateMessage(GameState.GRADING, quizId, null, null, null, "Processing answers...", null);
     }
     
     public static GameStateMessage reveal(Long quizId) {
-        return new GameStateMessage(GameState.REVEAL, quizId, null, null, null, null);
+        return new GameStateMessage(GameState.REVEAL, quizId, null, null, null, null, null);
     }
     
     public static GameStateMessage roundSummary(Long quizId, String roundName) {
-        return new GameStateMessage(GameState.ROUND_SUMMARY, quizId, null, null, roundName, null);
+        return new GameStateMessage(GameState.ROUND_SUMMARY, quizId, null, null, roundName, null, null);
     }
     
     public static GameStateMessage ended(Long quizId) {
-        return new GameStateMessage(GameState.ENDED, quizId, null, null, null, "Quiz ended");
+        return new GameStateMessage(GameState.ENDED, quizId, null, null, null, "Quiz ended", null);
     }
     
     public static GameStateMessage paused(Long quizId, String message) {
-        return new GameStateMessage(GameState.PAUSED, quizId, null, null, null, message);
+        return new GameStateMessage(GameState.PAUSED, quizId, null, null, null, message, null);
     }
 }
