@@ -50,6 +50,18 @@ public class QuizBroadcastService {
         logger.debug("Broadcast game state {} to quiz {}", stateMessage.state(), quizId);
     }
 
+    /**
+     * Sends a game state snapshot to all clients WITHOUT modifying session state.
+     * Used by status request handlers to avoid race conditions with timer callbacks.
+     */
+    public void sendGameStateSnapshot(Long quizId, GameStateMessage stateMessage) {
+        messagingTemplate.convertAndSend(
+                "/topic/quiz/" + quizId + "/state",
+                stateMessage
+        );
+        logger.debug("Sent game state snapshot {} to quiz {}", stateMessage.state(), quizId);
+    }
+
     // ==================== Buffer/Timer Broadcasts ====================
 
     /**
@@ -258,4 +270,28 @@ public class QuizBroadcastService {
      * Submission confirmation record.
      */
     public record SubmissionConfirmation(Long questionId, boolean success, String message) {}
+
+    // ==================== Proctoring Broadcasts ====================
+
+    /**
+     * Broadcasts a message to all proctor sessions watching a quiz.
+     */
+    public void broadcastToProctors(Long quizId, Object message) {
+        messagingTemplate.convertAndSend(
+                "/topic/quiz/" + quizId + "/violations",
+                message
+        );
+        logger.debug("Broadcast proctoring message to quiz {}", quizId);
+    }
+
+    /**
+     * Broadcasts a kick event to all participants and proctors.
+     */
+    public void broadcastKick(Long quizId, Object kickMessage) {
+        messagingTemplate.convertAndSend(
+                "/topic/quiz/" + quizId + "/kick",
+                kickMessage
+        );
+        logger.debug("Broadcast kick event to quiz {}", quizId);
+    }
 }
