@@ -8,6 +8,7 @@ import com.intelliquiz.api.realtime.internal.application.services.GameFlowServic
 import com.intelliquiz.api.realtime.internal.application.services.QuizBroadcastService;
 import com.intelliquiz.api.realtime.internal.application.services.QuizSessionManager;
 import com.intelliquiz.api.realtime.internal.application.services.QuizTimerService;
+import com.intelliquiz.api.realtime.internal.application.services.ProctorSessionService;
 import com.intelliquiz.api.realtime.internal.domain.enums.GameState;
 import net.jqwik.api.*;
 
@@ -30,9 +31,11 @@ class SubmissionHandlingPropertyTest {
             SubmissionFacade submissionFacade,
             AnswerDistributionService distributionService
     ) {
+        ProctorSessionService proctorSessionService = mock(ProctorSessionService.class);
         return new GameFlowService(
                 timerService, broadcastService, sessionManager,
-                quizFacade, teamFacade, submissionFacade, distributionService
+                quizFacade, teamFacade, submissionFacade, distributionService,
+                proctorSessionService
         );
     }
 
