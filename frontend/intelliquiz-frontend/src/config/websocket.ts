@@ -31,6 +31,32 @@ export const WS_CONFIG = {
     
     // Join quiz session
     JOIN: (quizId: number) => `/app/quiz/${quizId}/join`,
+    
+    // ==================== Proctoring Endpoints ====================
+    
+    // Subscribe to violation notifications (proctor)
+    VIOLATIONS: (quizId: number) => `/topic/quiz/${quizId}/violations`,
+    
+    // Subscribe to kick events
+    KICK: (quizId: number) => `/topic/quiz/${quizId}/kick`,
+    
+    // Subscribe to team-specific messages (participant)
+    TEAM_QUEUE: (teamId: number) => `/queue/team/${teamId}`,
+    
+    // Send violation report (participant)
+    SEND_VIOLATION: (quizId: number) => `/app/quiz/${quizId}/violation`,
+    
+    // Send manual kick (proctor/host)
+    SEND_KICK: (quizId: number) => `/app/quiz/${quizId}/kick`,
+    
+    // Send auto-kick threshold (proctor/host)
+    SEND_THRESHOLD: (quizId: number) => `/app/quiz/${quizId}/set-threshold`,
+    
+    // Send question navigation (participant, NON_LINEAR mode)
+    SEND_NAVIGATE: (quizId: number) => `/app/quiz/${quizId}/navigate`,
+    
+    // Request current game status (on reconnect/initial connect)
+    SEND_STATUS: (quizId: number) => `/app/quiz/${quizId}/status`,
   },
   
   // Reconnection settings
