@@ -1,6 +1,7 @@
 package com.intelliquiz.api.realtime.internal.application.services;
 
 import com.intelliquiz.api.realtime.internal.domain.enums.GameState;
+import com.intelliquiz.api.shared.enums.NavigationMode;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -9,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages WebSocket session state for quiz games.
- * Tracks connected hosts and participants, current game state, and question index.
+ * Tracks connected hosts, proctors, and participants, current game state, and question index.
  */
 @Service
 public class QuizSessionManager {
@@ -31,6 +32,15 @@ public class QuizSessionManager {
     
     // Quiz ID -> Current question ID
     private final Map<Long, Long> currentQuestions = new ConcurrentHashMap<>();
+
+    // Quiz ID -> Set of proctor session IDs
+    private final Map<Long, Set<String>> proctorSessions = new ConcurrentHashMap<>();
+
+    // Quiz ID -> Navigation mode for the active session
+    private final Map<Long, NavigationMode> navigationModes = new ConcurrentHashMap<>();
+
+    // Quiz ID -> { Team ID -> Set of answered question indices } (for NON_LINEAR mode)
+    private final Map<Long, Map<Long, Set<Integer>>> answeredQuestions = new ConcurrentHashMap<>();
 
     /**
      * Registers a host connection for a quiz.
@@ -171,6 +181,69 @@ public class QuizSessionManager {
         gameStates.remove(quizId);
         questionIndices.remove(quizId);
         currentQuestions.remove(quizId);
+        proctorSessions.remove(quizId);
+        navigationModes.remove(quizId);
+        answeredQuestions.remove(quizId);
+    }
+
+    // ==================== Proctor Session Management ====================
+
+    /**
+     * Registers a proctor connection for a quiz.
+     */
+    public void registerProctor(Long quizId, String sessionId) {
+        connections.put(sessionId, new ClientConnection(sessionId, quizId, null, false, Instant.now(), false));
+        proctorSessions.computeIfAbsent(quizId, k -> ConcurrentHashMap.newKeySet()).add(sessionId);
+    }
+
+    /**
+     * Gets all proctor session IDs for a quiz.
+     */
+    public Set<String> getProctorSessions(Long quizId) {
+        return proctorSessions.getOrDefault(quizId, Set.of());
+    }
+
+    /**
+     * Checks if a session belongs to a proctor.
+     */
+    public boolean isProctorSession(Long quizId, String sessionId) {
+        Set<String> proctors = proctorSessions.get(quizId);
+        return proctors != null && proctors.contains(sessionId);
+    }
+
+    // ==================== Navigation Mode Management ====================
+
+    /**
+     * Sets the navigation mode for a quiz session.
+     */
+    public void setNavigationMode(Long quizId, NavigationMode mode) {
+        navigationModes.put(quizId, mode);
+    }
+
+    /**
+     * Gets the navigation mode for a quiz session.
+     */
+    public NavigationMode getNavigationMode(Long quizId) {
+        return navigationModes.getOrDefault(quizId, NavigationMode.LINEAR);
+    }
+
+    /**
+     * Records that a team has answered a question (for NON_LINEAR tracking).
+     */
+    public void markQuestionAnswered(Long quizId, Long teamId, int questionIndex) {
+        answeredQuestions
+                .computeIfAbsent(quizId, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(teamId, k -> ConcurrentHashMap.newKeySet())
+                .add(questionIndex);
+    }
+
+    /**
+     * Gets the set of answered question indices for a team (NON_LINEAR mode).
+     */
+    public Set<Integer> getAnsweredQuestions(Long quizId, Long teamId) {
+        Map<Long, Set<Integer>> quizAnswered = answeredQuestions.get(quizId);
+        if (quizAnswered == null) return Set.of();
+        return Set.copyOf(quizAnswered.getOrDefault(teamId, Set.of()));
     }
 
     /**
