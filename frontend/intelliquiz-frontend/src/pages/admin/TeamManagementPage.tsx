@@ -35,9 +35,7 @@ export default function TeamManagementPage({ quizId }: { quizId: number }) {
     setError(null);
     try {
       const response = await fetch(`/api/quizzes/${quizId}/teams`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load teams');
       const data = await response.json();
@@ -58,10 +56,8 @@ export default function TeamManagementPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/quizzes/${quizId}/teams`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: teamName }),
       });
 
@@ -83,9 +79,7 @@ export default function TeamManagementPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/teams/${selectedTeam.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to delete team');
@@ -104,9 +98,7 @@ export default function TeamManagementPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/quizzes/${quizId}/teams/reset-scores`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to reset scores');
