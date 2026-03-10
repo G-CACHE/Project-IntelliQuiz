@@ -38,10 +38,10 @@ export default function SuperAdminDashboard() {
     try {
       const [quizzesRes, usersRes] = await Promise.all([
         fetch('/api/quizzes', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch('/api/users', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
