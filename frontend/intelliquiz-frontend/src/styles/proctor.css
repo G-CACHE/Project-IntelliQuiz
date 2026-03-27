@@ -1599,73 +1599,102 @@
 
 /* ==================== TIMER ==================== */
 .proctor-timer {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
 }
 
 .proctor-timer-large {
-  flex-direction: column;
+  gap: 12px;
 }
 
 .proctor-timer-value {
-  font-size: 32px;
-  font-weight: 800;
-  color: #f8c107;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 4px solid #0d0d0d;
+  box-shadow: 4px 4px 0 #0d0d0d;
+  background: #f2c84b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  font-weight: 400;
+  color: #0d0d0d;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 
 .proctor-timer-large .proctor-timer-value {
-  font-size: 64px;
+  width: 84px;
+  height: 84px;
+  font-size: 24px;
 }
 
 .proctor-timer-unit {
-  font-size: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .proctor-timer-large .proctor-timer-unit {
-  font-size: 32px;
+  font-size: 11px;
 }
 
 .proctor-timer-low .proctor-timer-value {
-  color: #f59e0b;
-  animation: pulse 1s infinite;
+  background: #d97706;
+  color: #ffffff;
+  animation: pixel-flash 0.8s infinite;
 }
 
 .proctor-timer-critical .proctor-timer-value {
-  color: #ef4444;
-  animation: pulse 0.5s infinite;
+  background: #c81e4d;
+  color: #ffffff;
+  animation: pixel-flash 0.4s infinite;
+  transform: scale(1.1);
 }
 
 .proctor-timer-progress {
-  width: 100px;
-  height: 8px;
-  background: #e5e7eb;
+  width: 160px;
+  height: 16px;
+  border: 3px solid #0d0d0d;
+  box-shadow: 4px 4px 0 #0d0d0d;
   border-radius: 4px;
+  background: #f2c84b;
   overflow: hidden;
 }
 
 .proctor-timer-large .proctor-timer-progress {
-  width: 200px;
+  width: 220px;
 }
 
 .proctor-timer-progress-fill {
   height: 100%;
-  background: #f8c107;
+  background: #f2c84b;
   transition: width 1s linear;
 }
 
 .proctor-timer-progress-low {
-  background: #f59e0b;
+  background: #d97706;
 }
 
 .proctor-timer-progress-critical {
-  background: #ef4444;
+  background: #c81e4d;
 }
 
 .proctor-timer-warning {
-  color: #ef4444;
-  animation: bounce 1s infinite;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  color: #c81e4d;
+  animation: pixel-flash 0.5s infinite;
 }
 
 .proctor-timer-warning-icon {
@@ -1676,6 +1705,16 @@
 .proctor-timer-large .proctor-timer-warning-icon {
   width: 32px;
   height: 32px;
+}
+
+@keyframes pixel-flash {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* ==================== QUESTION DISPLAY ==================== */
