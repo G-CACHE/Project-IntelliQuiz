@@ -6,6 +6,7 @@ interface ScoreboardDisplayProps {
   highlightTeamId?: number;
   isFinal?: boolean;
   variant?: 'proctor' | 'participant';
+  title?: string;
 }
 
 const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
@@ -13,6 +14,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
   highlightTeamId,
   isFinal = false,
   variant = 'proctor',
+  title,
 }) => {
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
 
@@ -50,7 +52,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
       {/* Header */}
       <div className={`${prefix}-scoreboard-header`}>
         <h2 className={`${prefix}-scoreboard-title`}>
-          {isFinal ? '🏆 Final Results' : 'Scoreboard'}
+          {title ?? (isFinal ? '🏆 Final Results' : 'Scoreboard')}
         </h2>
         {isFinal && (
           <p className={`${prefix}-scoreboard-subtitle`}>Congratulations to all participants!</p>
