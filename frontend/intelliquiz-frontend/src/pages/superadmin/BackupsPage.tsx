@@ -143,57 +143,21 @@ export default function BackupsPage() {
 
 
   return (
-    <div>
+    <div className="superadmin-page">
       {/* Page Header */}
-      <div style={{
-        background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 60%, #9f2346 100%)',
-        borderRadius: 'var(--radius-xl)',
-        padding: 'var(--spacing-xl)',
-        marginBottom: 'var(--spacing-xl)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: -30,
-          right: 80,
-          width: 120,
-          height: 120,
-          background: 'rgba(248, 193, 7, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: -20,
-          right: 200,
-          width: 80,
-          height: 80,
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '50%',
-        }} />
+      <div className="sa-page-hero">
+        <div className="sa-page-hero-orb orb-a" />
+        <div className="sa-page-hero-orb orb-b" />
+        <div className="sa-page-hero-orb orb-c" />
         
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-            <div style={{
-              width: 56,
-              height: 56,
-              background: 'rgba(248, 193, 7, 0.2)',
-              borderRadius: 'var(--radius-lg)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#f2c84b',
-            }}>
+        <div className="sa-page-hero-content">
+          <div className="sa-page-hero-left">
+            <div className="sa-page-hero-icon">
               <BiData size={28} />
             </div>
             <div>
-              <h1 style={{ color: 'var(--color-white)', fontSize: 'var(--font-size-2xl)', fontWeight: 700, margin: 0 }}>
-                Database Backups
-              </h1>
-              <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 'var(--font-size-sm)', margin: '4px 0 0' }}>
-                Create, restore, and manage database backups
-              </p>
+              <h1 className="sa-page-hero-title">Database Backups</h1>
+              <p className="sa-page-hero-subtitle">Create, restore, and manage database backups</p>
             </div>
           </div>
           <button 

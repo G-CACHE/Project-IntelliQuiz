@@ -120,68 +120,22 @@ export default function UsersPage() {
   }
 
   return (
-    <div>
+    <div className="superadmin-page">
       {/* Page Header with gradient background */}
-      <div style={{
-        background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 60%, #9f2346 100%)',
-        borderRadius: 'var(--radius-xl)',
-        padding: 'var(--spacing-xl)',
-        marginBottom: 'var(--spacing-xl)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
+      <div className="sa-page-hero">
         {/* Decorative shapes */}
-        <div style={{
-          position: 'absolute',
-          top: -30,
-          right: 80,
-          width: 120,
-          height: 120,
-          background: 'rgba(248, 193, 7, 0.1)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: -20,
-          right: 200,
-          width: 80,
-          height: 80,
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '50%',
-        }} />
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          right: 50,
-          width: 6,
-          height: 60,
-          background: 'rgba(248, 193, 7, 0.3)',
-          borderRadius: 'var(--radius-full)',
-          transform: 'translateY(-50%) rotate(20deg)',
-        }} />
+        <div className="sa-page-hero-orb orb-a" />
+        <div className="sa-page-hero-orb orb-b" />
+        <div className="sa-page-hero-orb orb-c" />
         
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-            <div style={{
-              width: 56,
-              height: 56,
-              background: 'rgba(248, 193, 7, 0.2)',
-              borderRadius: 'var(--radius-lg)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#f2c84b',
-            }}>
+        <div className="sa-page-hero-content">
+          <div className="sa-page-hero-left">
+            <div className="sa-page-hero-icon">
               <BiUser size={28} />
             </div>
             <div>
-              <h1 style={{ color: 'var(--color-white)', fontSize: 'var(--font-size-2xl)', fontWeight: 700, margin: 0 }}>
-                User Management
-              </h1>
-              <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 'var(--font-size-sm)', margin: '4px 0 0' }}>
-                Manage admin users and their access permissions
-              </p>
+              <h1 className="sa-page-hero-title">User Management</h1>
+              <p className="sa-page-hero-subtitle">Manage admin users and their access permissions</p>
             </div>
           </div>
           <button className="btn btn-primary" onClick={() => { resetForm(); setShowCreateModal(true); }}>
@@ -204,17 +158,11 @@ export default function UsersPage() {
       )}
 
       {/* Search Card */}
-      <div className="card" style={{ marginBottom: 'var(--spacing-lg)', padding: 'var(--spacing-md)' }}>
-        <div style={{ position: 'relative' }}>
+      <div className="card sa-card-compact">
+        <div className="search-input-wrapper">
           <BiSearch 
-            size={20} 
-            style={{ 
-              position: 'absolute', 
-              left: 16, 
-              top: '50%', 
-              transform: 'translateY(-50%)', 
-              color: 'var(--text-muted)' 
-            }} 
+            size={20}
+            className="search-icon"
           />
           <input
             type="text"
