@@ -31,6 +31,9 @@ public class Team extends SoftDeletableEntity {
     @Column(name = "total_score")
     private int totalScore = 0;
 
+    @Column(name = "device_id")
+    private String deviceId;
+
     public Team() {
     }
 
@@ -79,6 +82,14 @@ public class Team extends SoftDeletableEntity {
 
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
     public void addPoints(int points) {
