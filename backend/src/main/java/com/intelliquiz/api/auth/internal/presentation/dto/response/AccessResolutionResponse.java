@@ -1,6 +1,7 @@
 package com.intelliquiz.api.auth.internal.presentation.dto.response;
 
 import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.shared.enums.QuizAccessMode;
 import com.intelliquiz.api.shared.enums.RouteType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -41,8 +42,11 @@ public record AccessResolutionResponse(
     public record QuizAccessResponse(
         Long id,
         String title,
+        String quizCode,
         String proctorPin,
-        QuizStatus status
+        boolean isLive,
+        QuizStatus status,
+        QuizAccessMode accessMode
     ) {}
 
     /**
