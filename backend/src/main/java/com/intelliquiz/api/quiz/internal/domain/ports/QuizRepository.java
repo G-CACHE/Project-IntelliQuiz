@@ -20,6 +20,10 @@ public interface QuizRepository {
 
     List<Quiz> findByIsLiveSessionTrue();
 
+    boolean existsByQuizCodeIgnoreCase(String quizCode);
+
+    Optional<Quiz> findByQuizCodeIgnoreCase(String quizCode);
+
     void delete(Quiz quiz);
 
     void deleteById(Long id);
