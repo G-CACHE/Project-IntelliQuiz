@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { AccessResolutionResponse, RouteType } from '../../../services/api';
+import type { AccessResolutionResponse, RouteType } from '../../../services/api';
 
 /**
  * Property 1: Access Code Routing Consistency
@@ -13,13 +13,12 @@ import { AccessResolutionResponse, RouteType } from '../../../services/api';
  */
 
 // Arbitrary generators
-const routeTypeArb = fc.constantFrom<RouteType>('HOST', 'PARTICIPANT', 'INVALID');
-
 const teamResponseArb = fc.record({
   id: fc.integer({ min: 1, max: 10000 }),
   name: fc.string({ minLength: 1, maxLength: 50 }),
   accessCode: fc.string({ minLength: 4, maxLength: 10 }),
   quizId: fc.integer({ min: 1, max: 10000 }),
+  totalScore: fc.integer({ min: 0, max: 10000 }),
 });
 
 const quizAccessResponseArb = fc.record({
