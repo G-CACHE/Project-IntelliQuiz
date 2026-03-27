@@ -1,6 +1,7 @@
 package com.intelliquiz.api.submission.internal.application.services;
 
 import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.submission.events.SubmissionGradedEvent;
 import com.intelliquiz.api.shared.exceptions.DuplicateSubmissionException;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.QuizFacade;
@@ -103,7 +104,17 @@ public class SubmissionService {
             teamFacade.addPoints(teamId, submission.getAwardedPoints());
         }
 
-        return submissionRepository.save(submission);
+        submission = submissionRepository.save(submission);
+
+        eventPublisher.publishEvent(new SubmissionGradedEvent(
+            submission.getId(),
+            submission.getTeamId(),
+            submission.getQuestionId(),
+            submission.isCorrect(),
+            submission.getAwardedPoints()
+        ));
+
+        return submission;
     }
 
     /**
@@ -174,7 +185,30 @@ public class SubmissionService {
         if (!submission.isGraded()) {
             submission.grade(correctKey, points);
             submission = submissionRepository.save(submission);
+
+            eventPublisher.publishEvent(new SubmissionGradedEvent(
+                submission.getId(),
+                submission.getTeamId(),
+                submission.getQuestionId(),
+                submission.isCorrect(),
+                submission.getAwardedPoints()
+            ));
         }
         return submission;
+    }
+
+    /**
+     * Clears all submissions for every question in the given quiz.
+     * This is used when starting a fresh live run so prior attempts don't leak into a new session.
+     */
+    public void clearSubmissionsForQuiz(Long quizId) {
+        if (!quizFacade.quizExists(quizId)) {
+            throw new EntityNotFoundException("Quiz", quizId);
+        }
+
+        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+        for (QuestionInfoDto question : questions) {
+            submissionRepository.deleteByQuestionId(question.id());
+        }
     }
 }
