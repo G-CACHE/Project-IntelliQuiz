@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { useSSE } from '../../hooks/useSSE';
+import { accessApi } from '../../services/api';
+import { getOrCreateDeviceId } from '../../services/deviceId';
 import { getProctorSession, clearSession } from '../../services/sessionStorage';
 import TeamGrid from '../../components/game/TeamGrid';
 import '../../styles/proctor.css';
@@ -9,13 +11,73 @@ const HostLobby: React.FC = () => {
   const navigate = useNavigate();
   const [session] = useState(() => getProctorSession());
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [noticeModal, setNoticeModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
+  const [accessChecking, setAccessChecking] = useState(true);
 
   // Redirect if no session
   useEffect(() => {
     if (!session) {
-      navigate('/proctor/login');
+      navigate('/');
     }
   }, [session, navigate]);
+
+  useEffect(() => {
+    if (!session?.proctorPin) {
+      return;
+    }
+
+    let active = true;
+    const verifyProctorAccess = async () => {
+      try {
+        const result = await accessApi.resolveCode(session.proctorPin, getOrCreateDeviceId());
+        if (!active) return;
+
+        if (result.routeType !== 'HOST' || !result.quiz) {
+          clearSession();
+          setNoticeModal({
+            title: 'Invalid Access',
+            message: result.errorMessage || 'Invalid proctor PIN.',
+            onClose: () => navigate('/'),
+          });
+          return;
+        }
+
+        if (result.quiz.status === 'DRAFT') {
+          clearSession();
+          setNoticeModal({
+            title: 'Proctoring Not Available',
+            message: 'Proctoring is not allowed while quiz is in draft.',
+            onClose: () => navigate('/'),
+          });
+          return;
+        }
+
+        // Skip lobby when quiz is already started or completed.
+        if (result.quiz.status === 'ARCHIVED' || result.quiz.status === 'ACTIVE' || Boolean(result.quiz.isLive)) {
+          navigate('/host/game');
+          return;
+        }
+      } catch {
+        if (!active) return;
+        clearSession();
+        setNoticeModal({
+          title: 'Access Check Failed',
+          message: 'Proctor access check failed. Please enter a valid PIN again.',
+          onClose: () => navigate('/'),
+        });
+        return;
+      } finally {
+        if (active) {
+          setAccessChecking(false);
+        }
+      }
+    };
+
+    verifyProctorAccess();
+    return () => {
+      active = false;
+    };
+  }, [session?.proctorPin, navigate]);
 
   const {
     connected,
@@ -26,10 +88,9 @@ const HostLobby: React.FC = () => {
     sendCommand,
     reconnect,
     disconnect,
-  } = useWebSocket(
+  } = useSSE(
     session?.quizId || 0,
     'PROCTOR',
-    undefined,
     undefined,
     session?.proctorPin
   );
@@ -43,10 +104,13 @@ const HostLobby: React.FC = () => {
 
   const handleStartQuiz = () => {
     if (connectedTeams.length === 0) {
-      alert('No teams connected. Wait for teams to join before starting.');
+      setNoticeModal({
+        title: 'Cannot Start Quiz',
+        message: 'No teams connected. Wait for teams to join before starting.',
+      });
       return;
     }
-    sendCommand({ type: 'START_ROUND', payload: { round: 'EASY' } });
+    sendCommand({ type: 'START_QUIZ' });
   };
 
   const handleLeave = () => {
@@ -61,6 +125,18 @@ const HostLobby: React.FC = () => {
 
   if (!session) {
     return null;
+  }
+
+  if (accessChecking) {
+    return (
+      <div className="proctor-page">
+        <div className="proctor-content">
+          <div className="proctor-container">
+            <p className="proctor-help-text">Validating proctor access...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
 
@@ -129,6 +205,13 @@ const HostLobby: React.FC = () => {
               Start Quiz
             </button>
             <button
+              onClick={() => navigate('/proctor/dashboard')}
+              className="proctor-btn-secondary"
+              style={{ minWidth: 180 }}
+            >
+              Open Proctor Dashboard
+            </button>
+            <button
               onClick={handleLeave}
               className="proctor-btn-secondary"
             >
@@ -167,6 +250,31 @@ const HostLobby: React.FC = () => {
                 className="proctor-btn-danger"
               >
                 Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {noticeModal && (
+        <div className="proctor-modal-overlay">
+          <div className="proctor-modal-content">
+            <div className="proctor-modal-header">
+              <h3 className="proctor-modal-title">{noticeModal.title}</h3>
+            </div>
+            <div className="proctor-modal-body">
+              <p>{noticeModal.message}</p>
+            </div>
+            <div className="proctor-modal-footer">
+              <button
+                onClick={() => {
+                  const handler = noticeModal.onClose;
+                  setNoticeModal(null);
+                  if (handler) handler();
+                }}
+                className="proctor-btn-primary"
+              >
+                OK
               </button>
             </div>
           </div>
