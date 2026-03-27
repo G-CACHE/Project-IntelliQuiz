@@ -4,7 +4,7 @@ import fc from 'fast-check';
 /**
  * Property 5: Proctor Command Dispatch
  * For any control button click by the proctor, the system SHALL send the
- * corresponding WebSocket command (START_QUIZ, SHOW_BUFFER, REVEAL_ANSWER,
+ * corresponding realtime command (START_QUIZ, SHOW_BUFFER, REVEAL_ANSWER,
  * SHOW_SCOREBOARD, NEXT_QUESTION, or END_QUIZ) to the server.
  * 
  * Validates: Requirements 4.7
