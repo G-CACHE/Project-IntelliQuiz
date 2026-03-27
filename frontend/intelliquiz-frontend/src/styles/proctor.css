@@ -5,7 +5,7 @@
 /* ==================== BASE STYLES ==================== */
 .proctor-root {
   font-family: var(--font-family);
-  background: linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%);
+  background: linear-gradient(135deg, #fffaf2 0%, #fdf4df 100%);
   color: var(--text-primary);
   min-height: 100vh;
 }
@@ -17,7 +17,7 @@
   justify-content: space-between;
   margin-bottom: 32px;
   padding: 24px 32px;
-  background: linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%);
+  background: linear-gradient(135deg, #5f1027 0%, #7a1733 50%, #9f2346 100%);
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(136, 0, 21, 0.3);
   position: relative;
@@ -76,25 +76,25 @@
 /* ==================== CARDS ==================== */
 .proctor-card {
   background: #fff;
-  border: none;
+  border: 1px solid #e7d8dc;
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(95, 16, 39, 0.08);
   transition: all 0.3s ease;
   overflow: visible;
 }
 
 .proctor-card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 32px rgba(95, 16, 39, 0.14);
   transform: translateY(-2px);
 }
 
 .proctor-card-static {
   background: #fff;
-  border: none;
+  border: 1px solid #e7d8dc;
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(95, 16, 39, 0.08);
 }
 
 /* ==================== BUTTONS ==================== */
@@ -148,54 +148,65 @@
 }
 
 .proctor-btn-secondary:hover {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-color: #cbd5e1;
+  background: linear-gradient(180deg, #fff8ea 0%, #fff3dd 100%);
+  border-color: #caa2af;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
 }
 
+.proctor-btn:focus-visible,
+.proctor-btn-icon:focus-visible,
+.proctor-form-input:focus-visible,
+.proctor-form-select:focus-visible,
+.proctor-form-textarea:focus-visible {
+  outline: 3px solid rgba(248, 193, 7, 0.45);
+  outline-offset: 2px;
+}
+
 .proctor-btn-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 15px rgba(122, 23, 51, 0.35);
 }
 
 .proctor-btn-danger:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 8px 25px rgba(122, 23, 51, 0.45);
 }
 
 .proctor-btn-warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(145deg, #f8c107 0%, #ffd54f 50%, #f8c107 100%);
+  color: #2b1a00;
+  box-shadow: 0 4px 15px rgba(248, 193, 7, 0.35);
+  border: 1px solid rgba(159, 35, 70, 0.18);
 }
 
 .proctor-btn-warning:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 25px rgba(248, 193, 7, 0.45);
 }
 
 .proctor-btn-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 15px rgba(122, 23, 51, 0.35);
 }
 
 .proctor-btn-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 25px rgba(122, 23, 51, 0.45);
 }
 
 .proctor-btn-info {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #fdf6ea 100%);
+  border: 2px solid #e8ced6;
+  color: #7a1733;
+  box-shadow: 0 4px 12px rgba(95, 16, 39, 0.14);
 }
 
 .proctor-btn-info:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 20px rgba(95, 16, 39, 0.2);
 }
 
 .proctor-btn-icon {
@@ -1015,7 +1026,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%);
+  background: linear-gradient(135deg, #5f1027 0%, #7a1733 50%, #9f2346 100%);
   box-shadow: 0 4px 20px rgba(136, 0, 21, 0.3);
 }
 
@@ -1092,6 +1103,342 @@
 .proctor-game-controls {
   margin-top: 48px;
   text-align: center;
+}
+
+.proctor-host-monitor-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.proctor-host-monitor-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.proctor-host-submitted-count {
+  margin-top: 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.proctor-host-stage {
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
+  border: 1px solid #ead9de;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 12px 32px rgba(95, 16, 39, 0.12);
+}
+
+.proctor-host-stage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.proctor-host-stage-header p {
+  margin: 0;
+  color: #5b3d49;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.proctor-host-state-panel {
+  text-align: center;
+  border-radius: 20px;
+  padding: 40px 24px;
+  margin-top: 4px;
+}
+
+.proctor-host-state-panel-neutral {
+  background: linear-gradient(145deg, #fffdf8 0%, #fff3dd 100%);
+  border: 1px solid #edd7a0;
+}
+
+.proctor-host-state-panel-buffer {
+  background: linear-gradient(145deg, #fff6e1 0%, #ffe9b2 100%);
+  border: 1px solid #f0c96a;
+}
+
+.proctor-host-state-icon {
+  font-size: 52px;
+  margin-bottom: 10px;
+}
+
+.proctor-host-panel-subtitle {
+  font-size: 16px;
+  color: #374151;
+  margin: 10px 0 0;
+}
+
+.proctor-host-panel-meta {
+  font-size: 14px;
+  color: #7c8798;
+  margin-top: 10px;
+}
+
+.proctor-host-timer-shell {
+  max-width: 420px;
+  margin: 22px auto 0;
+}
+
+.proctor-host-countdown-value {
+  font-size: 92px;
+  font-weight: 900;
+  color: #8b111f;
+  margin: 16px 0;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.proctor-host-progress-shell {
+  max-width: 420px;
+  height: 10px;
+  margin: 8px auto 0;
+  background: #f0e4d2;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.proctor-host-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #880015 0%, #b11226 100%);
+  transition: width 0.4s ease;
+}
+
+.proctor-host-reveal-results {
+  margin-top: 20px;
+  background: #fff;
+  border: 1px solid #e6d9dc;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.proctor-host-reveal-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #3f2931;
+}
+
+.proctor-host-reveal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proctor-host-reveal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fffaf0;
+  border: 1px solid #ebdbc3;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #50353f;
+}
+
+.proctor-host-reveal-item span:last-child {
+  color: #880015;
+  font-weight: 800;
+}
+
+.proctor-host-final-stage {
+  margin-top: 28px;
+  display: grid;
+  gap: 18px;
+}
+
+.proctor-host-final-banner {
+  position: relative;
+  text-align: center;
+  padding: 38px 30px 26px;
+  border-radius: 24px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(248, 193, 7, 0.2) 0%, transparent 45%),
+    radial-gradient(circle at 84% 30%, rgba(255, 255, 255, 0.14) 0%, transparent 50%),
+    linear-gradient(128deg, #5f1027 0%, #7a1733 55%, #9f2346 100%);
+  box-shadow: 0 16px 36px rgba(95, 16, 39, 0.34);
+  overflow: hidden;
+}
+
+.proctor-host-final-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 38px 38px;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.proctor-host-final-banner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.proctor-host-final-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: rgba(248, 193, 7, 0.2);
+  border: 1px solid rgba(248, 193, 7, 0.55);
+}
+
+.proctor-host-final-banner h2 {
+  margin: 0;
+  font-size: clamp(28px, 4.2vw, 40px);
+  letter-spacing: -0.01em;
+}
+
+.proctor-host-final-banner p {
+  margin: 10px 0 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.proctor-host-final-metrics {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.proctor-host-final-metric {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.proctor-host-final-metric span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.proctor-host-final-metric strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #f8c107;
+}
+
+.proctor-host-final-winner-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-radius: 18px;
+  border: 1px solid #f0d792;
+  background: linear-gradient(140deg, #fff5d8 0%, #ffe6a9 100%);
+  box-shadow: 0 10px 24px rgba(212, 160, 23, 0.22);
+  padding: 16px 20px;
+}
+
+.proctor-host-final-winner-label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #6f4d00;
+}
+
+.proctor-host-final-winner-main h3 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  color: #5f1027;
+}
+
+.proctor-host-final-winner-main p {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: #7a1733;
+  font-weight: 700;
+}
+
+.proctor-host-podium-grid {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  background: linear-gradient(180deg, #fff 0%, #fff8ea 100%);
+  border: 1px solid #e7d6db;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.proctor-host-podium-title {
+  grid-column: 1 / -1;
+  font-size: 18px;
+  font-weight: 800;
+  color: #5f1027;
+}
+
+.proctor-host-podium-item {
+  text-align: center;
+  border-radius: 16px;
+  border: 1px solid #e8d9be;
+  padding: 18px 12px;
+  background: linear-gradient(180deg, #fffdf7 0%, #fff3da 100%);
+}
+
+.proctor-host-podium-item.is-first {
+  border-width: 2px;
+  border-color: #f8c107;
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px rgba(248, 193, 7, 0.35);
+}
+
+.proctor-host-podium-medal {
+  font-size: 34px;
+  margin-bottom: 6px;
+}
+
+.proctor-host-podium-item p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #432b33;
+}
+
+.proctor-host-podium-item strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 24px;
+  color: #880015;
+}
+
+.proctor-host-final-scoreboard {
+  margin-top: 2px;
+}
+
+.proctor-host-final-actions {
+  margin: 8px 0 10px;
+  display: flex;
+  justify-content: center;
 }
 
 /* ==================== BUFFER STATE ==================== */
@@ -1376,40 +1723,38 @@
   position: relative;
   padding: 20px 24px 20px 56px;
   border-radius: 16px;
-  border: 3px solid transparent;
+  border: 2px solid #e3d2d8;
+  background: linear-gradient(180deg, #ffffff 0%, #fff7e8 100%);
+  color: #35262b;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: center;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(95, 16, 39, 0.08);
 }
 
-.proctor-answer-btn-red { background: #ef4444; color: #fff; }
-.proctor-answer-btn-blue { background: #3b82f6; color: #fff; }
-.proctor-answer-btn-yellow { background: #f59e0b; color: #fff; }
-.proctor-answer-btn-green { background: #10b981; color: #fff; }
-
 .proctor-answer-btn:hover:not(.proctor-answer-btn-disabled) {
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(95, 16, 39, 0.14);
 }
 
 .proctor-answer-btn-selected {
-  border-color: #fff;
-  transform: scale(1.05);
-  box-shadow: 0 0 0 4px rgba(248, 193, 7, 0.5);
+  border-color: #f8c107;
+  background: linear-gradient(180deg, #fff4cf 0%, #ffe8ad 100%);
+  box-shadow: 0 0 0 4px rgba(248, 193, 7, 0.35);
 }
 
 .proctor-answer-btn-correct {
-  background: #10b981 !important;
-  border-color: #fff;
-  transform: scale(1.05);
+  border-color: #16a34a;
+  background: linear-gradient(180deg, #eafbef 0%, #d0f7dd 100%);
 }
 
 .proctor-answer-btn-wrong {
-  background: #7f1d1d !important;
-  opacity: 0.75;
+  border-color: #b4233a;
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe0e4 100%);
 }
 
 .proctor-answer-btn-faded {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .proctor-answer-btn-disabled {
@@ -1423,7 +1768,8 @@
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
-  background: rgba(0, 0, 0, 0.2);
+  background: #880015;
+  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1453,7 +1799,7 @@
   right: 12px;
   width: 24px;
   height: 24px;
-  background: #fff;
+  background: #880015;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1463,7 +1809,7 @@
 .proctor-answer-selected-icon {
   width: 16px;
   height: 16px;
-  color: #1f2937;
+  color: #fff;
 }
 
 /* ==================== SCOREBOARD DISPLAY ==================== */
@@ -1683,10 +2029,138 @@
   50% { transform: translateY(-4px); }
 }
 
+/* ==================== PUP PALETTE OVERRIDES ==================== */
+.proctor-btn-danger,
+.proctor-btn-success {
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(122, 23, 51, 0.35);
+}
+
+.proctor-btn-danger:hover,
+.proctor-btn-success:hover {
+  box-shadow: 0 8px 25px rgba(122, 23, 51, 0.45);
+}
+
+.proctor-btn-warning,
+.proctor-btn-info {
+  background: linear-gradient(145deg, #f8c107 0%, #ffd54f 50%, #f8c107 100%);
+  color: #2b1a00;
+  border: 1px solid rgba(159, 35, 70, 0.18);
+  box-shadow: 0 4px 15px rgba(248, 193, 7, 0.35);
+}
+
+.proctor-btn-warning:hover,
+.proctor-btn-info:hover {
+  box-shadow: 0 8px 25px rgba(248, 193, 7, 0.45);
+}
+
+.proctor-status-connected {
+  background: #d4a017;
+}
+
+.proctor-status-connecting {
+  background: #f2c84b;
+}
+
+.proctor-status-disconnected {
+  background: #7a1733;
+}
+
+.proctor-team-card {
+  border-color: #9f2346;
+}
+
+.proctor-team-card-highlight {
+  border-color: #d4a017;
+  background: linear-gradient(135deg, rgba(212, 160, 23, 0.14) 0%, #fff 100%);
+}
+
+.proctor-team-status-text {
+  color: #7a1733;
+}
+
+.proctor-timer-low .proctor-timer-value,
+.proctor-timer-warning {
+  color: #d4a017;
+}
+
+.proctor-timer-critical .proctor-timer-value {
+  color: #7a1733;
+}
+
+.proctor-timer-progress-low {
+  background: #d4a017;
+}
+
+.proctor-timer-progress-critical {
+  background: #7a1733;
+}
+
+.proctor-podium-first .proctor-podium-icon,
+.proctor-podium-first .proctor-podium-info,
+.proctor-podium-second .proctor-podium-icon,
+.proctor-podium-second .proctor-podium-info,
+.proctor-podium-third .proctor-podium-icon,
+.proctor-podium-third .proctor-podium-info {
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
+  color: #fff;
+}
+
+.proctor-scoreboard-title,
+.proctor-ranking-points,
+.proctor-ranking-score-top {
+  color: #7a1733;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .proctor-content {
     padding: 16px;
+  }
+
+  .proctor-game-content {
+    padding: 20px 12px;
+  }
+
+  .proctor-host-stage {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .proctor-host-stage-header {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .proctor-host-state-panel {
+    padding: 28px 14px;
+  }
+
+  .proctor-host-countdown-value {
+    font-size: 74px;
+  }
+
+  .proctor-host-final-banner h2 {
+    font-size: 30px;
+  }
+
+  .proctor-host-final-metrics {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .proctor-host-final-winner-card {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .proctor-host-final-winner-main h3 {
+    font-size: 22px;
+  }
+
+  .proctor-host-podium-item.is-first {
+    transform: none;
   }
   
   .proctor-game-header-content {
