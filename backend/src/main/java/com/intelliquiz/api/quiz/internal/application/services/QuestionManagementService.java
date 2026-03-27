@@ -6,6 +6,7 @@ import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.events.QuestionAddedEvent;
 import com.intelliquiz.api.quiz.events.QuestionDeletedEvent;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
@@ -55,6 +56,7 @@ public class QuestionManagementService {
     public Question addQuestion(Long quizId, CreateQuestionCommand command, Long ownerUserId) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        assertQuizEditable(quiz);
 
         Question question = new Question(
                 quiz,
@@ -86,7 +88,7 @@ public class QuestionManagementService {
         // Auto-archive to Question Bank (fire-and-forget)
         if (ownerUserId != null) {
             try {
-                questionBankService.archiveFromQuiz(saved, ownerUserId);
+                questionBankService.archiveFromQuiz(saved, ownerUserId, quiz.getTitle());
             } catch (Exception e) {
                 log.warn("Failed to auto-archive question {} to bank for user {}: {}",
                         saved.getId(), ownerUserId, e.getMessage());
@@ -102,6 +104,7 @@ public class QuestionManagementService {
     public Question updateQuestion(Long questionId, UpdateQuestionCommand command) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
+        assertQuizEditable(question.getQuiz());
 
         if (command.text() != null) {
             question.setText(command.text());
@@ -133,6 +136,7 @@ public class QuestionManagementService {
     public void deleteQuestion(Long questionId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new EntityNotFoundException("Question", questionId));
+        assertQuizEditable(question.getQuiz());
         
         Long quizId = question.getQuiz().getId();
         Quiz quiz = question.getQuiz();
@@ -166,6 +170,7 @@ public class QuestionManagementService {
     public void reorderQuestions(Long quizId, List<Long> questionIds) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        assertQuizEditable(quiz);
 
         List<Question> questions = questionRepository.findByQuiz(quiz);
         
@@ -178,6 +183,12 @@ public class QuestionManagementService {
                         q.setOrderIndex(questionIds.indexOf(q.getId()));
                         questionRepository.save(q);
                     });
+        }
+    }
+
+    private void assertQuizEditable(Quiz quiz) {
+        if (quiz.getStatus() == QuizStatus.ARCHIVED) {
+            throw new IllegalArgumentException("Quiz is done and questions can no longer be edited");
         }
     }
 }
