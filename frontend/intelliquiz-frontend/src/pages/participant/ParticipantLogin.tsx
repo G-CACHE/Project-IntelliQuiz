@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { accessApi } from '../../services/api';
+import { getOrCreateDeviceId } from '../../services/deviceId';
 import { saveParticipantSession } from '../../services/sessionStorage';
 import '../../styles/participant.css';
 
@@ -9,6 +11,28 @@ const ParticipantLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  React.useEffect(() => {
+    const warning = searchParams.get('warning');
+    if (warning) {
+      setError(decodeURIComponent(warning));
+    }
+  }, [searchParams]);
+
+  const extractErrorMessage = (err: unknown, fallback: string): string => {
+    if (err instanceof Error && err.message) {
+      try {
+        const parsed = JSON.parse(err.message) as { message?: string; errorMessage?: string };
+        if (parsed?.message) return parsed.message;
+        if (parsed?.errorMessage) return parsed.errorMessage;
+      } catch {
+        // Not JSON; use raw message.
+      }
+      return err.message;
+    }
+    return fallback;
+  };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Convert to uppercase and remove non-alphanumeric characters
@@ -38,9 +62,20 @@ const ParticipantLogin: React.FC = () => {
     setError(null);
 
     try {
-      const result = await accessApi.resolveCode(teamCode.trim());
+      const result = await accessApi.resolveCode(teamCode.trim(), getOrCreateDeviceId());
       
       if (result.routeType === 'PARTICIPANT' && result.team) {
+        const access = await accessApi.checkParticipantAccess(
+          result.team.quizId,
+          result.team.id,
+          getOrCreateDeviceId()
+        );
+
+        if (!access.allowed) {
+          setError(access.message || 'You cannot rejoin this quiz right now. Please contact the proctor/admin.');
+          return;
+        }
+
         // Save session and navigate to lobby
         saveParticipantSession(
           result.team.quizId,
@@ -56,7 +91,7 @@ const ParticipantLogin: React.FC = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Network error. Please check your connection and try again.');
+      setError(extractErrorMessage(err, 'Network error. Please check your connection and try again.'));
     } finally {
       setLoading(false);
     }
