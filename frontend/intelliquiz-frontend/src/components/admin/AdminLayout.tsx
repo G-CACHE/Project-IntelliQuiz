@@ -108,73 +108,26 @@ export default function AdminLayout() {
       `}</style>
 
       {/* Top Navigation - Same as SuperAdmin */}
-      <header style={{
-        background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 60%, #9f2346 100%)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        boxShadow: '0 6px 18px rgba(95,16,39,0.28)',
-      }}>
-        <div style={{
-          maxWidth: 1400,
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-        }}>
+      <header className="pb-nav">
+        <div className="pb-nav-inner">
           {/* Logo */}
           <div 
             onClick={() => navigate('/admin')}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            className="pb-nav-logo-wrap"
           >
-            <div style={{
-              width: 40,
-              height: 40,
-              background: '#f2c84b',
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#2b1a00',
-            }}>
+            <div className="pb-nav-logo-icon">
               <BiBookOpen size={22} />
             </div>
-            <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>IntelliQuiz</span>
+            <span className="pb-nav-logo-text">IntelliQuiz</span>
           </div>
 
           {/* Desktop Nav */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <nav className="pb-nav-links">
             {navItems.map((item) => (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 16px',
-                  background: isActive(item.path) ? '#f2c84b' : 'transparent',
-                  border: 'none',
-                  borderRadius: 25,
-                  color: isActive(item.path) ? '#2b1a00' : 'rgba(255,255,255,0.88)',
-                  fontSize: 14,
-                  fontWeight: isActive(item.path) ? 600 : 500,
-                  fontFamily: "'Montserrat', sans-serif",
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(item.path)) {
-                    e.currentTarget.style.background = 'rgba(250,237,192,0.18)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(item.path)) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
+                className={`pb-nav-link ${isActive(item.path) ? 'active' : ''}`}
               >
                 {item.icon}
                 <span className="nav-label">{item.label}</span>
@@ -183,77 +136,28 @@ export default function AdminLayout() {
           </nav>
 
           {/* Right Section */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="pb-nav-right">
             {/* Profile */}
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '6px 12px',
-                  background: 'rgba(255,255,255,0.1)',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                }}
+                className="pb-nav-profile-btn"
               >
-                <div style={{
-                  width: 36,
-                  height: 36,
-                  background: '#f2c84b',
-                  color: '#2b1a00',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: 14,
-                }}>
+                <div className="pb-nav-avatar">
                   {username.charAt(0).toUpperCase() || 'A'}
                 </div>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{username || 'Admin'}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>Admin</div>
+                  <div className="pb-nav-profile-name">{username || 'Admin'}</div>
+                  <div className="pb-nav-profile-role">Admin</div>
                 </div>
-                <BiChevronDown size={18} style={{
-                  color: 'rgba(255,255,255,0.6)',
-                  transform: profileDropdownOpen ? 'rotate(180deg)' : 'rotate(0)',
-                  transition: 'transform 0.2s',
-                }} />
+                <BiChevronDown size={18} className={`pb-nav-chevron ${profileDropdownOpen ? 'open' : ''}`} />
               </button>
 
               {profileDropdownOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  right: 0,
-                  minWidth: 180,
-                  background: '#fff',
-                  borderRadius: 12,
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                  overflow: 'hidden',
-                  zIndex: 50,
-                }}>
+                <div className="pb-nav-dropdown">
                   <button
                     onClick={handleLogout}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      width: '100%',
-                      padding: 14,
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#880015',
-                      fontWeight: 700,
-                      fontSize: 14,
-                      fontFamily: "'Montserrat', sans-serif",
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    className="pb-nav-dropdown-item"
                   >
                     <BiLogOut size={18} />
                     Logout

@@ -1,5 +1,5 @@
 /* IntelliQuiz Super Admin - Admin-Aligned Styles */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Boogaloo&family=Nunito:wght@400;500;600;700;800;900&display=swap');
 
 /* ==================== BASE STYLES ==================== */
 .superadmin-root {
@@ -7,6 +7,199 @@
   background: linear-gradient(135deg, #fffaf2 0%, #fdf4df 100%);
   color: var(--text-primary);
   min-height: 100vh;
+}
+
+/* ==================== PHASE 1: PIXELBRUTE NAV ==================== */
+.pb-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #6E1028;
+  border-bottom: 4px solid #0D0D0D;
+  box-shadow: 0 4px 0 #0D0D0D;
+}
+
+.pb-nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pb-nav-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.pb-nav-logo-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #0D0D0D;
+  border-radius: 6px;
+  background: #F2C84B;
+  color: #0D0D0D;
+  box-shadow: 4px 4px 0 #0D0D0D;
+}
+
+.pb-nav-logo-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: #F2C84B;
+  text-shadow: 1px 1px 0 #0D0D0D;
+}
+
+.pb-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pb-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #ffffff;
+  font-family: 'Boogaloo', cursive;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.pb-nav-link:hover,
+.pb-nav-link.active {
+  background: #F2C84B;
+  color: #0D0D0D;
+  border-color: #0D0D0D;
+  box-shadow: 2px 2px 0 #0D0D0D;
+}
+
+.pb-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pb-nav-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: 3px solid #0D0D0D;
+  border-radius: 6px;
+  background: #FAFAF5;
+  color: #0D0D0D;
+  box-shadow: 4px 4px 0 #0D0D0D;
+  cursor: pointer;
+}
+
+.pb-nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid #0D0D0D;
+  background: #F2C84B;
+  color: #0D0D0D;
+}
+
+.pb-nav-profile-name {
+  color: #0D0D0D;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pb-nav-profile-role {
+  color: rgba(13, 13, 13, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pb-nav-chevron {
+  color: #0D0D0D;
+  transition: transform 0.2s ease;
+}
+
+.pb-nav-chevron.open {
+  transform: rotate(180deg);
+}
+
+.pb-nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: #FAFAF5;
+  border: 3px solid #0D0D0D;
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 #0D0D0D;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.pb-nav-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: #0D0D0D;
+  font-family: 'Boogaloo', cursive;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.pb-nav-dropdown-item:hover {
+  background: #F2C84B;
+}
+
+@media (max-width: 768px) {
+  .pb-nav-inner {
+    padding: 8px 12px;
+    min-height: 60px;
+  }
+
+  .pb-nav-logo-text {
+    font-size: 12px;
+    letter-spacing: 0.01em;
+  }
+
+  .pb-nav-links {
+    gap: 4px;
+  }
+
+  .pb-nav-link {
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+
+  .pb-nav-link .nav-label,
+  .pb-nav-profile-role {
+    display: none;
+  }
 }
 
 /* ==================== PAGE HEADER ==================== */
