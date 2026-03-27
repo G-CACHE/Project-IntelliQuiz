@@ -25,15 +25,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   variant = 'proctor',
 }) => {
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
-  const OPTION_COLORS = ['red', 'blue', 'yellow', 'green'];
 
-  const getOptionClass = (option: string, index: number) => {
-    const color = OPTION_COLORS[index % OPTION_COLORS.length];
+  const getOptionClass = (option: string) => {
     const isSelected = selectedOption === option;
     const isCorrect = correctAnswer === option;
     const isWrong = showCorrectAnswer && isSelected && !isCorrect;
 
-    let classes = `${prefix}-answer-btn ${prefix}-answer-btn-${color}`;
+    let classes = `${prefix}-answer-btn`;
 
     if (showCorrectAnswer) {
       if (isCorrect) {
@@ -83,7 +81,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               key={index}
               onClick={() => !disabled && onSelectOption?.(option)}
               disabled={disabled}
-              className={getOptionClass(option, index)}
+              className={getOptionClass(option)}
             >
               {/* Option Letter Badge */}
               <div className={`${prefix}-answer-letter`}>
