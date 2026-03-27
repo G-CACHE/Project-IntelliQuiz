@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ConnectedTeam } from '../../hooks/useWebSocket';
+import type { ConnectedTeam } from '../../hooks/useSSE';
 
 interface TeamGridProps {
   teams: ConnectedTeam[];
