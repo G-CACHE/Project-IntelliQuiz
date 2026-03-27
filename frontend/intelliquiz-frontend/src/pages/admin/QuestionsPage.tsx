@@ -12,8 +12,9 @@ import {
   BiLock,
   BiTime,
   BiStar,
+  BiImport,
 } from 'react-icons/bi';
-import { questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest } from '../../services/api';
+import { questionBankApi, questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest, type QuestionBankItem } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 
@@ -33,7 +34,7 @@ export default function AdminQuestionsPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
   const quizIdNum = quizId ? parseInt(quizId) : 0;
-  const { canEditQuiz, canViewQuiz, isSuperAdmin } = useAuth();
+  const { canEditQuiz, isSuperAdmin } = useAuth();
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -41,12 +42,18 @@ export default function AdminQuestionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CreateQuestionRequest>(initialForm);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
+  const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
+  const [bankSearch, setBankSearch] = useState('');
   
-  const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum);
-  const hasViewPermission = isSuperAdmin() || canViewQuiz(quizIdNum) || canEditQuiz(quizIdNum);
+  const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum, quiz?.createdByUserId);
+  const isDraftQuiz = quiz?.status === 'DRAFT';
+  const canEditContent = hasEditPermission && isDraftQuiz;
 
   useEffect(() => { if (quizIdNum) loadData(); }, [quizIdNum]);
 
@@ -70,6 +77,7 @@ export default function AdminQuestionsPage() {
   const handleSave = async () => {
     setError(null);
     if (!hasEditPermission) return setError('You do not have permission to edit this quiz');
+    if (!isDraftQuiz) return setError('Questions can only be edited while the quiz is in Draft status.');
     if (!formData.text.trim()) return setError('Question text is required');
     if (!formData.correctKey) return setError('Please select the correct answer');
     
@@ -102,6 +110,10 @@ export default function AdminQuestionsPage() {
 
   const handleDelete = async () => {
     if (!selectedQuestion) return;
+    if (!canEditContent) {
+      setError('Questions can only be deleted while the quiz is in Draft status.');
+      return;
+    }
     try {
       await questionsApi.delete(selectedQuestion.id);
       setShowDeleteModal(false);
@@ -113,6 +125,10 @@ export default function AdminQuestionsPage() {
   };
 
   const openEditModal = (question: Question) => {
+    if (!canEditContent) {
+      setError('Questions can only be edited while the quiz is in Draft status.');
+      return;
+    }
     setSelectedQuestion(question);
     setIsEditing(true);
     const options = question.options.length >= 4
@@ -143,6 +159,95 @@ export default function AdminQuestionsPage() {
     setFormData({ ...formData, options: newOptions });
   };
 
+  const normalizeText = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+  const buildQuestionFingerprint = (item: Pick<Question, 'text' | 'type' | 'difficulty' | 'correctKey' | 'options'>) => {
+    const normalizedOptions = item.options.map((option) => normalizeText(option)).join('|');
+    return [
+      normalizeText(item.text),
+      item.type,
+      item.difficulty,
+      item.correctKey,
+      normalizedOptions,
+    ].join('::');
+  };
+
+  const quizQuestionFingerprints = new Set(questions.map((question) => buildQuestionFingerprint(question)));
+
+  const loadQuestionBank = async () => {
+    if (!canEditContent) {
+      setError('Import from bank is only available while the quiz is in Draft status.');
+      return;
+    }
+    setBankLoading(true);
+    setError(null);
+    try {
+      const allBankItems = await questionBankApi.getAll();
+      const eligible = allBankItems.filter((item) => !quizQuestionFingerprints.has(buildQuestionFingerprint(item)));
+      setBankQuestions(eligible);
+      setSelectedBankIds([]);
+      setBankSearch('');
+      setShowBankModal(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load question bank');
+    } finally {
+      setBankLoading(false);
+    }
+  };
+
+  const toggleBankSelection = (id: number) => {
+    setSelectedBankIds((prev) => (
+      prev.includes(id) ? prev.filter((bankId) => bankId !== id) : [...prev, id]
+    ));
+  };
+
+  const filteredBankQuestions = bankQuestions.filter((item) => {
+    const query = bankSearch.trim().toLowerCase();
+    if (!query) return true;
+    return item.text.toLowerCase().includes(query);
+  });
+
+  const visibleBankIds = filteredBankQuestions.map((item) => item.id);
+  const selectedVisibleCount = visibleBankIds.filter((id) => selectedBankIds.includes(id)).length;
+  const allVisibleSelected = visibleBankIds.length > 0 && selectedVisibleCount === visibleBankIds.length;
+
+  const toggleSelectAllVisible = () => {
+    if (visibleBankIds.length === 0) return;
+
+    if (allVisibleSelected) {
+      const visibleIdSet = new Set(visibleBankIds);
+      setSelectedBankIds((prev) => prev.filter((id) => !visibleIdSet.has(id)));
+      return;
+    }
+
+    setSelectedBankIds((prev) => Array.from(new Set([...prev, ...visibleBankIds])));
+  };
+
+  const handleImportFromBank = async () => {
+    if (!hasEditPermission) {
+      setError('You do not have permission to edit this quiz');
+      return;
+    }
+    if (!isDraftQuiz) {
+      setError('Import from bank is only available while the quiz is in Draft status.');
+      return;
+    }
+    if (selectedBankIds.length === 0) {
+      setError('Select at least one question to import');
+      return;
+    }
+
+    try {
+      setError(null);
+      await questionBankApi.importToQuiz(quizIdNum, selectedBankIds);
+      setShowBankModal(false);
+      setSelectedBankIds([]);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import questions from bank');
+    }
+  };
+
   const getDifficultyBadge = (d: string) => {
     const map: Record<string, string> = { EASY: 'admin-badge-success', MEDIUM: 'admin-badge-warning', HARD: 'admin-badge-primary' };
     return map[d] || 'admin-badge-gray';
@@ -168,19 +273,26 @@ export default function AdminQuestionsPage() {
         </div>
         <div className="admin-page-header-content">
           <div className="admin-page-header-left">
-            <button className="admin-btn-icon" onClick={() => navigate('/admin/quizzes')} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}>
+            <button className="admin-btn-icon" onClick={() => navigate(`/admin/quizzes/${quizIdNum}`)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}>
               <BiArrowBack size={18} />
             </button>
             <div className="admin-page-icon"><BiFile size={26} /></div>
             <div>
               <h1 className="admin-page-title">Questions</h1>
-              <p className="admin-page-subtitle">{quiz?.title || 'Quiz'} • {questions.length} questions {!hasEditPermission && <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}><BiLock size={12} style={{ verticalAlign: 'middle' }} /> View only</span>}</p>
+              <p className="admin-page-subtitle">
+                {quiz?.title || 'Quiz'} • {questions.length} questions {!canEditContent && <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}><BiLock size={12} style={{ verticalAlign: 'middle' }} /> View only</span>}
+              </p>
             </div>
           </div>
-          {hasEditPermission && (
-            <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-              <BiPlus size={18} /> Add Question
-            </button>
+          {canEditContent && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
+                <BiImport size={18} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
+              </button>
+              <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                <BiPlus size={18} /> Add Question
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -241,7 +353,7 @@ export default function AdminQuestionsPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {hasEditPermission && (
+                  {canEditContent && (
                     <>
                       <button className="admin-btn-icon" onClick={() => openEditModal(q)} title="Edit"><BiEdit size={16} /></button>
                       <button className="admin-btn-icon danger" onClick={() => { setSelectedQuestion(q); setShowDeleteModal(true); }} title="Delete"><BiTrash size={16} /></button>
@@ -256,11 +368,16 @@ export default function AdminQuestionsPage() {
             <div className="admin-empty-state">
               <div className="admin-empty-icon"><BiFile size={32} /></div>
               <h3 className="admin-empty-title">No questions yet</h3>
-              <p className="admin-empty-text">{hasEditPermission ? 'Add questions to make your quiz complete' : 'No questions have been added to this quiz yet'}</p>
-              {hasEditPermission && (
-                <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                  <BiPlus size={16} /> Add First Question
-                </button>
+              <p className="admin-empty-text">{canEditContent ? 'Add questions to make your quiz complete' : 'Questions are view-only until the quiz is set back to Draft status.'}</p>
+              {canEditContent && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
+                    <BiImport size={16} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
+                  </button>
+                  <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                    <BiPlus size={16} /> Add First Question
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -358,6 +475,132 @@ export default function AdminQuestionsPage() {
             <div className="admin-modal-footer">
               <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
               <button onClick={handleSave} className="admin-btn admin-btn-primary">{isEditing ? 'Update' : 'Add'} Question</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import From Bank Modal */}
+      {showBankModal && (
+        <div className="admin-modal-overlay" onClick={() => setShowBankModal(false)}>
+          <div className="admin-modal" style={{ maxWidth: 760 }} onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #5f1027, #9f2346)' }}>
+              <h2 className="admin-modal-title">Import Questions from Bank</h2>
+              <button onClick={() => setShowBankModal(false)} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
+            </div>
+            <div className="admin-modal-body">
+              {bankQuestions.length === 0 ? (
+                <p className="admin-empty-text">No new question-bank items are available. All matching items are already in this quiz.</p>
+              ) : (
+                <>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    background: '#fff7ed',
+                    border: '1px solid #fed7aa',
+                    marginBottom: 12,
+                  }}>
+                    <p className="admin-empty-text" style={{ margin: 0, color: '#7c2d12', fontWeight: 600 }}>
+                      {filteredBankQuestions.length} available • {selectedBankIds.length} selected
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBankIds([])}
+                      className="admin-btn admin-btn-secondary"
+                      style={{ padding: '6px 10px', fontSize: 12 }}
+                      disabled={selectedBankIds.length === 0}
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      value={bankSearch}
+                      onChange={(e) => setBankSearch(e.target.value)}
+                      className="admin-form-input"
+                      style={{ flex: 1, minWidth: 220 }}
+                      placeholder="Search bank questions..."
+                    />
+                    <label style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      border: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      cursor: visibleBankIds.length > 0 ? 'pointer' : 'not-allowed',
+                      color: '#1e293b',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      opacity: visibleBankIds.length > 0 ? 1 : 0.6,
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        onChange={toggleSelectAllVisible}
+                        disabled={visibleBankIds.length === 0}
+                      />
+                      Select All Visible
+                    </label>
+                  </div>
+
+                  {filteredBankQuestions.length === 0 && (
+                    <p className="admin-empty-text" style={{ marginTop: 6 }}>No questions match your search.</p>
+                  )}
+
+                  <div style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+                    {filteredBankQuestions.map((item) => {
+                      const selected = selectedBankIds.includes(item.id);
+                      return (
+                        <label
+                          key={item.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 10,
+                            padding: '12px 14px',
+                            borderRadius: 8,
+                            border: `1px solid ${selected ? '#d4a017' : '#e2e8f0'}`,
+                            background: selected ? '#fff7ed' : '#ffffff',
+                            cursor: 'pointer',
+                            boxShadow: selected ? '0 6px 14px rgba(212,160,23,0.22)' : 'none',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => toggleBankSelection(item.id)}
+                            style={{ marginTop: 2, accentColor: '#9f2346' }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, color: '#1e293b', fontWeight: 600, fontSize: 14 }}>{item.text}</p>
+                            <p className="admin-empty-text" style={{ margin: '4px 0 0' }}>
+                              {item.difficulty} • {item.points} pts • {item.timeLimit}s
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="admin-modal-footer">
+              <button onClick={() => setShowBankModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+              <button
+                onClick={handleImportFromBank}
+                className="admin-btn admin-btn-primary"
+                disabled={selectedBankIds.length === 0 || !canEditContent}
+              >
+                Import Selected ({selectedBankIds.length})
+              </button>
             </div>
           </div>
         </div>
