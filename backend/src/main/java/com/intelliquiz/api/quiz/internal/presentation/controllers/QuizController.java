@@ -125,7 +125,7 @@ public class QuizController {
      * Creates a new quiz.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Create a new quiz",
             description = "Creates a new quiz with the provided title and description. The quiz is created in DRAFT status and assigned to the current user."
@@ -151,7 +151,15 @@ public class QuizController {
             @Valid @RequestBody CreateQuizRequest request,
             Authentication auth) {
         Long userId = SecurityUtils.extractUserId(auth);
-        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description(), userId);
+                CreateQuizCommand command = new CreateQuizCommand(
+            request.title(), 
+            request.description(), 
+            userId, 
+            request.accessMode(),
+            request.navigationMode(),
+                        request.globalTimeLimitSeconds(),
+                        request.randomizeQuestions()
+        );
         Quiz quiz = quizManagementService.createQuiz(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(QuizResponse.from(quiz));
     }
@@ -160,7 +168,7 @@ public class QuizController {
      * Updates an existing quiz.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Update a quiz",
             description = "Updates an existing quiz with the provided title and description. Admins can only update their own quizzes."
@@ -195,15 +203,43 @@ public class QuizController {
         Long userId = SecurityUtils.extractUserId(auth);
         SystemRole role = SecurityUtils.extractRole(auth);
         quizManagementService.verifyQuizAccess(id, userId, role);
-        UpdateQuizCommand command = new UpdateQuizCommand(request.title(), request.description());
+                UpdateQuizCommand command = new UpdateQuizCommand(
+            request.title(), 
+            request.description(), 
+            request.accessMode(),
+            request.navigationMode(),
+                        request.globalTimeLimitSeconds(),
+                        request.randomizeQuestions()
+        );
         Quiz quiz = quizManagementService.updateQuiz(id, command);
         return ResponseEntity.ok(QuizResponse.from(quiz));
     }
+
+        /**
+         * Returns a quiz from READY back to DRAFT status.
+         */
+        @PostMapping("/{id}/draft")
+        @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+        @Operation(
+                        summary = "Transition quiz to DRAFT status",
+                        description = "Returns a quiz from READY back to DRAFT (unready)."
+        )
+        public ResponseEntity<QuizResponse> transitionToDraft(
+                        @Parameter(description = "Unique identifier of the quiz", required = true)
+                        @PathVariable Long id,
+                        Authentication auth) {
+                Long userId = SecurityUtils.extractUserId(auth);
+                SystemRole role = SecurityUtils.extractRole(auth);
+                quizManagementService.verifyQuizAccess(id, userId, role);
+                Quiz quiz = quizManagementService.transitionToDraft(id);
+                return ResponseEntity.ok(QuizResponse.from(quiz));
+        }
 
     /**
      * Deletes a quiz.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Delete a quiz",
             description = "Deletes a quiz and all associated questions, teams, and submissions."
@@ -239,6 +275,7 @@ public class QuizController {
      * Transitions a quiz to READY status.
      */
     @PostMapping("/{id}/ready")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Transition quiz to READY status",
             description = "Transitions a quiz from DRAFT to READY status, making it available for activation."
@@ -280,6 +317,7 @@ public class QuizController {
      * Archives a quiz.
      */
     @PostMapping("/{id}/archive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Archive a quiz",
             description = "Archives a quiz, making it read-only and preserving historical data."
@@ -321,6 +359,7 @@ public class QuizController {
      * Activates a quiz session.
      */
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Activate quiz session",
             description = "Activates a quiz session, allowing teams to submit answers. Only one quiz can be active at a time."
@@ -362,6 +401,7 @@ public class QuizController {
      * Deactivates a quiz session.
      */
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Deactivate quiz session",
             description = "Deactivates an active quiz session, stopping answer submissions."
