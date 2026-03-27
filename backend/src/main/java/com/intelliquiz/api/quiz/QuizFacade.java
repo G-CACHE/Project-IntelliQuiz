@@ -41,7 +41,8 @@ public class QuizFacade {
     public QuizInfoDto getQuizInfo(Long quizId) {
         Quiz quiz = quizManagementService.getQuiz(quizId);
         return new QuizInfoDto(quiz.getId(), quiz.getTitle(), quiz.getStatus(),
-                               quiz.isLiveSession(), quiz.getProctorPin());
+                               quiz.isLiveSession(), quiz.getProctorPin(), quiz.getAccessMode(), quiz.getQuizCode(),
+                               quiz.getNavigationMode(), quiz.getGlobalTimeLimitSeconds());
     }
 
     /**
@@ -94,6 +95,13 @@ public class QuizFacade {
     }
 
     /**
+     * Archives a quiz, making it read-only and invalidating proctor PIN reuse.
+     */
+    public void archiveQuiz(Long quizId) {
+        quizManagementService.archiveQuiz(quizId);
+    }
+
+    /**
      * Check question existence.
      */
     public boolean questionExists(Long questionId) {
@@ -124,7 +132,8 @@ public class QuizFacade {
         return quizManagementService.getAllQuizzes().stream()
                 .filter(Quiz::isLiveSession)
                 .map(q -> new QuizInfoDto(q.getId(), q.getTitle(), q.getStatus(),
-                                          q.isLiveSession(), q.getProctorPin()))
+                          q.isLiveSession(), q.getProctorPin(), q.getAccessMode(), q.getQuizCode(),
+                          q.getNavigationMode(), q.getGlobalTimeLimitSeconds()))
                 .toList();
     }
 
@@ -135,7 +144,8 @@ public class QuizFacade {
     public List<QuizInfoDto> findAllQuizzes() {
         return quizManagementService.getAllQuizzes().stream()
                 .map(q -> new QuizInfoDto(q.getId(), q.getTitle(), q.getStatus(),
-                                          q.isLiveSession(), q.getProctorPin()))
+                          q.isLiveSession(), q.getProctorPin(), q.getAccessMode(), q.getQuizCode(),
+                          q.getNavigationMode(), q.getGlobalTimeLimitSeconds()))
                 .toList();
     }
 
@@ -157,6 +167,16 @@ public class QuizFacade {
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Get quiz info by participant-facing quiz code if it exists.
+     */
+    public Optional<QuizInfoDto> findQuizInfoByCode(String quizCode) {
+        return quizManagementService.getQuizByCode(quizCode)
+                .map(q -> new QuizInfoDto(q.getId(), q.getTitle(), q.getStatus(),
+                q.isLiveSession(), q.getProctorPin(), q.getAccessMode(), q.getQuizCode(),
+                q.getNavigationMode(), q.getGlobalTimeLimitSeconds()));
     }
 
     /**
