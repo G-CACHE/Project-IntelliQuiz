@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { useSSE } from '../../hooks/useSSE';
 import { getProctorSession, clearSession } from '../../services/sessionStorage';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import '../../styles/proctor.css';
@@ -26,7 +26,7 @@ const HostScoreboard: React.FC = () => {
     return null;
   });
 
-  // WebSocket connection - pass proctorPin as accessCode for authentication
+  // SSE connection - pass proctorPin as accessCode for authentication
   const {
     connected,
     error,
@@ -36,18 +36,17 @@ const HostScoreboard: React.FC = () => {
     sendCommand,
     reconnect,
     disconnect,
-  } = useWebSocket(
+  } = useSSE(
     session?.quizId || 0,
     'PROCTOR',
     undefined,  // teamId (not used for proctor)
-    undefined,  // teamName (not used for proctor)
-    session?.proctorPin  // accessCode for WebSocket authentication
+    session?.proctorPin  // accessCode for SSE authentication
   );
 
   // Redirect to login if no session
   useEffect(() => {
     if (!session) {
-      navigate('/proctor/login');
+      navigate('/');
     }
   }, [session, navigate]);
 
@@ -60,16 +59,10 @@ const HostScoreboard: React.FC = () => {
     sendCommand({ type: 'END_QUIZ' });
   };
 
-  const handleReturnToLogin = () => {
+  const handleExitHome = () => {
     disconnect();
     clearSession();
-    navigate('/proctor/login');
-  };
-
-  const handleNewQuiz = () => {
-    disconnect();
-    clearSession();
-    navigate('/proctor/login');
+    navigate('/');
   };
 
   if (!session) return null;
@@ -120,16 +113,10 @@ const HostScoreboard: React.FC = () => {
                 </p>
                 <div className="proctor-actions">
                   <button
-                    onClick={handleNewQuiz}
+                    onClick={handleExitHome}
                     className="proctor-btn-primary proctor-btn-large"
                   >
-                    Host Another Quiz
-                  </button>
-                  <button
-                    onClick={handleReturnToLogin}
-                    className="proctor-btn-secondary"
-                  >
-                    Return to Login
+                    Go Home
                   </button>
                 </div>
               </div>
