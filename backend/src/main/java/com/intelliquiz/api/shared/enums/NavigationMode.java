@@ -5,17 +5,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Defines the assessment navigation mode for a quiz session.
  */
-@Schema(description = "Assessment navigation mode: LINEAR (strict per-question timer, forward-only), NON_LINEAR (global timer, free navigation)")
+@Schema(description = "Assessment navigation mode: TOURNAMENT (proctor-controlled, per-question timer), CLASS (participant-controlled, global timer)")
 public enum NavigationMode {
     /**
-     * Strict Progression — per-question timers, forward-only navigation.
-     * Host-controlled question advancement. Participants cannot go back.
+     * Tournament Mode — per-question timers, proctor-controlled navigation.
+     * Proctor controls question advancement. Participants cannot navigate.
      */
-    LINEAR,
+    TOURNAMENT,
 
     /**
-     * Participant-Controlled — global timer, free navigation between questions.
-     * Participants can answer in any order and revisit questions.
+     * Class Mode — global quiz timer, participant-controlled navigation.
+     * Participants control next/previous navigation. Questions can be randomized.
      */
-    NON_LINEAR
+    CLASS
 }
