@@ -7,16 +7,17 @@ interface AuthContextType {
   assignments: QuizAssignment[];
   loading: boolean;
   refreshAuth: () => Promise<void>;
+  clearAuth: () => void;
   setAssignmentsForUser: (username: string, assignments: QuizAssignment[]) => void;
   addAssignmentForUser: (username: string, assignment: QuizAssignment) => void;
   removeAssignmentForUser: (username: string, quizId: number) => void;
   hasPermissionForQuiz: (quizId: number, permission: string) => boolean;
   getAssignedQuizIds: () => number[];
   getQuizPermissions: (quizId: number) => string[];
-  canViewQuiz: (quizId: number) => boolean;
-  canEditQuiz: (quizId: number) => boolean;
-  canManageTeams: (quizId: number) => boolean;
-  canHostGame: (quizId: number) => boolean;
+  canViewQuiz: (quizId: number, createdByUserId?: number) => boolean;
+  canEditQuiz: (quizId: number, createdByUserId?: number) => boolean;
+  canManageTeams: (quizId: number, createdByUserId?: number) => boolean;
+  canHostGame: (quizId: number, createdByUserId?: number) => boolean;
   isSuperAdmin: () => boolean;
   isExaminer: () => boolean;
   isProctor: () => boolean;
@@ -34,21 +35,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [assignments, setAssignments] = useState<QuizAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const shouldAttemptBackendAuth = () => {
+    const path = window.location.pathname;
+    const isAdminRoute = path.startsWith('/admin') || path.startsWith('/superadmin') || path === '/login';
+    const hasAuthHint = Boolean(localStorage.getItem('role') || localStorage.getItem('username'));
+    return isAdminRoute || hasAuthHint;
+  };
+
+  const clearAuth = () => {
+    localStorage.removeItem('role');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('assignments');
+    setRole(null);
+    setUsername(null);
+    setAssignments([]);
+  };
+
   // Function to refresh auth state from backend
   const refreshAuth = async () => {
     try {
+      const previousUsername = localStorage.getItem('username');
+
       // Fetch current user info from backend (cookie sent automatically)
       const user = await currentUserApi.getMe();
-      console.log('[AuthContext] User info from backend:', user);
+
+      // Switching accounts in the same tab should never inherit stale assignments.
+      if (previousUsername && previousUsername !== user.username) {
+        setAssignments([]);
+      }
+
       setRole(user.role);
       setUsername(user.username);
       localStorage.setItem('role', user.role);
       localStorage.setItem('username', user.username);
+      localStorage.setItem('userId', String(user.id));
 
       // Fetch assignments if user is ADMIN
       if (user.role === 'ADMIN' || user.role === 'EXAMINER') {
         const freshAssignments = await currentUserApi.getMyAssignments();
-        console.log('[AuthContext] Assignments from backend:', freshAssignments);
         setAssignments(freshAssignments);
         localStorage.setItem('assignments', JSON.stringify(freshAssignments));
       } else {
@@ -57,14 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('assignments');
       }
     } catch (err) {
-      console.error('[AuthContext] Failed to fetch user info:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('HTTP 401') || message.includes('HTTP 403')) {
+        console.log('[AuthContext] No active authenticated session.');
+      } else {
+        console.error('[AuthContext] Failed to fetch user info:', err);
+      }
       // Cookie might be invalid/expired, clear auth state
-      localStorage.removeItem('role');
-      localStorage.removeItem('username');
-      localStorage.removeItem('assignments');
-      setRole(null);
-      setUsername(null);
-      setAssignments([]);
+      clearAuth();
     } finally {
       setLoading(false);
     }
@@ -72,12 +97,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load auth state on mount
   useEffect(() => {
-    // Always try to fetch from backend — cookie presence is determined server-side
-    refreshAuth();
+    // Hydrate from local storage first for snappier initial render.
+    const cachedRole = localStorage.getItem('role');
+    const cachedUsername = localStorage.getItem('username');
+    const cachedAssignments = localStorage.getItem('assignments');
+
+    if (cachedRole) setRole(cachedRole);
+    if (cachedUsername) setUsername(cachedUsername);
+    if (cachedAssignments) {
+      try {
+        setAssignments(JSON.parse(cachedAssignments) as QuizAssignment[]);
+      } catch {
+        localStorage.removeItem('assignments');
+      }
+    }
+
+    // Only probe /api/users/me on admin routes or when a prior auth hint exists.
+    if (shouldAttemptBackendAuth()) {
+      refreshAuth();
+    } else {
+      setLoading(false);
+    }
 
     // Listen for visibility changes to re-check auth when tab becomes active
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && shouldAttemptBackendAuth()) {
         refreshAuth();
       }
     };
@@ -139,19 +183,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return assignment?.permissions ?? [];
   };
 
-  const canViewQuiz = (quizId: number): boolean => {
+  const canViewQuiz = (quizId: number, createdByUserId?: number): boolean => {
+    // Fallback for legacy/partial payloads where creator id is omitted.
+    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+      return true;
+    }
+
+    // Check if user is the quiz creator (admins/examiners own their quizzes)
+    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+      const myId = localStorage.getItem('userId');
+      if (myId && parseInt(myId) === createdByUserId) {
+        return true;
+      }
+    }
     return hasPermissionForQuiz(quizId, PERMISSIONS.CAN_VIEW_DETAILS);
   };
 
-  const canEditQuiz = (quizId: number): boolean => {
+  const canEditQuiz = (quizId: number, createdByUserId?: number): boolean => {
+    // Fallback for legacy/partial payloads where creator id is omitted.
+    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+      return true;
+    }
+
+    // Check if user is the quiz creator (admins/examiners own their quizzes)
+    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+      const myId = localStorage.getItem('userId');
+      if (myId && parseInt(myId) === createdByUserId) {
+        return true;
+      }
+    }
     return hasPermissionForQuiz(quizId, PERMISSIONS.CAN_EDIT_CONTENT);
   };
 
-  const canManageTeams = (quizId: number): boolean => {
+  const canManageTeams = (quizId: number, createdByUserId?: number): boolean => {
+    // Fallback for legacy/partial payloads where creator id is omitted.
+    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+      return true;
+    }
+
+    // Check if user is the quiz creator (admins/examiners own their quizzes)
+    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+      const myId = localStorage.getItem('userId');
+      if (myId && parseInt(myId) === createdByUserId) {
+        return true;
+      }
+    }
     return hasPermissionForQuiz(quizId, PERMISSIONS.CAN_MANAGE_TEAMS);
   };
 
-  const canHostGame = (quizId: number): boolean => {
+  const canHostGame = (quizId: number, createdByUserId?: number): boolean => {
+    // Fallback for legacy/partial payloads where creator id is omitted.
+    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+      return true;
+    }
+
+    // Check if user is the quiz creator (admins/examiners own their quizzes)
+    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+      const myId = localStorage.getItem('userId');
+      if (myId && parseInt(myId) === createdByUserId) {
+        return true;
+      }
+    }
     return hasPermissionForQuiz(quizId, PERMISSIONS.CAN_HOST_GAME);
   };
 
@@ -166,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       assignments,
       loading,
       refreshAuth,
+      clearAuth,
       setAssignmentsForUser,
       addAssignmentForUser,
       removeAssignmentForUser,
