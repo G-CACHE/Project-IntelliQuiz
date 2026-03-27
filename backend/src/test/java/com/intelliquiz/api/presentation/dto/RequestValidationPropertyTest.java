@@ -2,7 +2,9 @@ package com.intelliquiz.api.presentation.dto;
 
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.LoginRequest;
+import com.intelliquiz.api.shared.enums.NavigationMode;
 import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuizAccessMode;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.submission.internal.presentation.dto.request.SubmitAnswerRequest;
@@ -74,7 +76,14 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createQuizRequestRejectsBlankTitle(@ForAll("blankStrings") String title) {
-        CreateQuizRequest request = new CreateQuizRequest(title, "description");
+        CreateQuizRequest request = new CreateQuizRequest(
+                title,
+                "description",
+                QuizAccessMode.RESTRICTED,
+                NavigationMode.TOURNAMENT,
+                0,
+                false
+        );
         Set<ConstraintViolation<CreateQuizRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("title"));
@@ -82,7 +91,14 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createQuizRequestRejectsTitleOver200Chars(@ForAll("longStrings") String title) {
-        CreateQuizRequest request = new CreateQuizRequest(title, "description");
+        CreateQuizRequest request = new CreateQuizRequest(
+                title,
+                "description",
+                QuizAccessMode.RESTRICTED,
+                NavigationMode.TOURNAMENT,
+                0,
+                false
+        );
         Set<ConstraintViolation<CreateQuizRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("title"));
@@ -90,7 +106,14 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createQuizRequestAcceptsValidTitle(@ForAll("validTitles") String title) {
-        CreateQuizRequest request = new CreateQuizRequest(title, "description");
+        CreateQuizRequest request = new CreateQuizRequest(
+                title,
+                "description",
+                QuizAccessMode.RESTRICTED,
+                NavigationMode.TOURNAMENT,
+                0,
+                false
+        );
         Set<ConstraintViolation<CreateQuizRequest>> violations = validator.validate(request);
         assertThat(violations).isEmpty();
     }
@@ -133,7 +156,7 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createUserRequestRejectsShortPassword(@ForAll("shortPasswords") String password) {
-        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.ADMIN);
+        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.EXAMINER);
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("password"));
@@ -141,7 +164,7 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createUserRequestAcceptsValidPassword(@ForAll("validPasswords") String password) {
-        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.ADMIN);
+        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.EXAMINER);
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertThat(violations).isEmpty();
     }
