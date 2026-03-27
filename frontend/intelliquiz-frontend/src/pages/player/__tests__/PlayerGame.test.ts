@@ -136,7 +136,7 @@ describe('Property 7: Answer Submission Flow', () => {
   /**
    * Feature: proctor-participant-ui, Property 7: Answer Submission Flow
    * For any answer submission by a participant, the system SHALL send the
-   * submission via WebSocket AND disable further submissions AND display
+   * submission via realtime endpoint AND disable further submissions AND display
    * a confirmation message.
    */
   
