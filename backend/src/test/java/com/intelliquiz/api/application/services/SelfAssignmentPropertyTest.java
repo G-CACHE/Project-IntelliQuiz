@@ -99,7 +99,7 @@ public class SelfAssignmentPropertyTest {
     void permissionSerializationPreservesValues(@ForAll("permissionSets") Set<AdminPermission> permissions) {
         // Create assignment with specific permissions
         Quiz quiz = createQuiz(1L, "Test Quiz");
-        User user = createUser(1L, "testuser", SystemRole.ADMIN);
+        User user = createUser(1L, "testuser", SystemRole.EXAMINER);
         QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setId(1L);
         assignment.setPermissions(permissions);
@@ -176,7 +176,7 @@ public class SelfAssignmentPropertyTest {
         return Combinators.combine(
                 Arbitraries.longs().between(1L, 1000L),
                 Arbitraries.strings().alpha().ofMinLength(3).ofMaxLength(20),
-                Arbitraries.of(SystemRole.ADMIN, SystemRole.SUPER_ADMIN)
+                Arbitraries.of(SystemRole.EXAMINER, SystemRole.SUPER_ADMIN)
         ).as((id, username, role) -> {
             User user = new User(username, "password123", role);
             user.setId(id);
@@ -199,7 +199,7 @@ public class SelfAssignmentPropertyTest {
                 permissionSets()
         ).as((assignmentId, quizId, quizTitle, permissions) -> {
             Quiz quiz = createQuiz(quizId, quizTitle);
-            User user = createUser(1L, "testuser", SystemRole.ADMIN);
+            User user = createUser(1L, "testuser", SystemRole.EXAMINER);
             QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
             assignment.setId(assignmentId);
             assignment.setPermissions(permissions);
