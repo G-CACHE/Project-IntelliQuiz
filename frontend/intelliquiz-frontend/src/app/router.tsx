@@ -1,12 +1,10 @@
-import React from 'react';
-
 // Route definitions for the IntelliQuiz application
 const router = {
   // Public routes - Landing page
   '/': 'UniversalLogin',
   
   // Proctor (Host) routes
-  '/proctor/login': 'ProctorLogin',
+  '/proctor/login': 'UniversalLogin',
   '/host/lobby': 'HostLobby',
   '/host/game': 'HostGame',
   '/host/scoreboard': 'HostScoreboard',

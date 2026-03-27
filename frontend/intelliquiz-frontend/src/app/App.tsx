@@ -1,6 +1,4 @@
 import React from 'react';
-import { RoleGuard } from './RoleGuard';
-import { SessionGuard } from './SessionGuard';
 
 const App: React.FC = () => {
   return (
