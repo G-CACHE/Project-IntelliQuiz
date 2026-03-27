@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
+import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
@@ -19,6 +20,14 @@ const PlayerGame: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [lastQuestionNumber, setLastQuestionNumber] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+  const [earlySubmittedQuiz, setEarlySubmittedQuiz] = useState(false);
+  const [submittingEarly, setSubmittingEarly] = useState(false);
+  const [showEarlySubmitConfirm, setShowEarlySubmitConfirm] = useState(false);
+  const [showAnswersModal, setShowAnswersModal] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [questionReview, setQuestionReview] = useState<ParticipantQuestionResult[]>([]);
 
   // Get session data
   const [session] = useState(() => {
@@ -40,15 +49,22 @@ const PlayerGame: React.FC = () => {
     return null;
   });
 
+  const getEarlySubmitKey = useCallback(() => {
+    if (!session) return null;
+    return `early-submitted:${session.quizId}:${session.teamId}`;
+  }, [session]);
+
   // WebSocket connection - pass teamCode as accessCode for authentication
   const {
     connected,
     error,
     gameState,
+    participantNavigationEnabled,
     currentQuestion,
     questionNumber,
     totalQuestions,
     timeRemaining,
+    timerTotalTime,
     rankings,
     kicked,
     kickReason,
@@ -56,16 +72,15 @@ const PlayerGame: React.FC = () => {
     reconnect,
     reportViolation,
     navigateToQuestion,
-  } = useWebSocket(
+  } = useSSE(
     session?.quizId || 0,
     'PARTICIPANT',
     session?.teamId,
-    session?.teamName,
-    session?.teamCode  // accessCode for WebSocket authentication
+    session?.teamCode
   );
 
-  // TODO: detect navigation mode from game state message; for now check URL param
-  const isNonLinear = searchParams.get('mode') === 'NON_LINEAR';
+  // CLASS mode (participant-paced) is controlled by backend SSE flag.
+  const canNavigate = participantNavigationEnabled;
 
   // Redirect to login if no session
   useEffect(() => {
@@ -74,24 +89,37 @@ const PlayerGame: React.FC = () => {
     }
   }, [session, navigate]);
 
+  useEffect(() => {
+    const key = getEarlySubmitKey();
+    if (!key) return;
+    if (sessionStorage.getItem(key) === '1') {
+      setEarlySubmittedQuiz(true);
+    }
+  }, [getEarlySubmitKey]);
+
   // Reset state when question changes
   useEffect(() => {
     if (questionNumber !== lastQuestionNumber) {
-      setSelectedOption(null);
-      setSubmitted(false);
+      const questionId = Number(currentQuestion?.id ?? 0);
+      setSelectedOption(questionId > 0 ? (selectedAnswers[questionId] ?? null) : null);
+      if (!canNavigate) {
+        setSubmitted(false);
+      }
       setIsCorrect(null);
       setLastQuestionNumber(questionNumber);
     }
-  }, [questionNumber, lastQuestionNumber]);
+  }, [questionNumber, lastQuestionNumber, currentQuestion?.id, selectedAnswers, canNavigate]);
 
   // Also reset selection state whenever gameState transitions to QUESTION
   // This catches edge cases where questionNumber hasn't updated yet
   useEffect(() => {
     if (gameState === 'QUESTION') {
-      setSubmitted(false);
+      if (!canNavigate) {
+        setSubmitted(false);
+      }
       setIsCorrect(null);
     }
-  }, [gameState]);
+  }, [gameState, canNavigate]);
 
   // Redirect if kicked
   useEffect(() => {
@@ -99,6 +127,21 @@ const PlayerGame: React.FC = () => {
       navigate(`/player/terminated?reason=${encodeURIComponent(kickReason || 'Removed by proctor')}`);
     }
   }, [kicked, kickReason, navigate]);
+
+  const handleShowAnswers = useCallback(async () => {
+    if (!session) return;
+    try {
+      setReviewLoading(true);
+      setReviewError(null);
+      const results = await quizResultsApi.getParticipantResults(session.quizId, session.teamId);
+      setQuestionReview(results);
+      setShowAnswersModal(true);
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : 'Failed to load quiz answers');
+    } finally {
+      setReviewLoading(false);
+    }
+  }, [session]);
 
   // Navigate to final scoreboard — show inline instead of navigating away
   // (Removed: we now render FINAL_RESULTS inline in this component)
@@ -116,7 +159,7 @@ const PlayerGame: React.FC = () => {
 
   // Auto-submit when timer expires (LINEAR mode only)
   useEffect(() => {
-    if (!isNonLinear && gameState === 'QUESTION' && timeRemaining <= 0 && !submitted && currentQuestion && session) {
+    if (!canNavigate && gameState === 'QUESTION' && timeRemaining <= 0 && !submitted && currentQuestion && session) {
       if (selectedOption) {
         // Auto-submit selected answer
         submitAnswer({
@@ -127,61 +170,107 @@ const PlayerGame: React.FC = () => {
       }
       setSubmitted(true);
     }
-  }, [isNonLinear, gameState, timeRemaining, submitted, currentQuestion, session, selectedOption, submitAnswer]);
+  }, [canNavigate, gameState, timeRemaining, submitted, currentQuestion, session, selectedOption, submitAnswer]);
 
   // Handle option selection — click to select/change freely (submitted on timer expiry in LINEAR mode)
   const handleSelectOption = useCallback((option: string) => {
-    if (!submitted && gameState === 'QUESTION') {
-      setSelectedOption(option);
-      // In NON_LINEAR mode, no auto-submit; user must explicitly click Submit
-      // In LINEAR mode, selection is stored and auto-submitted when timer expires
+    if (gameState !== 'QUESTION' || earlySubmittedQuiz) {
+      return;
     }
-  }, [submitted, gameState]);
 
-  // Handle answer submission
-  const handleSubmit = useCallback(() => {
-    if (selectedOption && !submitted && currentQuestion && session && (isNonLinear || timeRemaining > 0)) {
+    if (canNavigate) {
+      if (!currentQuestion || !session || timeRemaining <= 0) {
+        return;
+      }
+
+      setSelectedOption(option);
+      const questionId = Number(currentQuestion.id);
+      setSelectedAnswers((prev) => ({ ...prev, [questionId]: option }));
+      setAnsweredQuestions((prev) => {
+        const next = new Set(prev);
+        next.add(questionNumber);
+        return next;
+      });
+
+      // Class mode autosaves immediately while timer is running.
       submitAnswer({
         teamId: session.teamId,
-        questionId: currentQuestion.id,
-        selectedOption,
+        questionId,
+        selectedOption: option,
       });
-      setSubmitted(true);
-      // Track answered questions for NON_LINEAR mode
-      if (isNonLinear) {
-        setAnsweredQuestions(prev => {
-          const next = new Set(prev);
-          next.add(questionNumber);
-          return next;
-        });
-      }
+      return;
     }
-  }, [selectedOption, submitted, currentQuestion, session, timeRemaining, submitAnswer, isNonLinear, questionNumber]);
+
+    if (!submitted) {
+      // Tournament mode: selection is local until timer expiry.
+      setSelectedOption(option);
+    }
+  }, [submitted, gameState, earlySubmittedQuiz, canNavigate, currentQuestion, session, timeRemaining, submitAnswer, questionNumber]);
+
+  const handleEarlySubmitQuiz = useCallback(async () => {
+    if (!canNavigate || earlySubmittedQuiz || !session) {
+      return;
+    }
+
+    try {
+      setShowEarlySubmitConfirm(false);
+      setSubmittingEarly(true);
+      if (currentQuestion) {
+        const questionId = Number(currentQuestion.id);
+        const fallbackAnswer = selectedAnswers[questionId] ?? selectedOption ?? '';
+        const response = await submitAnswer({
+          teamId: session.teamId,
+          questionId,
+          selectedOption: fallbackAnswer,
+        });
+        if (response?.status === 'rejected') {
+          return;
+        }
+      }
+      setEarlySubmittedQuiz(true);
+      const key = getEarlySubmitKey();
+      if (key) {
+        sessionStorage.setItem(key, '1');
+      }
+    } finally {
+      setSubmittingEarly(false);
+    }
+  }, [canNavigate, earlySubmittedQuiz, session, currentQuestion, selectedAnswers, selectedOption, submitAnswer, getEarlySubmitKey]);
+
+  const handleOpenEarlySubmitConfirm = useCallback(() => {
+    if (!canNavigate || earlySubmittedQuiz || submittingEarly || timeRemaining <= 0) {
+      return;
+    }
+    setShowEarlySubmitConfirm(true);
+  }, [canNavigate, earlySubmittedQuiz, submittingEarly, timeRemaining]);
 
   // Handle NON_LINEAR question navigation
   const handleNavigate = useCallback((questionIndex: number) => {
+    if (earlySubmittedQuiz) {
+      return;
+    }
     navigateToQuestion(questionIndex);
-    setSelectedOption(null);
-    setSubmitted(false);
+    if (!canNavigate) {
+      setSelectedOption(null);
+      setSubmitted(false);
+    }
     setIsCorrect(null);
-  }, [navigateToQuestion]);
-
-  // Block submission when timer expires (NON_LINEAR has no per-question timer)
-  const canSubmit = !submitted && selectedOption && (isNonLinear || timeRemaining > 0) && gameState === 'QUESTION';
+  }, [navigateToQuestion, canNavigate, earlySubmittedQuiz]);
 
   // Find current team score from rankings
-  const myTeamScore = rankings.find(r => r.teamId === session?.teamId)?.score;
+  const myTeamScore = rankings.find((r: any) => r.teamId === session?.teamId)?.score;
+  const classTimerExpired = canNavigate && timerTotalTime > 0 && timeRemaining <= 0;
 
   if (!session) return null;
 
   return (
-    <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION'}>
+    <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION' && !earlySubmittedQuiz}>
     <div className="participant-page participant-game-page">
       {/* Sticky Header */}
       <div className="participant-game-header">
         <div className="participant-game-header-content">
           <div className="participant-game-header-left">
-            <p className="participant-game-question-info">
+            <p className="participant-game-question-info participant-game-progress-chip">
               Q{questionNumber}/{totalQuestions}
             </p>
             <p className="participant-game-team-name">{session.teamName}</p>
@@ -190,12 +279,7 @@ const PlayerGame: React.FC = () => {
           <div className="participant-game-header-right">
             {/* Score Display */}
             {myTeamScore !== undefined && (
-              <span style={{
-                fontWeight: 700,
-                fontSize: '14px',
-                color: '#f59e0b',
-                marginRight: '12px',
-              }}>
+              <span className="participant-game-score-chip">
                 {myTeamScore} pts
               </span>
             )}
@@ -208,7 +292,8 @@ const PlayerGame: React.FC = () => {
               <div className="participant-timer-container">
                 <Timer 
                   timeRemaining={timeRemaining} 
-                  totalTime={currentQuestion?.timeLimit || 30}
+                  totalTime={canNavigate ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
+                  displayMode={canNavigate ? 'clock' : 'seconds'}
                   large
                 />
               </div>
@@ -233,8 +318,8 @@ const PlayerGame: React.FC = () => {
       <div className="participant-game-content">
         <div className="participant-container">
           {/* NON_LINEAR Question Palette */}
-          {isNonLinear && gameState === 'QUESTION' && (
-            <div style={{ marginBottom: '16px' }}>
+          {canNavigate && gameState === 'QUESTION' && !earlySubmittedQuiz && (
+            <div className="participant-palette-wrap">
               <QuestionPalette
                 totalQuestions={totalQuestions}
                 currentQuestion={questionNumber}
@@ -246,62 +331,80 @@ const PlayerGame: React.FC = () => {
 
           {/* QUESTION State */}
           {gameState === 'QUESTION' && currentQuestion && (
-            <>
-              <QuestionDisplay
-                question={currentQuestion}
-                questionNumber={questionNumber}
-                totalQuestions={totalQuestions}
-                selectedOption={selectedOption}
-                onSelectOption={handleSelectOption}
-                disabled={submitted || (!isNonLinear && timeRemaining <= 0)}
-              />
+            earlySubmittedQuiz ? (
+              <div className="participant-alert-success participant-submitted-alert" style={{ marginTop: '12px' }}>
+                <div className="participant-submitted-icon">✓</div>
+                <span className="participant-submitted-text">Quiz Submitted Early</span>
+                <p className="participant-submitted-hint">Your participation is complete. Waiting for final results...</p>
+              </div>
+            ) : (
+              <>
+                <QuestionDisplay
+                  question={currentQuestion}
+                  questionNumber={questionNumber}
+                  totalQuestions={totalQuestions}
+                  selectedOption={selectedOption}
+                  onSelectOption={handleSelectOption}
+                  disabled={submitted || (!canNavigate && timeRemaining <= 0)}
+                />
 
-              {/* Submit Section */}
-              <div className="participant-submit-section">
-                {isNonLinear ? (
-                  // NON_LINEAR mode: explicit submit button
-                  !submitted ? (
+                {/* Navigation Buttons for Participant-Navigated Quiz */}
+                {canNavigate && (
+                  <div className="participant-navigation-section">
+                    <button
+                      onClick={() => handleNavigate(questionNumber - 2)}
+                      disabled={questionNumber <= 1}
+                      className={`participant-btn-secondary participant-btn-nav participant-btn-prev ${questionNumber <= 1 ? 'participant-btn-disabled' : ''}`}
+                    >
+                      ← Previous
+                    </button>
+                    <button
+                      onClick={() => handleNavigate(questionNumber)}
+                      disabled={questionNumber >= totalQuestions}
+                      className={`participant-btn-secondary participant-btn-nav participant-btn-next ${questionNumber >= totalQuestions ? 'participant-btn-disabled' : ''}`}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
+
+                {/* Submit Section */}
+                <div className="participant-submit-section">
+                  {canNavigate ? (
+                    // Class mode: autosave on every selection + optional early quiz submit.
                     <>
                       <button
-                        onClick={handleSubmit}
-                        disabled={!canSubmit}
-                        className={`participant-btn-primary participant-btn-large ${!canSubmit ? 'participant-btn-disabled' : ''}`}
+                        onClick={handleOpenEarlySubmitConfirm}
+                        disabled={submittingEarly || timeRemaining <= 0}
+                        className={`participant-btn-primary participant-btn-large ${(submittingEarly || timeRemaining <= 0) ? 'participant-btn-disabled' : ''}`}
                       >
-                        Submit Answer
+                        {submittingEarly ? 'Submitting...' : 'Submit Quiz Early'}
                       </button>
-                      {selectedOption && (
-                        <p className="participant-submit-hint">
-                          Click to lock in your answer
-                        </p>
-                      )}
+                      <p className="participant-submit-hint">
+                        Answers are saved instantly. You can still change answers until time runs out.
+                      </p>
                     </>
                   ) : (
-                    <div className="participant-alert-success participant-submitted-alert">
-                      <div className="participant-submitted-icon">✓</div>
-                      <span className="participant-submitted-text">Answer Submitted!</span>
-                      <p className="participant-submitted-hint">Waiting for results...</p>
-                    </div>
-                  )
-                ) : (
-                  // LINEAR mode: select answer, auto-submitted on timer expiry
-                  submitted ? (
-                    <div className="participant-alert-success participant-submitted-alert">
-                      <div className="participant-submitted-icon">✓</div>
-                      <span className="participant-submitted-text">Answer Submitted!</span>
-                      <p className="participant-submitted-hint">Waiting for results...</p>
-                    </div>
-                  ) : selectedOption ? (
-                    <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
-                      ✓ Selected — you can change your answer before time runs out
-                    </p>
-                  ) : (
-                    <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
-                      Tap an answer to select it
-                    </p>
-                  )
-                )}
-              </div>
-            </>
+                    // LINEAR mode: select answer, auto-submitted on timer expiry
+                    submitted ? (
+                      <div className="participant-alert-success participant-submitted-alert">
+                        <div className="participant-submitted-icon">✓</div>
+                        <span className="participant-submitted-text">Answer Submitted!</span>
+                        <p className="participant-submitted-hint">Waiting for results...</p>
+                      </div>
+                    ) : selectedOption ? (
+                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
+                        ✓ Selected — you can change your answer before time runs out
+                      </p>
+                    ) : (
+                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
+                        Tap an answer to select it
+                      </p>
+                    )
+                  )}
+                </div>
+              </>
+            )
           )}
 
           {/* BUFFER State */}
@@ -315,13 +418,9 @@ const PlayerGame: React.FC = () => {
               
               {/* Prominent countdown */}
               <div style={{
-                fontSize: '72px',
-                fontWeight: 900,
-                color: '#f59e0b',
-                margin: '24px 0',
-                fontVariantNumeric: 'tabular-nums',
+                fontVariantNumeric: 'tabular-nums'
               }}>
-                {timeRemaining > 0 ? timeRemaining : '...'}
+                <span className="participant-buffer-countdown">{timeRemaining > 0 ? timeRemaining : '...'}</span>
               </div>
               
               <p className="participant-buffer-hint">The first question will appear shortly.</p>
@@ -383,11 +482,32 @@ const PlayerGame: React.FC = () => {
               <ScoreboardDisplay
                 rankings={rankings}
                 highlightTeamId={session.teamId}
-                isFinal={false}
+                isFinal={classTimerExpired}
+                title={classTimerExpired ? 'Congratulations' : undefined}
               />
-              <div className="participant-waiting-message">
-                <p>Waiting for next question...</p>
-              </div>
+              {classTimerExpired ? (
+                <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                  {canNavigate && (
+                    <button
+                      onClick={handleShowAnswers}
+                      disabled={reviewLoading}
+                      className="participant-btn-primary participant-btn-large participant-results-action"
+                    >
+                      {reviewLoading ? 'Loading...' : 'Show Answers'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => navigate('/')}
+                    className="participant-btn-secondary participant-btn-large participant-home-action"
+                  >
+                    Go Home
+                  </button>
+                </div>
+              ) : (
+                <div className="participant-waiting-message">
+                  <p>Waiting for next question...</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -411,10 +531,7 @@ const PlayerGame: React.FC = () => {
           {/* PAUSED State */}
           {gameState === 'PAUSED' && (
             <div className="participant-buffer-state">
-              <div style={{
-                fontSize: '64px',
-                marginBottom: '16px',
-              }}>⏸️</div>
+              <div className="participant-paused-icon">⏸</div>
               <h2 className="participant-buffer-title">Quiz Paused</h2>
               <p className="participant-buffer-text">Waiting for the host to resume...</p>
             </div>
@@ -422,41 +539,28 @@ const PlayerGame: React.FC = () => {
 
           {/* FINAL_RESULTS / ENDED State */}
           {gameState === 'FINAL_RESULTS' && (
-            <div style={{ textAlign: 'center' }}>
+            <div className="participant-final-results">
               {/* Celebration Header */}
-              <div style={{
-                padding: '32px 0 24px',
-                background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #8b5cf6 100%)',
-                borderRadius: '16px',
-                marginBottom: '24px',
-                color: '#fff',
-              }}>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎉🏆🎉</div>
-                <h2 style={{ fontSize: '28px', fontWeight: 800, margin: 0 }}>Quiz Complete!</h2>
-                <p style={{ fontSize: '14px', opacity: 0.9, marginTop: '4px' }}>
+              <div className="participant-final-banner">
+                <div className="participant-final-banner-emoji">🎉🏆🎉</div>
+                <h2 className="participant-final-banner-title">Quiz Complete!</h2>
+                <p className="participant-final-banner-subtitle">
                   Great job, everyone!
                 </p>
               </div>
 
               {/* Player's Own Result Card */}
               {(() => {
-                const myResult = rankings.find(r => r.teamId === session?.teamId);
+                const myResult = rankings.find((r: any) => r.teamId === session?.teamId);
                 return myResult ? (
-                  <div style={{
-                    background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                    border: '2px solid #f59e0b',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    marginBottom: '24px',
-                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
-                  }}>
-                    <p style={{ fontSize: '14px', color: '#92400e', fontWeight: 600, margin: '0 0 4px' }}>
+                  <div className="participant-final-result-card">
+                    <p className="participant-final-result-label">
                       Your Result
                     </p>
-                    <p style={{ fontSize: '36px', fontWeight: 900, color: '#78350f', margin: '0 0 4px' }}>
+                    <p className="participant-final-result-rank">
                       #{myResult.rank}
                     </p>
-                    <p style={{ fontSize: '20px', fontWeight: 700, color: '#92400e', margin: 0 }}>
+                    <p className="participant-final-result-score">
                       {myResult.score} points
                     </p>
                   </div>
@@ -467,30 +571,101 @@ const PlayerGame: React.FC = () => {
                 rankings={rankings}
                 highlightTeamId={session.teamId}
                 isFinal={true}
+                title="Congratulations"
               />
 
               {/* Exit Button */}
-              <button
-                onClick={() => navigate('/participant/login')}
-                style={{
-                  marginTop: '24px',
-                  padding: '12px 32px',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  color: '#fff',
-                  backgroundColor: '#6366f1',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
-                }}
-              >
-                Back to Home
-              </button>
+              <div className="participant-final-actions">
+                <button
+                  onClick={handleShowAnswers}
+                  disabled={reviewLoading}
+                  className="participant-btn-primary participant-btn-large participant-results-action"
+                >
+                  {reviewLoading ? 'Loading...' : 'Show Answers'}
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="participant-btn-secondary participant-btn-large participant-home-action"
+                >
+                  Go Home
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {showEarlySubmitConfirm && (
+        <div className="participant-modal-overlay" onClick={() => !submittingEarly && setShowEarlySubmitConfirm(false)}>
+          <div className="participant-modal-content participant-early-submit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="participant-modal-header">
+              <h3 className="participant-modal-title">Submit Quiz Early?</h3>
+            </div>
+            <div className="participant-modal-body">
+              <p className="participant-early-submit-warning">
+                After early submission, you cannot change any of your answers anymore.
+              </p>
+              <p className="participant-early-submit-note">
+                You will stay on this page and wait until the quiz ends.
+              </p>
+            </div>
+            <div className="participant-modal-footer">
+              <button
+                onClick={() => setShowEarlySubmitConfirm(false)}
+                disabled={submittingEarly}
+                className="participant-btn-secondary participant-btn-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEarlySubmitQuiz}
+                disabled={submittingEarly}
+                className="participant-btn-primary participant-btn-medium"
+              >
+                {submittingEarly ? 'Submitting...' : 'Confirm Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAnswersModal && (
+        <div className="participant-modal-overlay" onClick={() => setShowAnswersModal(false)}>
+          <div className="participant-answer-review-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="participant-answer-review-header">
+              <h3 className="participant-answer-review-title">Quiz Answer Review</h3>
+              <button onClick={() => setShowAnswersModal(false)} className="participant-answer-review-close">Close</button>
+            </div>
+
+            {reviewError && (
+              <p className="participant-answer-review-error">{reviewError}</p>
+            )}
+
+            {questionReview.length === 0 ? (
+              <p className="participant-answer-review-empty">No answer details available yet.</p>
+            ) : (
+              <div className="participant-answer-review-list">
+                {questionReview.map((entry) => (
+                  <div key={entry.questionId} className="participant-answer-review-item">
+                    <p className="participant-answer-review-question">
+                      Q{entry.questionNumber}. {entry.questionText}
+                    </p>
+                    <p className="participant-answer-review-line">
+                      Your answer: <strong>{entry.participantAnswer || 'No answer'}</strong>
+                    </p>
+                    <p className="participant-answer-review-line">
+                      Correct answer: <strong>{entry.correctAnswer}</strong>
+                    </p>
+                    <p className={`participant-answer-review-score ${entry.isCorrect ? 'is-correct' : 'is-wrong'}`}>
+                      {entry.isCorrect ? 'Correct' : 'Incorrect'} - {entry.pointsEarned}/{entry.maxPoints} pts
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
     </AntiCheatWrapper>
   );
