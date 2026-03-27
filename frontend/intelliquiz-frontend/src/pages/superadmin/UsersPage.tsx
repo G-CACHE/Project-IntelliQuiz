@@ -27,7 +27,7 @@ export default function UsersPage() {
   const [formData, setFormData] = useState<CreateUserRequest>({
     username: '',
     password: '',
-    role: 'ADMIN',
+    role: 'EXAMINER',
   });
   const navigate = useNavigate();
 
@@ -107,7 +107,7 @@ export default function UsersPage() {
   };
 
   const resetForm = () => {
-    setFormData({ username: '', password: '', role: 'ADMIN' });
+    setFormData({ username: '', password: '', role: 'EXAMINER' });
     setError(null);
   };
 
@@ -123,7 +123,7 @@ export default function UsersPage() {
     <div>
       {/* Page Header with gradient background */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)',
+        background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 60%, #9f2346 100%)',
         borderRadius: 'var(--radius-xl)',
         padding: 'var(--spacing-xl)',
         marginBottom: 'var(--spacing-xl)',
@@ -171,7 +171,7 @@ export default function UsersPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--color-accent)',
+              color: '#f2c84b',
             }}>
               <BiUser size={28} />
             </div>
@@ -248,12 +248,12 @@ export default function UsersPage() {
                         height: 44,
                         borderRadius: 'var(--radius-lg)',
                         background: user.role === 'SUPER_ADMIN' 
-                          ? 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))'
-                          : 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))',
+                          ? 'linear-gradient(120deg, #5f1027 0%, #7a1733 100%)'
+                          : 'linear-gradient(135deg, #d4a017 0%, #f2c84b 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: user.role === 'SUPER_ADMIN' ? 'white' : 'var(--color-black)',
+                        color: user.role === 'SUPER_ADMIN' ? '#fff' : '#2b1a00',
                       }}>
                         {user.role === 'SUPER_ADMIN' ? <BiCrown size={22} /> : <BiUserCircle size={22} />}
                       </div>
@@ -344,10 +344,11 @@ export default function UsersPage() {
                 <label className="form-label">Role</label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'ADMIN' | 'SUPER_ADMIN' })}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'ADMIN' | 'EXAMINER' | 'SUPER_ADMIN' })}
                   className="form-input form-select"
                 >
-                  <option value="ADMIN">Admin</option>
+                  <option value="EXAMINER">Admin</option>
+                  <option value="ADMIN">Admin (Legacy)</option>
                   <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
               </div>
@@ -417,7 +418,7 @@ export default function UsersPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--color-primary)',
+                  color: '#7a1733',
                 }}>
                   <BiTrash size={28} />
                 </div>
