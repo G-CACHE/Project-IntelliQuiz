@@ -8,7 +8,6 @@ import com.intelliquiz.api.backup.internal.infrastructure.config.BackupPropertie
 import jakarta.persistence.EntityManager;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.*;
-import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
