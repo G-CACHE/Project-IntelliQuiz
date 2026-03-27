@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { BiErrorCircle } from 'react-icons/bi';
 import { useSSE } from '../../hooks/useSSE';
 import { accessApi } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
@@ -131,10 +132,17 @@ const PlayerLobby: React.FC = () => {
       {/* Main Content */}
       <div className="participant-content participant-content-centered">
         <div className="participant-waiting-container">
+          {session.teamCode && (
+            <div className="participant-room-code-card">
+              <span className="participant-room-code-label">Team Code</span>
+              <span className="participant-room-code-value">{session.teamCode}</span>
+            </div>
+          )}
+
           {/* Error State */}
           {error && (
             <div className="participant-alert-error">
-              <span className="participant-alert-icon">⚠</span>
+              <span className="participant-alert-icon" aria-hidden="true"><BiErrorCircle /></span>
               <p>{error}</p>
               <button onClick={reconnect} className="participant-btn-danger participant-btn-small">
                 Try Again
@@ -144,7 +152,7 @@ const PlayerLobby: React.FC = () => {
 
           {accessDeniedMessage && (
             <div className="participant-alert-error">
-              <span className="participant-alert-icon">⚠</span>
+              <span className="participant-alert-icon" aria-hidden="true"><BiErrorCircle /></span>
               <p>{accessDeniedMessage}</p>
             </div>
           )}

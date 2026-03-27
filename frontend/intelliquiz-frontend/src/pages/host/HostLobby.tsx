@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BiErrorCircle, BiGroup } from 'react-icons/bi';
 import { useSSE } from '../../hooks/useSSE';
 import { accessApi } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
@@ -180,7 +181,7 @@ const HostLobby: React.FC = () => {
           {/* Error Display */}
           {error && (
             <div className="proctor-alert-error">
-              <span className="proctor-alert-icon">⚠</span>
+              <span className="proctor-alert-icon" aria-hidden="true"><BiErrorCircle /></span>
               <p>{error}</p>
             </div>
           )}
@@ -188,6 +189,7 @@ const HostLobby: React.FC = () => {
           {/* Teams Section */}
           <div className="proctor-section">
             <h2 className="proctor-section-title">
+              <BiGroup aria-hidden="true" />
               <span>Connected Teams</span>
               <span className="proctor-badge-accent">{connectedTeams.length}</span>
             </h2>
