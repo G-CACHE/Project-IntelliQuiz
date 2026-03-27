@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class ScoreboardController {
      * Teams are sorted by score descending, with ties handled by same rank.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Get quiz scoreboard",
             description = "Retrieves the scoreboard for a quiz with team rankings. Teams are sorted by score in descending order, with ties receiving the same rank."
