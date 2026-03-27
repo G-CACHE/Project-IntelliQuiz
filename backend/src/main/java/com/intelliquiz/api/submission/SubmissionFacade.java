@@ -87,6 +87,13 @@ public class SubmissionFacade {
         return toDto(s);
     }
 
+    /**
+     * Clears all prior submissions for a quiz to prepare a fresh game run.
+     */
+    public void clearSubmissionsForQuiz(Long quizId) {
+        submissionService.clearSubmissionsForQuiz(quizId);
+    }
+
     private SubmissionInfoDto toDto(Submission s) {
         return new SubmissionInfoDto(
                 s.getId(), s.getTeamId(), s.getQuestionId(),
