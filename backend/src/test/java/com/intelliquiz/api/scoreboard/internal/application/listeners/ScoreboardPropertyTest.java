@@ -4,8 +4,6 @@ import com.intelliquiz.api.scoreboard.internal.domain.entities.ScoreboardEntry;
 import com.intelliquiz.api.scoreboard.internal.domain.ports.ScoreboardReadRepository;
 import com.intelliquiz.api.submission.events.SubmissionGradedEvent;
 import com.intelliquiz.api.team.events.TeamRegisteredEvent;
-import com.intelliquiz.api.team.events.TeamRemovedEvent;
-import com.intelliquiz.api.team.events.TeamScoreResetEvent;
 import net.jqwik.api.*;
 
 import java.util.ArrayList;
@@ -14,10 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
 
 /**
  * Property-based tests for ScoreboardProjection (CQRS read model).
