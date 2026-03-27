@@ -32,7 +32,7 @@ public class AuthenticationPropertyTest {
         UserFacade userFacade = mock(UserFacade.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
         
-        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.ADMIN, false);
+        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.EXAMINER, false);
         when(userFacade.findCredentials(username)).thenReturn(Optional.of(creds));
         when(passwordHashingService.matches(password, "hashedPassword")).thenReturn(true);
         
@@ -45,7 +45,7 @@ public class AuthenticationPropertyTest {
         assertThat(result.success()).isTrue();
         assertThat(result.userId()).isEqualTo(1L);
         assertThat(result.username()).isEqualTo(username);
-        assertThat(result.role()).isEqualTo(SystemRole.ADMIN);
+        assertThat(result.role()).isEqualTo(SystemRole.EXAMINER);
         assertThat(result.errorMessage()).isNull();
     }
 
@@ -60,7 +60,7 @@ public class AuthenticationPropertyTest {
         UserFacade userFacade = mock(UserFacade.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
         
-        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.ADMIN, false);
+        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.EXAMINER, false);
         when(userFacade.findCredentials(username)).thenReturn(Optional.of(creds));
         when(passwordHashingService.matches(password, "hashedPassword")).thenReturn(false);
         
@@ -118,7 +118,7 @@ public class AuthenticationPropertyTest {
         // Setup mocks for wrong password scenario
         UserFacade userFacade2 = mock(UserFacade.class);
         PasswordHashingService passwordHashingService2 = mock(PasswordHashingService.class);
-        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.ADMIN, false);
+        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.EXAMINER, false);
         when(userFacade2.findCredentials(username)).thenReturn(Optional.of(creds));
         when(passwordHashingService2.matches(password, "hashedPassword")).thenReturn(false);
         
