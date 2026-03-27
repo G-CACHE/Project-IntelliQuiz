@@ -9,7 +9,7 @@ import fc from 'fast-check';
  * 
  * Property 14: Session Cleanup on Disconnect
  * For any manual disconnect action by a user, the system SHALL close the
- * WebSocket connection AND clear all session data from browser storage.
+ * active realtime connection AND clear all session data from browser storage.
  * 
  * Validates: Requirements 10.1, 10.2, 10.4
  */
@@ -92,7 +92,7 @@ describe('Property 12: Session Persistence', () => {
         fc.string({ minLength: 4, maxLength: 20 }), // proctorPin
         (quizId, quizTitle, proctorPin) => {
           // Save session
-          const saved = saveProctorSession(quizId, quizTitle, proctorPin);
+          saveProctorSession(quizId, quizTitle, proctorPin);
           
           // Retrieve session (simulating page refresh)
           const retrieved = getSession();

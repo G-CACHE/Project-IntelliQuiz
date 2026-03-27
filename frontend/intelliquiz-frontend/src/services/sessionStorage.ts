@@ -20,6 +20,7 @@ export interface ParticipantSession {
 export type GameSession = ProctorSession | ParticipantSession;
 
 const SESSION_KEY = 'intelliquiz_session';
+const PROCTOR_SESSION_FALLBACK_KEY = 'intelliquiz_proctor_session';
 
 /**
  * Save a proctor session to sessionStorage
@@ -36,6 +37,7 @@ export const saveProctorSession = (
     proctorPin,
   };
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(PROCTOR_SESSION_FALLBACK_KEY, JSON.stringify(session));
   return session;
 };
 
@@ -82,7 +84,17 @@ export const getProctorSession = (): ProctorSession | null => {
   if (session?.role === 'PROCTOR') {
     return session;
   }
-  return null;
+
+  // Allow host/proctor multi-window operation by falling back to localStorage in a new tab.
+  const stored = localStorage.getItem(PROCTOR_SESSION_FALLBACK_KEY);
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored) as ProctorSession;
+    return parsed.role === 'PROCTOR' ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
 /**
@@ -101,6 +113,7 @@ export const getParticipantSession = (): ParticipantSession | null => {
  */
 export const clearSession = (): void => {
   sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(PROCTOR_SESSION_FALLBACK_KEY);
 };
 
 /**
