@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.intelliquiz.api.team.events.TeamRegisteredEvent;
 import com.intelliquiz.api.team.events.TeamRemovedEvent;
 import com.intelliquiz.api.team.events.TeamScoreResetEvent;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class TeamRegistrationService {
         if (!quizFacade.quizExists(quizId)) {
             throw new EntityNotFoundException("Quiz", quizId);
         }
+        assertQuizNotArchived(quizId);
 
         String accessCode = generateUniqueAccessCode();
         Team team = new Team(quizId, teamName, accessCode);
@@ -60,6 +62,8 @@ public class TeamRegistrationService {
     public void removeTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
+
+        assertQuizNotArchived(team.getQuizId());
         
         Long quizId = team.getQuizId();
         teamRepository.delete(team);
@@ -99,6 +103,7 @@ public class TeamRegistrationService {
         if (!quizFacade.quizExists(quizId)) {
             throw new EntityNotFoundException("Quiz", quizId);
         }
+        assertQuizNotArchived(quizId);
         
         List<Team> teams = teamRepository.findByQuizId(quizId);
         for (Team team : teams) {
@@ -114,9 +119,19 @@ public class TeamRegistrationService {
     public Team updateTeamName(Long teamId, String newName) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
+
+        assertQuizNotArchived(team.getQuizId());
         
         team.setName(newName);
         return teamRepository.save(team);
+    }
+
+    private void assertQuizNotArchived(Long quizId) {
+        var quiz = quizFacade.findQuizInfo(quizId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (quiz.status() == QuizStatus.ARCHIVED) {
+            throw new IllegalArgumentException("Quiz is done and no longer accepts registration or team modifications");
+        }
     }
 
     /**
