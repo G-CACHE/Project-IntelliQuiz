@@ -216,8 +216,9 @@ CREATE TABLE public.quiz (
     title character varying(255) NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     created_by_user_id bigint,
-    navigation_mode character varying(255) DEFAULT 'LINEAR'::character varying NOT NULL,
+    navigation_mode character varying(255) DEFAULT 'TOURNAMENT'::character varying NOT NULL,
     global_time_limit_seconds integer DEFAULT 0 NOT NULL,
+    randomize_questions boolean DEFAULT false NOT NULL,
     CONSTRAINT quiz_status_check CHECK (((status)::text = ANY (ARRAY[('DRAFT'::character varying)::text, ('READY'::character varying)::text, ('ARCHIVED'::character varying)::text])))
 );
 
