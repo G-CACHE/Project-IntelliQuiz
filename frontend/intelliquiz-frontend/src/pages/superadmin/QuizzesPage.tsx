@@ -31,7 +31,14 @@ export default function QuizzesPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
-  const [formData, setFormData] = useState<CreateQuizRequest>({ title: '', description: '' });
+  const [formData, setFormData] = useState<CreateQuizRequest>({
+    title: '',
+    description: '',
+    accessMode: 'RESTRICTED',
+    navigationMode: 'TOURNAMENT',
+    globalTimeLimitSeconds: 0,
+    randomizeQuestions: false,
+  });
   const [copiedPin, setCopiedPin] = useState<number | null>(null);
   const navigate = useNavigate();
 
@@ -78,7 +85,10 @@ export default function QuizzesPage() {
   const handleCreate = async () => {
     if (!formData.title.trim()) return setError('Title is required');
     try {
-      await quizzesApi.create(formData);
+      await quizzesApi.create({
+        title: formData.title,
+        description: formData.description,
+      });
       setShowCreateModal(false);
       resetForm();
       loadQuizzes();
@@ -124,7 +134,17 @@ export default function QuizzesPage() {
     }
   };
 
-  const resetForm = () => { setFormData({ title: '', description: '' }); setError(null); };
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      accessMode: 'RESTRICTED',
+      navigationMode: 'TOURNAMENT',
+      globalTimeLimitSeconds: 0,
+      randomizeQuestions: false,
+    });
+    setError(null);
+  };
 
   const getStatusConfig = (status: Quiz['status']) => {
     const config: Record<string, { class: string; icon: React.ReactNode }> = {
@@ -295,6 +315,7 @@ export default function QuizzesPage() {
                 
                 <div className="data-card-meta">
                   <div className="data-card-meta-item"><BiTime size={14} /> {quiz.questionCount || 0} questions</div>
+                  <div className="data-card-meta-item">Code: <code>{quiz.quizCode || 'UNAVAILABLE'}</code></div>
                 </div>
                 <div className="data-card-footer">
                   <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
@@ -323,7 +344,7 @@ export default function QuizzesPage() {
                         <BiPause size={18} />
                       </button>
                     )}
-                    <button className="btn-icon" onClick={() => { setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '' }); setShowEditModal(true); }} title="Edit">
+                    <button className="btn-icon" onClick={() => { setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '', accessMode: quiz.accessMode || 'RESTRICTED', navigationMode: quiz.navigationMode || 'TOURNAMENT', globalTimeLimitSeconds: quiz.globalTimeLimitSeconds || 0, randomizeQuestions: !!quiz.randomizeQuestions }); setShowEditModal(true); }} title="Edit">
                       <BiEdit size={18} />
                     </button>
                     <button className="btn-icon danger" onClick={() => { setSelectedQuiz(quiz); setShowDeleteModal(true); }} title="Delete">
@@ -366,6 +387,9 @@ export default function QuizzesPage() {
                 <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="form-input form-textarea" placeholder="Enter quiz description" rows={4} />
               </div>
+              <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                Quiz settings (mode, access, timers) can be configured after creation in the quiz workspace.
+              </p>
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowCreateModal(false)} className="btn btn-secondary">Cancel</button>
@@ -393,6 +417,61 @@ export default function QuizzesPage() {
                 <label className="form-label">Description</label>
                 <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="form-input form-textarea" rows={4} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Quiz Access Mode</label>
+                <select
+                  value={formData.accessMode || 'RESTRICTED'}
+                  onChange={(e) => setFormData({ ...formData, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' })}
+                  className="form-input form-select"
+                >
+                  <option value="RESTRICTED">Restricted (registered teams only)</option>
+                  <option value="PUBLIC">Public (open entry)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Navigation Mode</label>
+                <select
+                  value={formData.navigationMode || 'TOURNAMENT'}
+                  onChange={(e) => {
+                    const mode = e.target.value as 'TOURNAMENT' | 'CLASS';
+                    setFormData({
+                      ...formData,
+                      navigationMode: mode,
+                    });
+                  }}
+                  className="form-input form-select"
+                >
+                  <option value="TOURNAMENT">Tournament (host controls each question)</option>
+                  <option value="CLASS">Class (participants can navigate)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  <input
+                    type="checkbox"
+                    checked={!!formData.randomizeQuestions}
+                    onChange={(e) => setFormData({ ...formData, randomizeQuestions: e.target.checked })}
+                    style={{ marginRight: 8 }}
+                    disabled={formData.navigationMode !== 'CLASS'}
+                  />
+                  Randomize question order per participant (Class mode)
+                </label>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Global Time Limit (seconds)</label>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '8px' }}>
+                  {formData.navigationMode === 'CLASS' 
+                    ? 'Total time allowed for all questions' 
+                    : 'Set to enable participant-controlled navigation (0 = host controls with per-question timers)'}
+                </p>
+                <input
+                  type="number"
+                  min={0}
+                  value={formData.globalTimeLimitSeconds ?? 0}
+                  onChange={(e) => setFormData({ ...formData, globalTimeLimitSeconds: Number(e.target.value || 0) })}
+                  className="form-input"
+                />
               </div>
             </div>
             <div className="modal-footer">
