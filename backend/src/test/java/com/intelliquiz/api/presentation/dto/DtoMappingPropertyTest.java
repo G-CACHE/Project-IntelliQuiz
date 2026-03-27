@@ -39,14 +39,19 @@ class DtoMappingPropertyTest {
             @ForAll("validTitles") String title,
             @ForAll("descriptions") String description) {
         // Given
-        CreateQuizRequest request = new CreateQuizRequest(title, description);
+        CreateQuizRequest request = new CreateQuizRequest(title, description, QuizAccessMode.RESTRICTED, 
+            NavigationMode.TOURNAMENT, 0, false);
         
         // When
-        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description(), 1L);
+        CreateQuizCommand command = new CreateQuizCommand(request.title(), request.description(), 1L, 
+            request.accessMode(), request.navigationMode(), request.globalTimeLimitSeconds(), request.randomizeQuestions());
         
         // Then
         assertThat(command.title()).isEqualTo(title);
         assertThat(command.description()).isEqualTo(description);
+        assertThat(command.accessMode()).isEqualTo(QuizAccessMode.RESTRICTED);
+        assertThat(command.navigationMode()).isEqualTo(NavigationMode.TOURNAMENT);
+        assertThat(command.globalTimeLimitSeconds()).isEqualTo(0);
     }
 
     @Property(tries = 10)
