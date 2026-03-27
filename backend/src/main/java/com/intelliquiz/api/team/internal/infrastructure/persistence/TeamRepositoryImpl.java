@@ -35,6 +35,11 @@ public class TeamRepositoryImpl implements TeamRepository {
     }
 
     @Override
+    public Optional<Team> findByQuizIdAndDeviceId(Long quizId, String deviceId) {
+        return springTeamRepository.findByQuizIdAndDeviceId(quizId, deviceId);
+    }
+
+    @Override
     public List<Team> findByQuizId(Long quizId) {
         return springTeamRepository.findByQuizId(quizId);
     }
