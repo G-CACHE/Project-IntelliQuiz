@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import { getParticipantSession } from '../../services/sessionStorage';
+import { useSSE } from '../../hooks/useSSE';
+import { accessApi } from '../../services/api';
+import { getOrCreateDeviceId } from '../../services/deviceId';
+import { clearSession, getParticipantSession } from '../../services/sessionStorage';
 import '../../styles/participant.css';
 
 const PlayerLobby: React.FC = () => {
@@ -29,7 +31,9 @@ const PlayerLobby: React.FC = () => {
     return null;
   });
 
-  // WebSocket connection
+  const [accessDeniedMessage, setAccessDeniedMessage] = useState<string | null>(null);
+
+  // SSE connection
   const {
     connected,
     connecting,
@@ -37,11 +41,13 @@ const PlayerLobby: React.FC = () => {
     gameState,
     connectedTeams,
     reconnect,
-  } = useWebSocket(
+    disconnect,
+    kicked,
+    kickReason,
+  } = useSSE(
     session?.quizId || 0,
     'PARTICIPANT',
     session?.teamId,
-    session?.teamName,
     session?.teamCode
   );
 
@@ -51,6 +57,45 @@ const PlayerLobby: React.FC = () => {
       navigate('/participant/login');
     }
   }, [session, navigate]);
+
+  // Guard stale sessions: blocked users must not proceed to lobby.
+  useEffect(() => {
+    let active = true;
+
+    const verifyAccess = async () => {
+      if (!session) return;
+      try {
+        const access = await accessApi.checkParticipantAccess(
+          session.quizId,
+          session.teamId,
+          getOrCreateDeviceId(),
+        );
+
+        if (!access.allowed && active) {
+          clearSession();
+          const warning = access.message || 'You cannot rejoin this quiz until approved by the proctor/admin.';
+          setAccessDeniedMessage(warning);
+          navigate(`/participant/login?warning=${encodeURIComponent(warning)}`);
+        }
+      } catch {
+        // If check fails, keep current UX and let SSE error handling continue.
+      }
+    };
+
+    verifyAccess();
+    return () => {
+      active = false;
+    };
+  }, [session, navigate]);
+
+  // Redirect to kicked screen if team was kicked
+  useEffect(() => {
+    if (kicked) {
+      disconnect();
+      const encodedReason = encodeURIComponent(kickReason || 'You have been removed from the quiz');
+      navigate(`/player/terminated?reason=${encodedReason}`);
+    }
+  }, [kicked, kickReason, disconnect, navigate]);
 
   // Navigate to game when quiz starts
   useEffect(() => {
@@ -94,6 +139,13 @@ const PlayerLobby: React.FC = () => {
               <button onClick={reconnect} className="participant-btn-danger participant-btn-small">
                 Try Again
               </button>
+            </div>
+          )}
+
+          {accessDeniedMessage && (
+            <div className="participant-alert-error">
+              <span className="participant-alert-icon">⚠</span>
+              <p>{accessDeniedMessage}</p>
             </div>
           )}
 
