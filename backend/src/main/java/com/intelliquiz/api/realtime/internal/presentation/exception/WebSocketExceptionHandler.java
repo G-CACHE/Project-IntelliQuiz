@@ -1,54 +1,14 @@
 package com.intelliquiz.api.realtime.internal.presentation.exception;
 
-import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
-import com.intelliquiz.api.realtime.internal.presentation.dto.ErrorMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-
 /**
- * Exception handler for WebSocket message processing.
- * Sends error messages to the affected client.
+ * DEPRECATED: WebSocket exception handling moved to REST controller exception handling.
+ * 
+ * Error responses are now returned directly from REST endpoints with appropriate
+ * HTTP status codes instead of being pushed via STOMP messages.
+ * 
+ * See: QuizSSEController, QuizSubmissionController, QuizControlController, QuizViolationController
  */
-@ControllerAdvice
+@Deprecated(since = "2026-03-23", forRemoval = true)
 public class WebSocketExceptionHandler {
-
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketExceptionHandler.class);
-
-    @MessageExceptionHandler(IllegalArgumentException.class)
-    @SendToUser("/queue/errors")
-    public ErrorMessage handleIllegalArgument(IllegalArgumentException e) {
-        logger.warn("WebSocket illegal argument: {}", e.getMessage());
-        return new ErrorMessage("INVALID_ARGUMENT", e.getMessage());
-    }
-
-    @MessageExceptionHandler(IllegalStateException.class)
-    @SendToUser("/queue/errors")
-    public ErrorMessage handleIllegalState(IllegalStateException e) {
-        logger.warn("WebSocket illegal state: {}", e.getMessage());
-        return ErrorMessage.invalidState(e.getMessage());
-    }
-
-    @MessageExceptionHandler(EntityNotFoundException.class)
-    @SendToUser("/queue/errors")
-    public ErrorMessage handleEntityNotFound(EntityNotFoundException e) {
-        logger.warn("WebSocket entity not found: {}", e.getMessage());
-        return new ErrorMessage("NOT_FOUND", e.getMessage());
-    }
-
-    @MessageExceptionHandler(SecurityException.class)
-    @SendToUser("/queue/errors")
-    public ErrorMessage handleSecurityException(SecurityException e) {
-        logger.warn("WebSocket security exception: {}", e.getMessage());
-        return ErrorMessage.notHost();
-    }
-
-    @MessageExceptionHandler(Exception.class)
-    @SendToUser("/queue/errors")
-    public ErrorMessage handleGenericException(Exception e) {
-        logger.error("WebSocket unexpected error: {}", e.getMessage(), e);
-        return new ErrorMessage("INTERNAL_ERROR", "An unexpected error occurred");
-    }
+    // DEPRECATED - exception handling moved to REST controller advice
 }
