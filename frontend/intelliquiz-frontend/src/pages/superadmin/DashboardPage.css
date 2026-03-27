@@ -624,3 +624,91 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==================== ADMIN PALETTE OVERRIDES ==================== */
+.dashboard-hero {
+  background: linear-gradient(120deg, #5f1027 0%, #7a1733 58%, #9f2346 100%);
+  box-shadow: 0 14px 36px rgba(95, 16, 39, 0.25);
+}
+
+.hero-greeting {
+  background: rgba(250, 237, 192, 0.14);
+  color: #faedc0;
+  border: 1px solid rgba(250, 237, 192, 0.28);
+}
+
+.hero-cta {
+  background: linear-gradient(135deg, #d4a017 0%, #f2c84b 100%);
+  color: #2b1a00;
+  box-shadow: 0 8px 28px rgba(212, 160, 23, 0.36);
+}
+
+.hero-cta:hover {
+  box-shadow: 0 12px 36px rgba(212, 160, 23, 0.44);
+}
+
+.stat-card-kahoot.red {
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
+  box-shadow: 0 8px 30px rgba(122, 23, 51, 0.35);
+}
+
+.stat-card-kahoot.green {
+  background: linear-gradient(135deg, #d4a017 0%, #f2c84b 100%);
+  box-shadow: 0 8px 30px rgba(212, 160, 23, 0.34);
+}
+
+.stat-card-kahoot.blue {
+  background: linear-gradient(135deg, #8f1f42 0%, #b54562 100%);
+  box-shadow: 0 8px 30px rgba(143, 31, 66, 0.34);
+}
+
+.stat-card-kahoot.yellow {
+  background: linear-gradient(135deg, #6f4e57 0%, #a0828b 100%);
+  box-shadow: 0 8px 30px rgba(111, 78, 87, 0.32);
+}
+
+.card-icon {
+  color: #7a1733;
+}
+
+.view-all-btn {
+  background: linear-gradient(135deg, #5f1027 0%, #7a1733 100%);
+}
+
+.view-all-btn:hover {
+  box-shadow: 0 4px 15px rgba(95, 16, 39, 0.3);
+}
+
+.quiz-item {
+  background: linear-gradient(180deg, #fff 0%, #fff8ea 100%);
+  border: 1px solid #e7d8dc;
+}
+
+.quiz-item:hover {
+  box-shadow: 0 8px 26px rgba(95, 16, 39, 0.12);
+}
+
+.quiz-status.status-draft {
+  background: #f8ecef;
+  color: #7a1733;
+}
+
+.quiz-status.status-ready {
+  background: #fff1c8;
+  color: #7c4b00;
+}
+
+.quiz-status.status-active {
+  background: #f6d5df;
+  color: #7a1733;
+}
+
+.quiz-status.status-archived {
+  background: #efe7e9;
+  color: #6f4e57;
+}
+
+.dashboard-card {
+  border: 1px solid #e4d4d9;
+  box-shadow: 0 8px 22px rgba(95, 16, 39, 0.09);
+}
