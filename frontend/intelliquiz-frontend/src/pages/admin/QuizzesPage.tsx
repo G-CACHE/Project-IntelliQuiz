@@ -17,6 +17,7 @@ import { useQuizzes, useCreateQuiz, useUpdateQuiz, useQuizStatusChange, useDelet
 import { useAuth } from '../../contexts/AuthContext';
 import type { Quiz, CreateQuizRequest } from '../../services/api';
 import '../../styles/admin.css';
+import './AdminRedesign.css';
 
 export default function AdminQuizzesPage() {
   const [searchQuery, setSearchQuery] = useState('');

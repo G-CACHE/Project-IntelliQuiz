@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
+import { BiErrorCircle } from 'react-icons/bi';
 import { accessApi } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { saveParticipantSession } from '../../services/sessionStorage';
@@ -139,7 +140,7 @@ const ParticipantLogin: React.FC = () => {
             {/* Error Message */}
             {error && (
               <div className="participant-alert-error">
-                <span className="participant-alert-icon">⚠</span>
+                <span className="participant-alert-icon" aria-hidden="true"><BiErrorCircle /></span>
                 <p>{error}</p>
               </div>
             )}

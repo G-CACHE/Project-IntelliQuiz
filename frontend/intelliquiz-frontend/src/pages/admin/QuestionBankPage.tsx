@@ -3,6 +3,7 @@ import { Archive, Download, CheckCircle2, Inbox, BookOpen } from 'lucide-react';
 import { questionBankApi, quizzesApi } from '../../services/api';
 import type { QuestionBankItem, Quiz } from '../../services/api';
 import '../../styles/admin.css';
+import './AdminRedesign.css';
 
 const QuestionBankPage: React.FC = () => {
   const [bankItems, setBankItems] = useState<QuestionBankItem[]>([]);

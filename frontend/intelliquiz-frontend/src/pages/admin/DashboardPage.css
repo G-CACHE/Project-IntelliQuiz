@@ -1,0 +1,42 @@
+/* Admin dashboard specific overrides layered on top of superadmin DashboardPage.css */
+
+.admin-stats-row-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.actions-grid-admin {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quiz-status.status-draft {
+  background: rgba(111, 78, 87, 0.16);
+  color: #6f4e57;
+}
+
+.quiz-status.status-ready {
+  background: rgba(212, 160, 23, 0.18);
+  color: #7c4b00;
+}
+
+.quiz-status.status-active {
+  background: rgba(122, 23, 51, 0.18);
+  color: #7a1733;
+}
+
+.quiz-status.status-archived {
+  background: rgba(107, 79, 88, 0.16);
+  color: #6b4f58;
+}
+
+@media (max-width: 1100px) {
+  .admin-stats-row-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .actions-grid-admin,
+  .admin-stats-row-4 {
+    grid-template-columns: 1fr;
+  }
+}

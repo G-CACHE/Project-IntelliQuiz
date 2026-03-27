@@ -19,6 +19,7 @@ import { useQuiz, useQuizStatusChange, useScoreboard, useTeams } from '../../hoo
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
+import './AdminRedesign.css';
 
 type ScoreboardRow = {
   teamId: number;

@@ -1103,6 +1103,128 @@
   margin-bottom: 4px;
 }
 
+/* ==================== PIXELBRUTE PARTICIPANT FINAL OVERRIDES ==================== */
+.participant-page {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(255, 229, 0, 0.3) 0%, transparent 32%),
+    radial-gradient(circle at 92% 4%, rgba(91, 33, 255, 0.18) 0%, transparent 32%),
+    linear-gradient(180deg, #fffdf6 0%, #fff5d9 100%);
+}
+
+.participant-page-header,
+.participant-game-header {
+  border: 4px solid #0d0d0d;
+  box-shadow: 9px 9px 0 #0d0d0d;
+}
+
+.participant-page-title,
+.participant-game-title,
+.participant-card-title,
+.participant-waiting-title {
+  font-family: var(--font-heading);
+  letter-spacing: 0.01em;
+}
+
+.participant-page-subtitle,
+.participant-waiting-text,
+.participant-footer-text {
+  font-family: var(--font-body);
+}
+
+.participant-card,
+.participant-card-static,
+.participant-room-code-card,
+.participant-team-count {
+  border: 3px solid #0d0d0d;
+  border-radius: 14px;
+  box-shadow: 6px 6px 0 #0d0d0d;
+}
+
+.participant-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 9px 9px 0 #0d0d0d;
+}
+
+.participant-btn,
+.participant-btn-primary,
+.participant-btn-secondary,
+.participant-btn-danger,
+.participant-btn-warning,
+.participant-btn-success,
+.participant-btn-info {
+  border: 3px solid #0d0d0d;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #0d0d0d;
+  font-family: var(--font-heading);
+}
+
+.participant-btn:hover,
+.participant-btn-primary:hover,
+.participant-btn-secondary:hover,
+.participant-btn-danger:hover,
+.participant-btn-warning:hover,
+.participant-btn-success:hover,
+.participant-btn-info:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #0d0d0d;
+}
+
+.participant-btn:active,
+.participant-btn-primary:active,
+.participant-btn-secondary:active,
+.participant-btn-danger:active,
+.participant-btn-warning:active,
+.participant-btn-success:active,
+.participant-btn-info:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+.participant-form-input,
+.participant-form-select,
+.participant-form-textarea {
+  border: 3px solid #0d0d0d;
+  border-radius: 10px;
+  background: #fffdf7;
+}
+
+.participant-form-input:focus,
+.participant-form-select:focus,
+.participant-form-textarea:focus {
+  border-color: #5b21ff;
+  box-shadow: 0 0 0 4px rgba(91, 33, 255, 0.2);
+}
+
+.participant-alert-error,
+.participant-alert-success,
+.participant-alert-info,
+.participant-alert-warning {
+  border: 3px solid #0d0d0d;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 #0d0d0d;
+}
+
+.participant-alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant-connection-badge,
+.participant-badge {
+  border: 2px solid #0d0d0d;
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 768px) {
+  .participant-page-header,
+  .participant-card,
+  .participant-card-static {
+    box-shadow: 4px 4px 0 #0d0d0d;
+  }
+}
+
 .participant-game-team-name {
   font-size: 18px;
   font-weight: 700;

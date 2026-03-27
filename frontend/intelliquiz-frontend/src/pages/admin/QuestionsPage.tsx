@@ -17,6 +17,7 @@ import {
 import { questionBankApi, questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest, type QuestionBankItem } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
+import './AdminRedesign.css';
 
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
 
