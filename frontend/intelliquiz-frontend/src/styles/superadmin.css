@@ -1,10 +1,10 @@
-/* IntelliQuiz Super Admin - Modern UI Styles */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+/* IntelliQuiz Super Admin - Admin-Aligned Styles */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 
 /* ==================== BASE STYLES ==================== */
 .superadmin-root {
-  font-family: var(--font-family);
-  background: linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%);
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #fffaf2 0%, #fdf4df 100%);
   color: var(--text-primary);
   min-height: 100vh;
 }
@@ -68,16 +68,16 @@
 /* ==================== CARDS ==================== */
 .card {
   background: #fff;
-  border: none;
+  border: 1px solid #e7d8dc;
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(95, 16, 39, 0.08);
   transition: all 0.3s ease;
   overflow: visible;
 }
 
 .card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 32px rgba(95, 16, 39, 0.14);
   transform: translateY(-2px);
 }
 
@@ -101,10 +101,10 @@
 }
 
 .btn-primary {
-  background: linear-gradient(145deg, #f8c107 0%, #ffd54f 50%, #f8c107 100%);
+  background: linear-gradient(135deg, #d4a017 0%, #f2c84b 100%);
   color: #1a1a2e;
   box-shadow: 
-    0 4px 15px rgba(248, 193, 7, 0.4),
+    0 4px 15px rgba(212, 160, 23, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   font-weight: 700;
 }
@@ -112,9 +112,9 @@
 .btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 
-    0 8px 25px rgba(248, 193, 7, 0.5),
+    0 8px 25px rgba(212, 160, 23, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  background: linear-gradient(145deg, #ffd54f 0%, #f8c107 50%, #ffd54f 100%);
+  background: linear-gradient(135deg, #f2c84b 0%, #d4a017 100%);
 }
 
 .btn-primary:active {
@@ -129,10 +129,16 @@
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-color: #cbd5e1;
+  background: linear-gradient(180deg, #fff8ea 0%, #fff3dd 100%);
+  border-color: #caa2af;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+.btn:focus-visible,
+.btn-icon:focus-visible {
+  outline: 3px solid rgba(248, 193, 7, 0.45);
+  outline-offset: 2px;
 }
 
 .btn-danger {
@@ -186,9 +192,10 @@
 /* ==================== TABLES ==================== */
 .table-container {
   background: #fff;
+  border: 1px solid #e7d8dc;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 22px rgba(95, 16, 39, 0.08);
 }
 
 .table {
@@ -197,7 +204,7 @@
 }
 
 .table th {
-  background: linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%);
+  background: linear-gradient(180deg, #fffaf4 0%, #fff2dc 100%);
   padding: 16px 24px;
   text-align: left;
   font-size: 12px;
@@ -205,7 +212,7 @@
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e7d8dc;
 }
 
 .table td {
@@ -225,7 +232,7 @@
 }
 
 .table tr:hover td {
-  background: linear-gradient(90deg, rgba(248, 193, 7, 0.05) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(212, 160, 23, 0.08) 0%, rgba(255, 248, 234, 0.6) 100%);
 }
 
 /* ==================== BADGES ==================== */
@@ -242,9 +249,9 @@
 }
 
 .badge-primary {
-  background: linear-gradient(135deg, rgba(136, 0, 21, 0.15) 0%, rgba(136, 0, 21, 0.1) 100%);
-  color: #880015;
-  border: 1px solid rgba(136, 0, 21, 0.2);
+  background: linear-gradient(135deg, rgba(122, 23, 51, 0.15) 0%, rgba(122, 23, 51, 0.1) 100%);
+  color: #7a1733;
+  border: 1px solid rgba(122, 23, 51, 0.2);
 }
 
 .badge-accent {
