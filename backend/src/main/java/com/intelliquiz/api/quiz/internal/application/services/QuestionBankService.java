@@ -45,6 +45,16 @@ public class QuestionBankService {
     }
 
     /**
+     * Auto-archives a question into the owner's bank with category (quiz title).
+     * Fire-and-forget: failure here should not block quiz question creation.
+     */
+    public QuestionBankItem archiveFromQuiz(Question question, Long ownerUserId, String category) {
+        QuestionBankItem item = QuestionBankItem.fromQuestion(question, ownerUserId);
+        item.setCategory(category);
+        return questionBankRepository.save(item);
+    }
+
+    /**
      * Lists bank items for a user, with optional filtering.
      */
     @Transactional(readOnly = true)
@@ -93,6 +103,9 @@ public class QuestionBankService {
         // Verify quiz ownership
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (quiz.getStatus() == com.intelliquiz.api.shared.enums.QuizStatus.ARCHIVED) {
+            throw new IllegalArgumentException("Quiz is done and questions can no longer be edited");
+        }
         if (role != SystemRole.SUPER_ADMIN && !quiz.getCreatedByUserId().equals(userId)) {
             throw new AccessDeniedException("You do not have access to this quiz");
         }
@@ -140,6 +153,9 @@ public class QuestionBankService {
     public List<Question> importFromBank(List<Long> bankItemIds, Long quizId, Long userId, SystemRole role) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        if (quiz.getStatus() == com.intelliquiz.api.shared.enums.QuizStatus.ARCHIVED) {
+            throw new IllegalArgumentException("Quiz is done and questions can no longer be edited");
+        }
         if (role != SystemRole.SUPER_ADMIN && !quiz.getCreatedByUserId().equals(userId)) {
             throw new AccessDeniedException("You do not have access to this quiz");
         }
