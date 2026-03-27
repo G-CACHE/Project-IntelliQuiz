@@ -185,7 +185,7 @@ export default function AdminHostPage() {
             <div className="admin-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 className="admin-card-title" style={{ margin: 0 }}><BiGroup size={18} /> Teams</h3>
-                <button className="admin-btn admin-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={() => navigate(`/admin/teams?quizId=${selectedQuizId}`)}>Manage</button>
+                <button className="admin-btn admin-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={() => navigate(`/admin/quizzes/${selectedQuizId}#registration`)}>Manage</button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
                 {teams.length > 0 ? teams.map((team) => (
@@ -219,7 +219,14 @@ export default function AdminHostPage() {
             <div className="admin-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 className="admin-card-title" style={{ margin: 0 }}><BiTrophy size={18} /> Live Scores</h3>
-                <button className="admin-btn admin-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={() => navigate('/admin/scoreboard')}>Full View</button>
+                <button
+                  className="admin-btn admin-btn-secondary"
+                  style={{ padding: '8px 14px', fontSize: 12 }}
+                  onClick={() => selectedQuizId && navigate(`/admin/quizzes/${selectedQuizId}#scoreboard`)}
+                  disabled={!selectedQuizId}
+                >
+                  Full View
+                </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
                 {scoreboard.length > 0 ? scoreboard.slice(0, 5).map((entry) => (
