@@ -79,10 +79,10 @@ public class UserController {
      * Gets the current user's info (role and username).
      */
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER', 'SUPER_ADMIN')")
     @Operation(
             summary = "Get current user info",
-            description = "Retrieves the authenticated user's info including role. Requires ADMIN or SUPER_ADMIN role."
+            description = "Retrieves the authenticated user's info including role. Requires ADMIN, EXAMINER, or SUPER_ADMIN role."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -113,10 +113,10 @@ public class UserController {
      * Gets the current user's quiz assignments.
      */
     @GetMapping("/me/assignments")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER', 'SUPER_ADMIN')")
     @Operation(
             summary = "Get my quiz assignments",
-            description = "Retrieves the authenticated user's quiz assignments. Requires ADMIN or SUPER_ADMIN role."
+            description = "Retrieves the authenticated user's quiz assignments. Requires ADMIN, EXAMINER, or SUPER_ADMIN role."
     )
     @ApiResponses(value = {
             @ApiResponse(
