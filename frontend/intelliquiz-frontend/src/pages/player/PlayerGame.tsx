@@ -280,7 +280,8 @@ const PlayerGame: React.FC = () => {
             {/* Score Display */}
             {myTeamScore !== undefined && (
               <span className="participant-game-score-chip">
-                {myTeamScore} pts
+                <span className="participant-game-score-chip-label">SCORE</span>
+                <span className="participant-game-score-chip-value">{myTeamScore}</span>
               </span>
             )}
             
