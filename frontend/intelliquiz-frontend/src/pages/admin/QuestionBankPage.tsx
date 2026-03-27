@@ -20,6 +20,7 @@ const QuestionBankPage: React.FC = () => {
   const [selectedQuizForImport, setSelectedQuizForImport] = useState<number | null>(null);
   const [selectedBankItems, setSelectedBankItems] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null);
 
   // Fetch bank items and quizzes
   const fetchData = useCallback(async () => {
@@ -88,7 +89,6 @@ const QuestionBankPage: React.FC = () => {
 
   // Delete bank item
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this question from the bank?')) return;
     try {
       await questionBankApi.delete(id);
       setBankItems(prev => prev.filter(item => item.id !== id));
@@ -294,7 +294,7 @@ const QuestionBankPage: React.FC = () => {
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                       <button
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteCandidateId(item.id)}
                         style={{
                           background: 'none',
                           border: '1px solid #fecaca',
@@ -314,6 +314,51 @@ const QuestionBankPage: React.FC = () => {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteCandidateId !== null && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '28px',
+            maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 10px', fontFamily: 'Montserrat, sans-serif' }}>
+              Delete Question?
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 20px' }}>
+              This question will be removed from the bank.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteCandidateId(null)}
+                style={{
+                  background: '#f3f4f6', color: '#374151', border: 'none',
+                  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const targetId = deleteCandidateId;
+                  if (targetId === null) return;
+                  await handleDelete(targetId);
+                  setDeleteCandidateId(null);
+                }}
+                style={{
+                  background: '#880015', color: '#fff', border: 'none', borderRadius: '8px',
+                  padding: '10px 20px', cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
