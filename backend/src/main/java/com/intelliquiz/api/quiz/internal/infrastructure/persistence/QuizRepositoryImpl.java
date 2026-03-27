@@ -46,6 +46,16 @@ public class QuizRepositoryImpl implements QuizRepository {
     }
 
     @Override
+    public boolean existsByQuizCodeIgnoreCase(String quizCode) {
+        return springQuizRepository.existsByQuizCodeIgnoreCase(quizCode);
+    }
+
+    @Override
+    public Optional<Quiz> findByQuizCodeIgnoreCase(String quizCode) {
+        return springQuizRepository.findByQuizCodeIgnoreCase(quizCode);
+    }
+
+    @Override
     public void delete(Quiz quiz) {
         springQuizRepository.delete(quiz);
     }
