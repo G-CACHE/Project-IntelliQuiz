@@ -1,23 +1,37 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import { getProctorSession } from '../../services/sessionStorage';
-import type { ViolationNotification } from '../../services/api';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { accessApi, violationApi, type ViolationLogRecord, type ViolationNotification } from '../../services/api';
+import { getOrCreateDeviceId } from '../../services/deviceId';
+import { clearSession, getProctorSession } from '../../services/sessionStorage';
+import { useSSE } from '../../hooks/useSSE';
+import Timer from '../../components/game/Timer';
 import '../../styles/proctor.css';
+
+interface LockStatusResponse {
+  isLocked: boolean;
+  connectedDeviceIds: string[];
+}
 
 const ProctorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [autoKickThreshold, setAutoKickThresholdLocal] = useState(5);
   const [showKickConfirm, setShowKickConfirm] = useState<{ teamId: number; teamName: string } | null>(null);
+  const [accessChecking, setAccessChecking] = useState(true);
+  const [lockState, setLockState] = useState<LockStatusResponse>({ isLocked: false, connectedDeviceIds: [] });
+  const [lockLoading, setLockLoading] = useState(false);
+  const [lockError, setLockError] = useState<string | null>(null);
+  const [violationHistory, setViolationHistory] = useState<ViolationLogRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [noticeModal, setNoticeModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
 
-  // Get session data
   const [session] = useState(() => {
     const stored = getProctorSession();
     if (stored) return stored;
     const quizId = searchParams.get('quizId');
     if (quizId) {
-      return { quizId: parseInt(quizId), quizTitle: 'Quiz', proctorPin: '' };
+      return { quizId: parseInt(quizId, 10), quizTitle: 'Quiz', proctorPin: '' };
     }
     return null;
   });
@@ -25,362 +39,412 @@ const ProctorDashboard: React.FC = () => {
   const {
     connected,
     error,
+    gameState,
+    participantNavigationEnabled,
+    timeRemaining,
+    timerTotalTime,
     violations,
+    submissions,
     connectedTeams,
+    kickedTeams,
     kickTeam,
+    approveReentry,
     setAutoKickThreshold,
     reconnect,
-  } = useWebSocket(
+    refreshProctorSnapshot,
+  } = useSSE(
     session?.quizId || 0,
     'PROCTOR',
-    undefined,
     undefined,
     session?.proctorPin
   );
 
-  // Aggregate violation counts per team
+  const refreshLockStatus = useCallback(async () => {
+    if (!session?.quizId) return;
+    try {
+      const response = await fetch(`/api/quiz/${session.quizId}/lock-status`, { credentials: 'include' });
+      const payload = await response.json() as LockStatusResponse;
+      if (!response.ok) {
+        throw new Error('Unable to load lock status');
+      }
+      setLockState(payload);
+      setLockError(null);
+    } catch (err) {
+      setLockError(err instanceof Error ? err.message : 'Unable to load lock status');
+    }
+  }, [session?.quizId]);
+
+  const refreshViolationHistory = useCallback(async () => {
+    if (!session?.quizId) return;
+    setHistoryLoading(true);
+    try {
+      const records = await violationApi.getHistory(session.quizId, { limit: 500 });
+      setViolationHistory(records);
+      setHistoryError(null);
+    } catch (err) {
+      setHistoryError(err instanceof Error ? err.message : 'Unable to load violation history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [session?.quizId]);
+
+  const toggleLockEntry = useCallback(async () => {
+    if (!session?.quizId) return;
+    setLockLoading(true);
+    setLockError(null);
+    try {
+      const endpoint = lockState.isLocked ? 'unlock' : 'lock';
+      const response = await fetch(`/api/quiz/${session.quizId}/${endpoint}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const payload = await response.json() as { message?: string };
+      if (!response.ok) {
+        throw new Error(payload.message || 'Failed to update lock state');
+      }
+      await refreshLockStatus();
+    } catch (err) {
+      setLockError(err instanceof Error ? err.message : 'Failed to update lock state');
+    } finally {
+      setLockLoading(false);
+    }
+  }, [lockState.isLocked, refreshLockStatus, session?.quizId]);
+
+  useEffect(() => {
+    if (!session?.proctorPin) {
+      return;
+    }
+
+    let active = true;
+    const verifyProctorAccess = async () => {
+      try {
+        const result = await accessApi.resolveCode(session.proctorPin, getOrCreateDeviceId());
+        if (!active) return;
+
+        if (result.routeType !== 'HOST' || !result.quiz) {
+          clearSession();
+          setNoticeModal({
+            title: 'Invalid Access',
+            message: result.errorMessage || 'Invalid proctor PIN.',
+            onClose: () => navigate('/'),
+          });
+          return;
+        }
+
+        if (result.quiz.status === 'DRAFT') {
+          clearSession();
+          setNoticeModal({
+            title: 'Proctoring Not Available',
+            message: 'Proctoring is not allowed while quiz is in draft.',
+            onClose: () => navigate('/'),
+          });
+          return;
+        }
+
+        // If quiz is archived, go straight to final/results host view.
+        if (result.quiz.status === 'ARCHIVED') {
+          navigate('/host/game');
+          return;
+        }
+
+        await Promise.all([refreshLockStatus(), refreshViolationHistory(), refreshProctorSnapshot()]);
+      } catch {
+        if (!active) return;
+        clearSession();
+        setNoticeModal({
+          title: 'Access Check Failed',
+          message: 'Proctor access check failed. Please enter a valid PIN again.',
+          onClose: () => navigate('/'),
+        });
+        return;
+      } finally {
+        if (active) {
+          setAccessChecking(false);
+        }
+      }
+    };
+
+    verifyProctorAccess();
+    return () => {
+      active = false;
+    };
+  }, [navigate, refreshLockStatus, refreshProctorSnapshot, refreshViolationHistory, session?.proctorPin]);
+
+  useEffect(() => {
+    if (!session?.quizId || accessChecking) {
+      return;
+    }
+    refreshViolationHistory();
+  }, [accessChecking, refreshViolationHistory, session?.quizId, violations.length]);
+
   const teamViolationCounts = useMemo(() => {
     const counts: Record<number, { teamName: string; count: number; lastType: string }> = {};
     violations.forEach((v: ViolationNotification) => {
-      if (!counts[v.teamId]) {
-        counts[v.teamId] = { teamName: v.teamName, count: 0, lastType: '' };
-      }
-      counts[v.teamId].count = v.totalCount;
-      counts[v.teamId].lastType = v.lastType;
+      counts[v.teamId] = {
+        teamName: v.teamName,
+        count: v.totalCount,
+        lastType: v.lastType,
+      };
     });
     return counts;
   }, [violations]);
 
-  // Handle threshold change
+  const submittedTeamIds = useMemo(() => {
+    const ids = new Set<number>();
+    submissions.forEach((s: any) => {
+      const id = Number(s?.teamId ?? s?.id ?? s?.payload);
+      if (Number.isFinite(id) && id > 0) {
+        ids.add(id);
+      }
+    });
+    return ids;
+  }, [submissions]);
+
+  const submittedTeams = useMemo(
+    () => connectedTeams.filter((team) => submittedTeamIds.has(team.id)),
+    [connectedTeams, submittedTeamIds]
+  );
+
+  const pendingTeams = useMemo(
+    () => connectedTeams.filter((team) => !submittedTeamIds.has(team.id)),
+    [connectedTeams, submittedTeamIds]
+  );
+
   const handleThresholdChange = useCallback((value: number) => {
     setAutoKickThresholdLocal(value);
     setAutoKickThreshold(value);
   }, [setAutoKickThreshold]);
 
-  // Handle manual kick
+  useEffect(() => {
+    // Keep backend threshold in sync with the UI's displayed value.
+    // Without this, auto-kick stays disabled until the slider is manually moved.
+    setAutoKickThreshold(autoKickThreshold);
+  }, [autoKickThreshold, setAutoKickThreshold]);
+
   const handleKick = useCallback((teamId: number, teamName: string) => {
     kickTeam(teamId, teamName);
+    void refreshProctorSnapshot();
     setShowKickConfirm(null);
-  }, [kickTeam]);
+  }, [kickTeam, refreshProctorSnapshot]);
+
+  const handleApproveReentry = useCallback((teamId: number) => {
+    approveReentry(teamId);
+    void refreshProctorSnapshot();
+  }, [approveReentry, refreshProctorSnapshot]);
+
+  const backRoute = gameState === 'LOBBY' ? '/host/lobby' : '/host/game';
+  const backLabel = gameState === 'LOBBY' ? 'Back to Lobby' : 'Back to Game';
 
   if (!session) {
-    navigate('/proctor/login');
+    navigate('/');
     return null;
   }
 
-  // Get violation severity color
-  const getSeverityColor = (count: number): string => {
-    if (count >= autoKickThreshold) return '#ef4444';
-    if (count >= autoKickThreshold * 0.6) return '#f59e0b';
-    return '#10b981';
+  if (accessChecking) {
+    return (
+      <div className="proctor-page">
+        <div className="proctor-content">
+          <div className="proctor-container">
+            <p className="proctor-help-text">Validating proctor access...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const formatViolationType = (type?: string | null): string => {
+    const safeType = typeof type === 'string' ? type : 'UNKNOWN';
+    return safeType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
-  // Format violation type for display
-  const formatViolationType = (type: string): string => {
-    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const formatDetectedAt = (detectedAt: string): string => {
+    const date = new Date(detectedAt);
+    if (Number.isNaN(date.getTime())) {
+      return detectedAt;
+    }
+    return date.toLocaleString();
   };
 
   return (
-    <div className="proctor-page" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8f9fc 0%, #eef1f5 100%)' }}>
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%)',
-        padding: '20px 32px',
-        color: '#fff',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+    <div className="proctor-page" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #fffaf2 0%, #fdf4df 100%)' }}>
+      <div style={{ background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 58%, #9f2346 100%)', padding: '20px 32px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'Montserrat, sans-serif', margin: 0 }}>
-            🛡️ Proctor Dashboard
-          </h1>
-          <p style={{ fontSize: '14px', opacity: 0.8, margin: '4px 0 0' }}>
-            {session.quizTitle} — Real-time Monitoring
-          </p>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, margin: 0 }}>Proctor Dashboard</h1>
+          <p style={{ fontSize: '14px', opacity: 0.85, margin: '4px 0 0' }}>{session.quizTitle} - Real-time Monitoring</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: connected ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
-            padding: '6px 12px',
-            borderRadius: '20px',
-            fontSize: '13px',
-            fontWeight: 600,
-          }}>
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: connected ? '#10b981' : '#ef4444',
-            }}></span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {participantNavigationEnabled && (gameState === 'QUESTION' || gameState === 'ACTIVE' || gameState === 'PAUSED' || gameState === 'SCOREBOARD' || gameState === 'ROUND_SUMMARY') && (
+            <div style={{ minWidth: 190 }}>
+              <Timer timeRemaining={timeRemaining} totalTime={timerTotalTime || 1} displayMode="clock" />
+            </div>
+          )}
+          <span style={{ background: connected ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>
             {connected ? 'Live' : 'Disconnected'}
           </span>
-          <button
-            onClick={() => navigate('/host/game')}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '8px 16px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 600,
-            }}
-          >
-            ← Back to Game
+          <button onClick={() => navigate(backRoute)} style={{ background: 'rgba(250,237,192,0.14)', border: '1px solid rgba(250,237,192,0.36)', color: '#fff', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+            {backLabel}
           </button>
         </div>
       </div>
 
-      {/* Error Banner */}
       {error && (
-        <div style={{ background: '#fee2e2', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <p style={{ color: '#991b1b', fontSize: '14px', margin: 0 }}>{error}</p>
-          <button onClick={reconnect} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '13px' }}>
-            Reconnect
-          </button>
+        <div style={{ background: '#fff1f4', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ color: '#991b1b', fontSize: 14, margin: 0 }}>{error}</p>
+          <button onClick={reconnect} style={{ background: '#9f2346', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 13 }}>Reconnect</button>
         </div>
       )}
 
-      {/* Main Content */}
-      <div style={{ padding: '24px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {/* Left Column - Team Monitor */}
-        <div>
-          {/* Auto-Kick Threshold */}
-          <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '20px',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '16px', fontFamily: 'Montserrat, sans-serif' }}>
-              ⚙️ Auto-Kick Settings
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <label style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>
-                Violation Threshold:
-              </label>
-              <input
-                type="range"
-                min={1}
-                max={20}
-                value={autoKickThreshold}
-                onChange={(e) => handleThresholdChange(parseInt(e.target.value))}
-                style={{ flex: 1 }}
-              />
-              <span style={{
-                background: '#880015',
-                color: '#fff',
-                borderRadius: '8px',
-                padding: '4px 12px',
-                fontSize: '14px',
-                fontWeight: 700,
-                minWidth: '36px',
-                textAlign: 'center',
-              }}>
-                {autoKickThreshold}
-              </span>
+      <div style={{ padding: '24px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gap: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(95,16,39,0.09)', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>Auto-Kick Settings</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <label style={{ fontSize: 13, color: '#5d3a43' }}>Violation Threshold:</label>
+              <input type="range" min={1} max={20} value={autoKickThreshold} onChange={(e) => handleThresholdChange(parseInt(e.target.value, 10))} style={{ flex: 1 }} />
+              <strong>{autoKickThreshold}</strong>
             </div>
-            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
-              Teams will be automatically kicked after reaching this many violations.
-            </p>
           </div>
 
-          {/* Connected Teams */}
-          <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            padding: '24px',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '16px', fontFamily: 'Montserrat, sans-serif' }}>
-              👥 Connected Teams ({connectedTeams.length})
-            </h3>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(95,16,39,0.09)', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: 16 }}>Lock Entry</h3>
+            <p style={{ marginTop: 0, fontSize: 13, color: '#5d3a43' }}>
+              Uses browser identity. When locked, only previously recognized devices can rejoin if accidentally disconnected.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: lockState.isLocked ? '#9f2346' : '#7a1733' }}>
+                {lockState.isLocked ? 'Locked' : 'Unlocked'}
+              </span>
+              <button
+                onClick={toggleLockEntry}
+                disabled={lockLoading}
+                style={{ background: lockState.isLocked ? '#d4a017' : '#9f2346', color: lockState.isLocked ? '#2b1a00' : '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
+              >
+                {lockLoading ? 'Saving...' : lockState.isLocked ? 'Unlock Entry' : 'Lock Entry'}
+              </button>
+              <button onClick={refreshLockStatus} style={{ background: '#fff3dd', border: '1px solid #e8ced6', color: '#7a1733', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+                Refresh
+              </button>
+            </div>
+            <p style={{ margin: 0, fontSize: 12, color: '#6f4e57' }}>
+              Known devices: {lockState.connectedDeviceIds.length}
+            </p>
+            {lockError && <p style={{ marginBottom: 0, color: '#b91c1c', fontSize: 12 }}>{lockError}</p>}
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(95,16,39,0.09)', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>Connected Teams ({connectedTeams.length})</h3>
             {connectedTeams.length === 0 ? (
-              <p style={{ fontSize: '14px', color: '#9ca3af', textAlign: 'center', padding: '24px 0' }}>
-                No teams connected yet.
-              </p>
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>No connected teams yet.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {connectedTeams.map((team) => {
-                  const violation = teamViolationCounts[team.id];
-                  const count = violation?.count || 0;
-                  return (
-                    <div key={team.id} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      borderRadius: '10px',
-                      background: count > 0 ? '#fef2f2' : '#f0fdf4',
-                      border: `1px solid ${count > 0 ? '#fecaca' : '#bbf7d0'}`,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
-                          {team.name}
-                        </span>
-                        {count > 0 && (
-                          <span style={{
-                            background: getSeverityColor(count),
-                            color: '#fff',
-                            borderRadius: '12px',
-                            padding: '2px 8px',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                          }}>
-                            {count} violation{count !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setShowKickConfirm({ teamId: team.id, teamName: team.name })}
-                        style={{
-                          background: '#ef4444',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '6px',
-                          padding: '6px 12px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Kick
-                      </button>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {connectedTeams.map((team) => (
+                  <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 10, border: '1px solid #e7d8dc', background: '#fffcf7' }}>
+                    <div>
+                      <strong style={{ fontSize: 14 }}>{team.name}</strong>
+                      {teamViolationCounts[team.id] && (
+                        <p style={{ margin: 0, fontSize: 12, color: '#7a1733' }}>
+                          Violations: {teamViolationCounts[team.id].count} ({formatViolationType(teamViolationCounts[team.id].lastType)})
+                        </p>
+                      )}
                     </div>
-                  );
-                })}
+                    <button onClick={() => setShowKickConfirm({ teamId: team.id, teamName: team.name })} style={{ background: '#9f2346', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                      Kick
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Right Column - Violation Feed */}
-        <div style={{
-          background: '#fff',
-          borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          maxHeight: 'calc(100vh - 200px)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '16px', fontFamily: 'Montserrat, sans-serif' }}>
-            🚨 Violation Feed ({violations.length})
-          </h3>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {violations.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af' }}>
-                <p style={{ fontSize: '32px', marginBottom: '8px' }}>✓</p>
-                <p style={{ fontSize: '14px' }}>No violations detected. All teams are behaving.</p>
-              </div>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(95,16,39,0.09)', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>Submission Status</h3>
+            <p style={{ margin: 0, fontSize: 13, color: '#6f4e57' }}>Submitted: {submittedTeams.length} | Not Yet: {pendingTeams.length}</p>
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(95,16,39,0.09)', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>Kicked Teams ({kickedTeams.length})</h3>
+            {kickedTeams.length === 0 ? (
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>No kicked teams awaiting approval.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {[...violations].reverse().map((v, idx) => (
-                  <div key={idx} style={{
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    background: v.autoKicked ? '#fef2f2' : '#fffbeb',
-                    border: `1px solid ${v.autoKicked ? '#fecaca' : '#fde68a'}`,
-                    position: 'relative',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>
-                          {v.teamName}
-                        </span>
-                        <span style={{
-                          marginLeft: '8px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: v.autoKicked ? '#ef4444' : '#f59e0b',
-                          background: v.autoKicked ? '#fee2e2' : '#fef3c7',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                        }}>
-                          {formatViolationType(v.lastType)}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500 }}>
-                        #{v.totalCount}
-                      </span>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {kickedTeams.map((team) => (
+                  <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 10, background: '#fff1f4', border: '1px solid #f1c7d4' }}>
+                    <div>
+                      <strong style={{ fontSize: 14, color: '#7a1733' }}>{team.name}</strong>
+                      <p style={{ margin: 0, fontSize: 12, color: '#9f2346' }}>{team.reason}</p>
                     </div>
-                    {v.autoKicked && (
-                      <p style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, marginTop: '4px' }}>
-                        ⛔ Auto-kicked from session
-                      </p>
-                    )}
+                    <button onClick={() => handleApproveReentry(team.id)} style={{ background: '#d4a017', color: '#2b1a00', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                      Approve Re-entry
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
         </div>
+
+        <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(95,16,39,0.09)', border: '1px solid #e7d8dc', maxHeight: 'calc(100vh - 160px)', overflow: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 16 }}>Violation History ({violationHistory.length})</h3>
+            <button onClick={refreshViolationHistory} style={{ background: '#fff3dd', border: '1px solid #e8ced6', color: '#7a1733', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+              Refresh
+            </button>
+          </div>
+
+          {historyError && (
+            <p style={{ marginTop: 0, color: '#b91c1c', fontSize: 12 }}>{historyError}</p>
+          )}
+
+          {historyLoading ? (
+            <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>Loading violation history...</p>
+          ) : violationHistory.length === 0 ? (
+            <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>No persisted violations yet.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {violationHistory.map((v) => (
+                <div key={v.id} style={{ border: '1px solid #f1d99b', background: '#fffbf2', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong>{v.teamName}</strong>
+                    <span style={{ fontSize: 12, color: '#64748b' }}>{formatDetectedAt(v.detectedAt)}</span>
+                  </div>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#7a1733' }}>{formatViolationType(v.violationType)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Kick Confirmation Modal */}
       {showKickConfirm && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            padding: '32px',
-            maxWidth: '400px',
-            width: '100%',
-            textAlign: 'center',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          }}>
-            <div style={{ fontSize: '36px', marginBottom: '16px' }}>⚠️</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
-              Kick Team?
-            </h3>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-              Are you sure you want to remove <strong>{showKickConfirm.teamName}</strong> from the session? This action cannot be undone.
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 420, width: '94%', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0 }}>Kick Team?</h3>
+            <p style={{ fontSize: 14, color: '#475569' }}>
+              Remove <strong>{showKickConfirm.teamName}</strong> from this quiz session?
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button onClick={() => setShowKickConfirm(null)} style={{ background: '#fff3dd', border: '1px solid #e8ced6', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', color: '#7a1733' }}>Cancel</button>
+              <button onClick={() => handleKick(showKickConfirm.teamId, showKickConfirm.teamName)} style={{ background: '#9f2346', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>Kick Team</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {noticeModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 420, width: '94%', border: '1px solid #e7d8dc' }}>
+            <h3 style={{ marginTop: 0 }}>{noticeModal.title}</h3>
+            <p style={{ fontSize: 14, color: '#475569' }}>{noticeModal.message}</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setShowKickConfirm(null)}
-                style={{
-                  background: '#f3f4f6',
-                  color: '#374151',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 24px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 600,
+                onClick={() => {
+                  const handler = noticeModal.onClose;
+                  setNoticeModal(null);
+                  if (handler) handler();
                 }}
+                style={{ background: '#9f2346', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleKick(showKickConfirm.teamId, showKickConfirm.teamName)}
-                style={{
-                  background: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 24px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                }}
-              >
-                Kick Team
+                OK
               </button>
             </div>
           </div>
