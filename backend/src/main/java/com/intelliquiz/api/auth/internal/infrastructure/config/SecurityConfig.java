@@ -2,6 +2,7 @@ package com.intelliquiz.api.auth.internal.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,6 +41,10 @@ public class SecurityConfig {
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/access/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                // SSE + realtime quiz flow endpoints use access-code based session logic
+                .requestMatchers(HttpMethod.GET, "/api/quiz/*/stream", "/api/quiz/*/status", "/api/quiz/*/state", "/api/quiz/*/participant-access", "/api/quiz/*/participant-results", "/api/quiz/*/violations", "/api/quiz/*/proctor-snapshot").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/quiz/*/answer", "/api/quiz/*/command", "/api/quiz/*/violation", "/api/quiz/*/kick", "/api/quiz/*/auto-kick-threshold", "/api/quiz/*/approve-reentry", "/api/quiz/*/lock", "/api/quiz/*/unlock").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/quiz/*/lock-status").permitAll()
                 // WebSocket endpoints - authentication handled by WebSocket interceptor
                 .requestMatchers("/ws/**").permitAll()
                 // Swagger/OpenAPI endpoints
