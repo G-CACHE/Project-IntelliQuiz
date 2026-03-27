@@ -39,7 +39,10 @@ public class QuizSessionManager {
     // Quiz ID -> Navigation mode for the active session
     private final Map<Long, NavigationMode> navigationModes = new ConcurrentHashMap<>();
 
-    // Quiz ID -> { Team ID -> Set of answered question indices } (for NON_LINEAR mode)
+    // Quiz ID -> Whether participants can control next/previous navigation (for Tournament mode with global timer)
+    private final Map<Long, Boolean> participantNavigationEnabled = new ConcurrentHashMap<>();
+
+    // Quiz ID -> { Team ID -> Set of answered question indices } (for Class mode)
     private final Map<Long, Map<Long, Set<Integer>>> answeredQuestions = new ConcurrentHashMap<>();
 
     /**
@@ -183,6 +186,7 @@ public class QuizSessionManager {
         currentQuestions.remove(quizId);
         proctorSessions.remove(quizId);
         navigationModes.remove(quizId);
+        participantNavigationEnabled.remove(quizId);
         answeredQuestions.remove(quizId);
     }
 
@@ -224,11 +228,26 @@ public class QuizSessionManager {
      * Gets the navigation mode for a quiz session.
      */
     public NavigationMode getNavigationMode(Long quizId) {
-        return navigationModes.getOrDefault(quizId, NavigationMode.LINEAR);
+        return navigationModes.getOrDefault(quizId, NavigationMode.TOURNAMENT);
     }
 
     /**
-     * Records that a team has answered a question (for NON_LINEAR tracking).
+     * Sets whether participants can control next/previous navigation.
+        * Used for Tournament mode with global timer or Class mode.
+     */
+    public void setParticipantNavigationEnabled(Long quizId, boolean enabled) {
+        participantNavigationEnabled.put(quizId, enabled);
+    }
+
+    /**
+     * Checks if participants can control next/previous navigation.
+     */
+    public boolean isParticipantNavigationEnabled(Long quizId) {
+        return participantNavigationEnabled.getOrDefault(quizId, false);
+    }
+
+    /**
+        * Records that a team has answered a question (for Class mode tracking).
      */
     public void markQuestionAnswered(Long quizId, Long teamId, int questionIndex) {
         answeredQuestions
@@ -238,7 +257,7 @@ public class QuizSessionManager {
     }
 
     /**
-     * Gets the set of answered question indices for a team (NON_LINEAR mode).
+        * Gets the set of answered question indices for a team (Class mode).
      */
     public Set<Integer> getAnsweredQuestions(Long quizId, Long teamId) {
         Map<Long, Set<Integer>> quizAnswered = answeredQuestions.get(quizId);
