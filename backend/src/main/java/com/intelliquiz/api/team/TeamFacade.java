@@ -1,6 +1,7 @@
 package com.intelliquiz.api.team;
 
 import com.intelliquiz.api.team.dto.TeamInfoDto;
+import com.intelliquiz.api.team.internal.application.services.TeamRegistrationService;
 import com.intelliquiz.api.team.internal.domain.entities.Team;
 import com.intelliquiz.api.team.internal.domain.ports.TeamRepository;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,12 @@ import java.util.Optional;
 public class TeamFacade {
 
     private final TeamRepository teamRepository;
+    private final TeamRegistrationService teamRegistrationService;
 
-    public TeamFacade(TeamRepository teamRepository) {
+    public TeamFacade(TeamRepository teamRepository,
+                      TeamRegistrationService teamRegistrationService) {
         this.teamRepository = teamRepository;
+        this.teamRegistrationService = teamRegistrationService;
     }
 
     /**
@@ -34,6 +38,14 @@ public class TeamFacade {
      */
     public Optional<TeamInfoDto> getTeamByAccessCode(String accessCode) {
         return teamRepository.findByAccessCode(accessCode)
+                .map(this::toDto);
+    }
+
+    /**
+     * Gets a team by quiz and browser device ID.
+     */
+    public Optional<TeamInfoDto> getTeamByQuizAndDeviceId(Long quizId, String deviceId) {
+        return teamRepository.findByQuizIdAndDeviceId(quizId, deviceId)
                 .map(this::toDto);
     }
 
@@ -66,6 +78,24 @@ public class TeamFacade {
     public void addPoints(Long teamId, int points) {
         teamRepository.findById(teamId).ifPresent(team -> {
             team.addPoints(points);
+            teamRepository.save(team);
+        });
+    }
+
+    /**
+     * Registers a team and returns public team info.
+     */
+    public TeamInfoDto registerTeam(Long quizId, String teamName) {
+        Team created = teamRegistrationService.registerTeam(quizId, teamName);
+        return toDto(created);
+    }
+
+    /**
+     * Binds/updates browser device ID to the given team for seamless rejoin.
+     */
+    public void bindDeviceId(Long teamId, String deviceId) {
+        teamRepository.findById(teamId).ifPresent(team -> {
+            team.setDeviceId(deviceId);
             teamRepository.save(team);
         });
     }
