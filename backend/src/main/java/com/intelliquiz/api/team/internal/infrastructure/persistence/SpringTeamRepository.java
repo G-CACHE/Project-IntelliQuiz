@@ -22,5 +22,7 @@ public interface SpringTeamRepository extends JpaRepository<Team, Long> {
     @Query("SELECT t FROM Team t WHERE UPPER(t.accessCode) = UPPER(:accessCode)")
     Optional<Team> findByAccessCode(@Param("accessCode") String accessCode);
 
+    Optional<Team> findByQuizIdAndDeviceId(Long quizId, String deviceId);
+
     List<Team> findByQuizId(Long quizId);
 }
