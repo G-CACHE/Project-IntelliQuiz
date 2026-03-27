@@ -2,18 +2,18 @@ import { useNavigate } from 'react-router-dom';
 import { BiLock, BiLogOut, BiRefresh } from 'react-icons/bi';
 import { currentUserApi, authApi } from '../../services/api';
 import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function NoPermissionsPage() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(false);
   const username = localStorage.getItem('username') || 'Admin';
+  const { clearAuth, refreshAuth } = useAuth();
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
-    localStorage.removeItem('assignments');
-    navigate('/login');
+    clearAuth();
+    navigate('/portal');
   };
 
   const handleCheckPermissions = async () => {
@@ -21,6 +21,7 @@ export default function NoPermissionsPage() {
     try {
       const assignments = await currentUserApi.getMyAssignments();
       localStorage.setItem('assignments', JSON.stringify(assignments));
+      await refreshAuth();
       
       if (assignments.length > 0) {
         navigate('/admin');
@@ -110,8 +111,8 @@ export default function NoPermissionsPage() {
           }}>
             <li>View assigned quizzes</li>
             <li>Manage quiz content</li>
-            <li>Register and manage teams</li>
-            <li>Host live quiz sessions</li>
+            <li>Review participant results and violation reports</li>
+            <li>Configure quiz lifecycle and readiness states</li>
           </ul>
         </div>
 
