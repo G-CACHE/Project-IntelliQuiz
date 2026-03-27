@@ -1,6 +1,5 @@
 package com.intelliquiz.api.presentation.controllers;
 
-import com.intelliquiz.api.application.services.*;
 import com.intelliquiz.api.quiz.internal.application.services.QuizManagementService;
 import com.intelliquiz.api.quiz.internal.application.services.QuizSessionService;
 import com.intelliquiz.api.quiz.internal.presentation.controllers.QuizController;
@@ -12,6 +11,8 @@ import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.quiz.QuizFacade;
 import com.intelliquiz.api.team.TeamFacade;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.shared.enums.NavigationMode;
+import com.intelliquiz.api.shared.enums.QuizAccessMode;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 
@@ -56,8 +58,8 @@ class HttpStatusCodePropertyTest {
         
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().routeType()).isEqualTo(RouteType.PARTICIPANT);
+        AccessResolutionResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.routeType()).isEqualTo(RouteType.PARTICIPANT);
     }
 
     @Property(tries = 10)
@@ -77,8 +79,8 @@ class HttpStatusCodePropertyTest {
         
         // Then - Returns 200 with INVALID route type (not 4xx)
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().routeType()).isEqualTo(RouteType.INVALID);
+        AccessResolutionResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.routeType()).isEqualTo(RouteType.INVALID);
     }
 
     // ==================== QuizController Tests ====================
@@ -143,7 +145,14 @@ class HttpStatusCodePropertyTest {
         
         // When
         ResponseEntity<?> response = controller.createQuiz(
-                new com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest(title, "Description"),
+            new com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest(
+                    title,
+                    "Description",
+                    QuizAccessMode.RESTRICTED,
+                    NavigationMode.TOURNAMENT,
+                    0,
+                    false
+            ),
                 auth
         );
         
