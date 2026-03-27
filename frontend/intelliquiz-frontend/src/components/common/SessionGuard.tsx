@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getSession, getProctorSession, getParticipantSession, GameSession } from '../../services/sessionStorage';
+import { getSession, getProctorSession, getParticipantSession, type GameSession } from '../../services/sessionStorage';
 import LoadingSpinner from './LoadingSpinner';
 
 interface SessionGuardProps {
@@ -21,7 +21,6 @@ const SessionGuard: React.FC<SessionGuardProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [isValidating, setIsValidating] = useState(true);
-  const [session, setSession] = useState<GameSession | null>(null);
 
   useEffect(() => {
     const validateSession = () => {
@@ -30,7 +29,7 @@ const SessionGuard: React.FC<SessionGuardProps> = ({
       if (!currentSession) {
         // No session, redirect to appropriate login
         const defaultRedirect = requiredRole === 'PROCTOR' 
-          ? '/proctor/login' 
+          ? '/' 
           : requiredRole === 'PARTICIPANT'
           ? '/participant/login'
           : '/';
@@ -42,14 +41,13 @@ const SessionGuard: React.FC<SessionGuardProps> = ({
       if (requiredRole && currentSession.role !== requiredRole) {
         // Wrong role, redirect to appropriate login
         const roleRedirect = requiredRole === 'PROCTOR' 
-          ? '/proctor/login' 
+          ? '/' 
           : '/participant/login';
         navigate(redirectTo || roleRedirect);
         return;
       }
 
-      // Session is valid
-      setSession(currentSession);
+      // Session is valid, validation complete
       setIsValidating(false);
     };
 
@@ -80,7 +78,7 @@ export const useSession = (requiredRole?: 'PROCTOR' | 'PARTICIPANT') => {
 
     if (!currentSession) {
       const redirectTo = requiredRole === 'PROCTOR'
-        ? '/proctor/login'
+        ? '/'
         : requiredRole === 'PARTICIPANT'
         ? '/participant/login'
         : '/';

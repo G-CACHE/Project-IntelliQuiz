@@ -10,7 +10,7 @@ interface AntiCheatWrapperProps {
 /**
  * AntiCheatWrapper - Wraps participant game content to detect cheating attempts.
  * Monitors: tab switches (visibilitychange), copy, right-click, print-screen.
- * Calls onViolation callback (which sends to server via WebSocket).
+ * Calls onViolation callback (which reports to server via REST/SSE flow).
  */
 const AntiCheatWrapper: React.FC<AntiCheatWrapperProps> = ({
   children,
@@ -42,11 +42,9 @@ const AntiCheatWrapper: React.FC<AntiCheatWrapperProps> = ({
   const handleContextMenu = useCallback((e: MouseEvent) => {
     if (enabled) {
       e.preventDefault();
-      violationCountRef.current++;
-      console.warn(`[AntiCheat] Right-click detected (count: ${violationCountRef.current})`);
-      onViolation('RIGHT_CLICK');
+      console.warn('[AntiCheat] Right-click detected (logged only, not counted as violation)');
     }
-  }, [enabled, onViolation]);
+  }, [enabled]);
 
   // Detect print-screen and other suspicious key combos
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -55,9 +53,7 @@ const AntiCheatWrapper: React.FC<AntiCheatWrapperProps> = ({
     // PrintScreen key
     if (e.key === 'PrintScreen') {
       e.preventDefault();
-      violationCountRef.current++;
-      console.warn(`[AntiCheat] Print screen detected (count: ${violationCountRef.current})`);
-      onViolation('PRINT_SCREEN');
+      console.warn('[AntiCheat] Print screen detected (logged only, not counted as violation)');
       return;
     }
 
@@ -69,12 +65,9 @@ const AntiCheatWrapper: React.FC<AntiCheatWrapperProps> = ({
       e.key === 'F12'
     ) {
       e.preventDefault();
-      violationCountRef.current++;
-      const violationType: ViolationType = e.key === 'c' ? 'COPY_ATTEMPT' : 'PRINT_SCREEN';
-      console.warn(`[AntiCheat] Suspicious key combo: ${e.key} (count: ${violationCountRef.current})`);
-      onViolation(violationType);
+      console.warn(`[AntiCheat] Suspicious key combo: ${e.key} (logged only, not counted as violation)`);
     }
-  }, [enabled, onViolation]);
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled) return;

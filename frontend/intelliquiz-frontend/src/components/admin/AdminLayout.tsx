@@ -3,14 +3,12 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
   BiHomeAlt,
   BiBookOpen,
-  BiGroup,
-  BiTrophy,
   BiLogOut,
   BiChevronDown,
-  BiPlay,
 } from 'react-icons/bi';
 import '../../styles/admin.css';
-import { currentUserApi, authApi } from '../../services/api';
+import { authApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface NavItem {
   path: string;
@@ -26,14 +24,12 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { clearAuth } = useAuth();
 
   // Build nav items based on user's permissions
   const navItems: NavItem[] = [
     { path: '/admin', label: 'Dashboard', icon: <BiHomeAlt size={18} /> },
-    { path: '/admin/quizzes', label: 'Assigned Quizzes', icon: <BiBookOpen size={18} /> },
-    { path: '/admin/teams', label: 'Teams', icon: <BiGroup size={18} /> },
-    { path: '/admin/scoreboard', label: 'Scoreboard', icon: <BiTrophy size={18} /> },
-    { path: '/admin/host', label: 'Host Game', icon: <BiPlay size={18} /> },
+    { path: '/admin/quizzes', label: 'My Quizzes', icon: <BiBookOpen size={18} /> },
   ];
 
   useEffect(() => {
@@ -49,30 +45,13 @@ export default function AdminLayout() {
     }
     
     // Redirect unauthenticated users to login
-    if (!storedRole || storedRole !== 'ADMIN') {
-      navigate('/login');
+    if (!storedRole || (storedRole !== 'ADMIN' && storedRole !== 'EXAMINER')) {
+      navigate('/portal');
       return;
     }
     
-    // Check if admin user has permissions
-    const checkPermissions = async () => {
-      try {
-        const assignments = await currentUserApi.getMyAssignments();
-        localStorage.setItem('assignments', JSON.stringify(assignments));
-        
-        if (assignments.length === 0) {
-          navigate('/admin/no-permissions');
-          return;
-        }
-      } catch (error) {
-        console.error('Failed to fetch assignments:', error);
-        navigate('/admin/no-permissions');
-        return;
-      }
-      setLoading(false);
-    };
-    
-    checkPermissions();
+    // Admin users can access their own quizzes directly (no assignment check needed)
+    setLoading(false);
   }, [navigate]);
 
   useEffect(() => {
@@ -87,10 +66,8 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
-    localStorage.removeItem('assignments');
-    navigate('/login');
+    clearAuth();
+    navigate('/portal');
   };
 
   if (loading) {
@@ -125,18 +102,18 @@ export default function AdminLayout() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Nunito', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#fffaf2', fontFamily: "'Nunito', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
       `}</style>
 
       {/* Top Navigation - Same as SuperAdmin */}
       <header style={{
-        background: '#880015',
+        background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 60%, #9f2346 100%)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+        boxShadow: '0 6px 18px rgba(95,16,39,0.28)',
       }}>
         <div style={{
           maxWidth: 1400,
@@ -155,12 +132,12 @@ export default function AdminLayout() {
             <div style={{
               width: 40,
               height: 40,
-              background: '#f8c107',
+              background: '#f2c84b',
               borderRadius: 10,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#000',
+              color: '#2b1a00',
             }}>
               <BiBookOpen size={22} />
             </div>
@@ -178,10 +155,10 @@ export default function AdminLayout() {
                   alignItems: 'center',
                   gap: 8,
                   padding: '10px 16px',
-                  background: isActive(item.path) ? '#f8c107' : 'transparent',
+                  background: isActive(item.path) ? '#f2c84b' : 'transparent',
                   border: 'none',
                   borderRadius: 25,
-                  color: isActive(item.path) ? '#000' : 'rgba(255,255,255,0.85)',
+                  color: isActive(item.path) ? '#2b1a00' : 'rgba(255,255,255,0.88)',
                   fontSize: 14,
                   fontWeight: isActive(item.path) ? 600 : 500,
                   fontFamily: "'Montserrat', sans-serif",
@@ -190,7 +167,7 @@ export default function AdminLayout() {
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive(item.path)) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.background = 'rgba(250,237,192,0.18)';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -225,8 +202,8 @@ export default function AdminLayout() {
                 <div style={{
                   width: 36,
                   height: 36,
-                  background: '#f8c107',
-                  color: '#000',
+                  background: '#f2c84b',
+                  color: '#2b1a00',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -270,6 +247,7 @@ export default function AdminLayout() {
                       background: 'transparent',
                       border: 'none',
                       color: '#880015',
+                      fontWeight: 700,
                       fontSize: 14,
                       fontFamily: "'Montserrat', sans-serif",
                       cursor: 'pointer',
