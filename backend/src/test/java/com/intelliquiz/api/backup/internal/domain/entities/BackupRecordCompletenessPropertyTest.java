@@ -1,6 +1,5 @@
 package com.intelliquiz.api.backup.internal.domain.entities;
 
-import com.intelliquiz.api.backup.internal.domain.entities.BackupRecord;
 import com.intelliquiz.api.shared.enums.BackupStatus;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.*;
