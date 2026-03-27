@@ -19,8 +19,12 @@ public class CodeGenerationService {
     
     // Charset for proctor PINs: numeric only for easy verbal communication
     private static final String PROCTOR_CHARSET = "0123456789";
+
+    // Charset for participant-facing quiz codes: unambiguous alphanumeric
+    private static final String QUIZ_CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     
     private static final int CODE_SEGMENT_LENGTH = 3;
+    private static final int QUIZ_CODE_LENGTH = 6;
     
     private final SecureRandom random = new SecureRandom();
 
@@ -42,6 +46,19 @@ public class CodeGenerationService {
      */
     public String generateProctorPin() {
         return generateCode(PROCTOR_CHARSET);
+    }
+
+    /**
+     * Generates a participant-facing quiz code with exactly 6 alphanumeric characters.
+     *
+     * @return a new 6-character quiz code
+     */
+    public String generateQuizCode() {
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < QUIZ_CODE_LENGTH; i++) {
+            code.append(QUIZ_CHARSET.charAt(random.nextInt(QUIZ_CHARSET.length())));
+        }
+        return code.toString();
     }
 
     /**
