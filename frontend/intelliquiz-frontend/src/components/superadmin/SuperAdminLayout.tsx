@@ -10,7 +10,7 @@ import {
   BiBookOpen,
 } from 'react-icons/bi';
 import '../../styles/superadmin.css';
-import { authApi } from '../../services/api';
+import { authApi, currentUserApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface NavItem {
@@ -36,22 +36,34 @@ export default function SuperAdminLayout() {
   const { clearAuth } = useAuth();
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('role');
-    
-    // Redirect non-super-admins to their appropriate page
-    if (storedRole !== 'SUPER_ADMIN') {
-      if (storedRole === 'ADMIN' || storedRole === 'EXAMINER') {
-        navigate('/admin');
-      } else {
-        navigate('/portal');
+    const verifySessionAndRole = async () => {
+      setLoading(true);
+      try {
+        const me = await currentUserApi.getMe();
+        localStorage.setItem('username', me.username);
+        localStorage.setItem('role', me.role);
+        setUsername(me.username);
+
+        if (me.role !== 'SUPER_ADMIN') {
+          if (me.role === 'ADMIN' || me.role === 'EXAMINER') {
+            navigate('/admin', { replace: true });
+          } else {
+            clearAuth();
+            navigate('/portal', { replace: true });
+          }
+          return;
+        }
+      } catch {
+        clearAuth();
+        navigate('/portal', { replace: true });
+        return;
+      } finally {
+        setLoading(false);
       }
-      return;
-    }
-    
-    if (storedUsername) setUsername(storedUsername);
-    setLoading(false);
-  }, [navigate]);
+    };
+
+    verifySessionAndRole();
+  }, [navigate, clearAuth]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

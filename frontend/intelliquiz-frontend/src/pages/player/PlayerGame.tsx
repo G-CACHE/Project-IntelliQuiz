@@ -336,7 +336,7 @@ const PlayerGame: React.FC = () => {
           {gameState === 'QUESTION' && currentQuestion && (
             earlySubmittedQuiz ? (
               <div className="participant-alert-success participant-submitted-alert" style={{ marginTop: '12px' }}>
-                <div className="participant-submitted-icon">✓</div>
+                <div className="participant-submitted-icon"><CheckCircle2 size={18} /></div>
                 <span className="participant-submitted-text">Quiz Submitted Early</span>
                 <p className="participant-submitted-hint">Your participation is complete. Waiting for final results...</p>
               </div>
@@ -391,13 +391,13 @@ const PlayerGame: React.FC = () => {
                     // LINEAR mode: select answer, auto-submitted on timer expiry
                     submitted ? (
                       <div className="participant-alert-success participant-submitted-alert">
-                        <div className="participant-submitted-icon">✓</div>
+                        <div className="participant-submitted-icon"><CheckCircle2 size={18} /></div>
                         <span className="participant-submitted-text">Answer Submitted!</span>
                         <p className="participant-submitted-hint">Waiting for results...</p>
                       </div>
                     ) : selectedOption ? (
                       <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
-                        ✓ Selected — you can change your answer before time runs out
+                        <CheckCircle2 size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Selected - you can change your answer before time runs out
                       </p>
                     ) : (
                       <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>

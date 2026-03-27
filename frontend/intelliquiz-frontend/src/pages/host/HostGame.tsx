@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Sparkles, Home } from 'lucide-react';
+import { Trophy, Sparkles, Home, Medal } from 'lucide-react';
 import { Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
@@ -463,7 +463,7 @@ const HostGame: React.FC = () => {
                       className={`proctor-host-podium-item ${idx === 0 ? 'is-first' : ''}`}
                     >
                       <div className="proctor-host-podium-medal">
-                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
+                        {idx === 0 ? <Trophy size={22} /> : <Medal size={22} />}
                       </div>
                       <p>{team.teamName}</p>
                       <strong>{team.score} pts</strong>

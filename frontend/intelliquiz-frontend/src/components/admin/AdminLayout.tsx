@@ -7,7 +7,7 @@ import {
   BiChevronDown,
 } from 'react-icons/bi';
 import '../../styles/admin.css';
-import { authApi } from '../../services/api';
+import { authApi, currentUserApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface NavItem {
@@ -33,26 +33,35 @@ export default function AdminLayout() {
   ];
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('role');
-    
-    if (storedUsername) setUsername(storedUsername);
-    
-    // Redirect super admins to their dashboard
-    if (storedRole === 'SUPER_ADMIN') {
-      navigate('/superadmin');
-      return;
-    }
-    
-    // Redirect unauthenticated users to login
-    if (!storedRole || (storedRole !== 'ADMIN' && storedRole !== 'EXAMINER')) {
-      navigate('/portal');
-      return;
-    }
-    
-    // Admin users can access their own quizzes directly (no assignment check needed)
-    setLoading(false);
-  }, [navigate]);
+    const verifySessionAndRole = async () => {
+      setLoading(true);
+      try {
+        const me = await currentUserApi.getMe();
+        localStorage.setItem('username', me.username);
+        localStorage.setItem('role', me.role);
+        setUsername(me.username);
+
+        if (me.role === 'SUPER_ADMIN') {
+          navigate('/superadmin', { replace: true });
+          return;
+        }
+
+        if (me.role !== 'ADMIN' && me.role !== 'EXAMINER') {
+          clearAuth();
+          navigate('/portal', { replace: true });
+          return;
+        }
+      } catch {
+        clearAuth();
+        navigate('/portal', { replace: true });
+        return;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifySessionAndRole();
+  }, [navigate, clearAuth]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

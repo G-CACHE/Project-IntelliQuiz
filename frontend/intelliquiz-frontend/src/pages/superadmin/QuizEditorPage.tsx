@@ -3,6 +3,7 @@ import { PlusCircle, Edit2, Trash2, GripVertical } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
+import { Check } from 'lucide-react';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 
 interface Question {
@@ -235,7 +236,7 @@ export default function QuizEditorPage({ quizId }: { quizId: number }) {
                         }`}
                       >
                         <span className={answer.isCorrect ? 'text-green-700 font-semibold' : 'text-gray-700'}>
-                          {answer.isCorrect && '✓ '}{answer.text}
+                          {answer.isCorrect && <Check className="inline w-3 h-3 mr-1" />}{answer.text}
                         </span>
                       </div>
                     ))}

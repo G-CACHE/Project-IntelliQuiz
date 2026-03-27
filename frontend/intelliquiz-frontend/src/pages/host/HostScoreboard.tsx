@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Trophy } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getProctorSession, clearSession } from '../../services/sessionStorage';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
@@ -109,7 +110,7 @@ const HostScoreboard: React.FC = () => {
             {isFinal ? (
               <div className="proctor-final-controls">
                 <p className="proctor-final-message">
-                  🎉 Quiz Complete! Thank you for hosting.
+                  Quiz complete. Thank you for hosting.
                 </p>
                 <div className="proctor-actions">
                   <button
@@ -136,7 +137,7 @@ const HostScoreboard: React.FC = () => {
                     disabled={!connected}
                     className="proctor-btn-primary proctor-btn-large"
                   >
-                    🏆 Show Final Results
+                    <Trophy size={18} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Show Final Results
                   </button>
                 )}
               </div>

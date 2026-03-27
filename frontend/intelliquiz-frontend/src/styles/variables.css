@@ -2,6 +2,36 @@
 /* Color Palette: #880015 (Primary), #f8c107 (Accent), #FFFFFF (White), #000000 (Black) */
 
 :root {
+  /* PixelBrute Typography */
+  --font-display: 'Press Start 2P', monospace;
+  --font-heading: 'Boogaloo', cursive;
+  --font-body: 'Nunito', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  /* PixelBrute Palette */
+  --color-secondary: #5B21FF;
+  --color-accent-pink: #FF2D78;
+  --color-accent-green: #00E87A;
+  --color-accent-orange: #FF6B00;
+  --color-cream: #FFF8DC;
+  --color-correct: #00E87A;
+  --color-wrong: #FF2D78;
+  --color-timer-ok: #FFE500;
+  --color-timer-warn: #FF6B00;
+  --color-timer-danger: #FF2D78;
+  --color-rank-1: #FFD700;
+  --color-rank-2: #C0C0C0;
+  --color-rank-3: #CD7F32;
+
+  /* PixelBrute Border & Shadow */
+  --shadow-brutal: 4px 4px 0px #0D0D0D;
+  --shadow-brutal-lg: 6px 6px 0px #0D0D0D;
+  --shadow-brutal-hover: 2px 2px 0px #0D0D0D;
+  --border-brutal: 3px solid #0D0D0D;
+  --border-radius-pixel: 4px;
+  --border-radius-card: 8px;
+  --border-radius-btn: 6px;
+
   /* Primary Colors - Maroon */
   --color-primary: #880015;
   --color-primary-light: #a30018;
@@ -88,4 +118,23 @@
   /* Border Colors */
   --border-primary: rgba(248, 193, 7, 0.3);
   --border-secondary: #e5e7eb;
+}
+
+@keyframes pixel-jump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pixel-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes pixel-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }

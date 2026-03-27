@@ -12,6 +12,8 @@ import {
   BiGlobe,
   BiRefresh,
   BiCog,
+  BiX,
+  BiErrorCircle,
 } from 'react-icons/bi';
 import { useQuiz, useQuizStatusChange, useScoreboard, useTeams } from '../../hooks';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
@@ -540,11 +542,11 @@ export default function QuizWorkspacePage() {
           <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header workspace-modal-header-error">
               <h2 className="admin-modal-title">Cannot Change Quiz Status</h2>
-              <button onClick={() => setStatusError(null)} className="admin-btn-icon workspace-modal-close">✕</button>
+              <button onClick={() => setStatusError(null)} className="admin-btn-icon workspace-modal-close"><BiX size={18} /></button>
             </div>
             <div className="admin-modal-body">
               <div style={{ textAlign: 'center', padding: 20 }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+                <div style={{ color: '#b45309', marginBottom: 12 }}><BiErrorCircle size={36} /></div>
                 <p style={{ fontSize: 14, color: '#334155', lineHeight: 1.6 }}>
                   {statusError}
                 </p>

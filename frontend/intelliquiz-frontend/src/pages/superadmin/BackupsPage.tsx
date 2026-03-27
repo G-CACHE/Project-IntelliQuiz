@@ -394,8 +394,9 @@ export default function BackupsPage() {
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid rgba(245, 158, 11, 0.3)',
                 }}>
-                  <p style={{ fontSize: 'var(--font-size-sm)', color: '#b45309', margin: 0 }}>
-                    ⚠️ A pre-restore backup will be created automatically. This operation will replace all current data.
+                  <p style={{ fontSize: 'var(--font-size-sm)', color: '#b45309', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <BiErrorCircle size={16} />
+                    A pre-restore backup will be created automatically. This operation will replace all current data.
                   </p>
                 </div>
               </div>
