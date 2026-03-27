@@ -7,12 +7,16 @@ import com.intelliquiz.api.shared.exceptions.BackupNotFoundException;
 import com.intelliquiz.api.shared.dto.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -149,6 +153,46 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.withFieldErrors("Validation failed", HttpStatus.BAD_REQUEST.value(), fieldErrors));
+    }
+
+    /**
+     * Handles missing resources - returns 404 Not Found.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex) {
+        logger.debug("Resource not found: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("Resource not found", HttpStatus.NOT_FOUND.value()));
+    }
+
+    /**
+     * Handles DB connection acquisition failures - returns 503 Service Unavailable.
+     */
+    @ExceptionHandler(DataAccessResourceFailureException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessResourceFailure(DataAccessResourceFailureException ex) {
+        logger.error("Database resource failure: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ErrorResponse.of("Database temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE.value()));
+    }
+
+    /**
+     * Handles expected async request timeout for long-lived SSE requests.
+     */
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    public ResponseEntity<Void> handleAsyncRequestTimeout(AsyncRequestTimeoutException ex) {
+        logger.debug("Async request timeout (expected for SSE): {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    /**
+     * Handles client disconnects during SSE writes (browser tab close/refresh).
+     */
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public ResponseEntity<Void> handleAsyncRequestNotUsable(AsyncRequestNotUsableException ex) {
+        logger.debug("Async request not usable (client disconnected): {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     /**
