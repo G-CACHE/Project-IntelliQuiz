@@ -3,8 +3,11 @@ package com.intelliquiz.api.quiz.internal.application.services;
 import com.intelliquiz.api.quiz.internal.application.commands.CreateQuizCommand;
 import com.intelliquiz.api.quiz.internal.application.commands.UpdateQuizCommand;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.QuestionBankItem;
 import com.intelliquiz.api.quiz.events.QuizCreatedEvent;
 import com.intelliquiz.api.quiz.events.QuizStatusChangedEvent;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuestionBankRepository;
+import com.intelliquiz.api.shared.enums.QuizAccessMode;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Application service for quiz CRUD operations.
@@ -26,14 +30,19 @@ import java.util.List;
 @Transactional
 public class QuizManagementService {
 
+    private static final int QUIZ_CODE_MAX_ATTEMPTS = 20;
+
     private final QuizRepository quizRepository;
+    private final QuestionBankRepository questionBankRepository;
     private final CodeGenerationService codeGenerationService;
     private final ApplicationEventPublisher eventPublisher;
 
     public QuizManagementService(QuizRepository quizRepository, 
+                                  QuestionBankRepository questionBankRepository,
                                   CodeGenerationService codeGenerationService,
                                   ApplicationEventPublisher eventPublisher) {
         this.quizRepository = quizRepository;
+        this.questionBankRepository = questionBankRepository;
         this.codeGenerationService = codeGenerationService;
         this.eventPublisher = eventPublisher;
     }
@@ -47,13 +56,38 @@ public class QuizManagementService {
      */
     public Quiz createQuiz(CreateQuizCommand command) {
         String proctorPin = codeGenerationService.generateProctorPin();
+        String quizCode = generateUniqueQuizCode();
         Quiz quiz = new Quiz(command.title(), command.description(), proctorPin, QuizStatus.DRAFT);
+        quiz.setQuizCode(quizCode);
         quiz.setCreatedByUserId(command.createdByUserId());
+        quiz.setAccessMode(command.accessMode() != null ? command.accessMode() : QuizAccessMode.RESTRICTED);
+        
+        // Set navigation mode and global time limit if provided
+        if (command.navigationMode() != null) {
+            quiz.setNavigationMode(command.navigationMode());
+        }
+        if (command.globalTimeLimitSeconds() != null) {
+            quiz.setGlobalTimeLimitSeconds(command.globalTimeLimitSeconds());
+        }
+        if (command.randomizeQuestions() != null) {
+            quiz.setRandomizeQuestions(command.randomizeQuestions());
+        }
+        
         quiz.validateTitle();
         Quiz saved = quizRepository.save(quiz);
         eventPublisher.publishEvent(new QuizCreatedEvent(
                 saved.getId(), saved.getTitle(), Instant.now()));
         return saved;
+    }
+
+    private String generateUniqueQuizCode() {
+        for (int i = 0; i < QUIZ_CODE_MAX_ATTEMPTS; i++) {
+            String candidate = codeGenerationService.generateQuizCode();
+            if (!quizRepository.existsByQuizCodeIgnoreCase(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Unable to generate a unique quiz code");
     }
 
     /**
@@ -66,9 +100,13 @@ public class QuizManagementService {
      */
     public List<Quiz> getQuizzesForUser(Long userId, SystemRole role) {
         if (role == SystemRole.SUPER_ADMIN) {
-            return quizRepository.findAll();
+            List<Quiz> quizzes = quizRepository.findAll();
+            quizzes.forEach(this::ensureQuizCode);
+            return quizzes;
         }
-        return quizRepository.findByCreatedByUserId(userId);
+        List<Quiz> quizzes = quizRepository.findByCreatedByUserId(userId);
+        quizzes.forEach(this::ensureQuizCode);
+        return quizzes;
     }
 
     /**
@@ -85,6 +123,7 @@ public class QuizManagementService {
     public Quiz getQuizForUser(Long quizId, Long userId, SystemRole role) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        ensureQuizCode(quiz);
         if (role != SystemRole.SUPER_ADMIN && !quiz.getCreatedByUserId().equals(userId)) {
             throw new AccessDeniedException("You do not have access to this quiz");
         }
@@ -123,6 +162,19 @@ public class QuizManagementService {
         if (command.description() != null) {
             quiz.setDescription(command.description());
         }
+        if (command.accessMode() != null) {
+            quiz.setAccessMode(command.accessMode());
+        }
+        if (command.navigationMode() != null) {
+            quiz.setNavigationMode(command.navigationMode());
+        }
+        if (command.globalTimeLimitSeconds() != null) {
+            quiz.setGlobalTimeLimitSeconds(command.globalTimeLimitSeconds());
+        }
+        if (command.randomizeQuestions() != null) {
+            quiz.setRandomizeQuestions(command.randomizeQuestions());
+        }
+        
         quiz.validateTitle();
         
         return quizRepository.save(quiz);
@@ -137,6 +189,14 @@ public class QuizManagementService {
     public void deleteQuiz(Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+
+        // Keep bank entries intact even after quiz deletion by detaching source linkage.
+        List<QuestionBankItem> bankItems = questionBankRepository.findBySourceQuizId(quizId);
+        for (QuestionBankItem item : bankItems) {
+            item.setSourceQuizId(null);
+            questionBankRepository.save(item);
+        }
+
         quizRepository.delete(quiz);
     }
 
@@ -148,8 +208,10 @@ public class QuizManagementService {
      * @throws EntityNotFoundException if the quiz doesn't exist
      */
     public Quiz getQuiz(Long quizId) {
-        return quizRepository.findById(quizId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        Quiz quiz = quizRepository.findById(quizId)
+            .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        ensureQuizCode(quiz);
+        return quiz;
     }
 
     /**
@@ -158,7 +220,19 @@ public class QuizManagementService {
      * @return list of all quizzes
      */
     public List<Quiz> getAllQuizzes() {
-        return quizRepository.findAll();
+        List<Quiz> quizzes = quizRepository.findAll();
+        quizzes.forEach(this::ensureQuizCode);
+        return quizzes;
+    }
+
+    /**
+     * Gets a quiz by participant-facing quiz code.
+     */
+    public Optional<Quiz> getQuizByCode(String quizCode) {
+        if (quizCode == null || quizCode.isBlank()) {
+            return Optional.empty();
+        }
+        return quizRepository.findByQuizCodeIgnoreCase(quizCode.trim());
     }
 
     /**
@@ -181,6 +255,20 @@ public class QuizManagementService {
     }
 
     /**
+     * Returns a READY quiz back to DRAFT (unready).
+     */
+    public Quiz transitionToDraft(Long quizId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
+        QuizStatus oldStatus = quiz.getStatus();
+        quiz.transitionToDraft();
+        Quiz saved = quizRepository.save(quiz);
+        eventPublisher.publishEvent(new QuizStatusChangedEvent(
+                saved.getId(), oldStatus, saved.getStatus(), Instant.now()));
+        return saved;
+    }
+
+    /**
      * Archives a quiz.
      * 
      * @param quizId the ID of the quiz
@@ -196,5 +284,13 @@ public class QuizManagementService {
         eventPublisher.publishEvent(new QuizStatusChangedEvent(
                 saved.getId(), oldStatus, saved.getStatus(), Instant.now()));
         return saved;
+    }
+
+    private void ensureQuizCode(Quiz quiz) {
+        if (quiz.getQuizCode() != null && !quiz.getQuizCode().isBlank()) {
+            return;
+        }
+        quiz.setQuizCode(generateUniqueQuizCode());
+        quizRepository.save(quiz);
     }
 }
