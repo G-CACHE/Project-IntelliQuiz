@@ -49,6 +49,7 @@ public class TeamController {
      * Lists all teams for a quiz.
      */
     @GetMapping("/quizzes/{quizId}/teams")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "List teams for a quiz",
             description = "Retrieves all teams registered for a specific quiz."
@@ -89,6 +90,7 @@ public class TeamController {
      * Returns the team with generated access code.
      */
     @PostMapping("/quizzes/{quizId}/teams")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Register a team",
             description = "Registers a new team for a quiz and generates a unique access code for the team."
@@ -131,6 +133,7 @@ public class TeamController {
      * Removes a team.
      */
     @DeleteMapping("/teams/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Remove a team",
             description = "Removes a team and all associated submissions."
@@ -162,6 +165,7 @@ public class TeamController {
      * Resets all team scores for a quiz to zero.
      */
     @PostMapping("/quizzes/{quizId}/teams/reset-scores")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Reset team scores",
             description = "Resets all team scores for a quiz to zero."
