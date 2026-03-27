@@ -73,19 +73,13 @@ class SecurityPropertyTest {
 
     @Property(tries = 10)
     void publicEndpointPatternsMatchAccessEndpoints(@ForAll("accessEndpoints") String endpoint) {
-        // Given - public endpoints should match /api/access/**
-        String pattern = "/api/access/**";
-        
-        // When/Then
+        // Public endpoints should match /api/access/**
         assertThat(endpoint).startsWith("/api/access/");
     }
 
     @Property(tries = 10)
     void publicEndpointPatternsMatchAuthEndpoints(@ForAll("authEndpoints") String endpoint) {
-        // Given - public endpoints should match /api/auth/**
-        String pattern = "/api/auth/**";
-        
-        // When/Then
+        // Public endpoints should match /api/auth/**
         assertThat(endpoint).startsWith("/api/auth/");
     }
 
