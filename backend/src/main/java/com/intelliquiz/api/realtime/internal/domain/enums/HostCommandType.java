@@ -6,6 +6,11 @@ package com.intelliquiz.api.realtime.internal.domain.enums;
  */
 public enum HostCommandType {
     /**
+     * Starts quiz using configured navigation mode.
+     */
+    START_QUIZ,
+
+    /**
      * Triggers BUFFER countdown, then auto-starts questions.
      * Used at the beginning of each round (Easy, Medium, Hard).
      */
