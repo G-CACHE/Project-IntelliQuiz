@@ -6,7 +6,6 @@ import com.intelliquiz.api.realtime.internal.application.services.QuizTimerServi
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.IntRange;
 import net.jqwik.api.constraints.Positive;
-import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
