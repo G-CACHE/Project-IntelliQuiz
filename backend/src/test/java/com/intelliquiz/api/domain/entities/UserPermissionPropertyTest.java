@@ -8,8 +8,6 @@ import com.intelliquiz.api.shared.enums.SystemRole;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.NotBlank;
 
-import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -51,7 +49,7 @@ public class UserPermissionPropertyTest {
     void regularAdminOnlyHasGrantedPermissions(
             @ForAll("adminPermissions") AdminPermission grantedPermission,
             @ForAll("adminPermissions") AdminPermission checkedPermission) {
-        User admin = new User("admin", "password123", SystemRole.ADMIN);
+        User admin = new User("admin", "password123", SystemRole.EXAMINER);
         
         QuizAssignment assignment = new QuizAssignment(admin, TEST_QUIZ_ID);
         assignment.grantPermission(grantedPermission);
@@ -67,7 +65,7 @@ public class UserPermissionPropertyTest {
     @Property(tries = 20)
     void adminWithoutAssignmentHasNoPermissions(
             @ForAll("adminPermissions") AdminPermission permission) {
-        User admin = new User("admin", "password123", SystemRole.ADMIN);
+        User admin = new User("admin", "password123", SystemRole.EXAMINER);
         
         assertThat(admin.hasPermissionFor(TEST_QUIZ_ID, permission)).isFalse();
     }
@@ -78,7 +76,7 @@ public class UserPermissionPropertyTest {
     @Property(tries = 20)
     void getAccessibleQuizIdsReturnsAssignedQuizIds(
             @ForAll @NotBlank String quizTitle) {
-        User admin = new User("admin", "password123", SystemRole.ADMIN);
+        User admin = new User("admin", "password123", SystemRole.EXAMINER);
         
         QuizAssignment assignment = new QuizAssignment(admin, TEST_QUIZ_ID);
         admin.addAssignment(assignment);
@@ -91,7 +89,7 @@ public class UserPermissionPropertyTest {
      */
     @Property(tries = 5)
     void validateCredentialsThrowsForBlankUsername() {
-        User user = new User("", "password123", SystemRole.ADMIN);
+        User user = new User("", "password123", SystemRole.EXAMINER);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -103,7 +101,7 @@ public class UserPermissionPropertyTest {
      */
     @Property(tries = 5)
     void validateCredentialsThrowsForShortPassword() {
-        User user = new User("testuser", "short", SystemRole.ADMIN);
+        User user = new User("testuser", "short", SystemRole.EXAMINER);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -117,7 +115,7 @@ public class UserPermissionPropertyTest {
     void validateCredentialsPassesForValidCredentials(
             @ForAll @NotBlank String username,
             @ForAll("validPasswords") String password) {
-        User user = new User(username, password, SystemRole.ADMIN);
+        User user = new User(username, password, SystemRole.EXAMINER);
         
         // Should not throw
         user.validateCredentials();
