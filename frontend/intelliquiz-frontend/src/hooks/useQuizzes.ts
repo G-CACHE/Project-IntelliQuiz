@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { quizzesApi, type Quiz, type CreateQuizRequest, type UpdateQuizRequest } from '../services/api';
+import { quizzesApi, type CreateQuizRequest, type UpdateQuizRequest } from '../services/api';
 import { queryKeys } from '../lib/queryClient';
 
 export function useQuizzes() {
@@ -63,9 +63,10 @@ export function useQuizStatusChange() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, action }: { id: number; action: 'ready' | 'activate' | 'deactivate' | 'archive' }) => {
+    mutationFn: ({ id, action }: { id: number; action: 'ready' | 'draft' | 'activate' | 'deactivate' | 'archive' }) => {
       switch (action) {
         case 'ready': return quizzesApi.markReady(id);
+        case 'draft': return quizzesApi.markDraft(id);
         case 'activate': return quizzesApi.activate(id);
         case 'deactivate': return quizzesApi.deactivate(id);
         case 'archive': return quizzesApi.archive(id);
