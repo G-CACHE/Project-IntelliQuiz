@@ -3,6 +3,7 @@ package com.intelliquiz.api.quiz.internal.domain.entities;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
 import com.intelliquiz.api.shared.enums.NavigationMode;
+import com.intelliquiz.api.shared.enums.QuizAccessMode;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.InvalidQuizStateException;
 import com.intelliquiz.api.shared.exceptions.QuizNotReadyException;
@@ -20,7 +21,9 @@ import java.util.List;
  * Rich domain entity with behavior methods for state transitions and validation.
  */
 @Entity
-@Table(name = "quiz")
+@Table(name = "quiz", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_quiz_quiz_code", columnNames = "quiz_code")
+})
 @SQLDelete(sql = "UPDATE quiz SET deleted = true WHERE id = ?")
 @SQLRestriction("deleted = false")
 public class Quiz extends SoftDeletableEntity {
@@ -37,6 +40,9 @@ public class Quiz extends SoftDeletableEntity {
     @Column(name = "proctor_pin", nullable = false)
     private String proctorPin;
 
+    @Column(name = "quiz_code", length = 6, unique = true)
+    private String quizCode;
+
     @Column(name = "is_live_session", nullable = false)
     private boolean isLiveSession;
 
@@ -48,10 +54,17 @@ public class Quiz extends SoftDeletableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "navigation_mode", nullable = false)
-    private NavigationMode navigationMode = NavigationMode.LINEAR;
+    private NavigationMode navigationMode = NavigationMode.TOURNAMENT;
 
     @Column(name = "global_time_limit_seconds", nullable = false)
     private int globalTimeLimitSeconds = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access_mode", nullable = false)
+    private QuizAccessMode accessMode = QuizAccessMode.RESTRICTED;
+
+    @Column(name = "randomize_questions", nullable = false)
+    private boolean randomizeQuestions = false;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
     @JsonManagedReference("quiz-questions")
@@ -101,6 +114,16 @@ public class Quiz extends SoftDeletableEntity {
             throw new InvalidQuizStateException("Quiz must have at least one question to transition to READY");
         }
         this.status = QuizStatus.READY;
+    }
+
+    /**
+     * Returns the quiz back to DRAFT from READY.
+     */
+    public void transitionToDraft() {
+        if (this.status != QuizStatus.READY) {
+            throw new InvalidQuizStateException("Only READY quizzes can be marked as DRAFT");
+        }
+        this.status = QuizStatus.DRAFT;
     }
 
     /**
@@ -213,5 +236,29 @@ public class Quiz extends SoftDeletableEntity {
 
     public void setGlobalTimeLimitSeconds(int globalTimeLimitSeconds) {
         this.globalTimeLimitSeconds = globalTimeLimitSeconds;
+    }
+
+    public QuizAccessMode getAccessMode() {
+        return accessMode;
+    }
+
+    public void setAccessMode(QuizAccessMode accessMode) {
+        this.accessMode = accessMode;
+    }
+
+    public String getQuizCode() {
+        return quizCode;
+    }
+
+    public void setQuizCode(String quizCode) {
+        this.quizCode = quizCode;
+    }
+
+    public boolean isRandomizeQuestions() {
+        return randomizeQuestions;
+    }
+
+    public void setRandomizeQuestions(boolean randomizeQuestions) {
+        this.randomizeQuestions = randomizeQuestions;
     }
 }
