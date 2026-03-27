@@ -21,7 +21,7 @@ export default function AdminTeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [teamName, setTeamName] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const { assignments, isSuperAdmin, canManageTeams } = useAuth();
+  const { assignments, isSuperAdmin } = useAuth();
 
   useEffect(() => { loadQuizzes(); }, []);
   useEffect(() => { if (selectedQuizId) loadTeams(); else setTeams([]); }, [selectedQuizId]);
