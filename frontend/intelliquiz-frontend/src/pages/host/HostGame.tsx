@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Trophy, Sparkles, Home } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
@@ -412,8 +413,12 @@ const HostGame: React.FC = () => {
           {gameState === 'FINAL_RESULTS' && (
             <div className="proctor-host-final-stage">
               <div className="proctor-host-final-banner">
-                <div className="proctor-host-final-icon">�</div>
-                <h2>Quiz Complete</h2>
+                <div className="proctor-host-final-icon" aria-hidden="true">
+                  <Trophy className="proctor-host-final-icon-main" />
+                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-left" />
+                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-right" />
+                </div>
+                <h2 className="proctor-host-final-title">Quiz Complete</h2>
                 <p>Final results are in. Great run from every team.</p>
                 <div className="proctor-host-final-metrics">
                   <div className="proctor-host-final-metric">
@@ -471,6 +476,7 @@ const HostGame: React.FC = () => {
                   onClick={handleExitHome}
                   className="proctor-btn-primary proctor-btn-large"
                 >
+                  <Home size={20} aria-hidden="true" />
                   Go Home
                 </button>
               </div>

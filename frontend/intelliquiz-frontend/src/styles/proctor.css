@@ -1264,6 +1264,15 @@
 
 .proctor-host-final-stage {
   margin-top: 28px;
+  padding: 22px;
+  border: 4px solid var(--color-black);
+  border-radius: var(--border-radius-card);
+  background: var(--color-primary);
+  background-image:
+    linear-gradient(rgba(13, 13, 13, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 13, 13, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  box-shadow: 8px 8px 0 var(--color-secondary);
   display: grid;
   gap: 18px;
 }
@@ -1271,15 +1280,14 @@
 .proctor-host-final-banner {
   position: relative;
   text-align: center;
-  padding: 38px 30px 26px;
-  border-radius: 24px;
+  padding: 30px 24px 24px;
+  border: 4px solid var(--color-black);
+  border-radius: var(--border-radius-card);
   color: #fff;
-  background:
-    radial-gradient(circle at 14% 20%, rgba(248, 193, 7, 0.2) 0%, transparent 45%),
-    radial-gradient(circle at 84% 30%, rgba(255, 255, 255, 0.14) 0%, transparent 50%),
-    linear-gradient(128deg, #5f1027 0%, #7a1733 55%, #9f2346 100%);
-  box-shadow: 0 16px 36px rgba(95, 16, 39, 0.34);
+  background: var(--color-secondary);
+  box-shadow: var(--shadow-brutal-lg);
   overflow: hidden;
+  animation: pixel-pop 0.45s ease-out;
 }
 
 .proctor-host-final-banner::after {
@@ -1298,27 +1306,58 @@
 }
 
 .proctor-host-final-icon {
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   margin: 0 auto 12px;
-  border-radius: 20px;
+  border-radius: 50%;
+  border: 4px solid var(--color-black);
+  box-shadow: var(--shadow-brutal);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  background: rgba(248, 193, 7, 0.2);
-  border: 1px solid rgba(248, 193, 7, 0.55);
+  background: var(--color-primary);
+  position: relative;
+}
+
+.proctor-host-final-icon-main {
+  width: 46px;
+  height: 46px;
+  color: var(--color-black);
+}
+
+.proctor-host-final-icon-spark {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  color: var(--color-white);
+  animation: float 1.2s ease-in-out infinite;
+}
+
+.proctor-host-final-icon-spark-left {
+  left: -8px;
+  top: 10px;
+}
+
+.proctor-host-final-icon-spark-right {
+  right: -8px;
+  bottom: 14px;
+}
+
+.proctor-host-final-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 5vw, 48px);
+  text-shadow: 4px 4px 0 var(--color-black);
 }
 
 .proctor-host-final-banner h2 {
   margin: 0;
-  font-size: clamp(28px, 4.2vw, 40px);
-  letter-spacing: -0.01em;
 }
 
 .proctor-host-final-banner p {
   margin: 10px 0 0;
-  font-size: 15px;
+  font-family: var(--font-heading);
+  font-size: 22px;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -1330,26 +1369,29 @@
 }
 
 .proctor-host-final-metric {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: 14px;
+  background: var(--color-white);
+  border: var(--border-brutal);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-brutal);
   padding: 10px;
 }
 
 .proctor-host-final-metric span {
   display: block;
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.76);
+  color: rgba(13, 13, 13, 0.68);
 }
 
 .proctor-host-final-metric strong {
   display: block;
   margin-top: 4px;
-  font-size: 22px;
-  font-weight: 900;
-  color: #f8c107;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-secondary);
 }
 
 .proctor-host-final-winner-card {
@@ -1358,32 +1400,35 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  border-radius: 18px;
-  border: 1px solid #f0d792;
-  background: linear-gradient(140deg, #fff5d8 0%, #ffe6a9 100%);
-  box-shadow: 0 10px 24px rgba(212, 160, 23, 0.22);
+  border-radius: var(--border-radius-card);
+  border: 4px solid var(--color-black);
+  background: var(--color-primary);
+  box-shadow: var(--shadow-brutal-lg);
   padding: 16px 20px;
 }
 
 .proctor-host-final-winner-label {
-  font-size: 12px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: #6f4d00;
+  letter-spacing: 0.2em;
+  color: rgba(13, 13, 13, 0.72);
 }
 
 .proctor-host-final-winner-main h3 {
   margin: 0;
-  font-size: 26px;
-  font-weight: 900;
-  color: #5f1027;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4vw, 34px);
+  font-weight: 400;
+  color: var(--color-secondary);
 }
 
 .proctor-host-final-winner-main p {
   margin: 4px 0 0;
-  font-size: 15px;
-  color: #7a1733;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  color: var(--color-black);
   font-weight: 700;
 }
 
@@ -1392,32 +1437,38 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
-  background: linear-gradient(180deg, #fff 0%, #fff8ea 100%);
-  border: 1px solid #e7d6db;
-  border-radius: 20px;
+  background: var(--color-white);
+  border: var(--border-brutal);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-brutal);
   padding: 20px;
 }
 
 .proctor-host-podium-title {
   grid-column: 1 / -1;
-  font-size: 18px;
-  font-weight: 800;
-  color: #5f1027;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-black);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .proctor-host-podium-item {
   text-align: center;
-  border-radius: 16px;
-  border: 1px solid #e8d9be;
+  border-radius: var(--border-radius-card);
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
   padding: 18px 12px;
-  background: linear-gradient(180deg, #fffdf7 0%, #fff3da 100%);
+  background: var(--color-white);
 }
 
 .proctor-host-podium-item.is-first {
-  border-width: 2px;
-  border-color: #f8c107;
+  border-width: 4px;
+  border-color: var(--color-black);
+  background: var(--color-primary);
   transform: translateY(-6px);
-  box-shadow: 0 10px 24px rgba(248, 193, 7, 0.35);
+  box-shadow: var(--shadow-brutal-lg);
 }
 
 .proctor-host-podium-medal {
@@ -1427,16 +1478,18 @@
 
 .proctor-host-podium-item p {
   margin: 0;
-  font-size: 16px;
+  font-family: var(--font-heading);
+  font-size: 22px;
   font-weight: 700;
-  color: #432b33;
+  color: var(--color-black);
 }
 
 .proctor-host-podium-item strong {
   display: block;
   margin-top: 6px;
-  font-size: 24px;
-  color: #880015;
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-secondary);
 }
 
 .proctor-host-final-scoreboard {
@@ -1447,6 +1500,17 @@
   margin: 8px 0 10px;
   display: flex;
   justify-content: center;
+}
+
+.proctor-host-final-actions .proctor-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal-lg);
 }
 
 /* ==================== BUFFER STATE ==================== */
