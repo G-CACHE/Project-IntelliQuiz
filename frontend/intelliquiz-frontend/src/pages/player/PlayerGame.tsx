@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, CircleX, AlarmClock } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -439,21 +440,32 @@ const PlayerGame: React.FC = () => {
               }`}>
                 {isCorrect === true && (
                   <>
-                    <div className="participant-result-icon">✓</div>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <CheckCircle2 className="participant-result-icon-svg" />
+                    </div>
                     <h2 className="participant-result-title">Correct!</h2>
                     <p className="participant-result-points">+{currentQuestion.points} points</p>
                   </>
                 )}
                 {isCorrect === false && (
                   <>
-                    <div className="participant-result-icon">✗</div>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <CircleX className="participant-result-icon-svg" />
+                    </div>
                     <h2 className="participant-result-title">Incorrect</h2>
                     <p className="participant-result-hint">Better luck next time!</p>
+                    {currentQuestion.correctAnswer && (
+                      <p className="participant-result-correct-answer">
+                        Correct answer: {currentQuestion.correctAnswer}
+                      </p>
+                    )}
                   </>
                 )}
                 {isCorrect === null && !submitted && (
                   <>
-                    <div className="participant-result-icon">⏱</div>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <AlarmClock className="participant-result-icon-svg" />
+                    </div>
                     <h2 className="participant-result-title">No Answer</h2>
                     <p className="participant-result-hint">You didn't submit an answer</p>
                   </>
