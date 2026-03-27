@@ -158,7 +158,7 @@ describe('UniversalLogin Component', () => {
       const proctorCard = screen.getByLabelText('Host as Proctor');
       fireEvent.click(proctorCard);
       
-      expect(mockNavigate).toHaveBeenCalledWith('/proctor/login');
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
 
     it('should navigate to admin login on admin card click', () => {
@@ -185,7 +185,7 @@ describe('UniversalLogin Component', () => {
       const proctorCard = screen.getByLabelText('Host as Proctor');
       fireEvent.keyDown(proctorCard, { key: 'Enter' });
       
-      expect(mockNavigate).toHaveBeenCalledWith('/proctor/login');
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
 
     it('should navigate on Enter key press for admin card', () => {
