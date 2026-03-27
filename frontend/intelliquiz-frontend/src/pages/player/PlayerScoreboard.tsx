@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession, clearSession } from '../../services/sessionStorage';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import '../../styles/participant.css';
@@ -30,7 +30,7 @@ const PlayerScoreboard: React.FC = () => {
     return null;
   });
 
-  // WebSocket connection - pass teamCode as accessCode for authentication
+  // SSE connection - pass teamCode as accessCode for authentication
   const {
     connected,
     error,
@@ -40,12 +40,11 @@ const PlayerScoreboard: React.FC = () => {
     rankings,
     reconnect,
     disconnect,
-  } = useWebSocket(
+  } = useSSE(
     session?.quizId || 0,
     'PARTICIPANT',
     session?.teamId,
-    session?.teamName,
-    session?.teamCode  // accessCode for WebSocket authentication
+    session?.teamCode  // accessCode for SSE authentication
   );
 
   // Redirect to login if no session
@@ -62,16 +61,10 @@ const PlayerScoreboard: React.FC = () => {
     }
   }, [gameState, isFinal, session, navigate]);
 
-  const handleReturnToLogin = () => {
+  const handleExitHome = () => {
     disconnect();
     clearSession();
-    navigate('/participant/login');
-  };
-
-  const handlePlayAgain = () => {
-    disconnect();
-    clearSession();
-    navigate('/participant/login');
+    navigate('/');
   };
 
   // Find current team's rank
@@ -137,6 +130,7 @@ const PlayerScoreboard: React.FC = () => {
             rankings={rankings}
             highlightTeamId={session.teamId}
             isFinal={isFinal}
+            title={isFinal ? 'Congratulations' : undefined}
           />
 
           {/* Footer */}
@@ -148,16 +142,10 @@ const PlayerScoreboard: React.FC = () => {
                 </p>
                 <div className="participant-actions">
                   <button
-                    onClick={handlePlayAgain}
+                    onClick={handleExitHome}
                     className="participant-btn-primary participant-btn-large"
                   >
-                    Play Again
-                  </button>
-                  <button
-                    onClick={handleReturnToLogin}
-                    className="participant-btn-secondary"
-                  >
-                    Return to Login
+                    Go Home
                   </button>
                 </div>
               </div>
