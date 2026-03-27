@@ -117,6 +117,12 @@ public class QuizTimerService {
                         onExpired.accept(questionId);
                     } catch (Exception e) {
                         logger.error("Error executing timer expiry callback for quiz {} question {}: {}", quizId, questionId, e.getMessage(), e);
+                        // Attempt to broadcast REVEAL state to prevent frontend from being stuck
+                        try {
+                            broadcastService.broadcastGameState(quizId, GameStateMessage.reveal(quizId));
+                        } catch (Exception fallbackError) {
+                            logger.error("Failed to broadcast fallback state after callback error: {}", fallbackError.getMessage());
+                        }
                     }
                 }
             } else {
@@ -236,8 +242,18 @@ public class QuizTimerService {
             if (remaining <= 0) {
                 stopTimer(quizId);
                 broadcastService.broadcastTimerExpired(quizId, current.totalSeconds());
+                broadcastService.broadcastGameState(quizId, GameStateMessage.grading(quizId));
                 if (onExpired != null) {
-                    onExpired.run();
+                    try {
+                        onExpired.run();
+                    } catch (Exception e) {
+                        logger.error("Error executing global timer expiry callback for quiz {}: {}", quizId, e.getMessage(), e);
+                        // Ensure clients are never stuck in GRADING after an expiry callback failure.
+                        broadcastService.broadcastGameState(
+                                quizId,
+                                GameStateMessage.roundSummary(quizId, "Error during auto-grading")
+                        );
+                    }
                 }
             } else {
                 timers.put(quizId, current.withRemaining(remaining));
@@ -247,6 +263,55 @@ public class QuizTimerService {
 
         timers.put(quizId, state.withFuture(future));
         logger.info("Started global timer for quiz {} ({} seconds)", quizId, durationSeconds);
+    }
+
+    /**
+     * Resumes a paused global timer for Class mode.
+     * Uses a Runnable callback because Class mode grades the full quiz on expiry.
+     */
+    public void resumeGlobalTimer(Long quizId, Runnable onExpired) {
+        TimerState state = timers.get(quizId);
+        if (state == null || !state.isPaused()) {
+            return;
+        }
+
+        int remaining = state.remainingSeconds();
+        int total = state.totalSeconds();
+
+        TimerState newState = new TimerState(remaining, total, true, false, null);
+        timers.put(quizId, newState);
+
+        broadcastService.broadcastTimerTick(quizId, remaining, total);
+
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
+            TimerState current = timers.get(quizId);
+            if (current == null || current.isPaused()) return;
+
+            int rem = current.remainingSeconds() - 1;
+
+            if (rem <= 0) {
+                stopTimer(quizId);
+                broadcastService.broadcastTimerExpired(quizId, current.totalSeconds());
+                broadcastService.broadcastGameState(quizId, GameStateMessage.grading(quizId));
+                if (onExpired != null) {
+                    try {
+                        onExpired.run();
+                    } catch (Exception e) {
+                        logger.error("Error executing resumed global timer callback for quiz {}: {}", quizId, e.getMessage(), e);
+                        broadcastService.broadcastGameState(
+                                quizId,
+                                GameStateMessage.roundSummary(quizId, "Error during auto-grading")
+                        );
+                    }
+                }
+            } else {
+                timers.put(quizId, current.withRemaining(rem));
+                broadcastService.broadcastTimerTick(quizId, rem, current.totalSeconds());
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+
+        timers.put(quizId, newState.withFuture(future));
+        logger.info("Resumed global timer for quiz {} with {} seconds remaining", quizId, remaining);
     }
 
     /**
