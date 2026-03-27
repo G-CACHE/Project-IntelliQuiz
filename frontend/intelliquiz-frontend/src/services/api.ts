@@ -43,13 +43,37 @@ export const authApi = {
 
 // Access Code Resolution API (Public - no auth required)
 export const accessApi = {
-  resolveCode: async (code: string): Promise<AccessResolutionResponse> => {
+  resolveCode: async (code: string, deviceId?: string): Promise<AccessResolutionResponse> => {
     const response = await apiFetch(`${API_BASE_URL}/api/access/resolve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, deviceId }),
     });
     return handleResponse<AccessResolutionResponse>(response);
+  },
+
+  joinPublicQuiz: async (quizId: number, name: string, deviceId?: string): Promise<AccessResolutionResponse> => {
+    const response = await apiFetch(`${API_BASE_URL}/api/access/quizzes/${quizId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, deviceId }),
+    });
+    return handleResponse<AccessResolutionResponse>(response);
+  },
+
+  checkParticipantAccess: async (quizId: number, teamId: number, deviceId?: string): Promise<ParticipantAccessCheckResponse> => {
+    const params = new URLSearchParams();
+    params.set('teamId', String(teamId));
+    if (deviceId) {
+      params.set('deviceId', deviceId);
+    }
+
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/participant-access?${params.toString()}`, {
+      method: 'GET',
+      headers: JSON_HEADERS,
+    });
+
+    return handleResponse<ParticipantAccessCheckResponse>(response);
   },
 };
 
@@ -194,6 +218,14 @@ export const quizzesApi = {
     return handleResponse<Quiz>(response);
   },
 
+  markDraft: async (id: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}/draft`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<Quiz>(response);
+  },
+
   activate: async (id: number) => {
     const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${id}/activate`, {
       method: 'POST',
@@ -216,6 +248,33 @@ export const quizzesApi = {
       headers: JSON_HEADERS,
     });
     return handleResponse<Quiz>(response);
+  },
+};
+
+// Quiz runtime control API
+export const quizControlApi = {
+  start: async (quizId: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/start`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<CommandResponse>(response);
+  },
+
+  command: async (quizId: number, command: CommandMessage) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/command`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify(command),
+    });
+    return handleResponse<CommandResponse>(response);
+  },
+
+  state: async (quizId: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/state`, {
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<QuizRuntimeState>(response);
   },
 };
 
@@ -305,7 +364,11 @@ export const scoreboardApi = {
     const response = await apiFetch(`${API_BASE_URL}/api/quizzes/${quizId}/scoreboard`, {
       headers: JSON_HEADERS,
     });
-    return handleResponse<ScoreboardEntry[]>(response);
+    const payload = await handleResponse<ScoreboardEntry[] | { entries?: ScoreboardEntry[] }>(response);
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+    return Array.isArray(payload?.entries) ? payload.entries : [];
   },
 };
 
@@ -375,6 +438,32 @@ export const submissionsApi = {
   },
 };
 
+export const quizResultsApi = {
+  getParticipantResults: async (quizId: number, teamId: number) => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/participant-results?teamId=${teamId}`, {
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<ParticipantQuestionResult[]>(response);
+  },
+};
+
+export const violationApi = {
+  getHistory: async (quizId: number, options?: { teamId?: number; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options?.teamId) {
+      params.set('teamId', String(options.teamId));
+    }
+    if (options?.limit) {
+      params.set('limit', String(options.limit));
+    }
+    const query = params.toString();
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/violations${query ? `?${query}` : ''}`, {
+      headers: JSON_HEADERS,
+    });
+    return handleResponse<ViolationLogRecord[]>(response);
+  },
+};
+
 // Types
 export type SystemRole = 'ADMIN' | 'SUPER_ADMIN' | 'EXAMINER' | 'PROCTOR' | 'PARTICIPANT';
 
@@ -400,27 +489,40 @@ export interface AssignPermissionsRequest {
   permissions: string[];
 }
 
-export type NavigationMode = 'LINEAR' | 'NON_LINEAR';
+export type NavigationMode = 'TOURNAMENT' | 'CLASS';
 
 export interface Quiz {
   id: number;
   title: string;
   description: string;
+  quizCode?: string;
   proctorPin: string;
   status: 'DRAFT' | 'READY' | 'ACTIVE' | 'ARCHIVED';
+  accessMode?: 'PUBLIC' | 'RESTRICTED';
   questionCount?: number;
   navigationMode?: NavigationMode;
   globalTimeLimitSeconds?: number;
+  randomizeQuestions?: boolean;
+  createdByUserId?: number;
+  isLiveSession?: boolean;
 }
 
 export interface CreateQuizRequest {
   title: string;
   description?: string;
+  accessMode?: 'PUBLIC' | 'RESTRICTED';
+  navigationMode?: NavigationMode;
+  globalTimeLimitSeconds?: number;
+  randomizeQuestions?: boolean;
 }
 
 export interface UpdateQuizRequest {
   title?: string;
   description?: string;
+  accessMode?: 'PUBLIC' | 'RESTRICTED';
+  navigationMode?: NavigationMode;
+  globalTimeLimitSeconds?: number;
+  randomizeQuestions?: boolean;
 }
 
 export interface Question {
@@ -483,6 +585,17 @@ export interface Submission {
   submittedAt: string;
 }
 
+export interface ParticipantQuestionResult {
+  questionId: number;
+  questionNumber: number;
+  questionText: string;
+  participantAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+  pointsEarned: number;
+  maxPoints: number;
+}
+
 export interface SubmitAnswerRequest {
   teamId: number;
   questionId: number;
@@ -536,8 +649,11 @@ export interface TeamResponse {
 export interface QuizAccessResponse {
   id: number;
   title: string;
+  quizCode?: string;
   proctorPin: string;
+  isLive?: boolean;
   status: string;
+  accessMode?: 'PUBLIC' | 'RESTRICTED';
 }
 
 export interface AccessResolutionResponse {
@@ -545,6 +661,11 @@ export interface AccessResolutionResponse {
   team?: TeamResponse;
   quiz?: QuizAccessResponse;
   errorMessage?: string;
+}
+
+export interface ParticipantAccessCheckResponse {
+  allowed: boolean;
+  message: string;
 }
 
 // Game State Types
@@ -641,8 +762,9 @@ export interface AnswerRevealData {
   }>;
 }
 
-// WebSocket Command Types
+// Realtime command types
 export type CommandType = 
+  | 'START_QUIZ'
   | 'START_ROUND' 
   | 'NEXT_QUESTION' 
   | 'VIEW_LEADERBOARD' 
@@ -650,6 +772,19 @@ export type CommandType =
   | 'END_QUIZ' 
   | 'PAUSE' 
   | 'RESUME';
+
+export interface CommandResponse {
+  status: 'executed' | 'failed';
+  newGameState: string | null;
+  message: string;
+}
+
+export interface QuizRuntimeState {
+  state: string;
+  questionIndex: number;
+  timeRemaining: number;
+  timestamp: string;
+}
 
 export interface CommandMessage {
   type: CommandType;
@@ -678,6 +813,15 @@ export interface ViolationNotification {
   totalCount: number;
   lastType: ViolationType;
   autoKicked: boolean;
+}
+
+export interface ViolationLogRecord {
+  id: number;
+  quizId: number;
+  teamId: number;
+  teamName: string;
+  violationType: string;
+  detectedAt: string;
 }
 
 export interface KickMessage {
