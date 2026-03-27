@@ -1,106 +1,279 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { accessApi, type QuizAccessResponse } from '../../services/api';
+import { getOrCreateDeviceId } from '../../services/deviceId';
+import { saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
 import '../../styles/landing.css';
 
 const UniversalLogin: React.FC = () => {
   const navigate = useNavigate();
+  const [code, setCode] = useState('');
+  const [participantName, setParticipantName] = useState('');
+  const [pendingPublicQuiz, setPendingPublicQuiz] = useState<QuizAccessResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [logoTapCount, setLogoTapCount] = useState(0);
+
+  const extractErrorMessage = (err: unknown, fallback: string): string => {
+    if (err instanceof Error && err.message) {
+      try {
+        const parsed = JSON.parse(err.message) as { message?: string; errorMessage?: string };
+        if (parsed?.message) return parsed.message;
+        if (parsed?.errorMessage) return parsed.errorMessage;
+      } catch {
+        // Not JSON; use raw message.
+      }
+      return err.message;
+    }
+    return fallback;
+  };
+
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) {
+      setError('Enter quiz code');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const deviceId = getOrCreateDeviceId();
+      const result = await accessApi.resolveCode(code.trim(), deviceId);
+
+      if (result.routeType === 'HOST' && result.quiz) {
+        if (result.quiz.status === 'DRAFT') {
+          setError('Proctoring is not allowed while quiz is in draft.');
+          return;
+        }
+
+        saveProctorSession(result.quiz.id, result.quiz.title, result.quiz.proctorPin);
+
+        const shouldOpenGame =
+          result.quiz.status === 'ARCHIVED' ||
+          result.quiz.status === 'ACTIVE' ||
+          Boolean(result.quiz.isLive);
+
+        navigate(shouldOpenGame ? '/host/game' : '/host/lobby');
+        return;
+      }
+
+      if (result.routeType === 'PARTICIPANT' && result.team) {
+        const access = await accessApi.checkParticipantAccess(
+          result.team.quizId,
+          result.team.id,
+          getOrCreateDeviceId(),
+        );
+
+        if (!access.allowed) {
+          setError(access.message || 'You cannot rejoin this quiz right now. Please contact the proctor/admin.');
+          return;
+        }
+
+        saveParticipantSession(
+          result.team.quizId,
+          result.team.id,
+          result.team.name,
+          result.team.accessCode,
+        );
+        navigate('/player/lobby');
+        return;
+      }
+
+      // Public quiz pre-join path: code resolved to PARTICIPANT quiz but no team yet.
+      if (result.routeType === 'PARTICIPANT' && result.quiz?.accessMode === 'PUBLIC' && !result.team) {
+        setPendingPublicQuiz(result.quiz);
+        setError(null);
+        return;
+      }
+
+      setError(result.errorMessage || 'Code not recognized. Please check and try again.');
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Unable to resolve code right now. Please try again.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePublicJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingPublicQuiz) return;
+    if (!participantName.trim()) {
+      setError('Enter your participant or team name.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const joined = await accessApi.joinPublicQuiz(
+        pendingPublicQuiz.id,
+        participantName.trim(),
+        getOrCreateDeviceId(),
+      );
+      if (joined.routeType === 'PARTICIPANT' && joined.team) {
+        const access = await accessApi.checkParticipantAccess(
+          joined.team.quizId,
+          joined.team.id,
+          getOrCreateDeviceId(),
+        );
+
+        if (!access.allowed) {
+          setError(access.message || 'You cannot rejoin this quiz right now. Please contact the proctor/admin.');
+          return;
+        }
+
+        saveParticipantSession(
+          joined.team.quizId,
+          joined.team.id,
+          joined.team.name,
+          joined.team.accessCode,
+        );
+        navigate('/player/lobby');
+        return;
+      }
+
+      setError(joined.errorMessage || 'Unable to join this quiz right now.');
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Unable to join this quiz right now.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPublicJoin = () => {
+    setPendingPublicQuiz(null);
+    setParticipantName('');
+    setError(null);
+  };
+
+  const handleLogoTap = () => {
+    const next = logoTapCount + 1;
+    if (next >= 3) {
+      setLogoTapCount(0);
+      navigate('/portal');
+      return;
+    }
+    setLogoTapCount(next);
+    window.setTimeout(() => setLogoTapCount(0), 900);
+  };
 
   return (
     <div className="landing-page">
-      {/* Hero Section */}
       <div className="landing-hero">
-        <div className="landing-hero-decoration landing-hero-decoration-1"></div>
-        <div className="landing-hero-decoration landing-hero-decoration-2"></div>
+        <div className="landing-orb landing-orb-left" aria-hidden="true"></div>
+        <div className="landing-orb landing-orb-right" aria-hidden="true"></div>
+        <div className="landing-grid-line" aria-hidden="true"></div>
         <div className="landing-hero-content">
-          <h1 className="landing-hero-title">IntelliQuiz</h1>
+          <p className="landing-hero-kicker">PUP Quiz Experience</p>
+          <h1 className="landing-hero-title" onClick={handleLogoTap}>IntelliQuiz</h1>
           <p className="landing-hero-subtitle">Interactive Quiz Platform</p>
-          <p className="landing-hero-tagline">Engage, Learn, and Compete in Real-Time</p>
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="landing-content">
-        <div className="landing-cards-container">
-          {/* Participant Login - Primary Action */}
-          <div
-            className="landing-card landing-card-primary"
-            onClick={() => navigate('/participant/login')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && navigate('/participant/login')}
-            aria-label="Join as Participant"
-          >
-            <div className="landing-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+        <div className="landing-shell">
+          <aside className="landing-info-panel">
+            <h2 className="landing-info-title">Fast join, instant play</h2>
+            <p className="landing-info-copy">
+              Enter your quiz code to continue. IntelliQuiz detects your access type automatically and routes you to the correct experience.
+            </p>
+            <div className="landing-feature-list">
+              <span className="landing-feature-item">Realtime sync</span>
+              <span className="landing-feature-item">Role-aware access</span>
+              <span className="landing-feature-item">Live leaderboard</span>
             </div>
-            <div className="landing-card-content">
-              <h2 className="landing-card-title">Join as Participant</h2>
-              <p className="landing-card-description">Enter your team code to join a quiz session</p>
-            </div>
-            <svg className="landing-card-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
+          </aside>
 
-          {/* Proctor Login - Secondary Action */}
-          <div
-            className="landing-card landing-card-secondary"
-            onClick={() => navigate('/proctor/login')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && navigate('/proctor/login')}
-            aria-label="Host as Proctor"
-          >
-            <div className="landing-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+          <section className="landing-auth-card" aria-label="Quiz Access">
+            <div className="landing-auth-header">
+              <p className="landing-auth-kicker">Access Portal</p>
+              <h3 className="landing-auth-title">
+                {!pendingPublicQuiz ? 'Enter your code to continue' : 'Set your team name'}
+              </h3>
             </div>
-            <div className="landing-card-content">
-              <h2 className="landing-card-title">Host as Proctor</h2>
-              <p className="landing-card-description">Enter your proctor PIN to host and manage a quiz</p>
-            </div>
-            <svg className="landing-card-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
 
-          {/* Divider */}
-          <div className="landing-divider">
-            <div className="landing-divider-line"></div>
-            <span className="landing-divider-text">or</span>
-            <div className="landing-divider-line"></div>
-          </div>
+            {!pendingPublicQuiz ? (
+              <form onSubmit={handleJoin} className="landing-auth-form">
+                <input
+                  id="landingCode"
+                  type="text"
+                  className="landing-entry-input"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''));
+                    setError(null);
+                  }}
+                  placeholder="XXXX-XXXX"
+                  autoFocus
+                  maxLength={24}
+                  disabled={loading}
+                />
 
-          {/* Admin Login - Tertiary Action */}
-          <div
-            className="landing-card landing-card-tertiary"
-            onClick={() => navigate('/login')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && navigate('/login')}
-            aria-label="Admin Portal"
-          >
-            <div className="landing-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <div className="landing-card-content">
-              <h2 className="landing-card-title">Admin Portal</h2>
-              <p className="landing-card-description">Manage quizzes, teams, and system settings</p>
-            </div>
-            <svg className="landing-card-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
+                {error && (
+                  <p className="landing-error-text">{error}</p>
+                )}
+
+                <button
+                  type="submit"
+                  className="landing-entry-btn"
+                  disabled={loading || !code.trim()}
+                >
+                  {loading ? 'Resolving...' : 'Join Quiz'}
+                </button>
+              </form>
+            ) : (
+              <>
+                <p className="landing-public-notice">
+                  Public mode detected for <strong>{pendingPublicQuiz.title}</strong>. Enter your participant/team name.
+                </p>
+
+                <form onSubmit={handlePublicJoin} className="landing-auth-form">
+                  <label htmlFor="landingPublicName" className="landing-input-label">Participant or Team Name</label>
+                  <input
+                    id="landingPublicName"
+                    type="text"
+                    className="landing-entry-input"
+                    value={participantName}
+                    onChange={(e) => {
+                      setParticipantName(e.target.value);
+                      setError(null);
+                    }}
+                    placeholder="Enter your name"
+                    autoFocus
+                    maxLength={100}
+                    disabled={loading}
+                  />
+
+                  {error && (
+                    <p className="landing-error-text">{error}</p>
+                  )}
+
+                  <div className="landing-public-actions">
+                    <button
+                      type="button"
+                      className="landing-entry-btn-secondary"
+                      onClick={resetPublicJoin}
+                      disabled={loading}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="landing-entry-btn"
+                      disabled={loading || !participantName.trim()}
+                    >
+                      {loading ? 'Joining...' : 'Continue'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </section>
         </div>
+
       </div>
 
-      {/* Footer */}
       <footer className="landing-footer">
         <p className="landing-footer-text">
           © 2026 IntelliQuiz. All rights reserved.
