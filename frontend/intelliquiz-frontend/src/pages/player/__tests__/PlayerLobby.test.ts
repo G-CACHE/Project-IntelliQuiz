@@ -3,7 +3,7 @@ import fc from 'fast-check';
 
 /**
  * Property 3: Game State Transition Navigation
- * For any game state change received via WebSocket, the participant interface
+ * For any game state change received via realtime events, the participant interface
  * SHALL navigate to the appropriate view (lobby → game → scoreboard)
  * corresponding to the new state.
  * 
