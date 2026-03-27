@@ -4,7 +4,6 @@ import {
   BiPlus,
   BiDownload,
   BiTrash,
-  BiRefresh,
   BiX,
   BiErrorCircle,
   BiCheckCircle,
@@ -147,7 +146,7 @@ export default function BackupsPage() {
     <div>
       {/* Page Header */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)',
+        background: 'linear-gradient(120deg, #5f1027 0%, #7a1733 60%, #9f2346 100%)',
         borderRadius: 'var(--radius-xl)',
         padding: 'var(--spacing-xl)',
         marginBottom: 'var(--spacing-xl)',
@@ -184,7 +183,7 @@ export default function BackupsPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--color-accent)',
+              color: '#f2c84b',
             }}>
               <BiData size={28} />
             </div>
@@ -428,7 +427,7 @@ export default function BackupsPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--color-primary)',
+                  color: '#7a1733',
                 }}>
                   <BiTrash size={28} />
                 </div>
