@@ -5,6 +5,7 @@ import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.docs.Documenter;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,7 +48,7 @@ class ModuleStructureTest {
     @Test
     void shouldGenerateDocumentation() {
         // AC-10: PlantUML documentation generated
-        Documenter documenter = new Documenter(modules);
+        Documenter documenter = new Documenter(Objects.requireNonNull(modules));
         documenter.writeDocumentation();
     }
 }
