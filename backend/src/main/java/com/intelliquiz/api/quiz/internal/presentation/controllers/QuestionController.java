@@ -53,7 +53,7 @@ public class QuestionController {
      * Lists all questions for a quiz.
      */
     @GetMapping("/quizzes/{quizId}/questions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "List questions for a quiz",
             description = "Retrieves all questions belonging to a specific quiz, ordered by their position."
@@ -93,6 +93,7 @@ public class QuestionController {
      * Adds a question to a quiz.
      */
     @PostMapping("/quizzes/{quizId}/questions")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Add a question to a quiz",
             description = "Creates a new question and adds it to the specified quiz."
@@ -144,6 +145,7 @@ public class QuestionController {
      * Updates a question.
      */
     @PutMapping("/questions/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Update a question",
             description = "Updates an existing question with the provided details."
@@ -191,6 +193,7 @@ public class QuestionController {
      * Deletes a question.
      */
     @DeleteMapping("/questions/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Delete a question",
             description = "Deletes a question and all associated submissions."
@@ -222,6 +225,7 @@ public class QuestionController {
      * Reorders questions within a quiz.
      */
     @PutMapping("/quizzes/{quizId}/questions/reorder")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
     @Operation(
             summary = "Reorder questions",
             description = "Reorders questions within a quiz based on the provided list of question IDs."
