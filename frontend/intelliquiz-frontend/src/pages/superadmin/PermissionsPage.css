@@ -779,3 +779,40 @@
     font-size: 24px;
   }
 }
+
+/* ==================== ADMIN PALETTE OVERRIDES ==================== */
+.permissions-hero {
+  background: linear-gradient(120deg, #5f1027 0%, #7a1733 58%, #9f2346 100%);
+  box-shadow: 0 14px 36px rgba(95, 16, 39, 0.24);
+}
+
+.hero-icon-wrap {
+  background: rgba(250, 237, 192, 0.15);
+  color: #faedc0;
+}
+
+.title-icon-svg {
+  color: #7a1733;
+}
+
+.permission-card {
+  border-color: #e7d8dc;
+  background: linear-gradient(180deg, #fff 0%, #fff8ea 100%);
+  box-shadow: 0 8px 20px rgba(95, 16, 39, 0.08);
+}
+
+.permission-card:hover {
+  box-shadow: 0 14px 32px rgba(95, 16, 39, 0.14);
+}
+
+.permission-card .permission-info h3 {
+  color: #5f1027;
+}
+
+.permission-card .permission-info p {
+  color: #5d3a43;
+}
+
+.section-title {
+  color: #5f1027;
+}
