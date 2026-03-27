@@ -6,6 +6,7 @@ interface TimerProps {
   large?: boolean;
   showProgress?: boolean;
   variant?: 'proctor' | 'participant';
+  displayMode?: 'seconds' | 'clock';
 }
 
 const Timer: React.FC<TimerProps> = ({
@@ -14,6 +15,7 @@ const Timer: React.FC<TimerProps> = ({
   large = false,
   showProgress = true,
   variant = 'proctor',
+  displayMode = 'seconds',
 }) => {
   const percentage = totalTime > 0 ? (timeRemaining / totalTime) * 100 : 0;
   const isLow = timeRemaining <= 5;
@@ -36,12 +38,25 @@ const Timer: React.FC<TimerProps> = ({
     return classes;
   };
 
+  const minutes = Math.floor(Math.max(0, timeRemaining) / 60);
+  const seconds = Math.max(0, timeRemaining) % 60;
+  const secondsPadded = String(seconds).padStart(2, '0');
+
   return (
     <div className={getTimerClass()}>
       {/* Time Display */}
       <div className={`${prefix}-timer-value`}>
-        {timeRemaining}
-        <span className={`${prefix}-timer-unit`}>s</span>
+        {displayMode === 'clock' ? (
+          <>
+            {minutes}m:{secondsPadded}
+            <span className={`${prefix}-timer-unit`}>s</span>
+          </>
+        ) : (
+          <>
+            {timeRemaining}
+            <span className={`${prefix}-timer-unit`}>s</span>
+          </>
+        )}
       </div>
 
       {/* Progress Bar */}
