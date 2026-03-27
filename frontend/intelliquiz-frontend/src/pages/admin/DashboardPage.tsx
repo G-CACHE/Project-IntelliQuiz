@@ -2,12 +2,9 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBookOpen,
-  BiGroup,
-  BiPlay,
   BiRightArrowAlt,
   BiTime,
   BiRocket,
-  BiTrophy,
   BiTargetLock,
 } from 'react-icons/bi';
 import { useQuizzes } from '../../hooks';
@@ -16,23 +13,19 @@ import '../../styles/admin.css';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { assignments, canEditQuiz } = useAuth();
+  const { canEditQuiz } = useAuth();
   const username = localStorage.getItem('username') || 'Admin';
   
   // React Query hook
   const { data: allQuizzes = [], isLoading } = useQuizzes();
 
-  // Filter quizzes to only show assigned quizzes
-  const quizzes = useMemo(() => {
-    const assignedQuizIds = assignments.map(a => a.quizId);
-    return allQuizzes.filter(q => assignedQuizIds.includes(q.id));
-  }, [allQuizzes, assignments]);
+  // No need to filter by assignments - backend already filters by createdByUserId
+  const quizzes = allQuizzes;
 
   const stats = useMemo(() => ({
     totalQuizzes: quizzes.length,
     activeQuizzes: quizzes.filter(q => q.status === 'ACTIVE').length,
     readyQuizzes: quizzes.filter(q => q.status === 'READY').length,
-    totalTeams: 0,
   }), [quizzes]);
 
   const recentQuizzes = useMemo(() => quizzes.slice(0, 5), [quizzes]);
@@ -75,7 +68,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="admin-grid-4" style={{ marginBottom: 24 }}>
+      <div className="admin-grid-3" style={{ marginBottom: 24 }}>
         <div className="admin-stat-card red">
           <div className="admin-stat-icon red"><BiBookOpen size={24} /></div>
           <p className="admin-stat-value">{stats.totalQuizzes}</p>
@@ -87,14 +80,9 @@ export default function AdminDashboardPage() {
           <p className="admin-stat-label">Ready to Play</p>
         </div>
         <div className="admin-stat-card green">
-          <div className="admin-stat-icon green"><BiPlay size={24} /></div>
+          <div className="admin-stat-icon green"><BiTargetLock size={24} /></div>
           <p className="admin-stat-value">{stats.activeQuizzes}</p>
           <p className="admin-stat-label">Live Now</p>
-        </div>
-        <div className="admin-stat-card blue">
-          <div className="admin-stat-icon blue"><BiGroup size={24} /></div>
-          <p className="admin-stat-value">{stats.totalTeams}</p>
-          <p className="admin-stat-label">Teams</p>
         </div>
       </div>
 
@@ -104,27 +92,19 @@ export default function AdminDashboardPage() {
         <div className="admin-card">
           <h2 className="admin-card-title"><BiRocket size={18} /> Quick Actions</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/host')}>
-              <div className="admin-quick-action-icon green"><BiPlay size={20} /></div>
+            <div className="admin-quick-action" onClick={() => navigate('/admin/quizzes')} style={{ background: 'linear-gradient(135deg, #e21b3c 0%, #ff6b6b 100%)', color: '#fff' }}>
+              <div className="admin-quick-action-icon red" style={{ background: 'rgba(255,255,255,0.2)' }}><BiBookOpen size={20} style={{ color: '#fff' }} /></div>
               <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">Host a Game</p>
-                <p className="admin-quick-action-desc">Start a live quiz session</p>
+                <p className="admin-quick-action-title" style={{ color: '#fff' }}>Create New Quiz</p>
+                <p className="admin-quick-action-desc" style={{ color: 'rgba(255,255,255,0.8)' }}>Build your own quiz</p>
               </div>
-              <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
+              <BiRightArrowAlt size={18} style={{ color: 'rgba(255,255,255,0.6)' }} />
             </div>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/teams')}>
-              <div className="admin-quick-action-icon yellow"><BiGroup size={20} /></div>
+            <div className="admin-quick-action" onClick={() => navigate('/admin/quizzes')}>
+              <div className="admin-quick-action-icon yellow"><BiTargetLock size={20} /></div>
               <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">Manage Teams</p>
-                <p className="admin-quick-action-desc">View and manage quiz teams</p>
-              </div>
-              <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
-            </div>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/scoreboard')}>
-              <div className="admin-quick-action-icon blue"><BiTrophy size={20} /></div>
-              <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">View Scoreboard</p>
-                <p className="admin-quick-action-desc">Check quiz rankings</p>
+                <p className="admin-quick-action-title">Review Quiz Status</p>
+                <p className="admin-quick-action-desc">Open quiz workspaces and monitor lifecycle state</p>
               </div>
               <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
             </div>
@@ -149,7 +129,7 @@ export default function AdminDashboardPage() {
                 <div 
                   key={quiz.id} 
                   className="admin-recent-item"
-                  onClick={() => canEditQuiz(quiz.id) ? navigate(`/admin/quizzes/${quiz.id}/questions`) : navigate('/admin/quizzes')}
+                  onClick={() => canEditQuiz(quiz.id, quiz.createdByUserId) ? navigate(`/admin/quizzes/${quiz.id}/questions`) : navigate('/admin/quizzes')}
                 >
                   <div className="admin-recent-item-left">
                     <div className="admin-recent-item-icon"><BiBookOpen size={16} /></div>
@@ -169,7 +149,7 @@ export default function AdminDashboardPage() {
                 <div className="admin-empty-icon" style={{ width: 56, height: 56 }}><BiBookOpen size={24} /></div>
                 <p className="admin-empty-title" style={{ fontSize: 15 }}>No quizzes yet</p>
                 <p className="admin-empty-text" style={{ marginBottom: 16 }}>
-                  No quizzes have been assigned to you yet
+                  Click "Create New Quiz" to build your first quiz
                 </p>
               </div>
             )}
