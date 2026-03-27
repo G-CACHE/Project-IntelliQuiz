@@ -34,7 +34,7 @@ public class ConstraintUnitTest {
     @Test
     void duplicateUsernameShouldThrowException() {
         // Create first user
-        User user1 = new User("testuser", "password123", SystemRole.ADMIN);
+        User user1 = new User("testuser", "password123", SystemRole.EXAMINER);
         entityManager.persistAndFlush(user1);
         
         // Attempt to create second user with same username
@@ -52,7 +52,7 @@ public class ConstraintUnitTest {
     @Test
     void duplicateQuizAssignmentShouldThrowException() {
         // Create user and quiz
-        User user = new User("assignmentuser", "password123", SystemRole.ADMIN);
+        User user = new User("assignmentuser", "password123", SystemRole.EXAMINER);
         entityManager.persistAndFlush(user);
         
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
@@ -75,10 +75,10 @@ public class ConstraintUnitTest {
      */
     @Test
     void differentUsernamesShouldBeAllowed() {
-        User user1 = new User("user1", "password123", SystemRole.ADMIN);
+        User user1 = new User("user1", "password123", SystemRole.EXAMINER);
         entityManager.persistAndFlush(user1);
         
-        User user2 = new User("user2", "password123", SystemRole.ADMIN);
+        User user2 = new User("user2", "password123", SystemRole.EXAMINER);
         entityManager.persistAndFlush(user2);
         
         // Both users should exist
@@ -95,7 +95,7 @@ public class ConstraintUnitTest {
      */
     @Test
     void sameUserDifferentQuizzesShouldBeAllowed() {
-        User user = new User("multiassignuser", "password123", SystemRole.ADMIN);
+        User user = new User("multiassignuser", "password123", SystemRole.EXAMINER);
         entityManager.persistAndFlush(user);
         
         Quiz quiz1 = new Quiz("Quiz 1", "Description", "123456", QuizStatus.DRAFT);
