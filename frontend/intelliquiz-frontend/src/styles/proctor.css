@@ -1747,40 +1747,99 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .proctor-answer-btn {
   position: relative;
-  padding: 20px 24px 20px 56px;
-  border-radius: 16px;
-  border: 2px solid #e3d2d8;
-  background: linear-gradient(180deg, #ffffff 0%, #fff7e8 100%);
-  color: #35262b;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 88px;
+  padding: 16px 22px;
+  border-radius: 6px;
+  border: 3px solid #0d0d0d;
+  box-shadow: 4px 4px 0 #0d0d0d;
+  background: #ffffff;
+  color: #0d0d0d;
+  font-family: 'Boogaloo', cursive;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
   text-align: left;
-  box-shadow: 0 4px 12px rgba(95, 16, 39, 0.08);
+}
+
+.proctor-answer-btn:nth-child(1) {
+  background: #f87171;
+  color: #ffffff;
+}
+
+.proctor-answer-btn:nth-child(2) {
+  background: #4ecdc4;
+  color: #0d0d0d;
+}
+
+.proctor-answer-btn:nth-child(3) {
+  background: #f2c84b;
+  color: #0d0d0d;
+}
+
+.proctor-answer-btn:nth-child(4) {
+  background: #8c1a37;
+  color: #ffffff;
 }
 
 .proctor-answer-btn:hover:not(.proctor-answer-btn-disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(95, 16, 39, 0.14);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #0d0d0d;
+}
+
+.proctor-answer-btn:active:not(.proctor-answer-btn-disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: none;
 }
 
 .proctor-answer-btn-selected {
-  border-color: #f8c107;
-  background: linear-gradient(180deg, #fff4cf 0%, #ffe8ad 100%);
-  box-shadow: 0 0 0 4px rgba(248, 193, 7, 0.35);
+  border-width: 4px;
+  border-color: #0d0d0d;
+  filter: brightness(1.08);
 }
 
 .proctor-answer-btn-correct {
-  border-color: #16a34a;
-  background: linear-gradient(180deg, #eafbef 0%, #d0f7dd 100%);
+  background: #00a650 !important;
+  color: #0d0d0d !important;
+  border-color: #0d0d0d;
+  animation: pixel-jump 0.4s ease-out;
+}
+
+.proctor-answer-btn-correct::after {
+  content: '+';
+  position: absolute;
+  right: 16px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  line-height: 1;
 }
 
 .proctor-answer-btn-wrong {
-  border-color: #b4233a;
-  background: linear-gradient(180deg, #fff1f2 0%, #ffe0e4 100%);
+  background: #c81e4d !important;
+  color: #ffffff !important;
+  border-color: #0d0d0d;
+  animation: pixel-shake 0.4s ease-out;
+}
+
+.proctor-answer-btn-wrong::after {
+  content: 'X';
+  position: absolute;
+  right: 16px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .proctor-answer-btn-faded {
@@ -1788,34 +1847,35 @@
 }
 
 .proctor-answer-btn-disabled {
-  cursor: default;
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.55;
 }
 
 .proctor-answer-letter {
-  position: absolute;
-  top: 50%;
-  left: 16px;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  background: #880015;
-  color: #fff;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 2px solid rgba(13, 13, 13, 0.3);
+  background: rgba(13, 13, 13, 0.2);
+  color: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  font-weight: 400;
 }
 
 .proctor-answer-text {
-  font-size: 18px;
+  flex: 1;
+  font-size: 24px;
   font-weight: 600;
 }
 
 .proctor-answer-indicator {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  display: none;
 }
 
 .proctor-answer-indicator-icon {
@@ -1825,15 +1885,29 @@
 
 .proctor-answer-selected-indicator {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   width: 24px;
   height: 24px;
-  background: #880015;
-  border-radius: 50%;
+  border: 2px solid #0d0d0d;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@keyframes pixel-jump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pixel-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
 }
 
 .proctor-answer-selected-icon {
