@@ -1,6 +1,5 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.*;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.submission.internal.domain.entities.Submission;
@@ -132,7 +131,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void userUsernameCannotBeBlank(@ForAll("blankStrings") String blankUsername) {
-        User user = new User(blankUsername, "password123", SystemRole.ADMIN);
+        User user = new User(blankUsername, "password123", SystemRole.EXAMINER);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -144,7 +143,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void userPasswordMustMeetMinimumLength(@ForAll("shortPasswords") String shortPassword) {
-        User user = new User("validuser", shortPassword, SystemRole.ADMIN);
+        User user = new User("validuser", shortPassword, SystemRole.EXAMINER);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -158,7 +157,7 @@ public class EntityValidationPropertyTest {
     void userCredentialsValidationAcceptsValidCredentials(
             @ForAll("validUsernames") String username,
             @ForAll("validPasswords") String password) {
-        User user = new User(username, password, SystemRole.ADMIN);
+        User user = new User(username, password, SystemRole.EXAMINER);
         
         // Should not throw
         user.validateCredentials();
