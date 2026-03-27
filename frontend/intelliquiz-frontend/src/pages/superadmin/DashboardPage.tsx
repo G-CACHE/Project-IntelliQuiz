@@ -52,7 +52,7 @@ export default function DashboardPage() {
       setStats({
         totalQuizzes: quizzes.length,
         activeQuizzes: quizzes.filter((q) => q.status === 'ACTIVE').length,
-        totalAdmins: users.filter((u) => u.role === 'ADMIN').length,
+        totalAdmins: users.filter((u) => u.role === 'ADMIN' || u.role === 'EXAMINER').length,
         draftQuizzes: quizzes.filter((q) => q.status === 'DRAFT').length,
       });
       setRecentQuizzes(quizzes.slice(0, 4));
@@ -65,10 +65,10 @@ export default function DashboardPage() {
 
   const getStatusConfig = (status: Quiz['status']) => {
     const config: Record<string, { class: string; icon: React.ReactNode; color: string }> = {
-      DRAFT: { class: 'status-draft', icon: <BiFile size={14} />, color: '#6b7280' },
-      READY: { class: 'status-ready', icon: <BiCheckCircle size={14} />, color: '#3b82f6' },
-      ACTIVE: { class: 'status-active', icon: <BiPulse size={14} />, color: '#10b981' },
-      ARCHIVED: { class: 'status-archived', icon: <BiArchive size={14} />, color: '#f59e0b' },
+      DRAFT: { class: 'status-draft', icon: <BiFile size={14} />, color: '#6f4e57' },
+      READY: { class: 'status-ready', icon: <BiCheckCircle size={14} />, color: '#7c4b00' },
+      ACTIVE: { class: 'status-active', icon: <BiPulse size={14} />, color: '#7a1733' },
+      ARCHIVED: { class: 'status-archived', icon: <BiArchive size={14} />, color: '#6f4e57' },
     };
     return config[status] || config.DRAFT;
   };
@@ -108,9 +108,9 @@ export default function DashboardPage() {
           </div>
           
           <div className="hero-right">
-            <button className="hero-cta" onClick={() => navigate('/superadmin/quizzes')}>
+            <button className="hero-cta" onClick={() => navigate('/superadmin/users')}>
               <BiRocket size={24} />
-              <span>Create Quiz</span>
+              <span>Manage Admins</span>
             </button>
           </div>
         </div>
@@ -179,10 +179,10 @@ export default function DashboardPage() {
           <div className="card-header-kahoot">
             <div className="card-title-wrap">
               <BiStar className="card-icon" />
-              <h2>Your Quizzes</h2>
+              <h2>Recent Quiz Activity</h2>
             </div>
-            <button className="view-all-btn" onClick={() => navigate('/superadmin/quizzes')}>
-              View All <BiRightArrowAlt size={18} />
+            <button className="view-all-btn" onClick={() => navigate('/superadmin/permissions')}>
+              Permission Control <BiRightArrowAlt size={18} />
             </button>
           </div>
           
@@ -190,12 +190,12 @@ export default function DashboardPage() {
             {recentQuizzes.length > 0 ? (
               recentQuizzes.map((quiz, index) => {
                 const statusConfig = getStatusConfig(quiz.status);
-                const colors = ['#e21b3c', '#1368ce', '#26890c', '#ffa602'];
+                const colors = ['#7a1733', '#9f2346', '#d4a017', '#6f4e57'];
                 return (
                   <div 
                     key={quiz.id} 
                     className="quiz-item"
-                    onClick={() => navigate(`/superadmin/quizzes`)}
+                    onClick={() => navigate('/superadmin/permissions')}
                     style={{ '--accent-color': colors[index % 4] } as React.CSSProperties}
                   >
                     <div className="quiz-item-left">
@@ -206,7 +206,7 @@ export default function DashboardPage() {
                         <h4>{quiz.title}</h4>
                         <span className="quiz-meta">
                           <BiTime size={14} />
-                          {new Date(quiz.createdAt).toLocaleDateString()}
+                          {new Date().toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -222,10 +222,10 @@ export default function DashboardPage() {
                 <div className="empty-illustration">
                   <BiBookOpen size={48} />
                 </div>
-                <h3>No quizzes yet!</h3>
-                <p>Create your first quiz and start the fun</p>
-                <button className="create-first-btn" onClick={() => navigate('/superadmin/quizzes')}>
-                  <BiPlus size={20} /> Create Quiz
+                <h3>No recent quiz activity</h3>
+                <p>Assign admins to quizzes from permission control</p>
+                <button className="create-first-btn" onClick={() => navigate('/superadmin/permissions')}>
+                  <BiPlus size={20} /> Assign Permissions
                 </button>
               </div>
             )}
@@ -242,11 +242,11 @@ export default function DashboardPage() {
           </div>
           
           <div className="actions-grid">
-            <button className="action-btn red" onClick={() => navigate('/superadmin/quizzes')}>
+            <button className="action-btn red" onClick={() => navigate('/superadmin/users')}>
               <div className="action-icon">
                 <BiPlus size={24} />
               </div>
-              <span>New Quiz</span>
+              <span>New Admin</span>
             </button>
             
             <button className="action-btn blue" onClick={() => navigate('/superadmin/users')}>
@@ -256,18 +256,18 @@ export default function DashboardPage() {
               <span>Users</span>
             </button>
             
-            <button className="action-btn green" onClick={() => navigate('/superadmin/teams')}>
+            <button className="action-btn green" onClick={() => navigate('/superadmin/permissions')}>
               <div className="action-icon">
                 <BiGroup size={24} />
               </div>
-              <span>Teams</span>
+              <span>Permissions</span>
             </button>
             
-            <button className="action-btn yellow" onClick={() => navigate('/superadmin/scoreboard')}>
+            <button className="action-btn yellow" onClick={() => navigate('/superadmin/backups')}>
               <div className="action-icon">
                 <BiTrophy size={24} />
               </div>
-              <span>Scores</span>
+              <span>Backups</span>
             </button>
           </div>
 
