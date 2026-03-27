@@ -16,6 +16,8 @@ public interface TeamRepository {
 
     Optional<Team> findByAccessCode(String accessCode);
 
+    Optional<Team> findByQuizIdAndDeviceId(Long quizId, String deviceId);
+
     List<Team> findByQuizId(Long quizId);
 
     void delete(Team team);
