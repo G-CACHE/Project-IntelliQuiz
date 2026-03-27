@@ -1807,17 +1807,26 @@
 
 /* ==================== SCOREBOARD DISPLAY ==================== */
 .participant-scoreboard {
-  max-width: 760px;
+  max-width: 860px;
   margin: 0 auto;
+  padding: 24px;
+  background: var(--color-secondary);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal-lg);
+  border-radius: var(--border-radius-card);
 }
 
 .participant-scoreboard-empty {
   text-align: center;
   padding: 40px 24px;
-  color: var(--color-black);
+  color: var(--color-primary);
   font-family: var(--font-heading);
   font-size: 20px;
-  background: var(--color-white);
+  background: rgba(13, 13, 13, 0.35);
   border: var(--border-brutal);
   box-shadow: var(--shadow-brutal);
   border-radius: var(--border-radius-card);
@@ -1840,7 +1849,7 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: 14px;
-  color: rgba(13, 13, 13, 0.72);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .participant-podium {
@@ -1953,22 +1962,28 @@
   border: var(--border-brutal);
   border-radius: var(--border-radius-card);
   box-shadow: var(--shadow-brutal);
-  transition: transform 0.1s ease;
-  animation: participantFadeIn 0.3s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  animation: pixel-pop 0.22s ease-out both;
+  animation-delay: calc(var(--row-index, 0) * 0.08s);
+  background: var(--color-white);
 }
 
 .participant-ranking-gold {
-  background: var(--color-rank-1);
+  background: var(--color-primary);
   color: var(--color-black);
+  border-width: 4px;
+  box-shadow: var(--shadow-brutal-lg);
+  transform: scale(1.02);
+  position: relative;
 }
 
 .participant-ranking-silver {
-  background: var(--color-rank-2);
+  background: var(--color-white);
   color: var(--color-black);
 }
 
 .participant-ranking-bronze {
-  background: var(--color-rank-3);
+  background: var(--color-white);
   color: var(--color-black);
 }
 
@@ -1982,16 +1997,82 @@
   transform: scale(1.02);
 }
 
+.participant-ranking-item:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
 .participant-ranking-rank {
   width: 54px;
   text-align: center;
   font-family: var(--font-display);
   font-size: 14px;
-  color: var(--color-black);
+  color: rgba(13, 13, 13, 0.55);
 }
 
 .participant-ranking-rank-top {
   font-size: 18px;
+}
+
+.participant-ranking-gold .participant-ranking-rank {
+  color: var(--color-rank-1);
+}
+
+.participant-ranking-silver .participant-ranking-rank {
+  color: var(--color-rank-2);
+}
+
+.participant-ranking-bronze .participant-ranking-rank {
+  color: var(--color-rank-3);
+}
+
+.participant-ranking-gold .participant-ranking-rank span {
+  position: relative;
+  display: inline-block;
+}
+
+.participant-ranking-gold .participant-ranking-rank span::before {
+  content: '👑';
+  position: absolute;
+  top: -14px;
+  right: -18px;
+  font-size: 14px;
+}
+
+.participant-ranking-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--color-black);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  color: var(--color-white);
+  flex-shrink: 0;
+}
+
+.participant-ranking-avatar-0 {
+  background: var(--color-primary);
+  color: var(--color-black);
+}
+
+.participant-ranking-avatar-1 {
+  background: var(--color-secondary);
+}
+
+.participant-ranking-avatar-2 {
+  background: var(--color-accent-pink);
+}
+
+.participant-ranking-avatar-3 {
+  background: var(--color-accent-green);
+  color: var(--color-black);
+}
+
+.participant-ranking-avatar-4 {
+  background: var(--color-accent-orange);
 }
 
 .participant-ranking-team {
@@ -2001,7 +2082,7 @@
 
 .participant-ranking-name {
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 20px;
   color: var(--color-black);
   margin: 0;
 }
@@ -2031,15 +2112,15 @@
 
 .participant-ranking-score {
   font-family: var(--font-display);
-  font-size: 22px;
-  color: var(--color-primary);
+  font-size: 14px;
+  color: var(--color-secondary);
   margin: 0;
   line-height: 1;
   transition: all 0.3s;
 }
 
 .participant-ranking-score-top {
-  font-size: 26px;
+  font-size: 16px;
 }
 
 .participant-ranking-points-label {
@@ -2049,6 +2130,32 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .participant-scoreboard {
+    padding: 16px;
+  }
+
+  .participant-ranking-item {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .participant-ranking-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .participant-ranking-name {
+    font-size: 18px;
+  }
+
+  .participant-ranking-score-container {
+    min-width: 102px;
+    padding: 6px 10px;
+  }
 }
 
 .participant-ranking-score.score-pop,

@@ -25,6 +25,13 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
     return `#${rank}`;
   };
 
+  const getInitials = (teamName: string) => {
+    const words = teamName.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return '?';
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  };
+
   // Calculate ranks with ties
   const rankedTeams = rankings.map((team, index) => {
     // Find the actual rank (accounting for ties)
@@ -106,11 +113,16 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
                 entry.displayRank === 3 ? `${prefix}-ranking-bronze` :
                 `${prefix}-ranking-default`
               } ${isHighlighted ? `${prefix}-ranking-highlight` : ''}`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              style={{ ['--row-index' as string]: index } as React.CSSProperties}
             >
               {/* Rank */}
               <div className={`${prefix}-ranking-rank ${isTopThree ? `${prefix}-ranking-rank-top` : ''}`}>
                 <span>{getRankIcon(entry.displayRank)}</span>
+              </div>
+
+              {/* Team Avatar */}
+              <div className={`${prefix}-ranking-avatar ${prefix}-ranking-avatar-${index % 5}`}>
+                {getInitials(entry.teamName)}
               </div>
 
               {/* Team Name */}
