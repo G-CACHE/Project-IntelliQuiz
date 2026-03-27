@@ -8,7 +8,6 @@ import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import net.jqwik.api.*;
-import net.jqwik.api.constraints.NotBlank;
 
 import java.util.List;
 
