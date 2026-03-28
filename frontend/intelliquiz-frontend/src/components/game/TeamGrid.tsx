@@ -30,6 +30,9 @@ const TeamGrid: React.FC<TeamGridProps> = ({ teams, highlightTeamId, variant = '
           className={`${prefix}-team-card ${highlightTeamId === team.id ? `${prefix}-team-card-highlight` : ''}`}
           style={{ animationDelay: `${index * 50}ms` }}
         >
+          <div className={`${prefix}-team-avatar ${prefix}-team-avatar-${index % 5}`} aria-hidden="true">
+            {(team.name?.trim()?.charAt(0) || '?').toUpperCase()}
+          </div>
           <div className={`${prefix}-team-status`}>
             <span className={`${prefix}-status-dot ${prefix}-status-connected`}></span>
             <span className={`${prefix}-team-status-text`}>Connected</span>

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Trophy, Sparkles, Home, Medal } from 'lucide-react';
+import { Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
@@ -86,6 +88,7 @@ const HostGame: React.FC = () => {
           onClick={handleExitHome}
           className="proctor-btn-primary proctor-btn-large"
         >
+          <Home size={20} aria-hidden="true" className="proctor-control-icon" />
           Go Home
         </button>
       );
@@ -101,7 +104,8 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-warning proctor-btn-large"
             >
-              ⏸ Pause Quiz
+              <Pause size={20} aria-hidden="true" className="proctor-control-icon" />
+              Pause Quiz
             </button>
             <p className="proctor-host-submitted-count">
               {(submittedTeamsCount || submissions.length)} team(s) submitted
@@ -116,7 +120,8 @@ const HostGame: React.FC = () => {
             disabled={!connected}
             className="proctor-btn-success proctor-btn-large"
           >
-            ▶ Resume Quiz
+            <Play size={20} aria-hidden="true" className="proctor-control-icon" />
+            Resume Quiz
           </button>
         );
       
@@ -151,14 +156,16 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-primary proctor-btn-large"
             >
-              📊 View Leaderboard
+              <BarChart3 size={20} aria-hidden="true" className="proctor-control-icon" />
+              View Leaderboard
             </button>
             <button
               onClick={handleNextQuestion}
               disabled={!connected}
               className="proctor-btn-success proctor-btn-large"
             >
-              Next Question →
+              <ArrowRight size={20} aria-hidden="true" className="proctor-control-icon" />
+              Next Question
             </button>
           </div>
         );
@@ -186,14 +193,16 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-success proctor-btn-large"
             >
-              Next Question →
+              <ArrowRight size={20} aria-hidden="true" className="proctor-control-icon" />
+              Next Question
             </button>
             <button
               onClick={handleEndQuiz}
               disabled={!connected}
               className="proctor-btn-danger proctor-btn-large"
             >
-              🏆 End Quiz
+              <Trophy size={20} aria-hidden="true" className="proctor-control-icon" />
+              End Quiz
             </button>
           </div>
         );
@@ -412,8 +421,12 @@ const HostGame: React.FC = () => {
           {gameState === 'FINAL_RESULTS' && (
             <div className="proctor-host-final-stage">
               <div className="proctor-host-final-banner">
-                <div className="proctor-host-final-icon">�</div>
-                <h2>Quiz Complete</h2>
+                <div className="proctor-host-final-icon" aria-hidden="true">
+                  <Trophy className="proctor-host-final-icon-main" />
+                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-left" />
+                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-right" />
+                </div>
+                <h2 className="proctor-host-final-title">Quiz Complete</h2>
                 <p>Final results are in. Great run from every team.</p>
                 <div className="proctor-host-final-metrics">
                   <div className="proctor-host-final-metric">
@@ -450,7 +463,7 @@ const HostGame: React.FC = () => {
                       className={`proctor-host-podium-item ${idx === 0 ? 'is-first' : ''}`}
                     >
                       <div className="proctor-host-podium-medal">
-                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
+                        {idx === 0 ? <Trophy size={22} /> : <Medal size={22} />}
                       </div>
                       <p>{team.teamName}</p>
                       <strong>{team.score} pts</strong>
@@ -471,6 +484,7 @@ const HostGame: React.FC = () => {
                   onClick={handleExitHome}
                   className="proctor-btn-primary proctor-btn-large"
                 >
+                  <Home size={20} aria-hidden="true" />
                   Go Home
                 </button>
               </div>
@@ -479,7 +493,33 @@ const HostGame: React.FC = () => {
 
           {/* Controls */}
           <div className="proctor-game-controls">
-            {renderControls()}
+            <div className="proctor-controls-shell">
+              <p className="proctor-controls-label">Host Controls</p>
+              <div className="proctor-controls-stats">
+                <div className="proctor-controls-stat">
+                  <Users size={16} aria-hidden="true" />
+                  <div>
+                    <span className="proctor-controls-stat-label">Players Online</span>
+                    <strong className="proctor-controls-stat-value">{rankings.length}</strong>
+                  </div>
+                </div>
+                <div className="proctor-controls-stat">
+                  <Gauge size={16} aria-hidden="true" />
+                  <div>
+                    <span className="proctor-controls-stat-label">Current Phase</span>
+                    <strong className="proctor-controls-stat-value">{gamePhaseLabel}</strong>
+                  </div>
+                </div>
+                <div className="proctor-controls-stat">
+                  <TimerIcon size={16} aria-hidden="true" />
+                  <div>
+                    <span className="proctor-controls-stat-label">Submitted Teams</span>
+                    <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>
+                  </div>
+                </div>
+              </div>
+              {renderControls()}
+            </div>
           </div>
         </div>
       </div>

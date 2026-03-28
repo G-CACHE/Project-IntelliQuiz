@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, CircleX, AlarmClock, Trophy, Sparkles, ListChecks, Home } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -259,6 +260,7 @@ const PlayerGame: React.FC = () => {
 
   // Find current team score from rankings
   const myTeamScore = rankings.find((r: any) => r.teamId === session?.teamId)?.score;
+  const myFinalResult = rankings.find((r: any) => r.teamId === session?.teamId);
   const classTimerExpired = canNavigate && timerTotalTime > 0 && timeRemaining <= 0;
 
   if (!session) return null;
@@ -280,7 +282,8 @@ const PlayerGame: React.FC = () => {
             {/* Score Display */}
             {myTeamScore !== undefined && (
               <span className="participant-game-score-chip">
-                {myTeamScore} pts
+                <span className="participant-game-score-chip-label">SCORE</span>
+                <span className="participant-game-score-chip-value">{myTeamScore}</span>
               </span>
             )}
             
@@ -333,7 +336,7 @@ const PlayerGame: React.FC = () => {
           {gameState === 'QUESTION' && currentQuestion && (
             earlySubmittedQuiz ? (
               <div className="participant-alert-success participant-submitted-alert" style={{ marginTop: '12px' }}>
-                <div className="participant-submitted-icon">✓</div>
+                <div className="participant-submitted-icon"><CheckCircle2 size={18} /></div>
                 <span className="participant-submitted-text">Quiz Submitted Early</span>
                 <p className="participant-submitted-hint">Your participation is complete. Waiting for final results...</p>
               </div>
@@ -388,13 +391,13 @@ const PlayerGame: React.FC = () => {
                     // LINEAR mode: select answer, auto-submitted on timer expiry
                     submitted ? (
                       <div className="participant-alert-success participant-submitted-alert">
-                        <div className="participant-submitted-icon">✓</div>
+                        <div className="participant-submitted-icon"><CheckCircle2 size={18} /></div>
                         <span className="participant-submitted-text">Answer Submitted!</span>
                         <p className="participant-submitted-hint">Waiting for results...</p>
                       </div>
                     ) : selectedOption ? (
                       <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
-                        ✓ Selected — you can change your answer before time runs out
+                        <CheckCircle2 size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Selected - you can change your answer before time runs out
                       </p>
                     ) : (
                       <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
@@ -438,21 +441,32 @@ const PlayerGame: React.FC = () => {
               }`}>
                 {isCorrect === true && (
                   <>
-                    <div className="participant-result-icon">✓</div>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <CheckCircle2 className="participant-result-icon-svg" />
+                    </div>
                     <h2 className="participant-result-title">Correct!</h2>
                     <p className="participant-result-points">+{currentQuestion.points} points</p>
                   </>
                 )}
                 {isCorrect === false && (
                   <>
-                    <div className="participant-result-icon">✗</div>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <CircleX className="participant-result-icon-svg" />
+                    </div>
                     <h2 className="participant-result-title">Incorrect</h2>
                     <p className="participant-result-hint">Better luck next time!</p>
+                    {currentQuestion.correctAnswer && (
+                      <p className="participant-result-correct-answer">
+                        Correct answer: {currentQuestion.correctAnswer}
+                      </p>
+                    )}
                   </>
                 )}
                 {isCorrect === null && !submitted && (
                   <>
-                    <div className="participant-result-icon">⏱</div>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <AlarmClock className="participant-result-icon-svg" />
+                    </div>
                     <h2 className="participant-result-title">No Answer</h2>
                     <p className="participant-result-hint">You didn't submit an answer</p>
                   </>
@@ -542,7 +556,11 @@ const PlayerGame: React.FC = () => {
             <div className="participant-final-results">
               {/* Celebration Header */}
               <div className="participant-final-banner">
-                <div className="participant-final-banner-emoji">🎉🏆🎉</div>
+                <div className="participant-final-banner-emoji" aria-hidden="true">
+                  <Trophy className="participant-final-banner-icon" />
+                  <Sparkles className="participant-final-banner-spark participant-final-banner-spark-left" />
+                  <Sparkles className="participant-final-banner-spark participant-final-banner-spark-right" />
+                </div>
                 <h2 className="participant-final-banner-title">Quiz Complete!</h2>
                 <p className="participant-final-banner-subtitle">
                   Great job, everyone!
@@ -550,22 +568,33 @@ const PlayerGame: React.FC = () => {
               </div>
 
               {/* Player's Own Result Card */}
-              {(() => {
-                const myResult = rankings.find((r: any) => r.teamId === session?.teamId);
-                return myResult ? (
+              {myFinalResult ? (
                   <div className="participant-final-result-card">
                     <p className="participant-final-result-label">
                       Your Result
                     </p>
                     <p className="participant-final-result-rank">
-                      #{myResult.rank}
+                      #{myFinalResult.rank}
                     </p>
                     <p className="participant-final-result-score">
-                      {myResult.score} points
+                      {myFinalResult.score} points
                     </p>
+                    <div className="participant-final-stats">
+                      <div className="participant-final-stat-cell">
+                        <span>Teams</span>
+                        <strong>{rankings.length}</strong>
+                      </div>
+                      <div className="participant-final-stat-cell">
+                        <span>Questions</span>
+                        <strong>{totalQuestions || 0}</strong>
+                      </div>
+                      <div className="participant-final-stat-cell">
+                        <span>Placement</span>
+                        <strong>#{myFinalResult.rank}</strong>
+                      </div>
+                    </div>
                   </div>
-                ) : null;
-              })()}
+                ) : null}
 
               <ScoreboardDisplay
                 rankings={rankings}
@@ -581,12 +610,14 @@ const PlayerGame: React.FC = () => {
                   disabled={reviewLoading}
                   className="participant-btn-primary participant-btn-large participant-results-action"
                 >
+                  <ListChecks size={20} aria-hidden="true" />
                   {reviewLoading ? 'Loading...' : 'Show Answers'}
                 </button>
                 <button
                   onClick={() => navigate('/')}
                   className="participant-btn-secondary participant-btn-large participant-home-action"
                 >
+                  <Home size={20} aria-hidden="true" />
                   Go Home
                 </button>
               </div>

@@ -1,16 +1,23 @@
 import { 
   BiShield, 
-  BiShow, 
+  BiSearch, 
   BiEdit, 
   BiGroup, 
   BiJoystick,
+  BiCheckCircle,
+  BiXCircle,
+  BiKey,
+  BiData,
+  BiBookOpen,
+  BiUser,
+  BiPin,
 } from 'react-icons/bi';
 import './PermissionsPage.css';
 
 interface Permission { key: string; label: string; description: string; icon: React.ReactNode; color: string; }
 
 const PERMISSIONS: Permission[] = [
-  { key: 'CAN_VIEW_DETAILS', label: 'View Details', description: 'Read-only access to quiz configuration', icon: <BiShow size={22} />, color: '#8f1f42' },
+  { key: 'CAN_VIEW_DETAILS', label: 'View Details', description: 'Read-only access to quiz configuration', icon: <BiSearch size={22} />, color: '#8f1f42' },
   { key: 'CAN_EDIT_CONTENT', label: 'Edit Content', description: 'Create, update, and delete questions', icon: <BiEdit size={22} />, color: '#7a1733' },
   { key: 'CAN_MANAGE_TEAMS', label: 'Manage Teams', description: 'Register teams and generate access codes', icon: <BiGroup size={22} />, color: '#d4a017' },
   { key: 'CAN_HOST_GAME', label: 'Host Game', description: 'Access live session controls and proctor PIN', icon: <BiJoystick size={22} />, color: '#6f4e57' },
@@ -43,7 +50,7 @@ export default function PermissionsPage() {
       <div className="info-section" style={{ padding: '40px 20px', background: 'linear-gradient(135deg, #fff8ea 0%, #fff2dd 100%)' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '24px', background: 'white', borderRadius: '12px', border: '1px solid #e7d8dc', boxShadow: '0 8px 22px rgba(95,16,39,0.08)' }}>
-            <div style={{ fontSize: '48px' }}>📚</div>
+            <div style={{ color: '#5f1027', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BiBookOpen size={40} /></div>
             <div>
               <h2 style={{ margin: '0 0 8px 0', color: '#5f1027', fontSize: '20px', fontWeight: '700' }}>Independent Quiz Ownership</h2>
               <p style={{ margin: 0, color: '#5d3a43', fontSize: '15px', lineHeight: '1.6' }}>
@@ -89,44 +96,44 @@ export default function PermissionsPage() {
             {/* Admin Card */}
             <div style={{ padding: '24px', background: 'linear-gradient(180deg, #fff 0%, #fff8ea 100%)', borderRadius: '8px', border: '1px solid #e7d8dc' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#f6d5df', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👤</div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#f6d5df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5f1027' }}><BiUser size={20} /></div>
                 <h3 style={{ margin: 0, color: '#5f1027', fontSize: '16px', fontWeight: '700' }}>Admin (EXAMINER)</h3>
               </div>
               <ul style={{ margin: 0, paddingLeft: '20px', color: '#5d3a43', fontSize: '14px', lineHeight: '1.8' }}>
-                <li>✅ Create and manage own quizzes</li>
-                <li>✅ Full rights to own question bank</li>
-                <li>✅ Register teams for own quizzes</li>
-                <li>✅ Host live quiz sessions</li>
-                <li>❌ Cannot access other admins' quizzes</li>
+                <li><BiCheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Create and manage own quizzes</li>
+                <li><BiCheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Full rights to own question bank</li>
+                <li><BiCheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Register teams for own quizzes</li>
+                <li><BiCheckCircle size={16} style={{ verticalAlign: 'middle' }} /> Host live quiz sessions</li>
+                <li><BiXCircle size={16} style={{ verticalAlign: 'middle' }} /> Cannot access other admins' quizzes</li>
               </ul>
             </div>
 
             {/* Super Admin Card */}
             <div style={{ padding: '24px', background: 'linear-gradient(180deg, #fff 0%, #fff8ea 100%)', borderRadius: '8px', border: '1px solid #e7d8dc' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#efe7e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🔑</div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#efe7e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5f1027' }}><BiKey size={20} /></div>
                 <h3 style={{ margin: 0, color: '#5f1027', fontSize: '16px', fontWeight: '700' }}>Super Admin</h3>
               </div>
               <ul style={{ margin: 0, paddingLeft: '20px', color: '#5d3a43', fontSize: '14px', lineHeight: '1.8', }}>
-                <li>🔍 View all quizzes (read-only)</li>
-                <li>👥 Create and manage admin accounts</li>
-                <li>🛡️ Control permission levels</li>
-                <li>💾 Manage system backups</li>
-                <li>❌ Does not create quizzes</li>
+                <li><BiSearch size={16} style={{ verticalAlign: 'middle' }} /> View all quizzes (read-only)</li>
+                <li><BiGroup size={16} style={{ verticalAlign: 'middle' }} /> Create and manage admin accounts</li>
+                <li><BiShield size={16} style={{ verticalAlign: 'middle' }} /> Control permission levels</li>
+                <li><BiData size={16} style={{ verticalAlign: 'middle' }} /> Manage system backups</li>
+                <li><BiXCircle size={16} style={{ verticalAlign: 'middle' }} /> Does not create quizzes</li>
               </ul>
             </div>
 
             {/* Participant Card */}
             <div style={{ padding: '24px', background: 'linear-gradient(180deg, #fff 0%, #fff8ea 100%)', borderRadius: '8px', border: '1px solid #e7d8dc' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#fff1c8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🎯</div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#fff1c8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5f1027' }}><BiJoystick size={20} /></div>
                 <h3 style={{ margin: 0, color: '#5f1027', fontSize: '16px', fontWeight: '700' }}>Participant</h3>
               </div>
               <ul style={{ margin: 0, paddingLeft: '20px', color: '#5d3a43', fontSize: '14px', lineHeight: '1.8' }}>
-                <li>📝 Answer quiz questions</li>
-                <li>👥 Join teams to participate</li>
-                <li>📊 View live scoreboard</li>
-                <li>❌ No creation or management rights</li>
+                <li><BiEdit size={16} style={{ verticalAlign: 'middle' }} /> Answer quiz questions</li>
+                <li><BiGroup size={16} style={{ verticalAlign: 'middle' }} /> Join teams to participate</li>
+                <li><BiBookOpen size={16} style={{ verticalAlign: 'middle' }} /> View live scoreboard</li>
+                <li><BiXCircle size={16} style={{ verticalAlign: 'middle' }} /> No creation or management rights</li>
               </ul>
             </div>
           </div>
@@ -136,7 +143,7 @@ export default function PermissionsPage() {
       {/* Additional Info */}
       <div className="additional-info-section" style={{ padding: '40px 20px', background: '#fff8ea', borderTop: '1px solid #e7d8dc' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h3 style={{ color: '#5f1027', marginTop: 0 }}>📌 Key Points:</h3>
+          <h3 style={{ color: '#5f1027', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><BiPin size={18} /> Key Points:</h3>
           <ul style={{ color: '#5d3a43', lineHeight: '1.8' }}>
             <li><strong>No Manual Assignment:</strong> Admins automatically own quizzes they create — no Super Admin assignment needed.</li>
             <li><strong>Complete Independence:</strong> Each admin manages their own quiz lifecycle, teams, and question bank independently.</li>

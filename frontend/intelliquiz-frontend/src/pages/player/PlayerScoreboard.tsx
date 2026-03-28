@@ -117,7 +117,7 @@ const PlayerScoreboard: React.FC = () => {
             }`}>
               <p className="participant-rank-label">Your Final Rank</p>
               <p className="participant-rank-value">
-                {currentRank <= 3 ? ['🥇', '🥈', '🥉'][currentRank - 1] : `#${currentRank}`}
+                {`#${currentRank}`}
               </p>
               {currentTeamRanking && (
                 <p className="participant-rank-score">{currentTeamRanking.score} points</p>
@@ -138,7 +138,7 @@ const PlayerScoreboard: React.FC = () => {
             {isFinal ? (
               <div className="participant-final-controls">
                 <p className="participant-final-message">
-                  🎉 Thanks for playing! Great job, {session.teamName}!
+                  Thanks for playing! Great job, {session.teamName}!
                 </p>
                 <div className="participant-actions">
                   <button

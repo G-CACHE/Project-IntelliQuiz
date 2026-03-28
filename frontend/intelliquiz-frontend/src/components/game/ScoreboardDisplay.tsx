@@ -1,4 +1,5 @@
 import React from 'react';
+import { BiMedal, BiTrophy } from 'react-icons/bi';
 import type { RankingEntry } from '../../services/api';
 
 interface ScoreboardDisplayProps {
@@ -19,10 +20,17 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
+    if (rank === 1) return <BiTrophy />;
+    if (rank === 2) return <BiMedal />;
+    if (rank === 3) return <BiMedal />;
     return `#${rank}`;
+  };
+
+  const getInitials = (teamName: string) => {
+    const words = teamName.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return '?';
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
   };
 
   // Calculate ranks with ties
@@ -52,7 +60,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
       {/* Header */}
       <div className={`${prefix}-scoreboard-header`}>
         <h2 className={`${prefix}-scoreboard-title`}>
-          {title ?? (isFinal ? '🏆 Final Results' : 'Scoreboard')}
+          {title ?? (isFinal ? 'Final Results' : 'Scoreboard')}
         </h2>
         {isFinal && (
           <p className={`${prefix}-scoreboard-subtitle`}>Congratulations to all participants!</p>
@@ -64,7 +72,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
         <div className={`${prefix}-podium`}>
           {/* 2nd Place */}
           <div className={`${prefix}-podium-item ${prefix}-podium-second`}>
-            <div className={`${prefix}-podium-icon`}>🥈</div>
+            <div className={`${prefix}-podium-icon`}><BiMedal /></div>
             <div className={`${prefix}-podium-info`}>
               <p className={`${prefix}-podium-name`}>{rankedTeams[1]?.teamName}</p>
               <p className={`${prefix}-podium-score`}>{rankedTeams[1]?.score} pts</p>
@@ -73,7 +81,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
 
           {/* 1st Place */}
           <div className={`${prefix}-podium-item ${prefix}-podium-first`}>
-            <div className={`${prefix}-podium-icon`}>🥇</div>
+            <div className={`${prefix}-podium-icon`}><BiTrophy /></div>
             <div className={`${prefix}-podium-info`}>
               <p className={`${prefix}-podium-name`}>{rankedTeams[0]?.teamName}</p>
               <p className={`${prefix}-podium-score`}>{rankedTeams[0]?.score} pts</p>
@@ -82,7 +90,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
 
           {/* 3rd Place */}
           <div className={`${prefix}-podium-item ${prefix}-podium-third`}>
-            <div className={`${prefix}-podium-icon`}>🥉</div>
+            <div className={`${prefix}-podium-icon`}><BiMedal /></div>
             <div className={`${prefix}-podium-info`}>
               <p className={`${prefix}-podium-name`}>{rankedTeams[2]?.teamName}</p>
               <p className={`${prefix}-podium-score`}>{rankedTeams[2]?.score} pts</p>
@@ -106,11 +114,16 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
                 entry.displayRank === 3 ? `${prefix}-ranking-bronze` :
                 `${prefix}-ranking-default`
               } ${isHighlighted ? `${prefix}-ranking-highlight` : ''}`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              style={{ ['--row-index' as string]: index } as React.CSSProperties}
             >
               {/* Rank */}
               <div className={`${prefix}-ranking-rank ${isTopThree ? `${prefix}-ranking-rank-top` : ''}`}>
                 <span>{getRankIcon(entry.displayRank)}</span>
+              </div>
+
+              {/* Team Avatar */}
+              <div className={`${prefix}-ranking-avatar ${prefix}-ranking-avatar-${index % 5}`}>
+                {getInitials(entry.teamName)}
               </div>
 
               {/* Team Name */}

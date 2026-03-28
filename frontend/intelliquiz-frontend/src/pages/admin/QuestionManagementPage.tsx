@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Edit2 } from 'lucide-react';
+import { Eye, Edit2, Check, X } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
@@ -232,7 +232,7 @@ export default function QuestionManagementPage({
                         }`}
                       >
                         {answer.isCorrect && (
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-xs">✓</span>
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-xs"><Check className="w-3 h-3" /></span>
                         )}
                         <span className={answer.isCorrect ? 'text-green-700 font-semibold' : 'text-gray-700'}>
                           {answer.text}
@@ -265,7 +265,7 @@ export default function QuestionManagementPage({
                         className="p-2 text-red-600 hover:bg-red-50 rounded"
                         title="Delete question"
                       >
-                        ✕
+                        <X className="w-4 h-4" />
                       </button>
                     </>
                   )}

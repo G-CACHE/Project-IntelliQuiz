@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, BookOpen, Users, Trophy, Settings } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Trophy, Settings, Check } from 'lucide-react';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { Loader } from '../../components/common/Loader';
 
@@ -247,10 +247,10 @@ export default function SuperAdminDashboard() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">System Overview</h3>
             <ul className="text-gray-700 text-sm space-y-1">
-              <li>✓ All admin users and permissions are managed from this dashboard</li>
-              <li>✓ You have full access to create and manage all quizzes</li>
-              <li>✓ Delegate quiz management to admin users with specific permissions</li>
-              <li>✓ Monitor all system activity and audit logs</li>
+              <li><Check className="inline w-4 h-4 mr-1" />All admin users and permissions are managed from this dashboard</li>
+              <li><Check className="inline w-4 h-4 mr-1" />You have full access to create and manage all quizzes</li>
+              <li><Check className="inline w-4 h-4 mr-1" />Delegate quiz management to admin users with specific permissions</li>
+              <li><Check className="inline w-4 h-4 mr-1" />Monitor all system activity and audit logs</li>
             </ul>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BiGlobe, BiError, BiLockAlt, BiWifi, BiTime, BiXCircle } from 'react-icons/bi';
 
 type ErrorType = 'NETWORK' | 'VALIDATION' | 'AUTH' | 'CONNECTION' | 'SESSION' | 'UNKNOWN';
 
@@ -11,13 +12,13 @@ interface ErrorDisplayProps {
   homeUrl?: string;
 }
 
-const ERROR_ICONS: Record<ErrorType, string> = {
-  NETWORK: '🌐',
-  VALIDATION: '⚠️',
-  AUTH: '🔒',
-  CONNECTION: '📡',
-  SESSION: '⏱️',
-  UNKNOWN: '❌',
+const ERROR_ICONS: Record<ErrorType, React.ReactNode> = {
+  NETWORK: <BiGlobe />,
+  VALIDATION: <BiError />,
+  AUTH: <BiLockAlt />,
+  CONNECTION: <BiWifi />,
+  SESSION: <BiTime />,
+  UNKNOWN: <BiXCircle />,
 };
 
 const ERROR_TITLES: Record<ErrorType, string> = {
@@ -42,7 +43,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="max-w-md w-full p-8 bg-primary-dark rounded-xl border border-red-500/30 text-center">
         {/* Icon */}
-        <div className="text-6xl mb-4">{ERROR_ICONS[type]}</div>
+        <div className="text-6xl mb-4 flex items-center justify-center">{ERROR_ICONS[type]}</div>
         
         {/* Title */}
         <h2 className="text-2xl font-bold text-white mb-2">
@@ -99,7 +100,7 @@ export const ErrorBanner: React.FC<{
   return (
     <div className="p-4 bg-red-900/50 border border-red-500 rounded-lg flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <span className="text-red-400">⚠️</span>
+        <span className="text-red-400"><BiError size={18} /></span>
         <p className="text-red-300">{message}</p>
       </div>
       <div className="flex gap-2">

@@ -103,12 +103,16 @@ export default function DashboardPage() {
               <BiBoltCircle className="greeting-icon" />
               <span>Welcome back!</span>
             </div>
-            <h1 className="hero-title">{username || 'Quiz Master'}</h1>
+            <h1 className="hero-title">{username || 'superadmin'}</h1>
             <p className="hero-subtitle">Ready to create something amazing? Let's make learning fun!</p>
           </div>
           
           <div className="hero-right">
-            <button className="hero-cta" onClick={() => navigate('/superadmin/users')}>
+            <button 
+              className="hero-cta" 
+              onClick={() => navigate('/superadmin/users')}
+              aria-label="Manage Admins"
+            >
               <BiRocket size={24} />
               <span>Manage Admins</span>
             </button>

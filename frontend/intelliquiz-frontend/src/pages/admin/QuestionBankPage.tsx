@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Archive, Download, CheckCircle2, Inbox, BookOpen } from 'lucide-react';
 import { questionBankApi, quizzesApi } from '../../services/api';
 import type { QuestionBankItem, Quiz } from '../../services/api';
 import '../../styles/admin.css';
+import './AdminRedesign.css';
 
 const QuestionBankPage: React.FC = () => {
   const [bankItems, setBankItems] = useState<QuestionBankItem[]>([]);
@@ -137,7 +139,7 @@ const QuestionBankPage: React.FC = () => {
       }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, fontFamily: 'Montserrat, sans-serif' }}>
-            📚 Question Bank
+            <BookOpen size={24} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Question Bank
           </h1>
           <p style={{ fontSize: '14px', opacity: 0.8, margin: '4px 0 0' }}>
             Manage your harvested and reusable questions
@@ -158,7 +160,7 @@ const QuestionBankPage: React.FC = () => {
               fontFamily: 'Montserrat, sans-serif',
             }}
           >
-            🌾 Harvest from Quiz
+            <Archive size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Harvest from Quiz
           </button>
           <button
             onClick={() => setShowImportModal(true)}
@@ -176,7 +178,7 @@ const QuestionBankPage: React.FC = () => {
               fontFamily: 'Montserrat, sans-serif',
             }}
           >
-            📥 Import to Quiz
+            <Download size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Import to Quiz
           </button>
         </div>
       </div>
@@ -193,7 +195,7 @@ const QuestionBankPage: React.FC = () => {
           fontSize: '14px',
           fontWeight: 600,
         }}>
-          ✓ {successMessage}
+          <CheckCircle2 size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />{successMessage}
         </div>
       )}
 
@@ -225,7 +227,7 @@ const QuestionBankPage: React.FC = () => {
           textAlign: 'center',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
         }}>
-          <p style={{ fontSize: '48px', marginBottom: '16px' }}>📭</p>
+          <p style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}><Inbox size={40} color="#9ca3af" /></p>
           <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
             No Questions in Bank
           </h3>
@@ -373,7 +375,7 @@ const QuestionBankPage: React.FC = () => {
             maxWidth: '480px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
             <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px', fontFamily: 'Montserrat, sans-serif' }}>
-              🌾 Harvest Questions
+              <Archive size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Harvest Questions
             </h3>
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>
               Select a quiz to harvest its questions into the bank.
@@ -430,7 +432,7 @@ const QuestionBankPage: React.FC = () => {
             display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
             <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px', fontFamily: 'Montserrat, sans-serif' }}>
-              📥 Import Questions to Quiz
+              <Download size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Import Questions to Quiz
             </h3>
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>
               Select a target quiz and choose questions to import.
