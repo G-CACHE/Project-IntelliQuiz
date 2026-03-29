@@ -212,14 +212,16 @@ CREATE TABLE public.quiz (
     description character varying(255),
     is_live_session boolean NOT NULL,
     proctor_pin character varying(255) NOT NULL,
+    quiz_code character varying(6),
     status character varying(255),
     title character varying(255) NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     created_by_user_id bigint,
+    access_mode character varying(255) DEFAULT 'RESTRICTED'::character varying NOT NULL,
     navigation_mode character varying(255) DEFAULT 'TOURNAMENT'::character varying NOT NULL,
     global_time_limit_seconds integer DEFAULT 0 NOT NULL,
     randomize_questions boolean DEFAULT false NOT NULL,
-    CONSTRAINT quiz_status_check CHECK (((status)::text = ANY (ARRAY[('DRAFT'::character varying)::text, ('READY'::character varying)::text, ('ARCHIVED'::character varying)::text])))
+    CONSTRAINT quiz_status_check CHECK (((status)::text = ANY (ARRAY[('DRAFT'::character varying)::text, ('READY'::character varying)::text, ('ACTIVE'::character varying)::text, ('ARCHIVED'::character varying)::text])))
 );
 
 
@@ -766,6 +768,14 @@ ALTER TABLE ONLY public.team
 
 ALTER TABLE ONLY public.scoreboard_entries
     ADD CONSTRAINT uk_209tg1o0uit4frd88bpcmay1o UNIQUE (team_id);
+
+
+--
+-- Name: quiz uk_quiz_quiz_code; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.quiz
+    ADD CONSTRAINT uk_quiz_quiz_code UNIQUE (quiz_code);
 
 
 --
