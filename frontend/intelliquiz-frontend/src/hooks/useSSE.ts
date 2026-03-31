@@ -220,6 +220,7 @@ export function useSSE(
           setCurrentQuestion({
             id: q.questionId ?? q.id,
             text: q.text,
+            type: q.type ?? 'MULTIPLE_CHOICE',
             options: q.options || [],
             timeLimit: q.timeLimit || 30,
             points: q.points || 0,

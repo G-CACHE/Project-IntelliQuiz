@@ -28,7 +28,7 @@ public record QuestionPayload(
                 dto.id(),
                 dto.text(),
                 dto.type(),
-                dto.type() == QuestionType.MULTIPLE_CHOICE ? dto.options() : List.of(),
+                (dto.type() == QuestionType.MULTIPLE_CHOICE || dto.type() == QuestionType.TRUE_FALSE) ? dto.options() : List.of(),
                 dto.timeLimit(),
                 dto.points(),
                 dto.orderIndex(),

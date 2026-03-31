@@ -18,7 +18,24 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
      * Falls back to the raw correctKey for identification-type questions or if resolution fails.
      */
     public String resolvedCorrectAnswer() {
-        if (correctKey == null || options == null || options.isEmpty()) {
+        if (correctKey == null) {
+            return null;
+        }
+
+        if (type == QuestionType.IDENTIFICATION) {
+            return correctKey.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isBlank())
+                    .findFirst()
+                    .orElse(correctKey);
+        }
+
+        if (options == null || options.isEmpty()) {
+            if (type == QuestionType.TRUE_FALSE) {
+                String key = correctKey.toUpperCase().trim();
+                if ("A".equals(key)) return "True";
+                if ("B".equals(key)) return "False";
+            }
             return correctKey;
         }
         String key = correctKey.toUpperCase().trim();

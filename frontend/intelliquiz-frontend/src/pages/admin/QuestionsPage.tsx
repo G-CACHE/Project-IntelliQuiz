@@ -20,6 +20,22 @@ import '../../styles/admin.css';
 import './AdminRedesign.css';
 
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
+const QUESTION_TYPES: Array<{ value: CreateQuestionRequest['type']; label: string }> = [
+  { value: 'MULTIPLE_CHOICE', label: 'Multiple Choice' },
+  { value: 'TRUE_FALSE', label: 'True / False' },
+  { value: 'IDENTIFICATION', label: 'Identification' },
+];
+
+const DEFAULT_TRUE_FALSE_OPTIONS = ['True', 'False'];
+
+const normalizeIdentificationAnswers = (raw: string) =>
+  raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line, index, arr) => line.length > 0 && arr.indexOf(line) === index)
+    .join('\n');
+
+const createBlankOptions = () => ['', '', '', ''];
 
 const initialForm: CreateQuestionRequest = {
   text: '',
@@ -80,22 +96,43 @@ export default function AdminQuestionsPage() {
     if (!hasEditPermission) return setError('You do not have permission to edit this quiz');
     if (!isDraftQuiz) return setError('Questions can only be edited while the quiz is in Draft status.');
     if (!formData.text.trim()) return setError('Question text is required');
-    if (!formData.correctKey) return setError('Please select the correct answer');
-    
-    const validOptions = formData.options.filter((o) => o.trim());
-    if (validOptions.length < 2) return setError('At least two answer options are required');
-    
-    const correctIndex = OPTION_KEYS.indexOf(formData.correctKey);
-    if (correctIndex >= validOptions.length) {
-      return setError('The correct answer must be one of the filled options');
-    }
 
-    try {
-      const payload = {
+    let payload: CreateQuestionRequest;
+    if (formData.type === 'MULTIPLE_CHOICE') {
+      if (!formData.correctKey) return setError('Please select the correct answer');
+      const validOptions = formData.options.filter((o) => o.trim());
+      if (validOptions.length < 2) return setError('At least two answer options are required');
+
+      const correctIndex = OPTION_KEYS.indexOf(formData.correctKey);
+      if (correctIndex >= validOptions.length) {
+        return setError('The correct answer must be one of the filled options');
+      }
+
+      payload = {
         ...formData,
         options: validOptions,
       };
-      
+    } else if (formData.type === 'TRUE_FALSE') {
+      if (formData.correctKey !== 'A' && formData.correctKey !== 'B') {
+        return setError('Select whether True or False is the correct answer');
+      }
+      payload = {
+        ...formData,
+        options: DEFAULT_TRUE_FALSE_OPTIONS,
+      };
+    } else {
+      const normalizedAnswers = normalizeIdentificationAnswers(formData.correctKey);
+      if (!normalizedAnswers) {
+        return setError('Please provide at least one accepted answer for identification');
+      }
+      payload = {
+        ...formData,
+        correctKey: normalizedAnswers,
+        options: [],
+      };
+    }
+
+    try {
       if (isEditing && selectedQuestion) {
         await questionsApi.update(selectedQuestion.id, payload);
       } else {
@@ -132,14 +169,23 @@ export default function AdminQuestionsPage() {
     }
     setSelectedQuestion(question);
     setIsEditing(true);
-    const options = question.options.length >= 4
-      ? question.options
-      : [...question.options, ...Array(4 - question.options.length).fill('')];
+    const options = question.type === 'MULTIPLE_CHOICE'
+      ? (question.options.length >= 4
+        ? question.options
+        : [...question.options, ...Array(4 - question.options.length).fill('')])
+      : (question.type === 'TRUE_FALSE' ? DEFAULT_TRUE_FALSE_OPTIONS : createBlankOptions());
+
+    const correctKey = question.type === 'IDENTIFICATION'
+      ? (question.correctKey || '')
+      : (question.type === 'TRUE_FALSE'
+        ? (question.correctKey === 'B' ? 'B' : 'A')
+        : question.correctKey);
+
     setFormData({
       text: question.text,
       type: question.type,
       difficulty: question.difficulty,
-      correctKey: question.correctKey,
+      correctKey,
       points: question.points,
       timeLimit: question.timeLimit,
       options,
@@ -158,6 +204,18 @@ export default function AdminQuestionsPage() {
     const newOptions = [...formData.options];
     newOptions[idx] = value;
     setFormData({ ...formData, options: newOptions });
+  };
+
+  const handleTypeChange = (type: CreateQuestionRequest['type']) => {
+    if (type === 'MULTIPLE_CHOICE') {
+      setFormData((prev) => ({ ...prev, type, correctKey: '', options: createBlankOptions() }));
+      return;
+    }
+    if (type === 'TRUE_FALSE') {
+      setFormData((prev) => ({ ...prev, type, correctKey: 'A', options: DEFAULT_TRUE_FALSE_OPTIONS }));
+      return;
+    }
+    setFormData((prev) => ({ ...prev, type, correctKey: '', options: [] }));
   };
 
   const normalizeText = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -333,25 +391,38 @@ export default function AdminQuestionsPage() {
                       <span className={`admin-badge ${getDifficultyBadge(q.difficulty)}`}>{q.difficulty}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                    {q.options.map((option, optIdx) => {
-                      const key = OPTION_KEYS[optIdx];
-                      const isCorrect = key === q.correctKey;
-                      return (
-                        <div key={optIdx} style={{
-                          display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-                          borderRadius: 8, fontSize: 13,
-                          background: isCorrect ? '#f0fdf4' : '#f8fafc',
-                          border: `1px solid ${isCorrect ? '#bbf7d0' : '#e2e8f0'}`,
-                          color: isCorrect ? '#16a34a' : '#64748b'
-                        }}>
-                          <span style={{ fontWeight: 600, minWidth: 18 }}>{key}.</span>
-                          {isCorrect && <BiCheck size={16} />}
-                          {option}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {q.type === 'IDENTIFICATION' ? (
+                    <div style={{
+                      borderRadius: 8,
+                      padding: '10px 12px',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      fontSize: 13,
+                      color: '#334155',
+                    }}>
+                      Accepted answers: {q.correctKey.split(/\r?\n/).filter(Boolean).join(', ')}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                      {q.options.map((option, optIdx) => {
+                        const key = OPTION_KEYS[optIdx];
+                        const isCorrect = key === q.correctKey;
+                        return (
+                          <div key={optIdx} style={{
+                            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                            borderRadius: 8, fontSize: 13,
+                            background: isCorrect ? '#f0fdf4' : '#f8fafc',
+                            border: `1px solid ${isCorrect ? '#bbf7d0' : '#e2e8f0'}`,
+                            color: isCorrect ? '#16a34a' : '#64748b'
+                          }}>
+                            <span style={{ fontWeight: 600, minWidth: 18 }}>{key}.</span>
+                            {isCorrect && <BiCheck size={16} />}
+                            {option}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {canEditContent && (
@@ -406,7 +477,19 @@ export default function AdminQuestionsPage() {
                   className="admin-form-input admin-form-textarea" placeholder="Enter the question" rows={3} />
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Type *</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => handleTypeChange(e.target.value as CreateQuestionRequest['type'])}
+                    className="admin-form-input admin-form-select"
+                  >
+                    {QUESTION_TYPES.map((typeOption) => (
+                      <option key={typeOption.value} value={typeOption.value}>{typeOption.label}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="admin-form-group">
                   <label className="admin-form-label">Difficulty *</label>
                   <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' })}
@@ -428,50 +511,98 @@ export default function AdminQuestionsPage() {
                 </div>
               </div>
 
-              <div className="admin-form-group">
-                <label className="admin-form-label">Answer Options * (click letter to mark correct)</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {formData.options.map((option, idx) => {
-                    const key = OPTION_KEYS[idx];
-                    const isCorrect = formData.correctKey === key;
-                    return (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {formData.type === 'MULTIPLE_CHOICE' && (
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Answer Options * (click letter to mark correct)</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {formData.options.map((option, idx) => {
+                      const key = OPTION_KEYS[idx];
+                      const isCorrect = formData.correctKey === key;
+                      return (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, correctKey: key })}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 8,
+                              border: `2px solid ${isCorrect ? '#16a34a' : '#e2e8f0'}`,
+                              background: isCorrect ? '#16a34a' : 'transparent',
+                              color: isCorrect ? 'white' : '#64748b',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            {isCorrect ? <BiCheck size={20} /> : key}
+                          </button>
+                          <input
+                            type="text"
+                            value={option}
+                            onChange={(e) => updateOption(idx, e.target.value)}
+                            className="admin-form-input"
+                            style={{ flex: 1 }}
+                            placeholder={`Option ${key}`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                    Click the letter button to mark the correct answer
+                  </p>
+                </div>
+              )}
+
+              {formData.type === 'TRUE_FALSE' && (
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Correct Answer *</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {DEFAULT_TRUE_FALSE_OPTIONS.map((option, idx) => {
+                      const key = idx === 0 ? 'A' : 'B';
+                      const isCorrect = formData.correctKey === key;
+                      return (
                         <button
+                          key={option}
                           type="button"
                           onClick={() => setFormData({ ...formData, correctKey: key })}
+                          className="admin-form-input"
                           style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 8,
+                            minHeight: 44,
                             border: `2px solid ${isCorrect ? '#16a34a' : '#e2e8f0'}`,
-                            background: isCorrect ? '#16a34a' : 'transparent',
-                            color: isCorrect ? 'white' : '#64748b',
-                            fontWeight: 600,
+                            background: isCorrect ? '#f0fdf4' : '#ffffff',
+                            color: isCorrect ? '#15803d' : '#334155',
+                            fontWeight: 700,
                             cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s ease',
                           }}
                         >
-                          {isCorrect ? <BiCheck size={20} /> : key}
+                          {isCorrect ? <><BiCheck size={16} /> {option}</> : option}
                         </button>
-                        <input
-                          type="text"
-                          value={option}
-                          onChange={(e) => updateOption(idx, e.target.value)}
-                          className="admin-form-input"
-                          style={{ flex: 1 }}
-                          placeholder={`Option ${key}`}
-                        />
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                  Click the letter button to mark the correct answer
-                </p>
-              </div>
+              )}
+
+              {formData.type === 'IDENTIFICATION' && (
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Accepted Answers * (one per line)</label>
+                  <textarea
+                    value={formData.correctKey}
+                    onChange={(e) => setFormData({ ...formData, correctKey: e.target.value })}
+                    className="admin-form-input admin-form-textarea"
+                    rows={4}
+                    placeholder={'Example:\nParis\nCity of Paris'}
+                  />
+                  <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                    Matching is case-insensitive and ignores extra spaces.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="admin-modal-footer">
               <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>

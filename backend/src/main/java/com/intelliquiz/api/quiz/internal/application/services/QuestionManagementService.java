@@ -6,6 +6,7 @@ import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
 import com.intelliquiz.api.quiz.events.QuestionAddedEvent;
 import com.intelliquiz.api.quiz.events.QuestionDeletedEvent;
+import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.quiz.internal.domain.ports.QuestionRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,6 +73,8 @@ public class QuestionManagementService {
             question.setOptions(command.options());
         }
 
+        normalizeQuestionByType(question);
+
         // Set order index to be at the end
         List<Question> existingQuestions = questionRepository.findByQuizOrderByOrderIndex(quiz);
         int nextIndex = existingQuestions.isEmpty() ? 0 : 
@@ -123,6 +127,8 @@ public class QuestionManagementService {
         if (command.options() != null) {
             question.setOptions(command.options());
         }
+
+        normalizeQuestionByType(question);
 
         question.validatePoints();
         question.validateOptions();
@@ -189,6 +195,36 @@ public class QuestionManagementService {
     private void assertQuizEditable(Quiz quiz) {
         if (quiz.getStatus() == QuizStatus.ARCHIVED) {
             throw new IllegalArgumentException("Quiz is done and questions can no longer be edited");
+        }
+    }
+
+    private void normalizeQuestionByType(Question question) {
+        if (question.getType() == QuestionType.TRUE_FALSE) {
+            // Keep a canonical option order so A=TRUE and B=FALSE is always deterministic.
+            question.setOptions(new ArrayList<>(List.of("True", "False")));
+
+            String normalizedKey = question.getCorrectKey() == null
+                    ? ""
+                    : question.getCorrectKey().trim().toUpperCase();
+            if ("TRUE".equals(normalizedKey)) {
+                question.setCorrectKey("A");
+            } else if ("FALSE".equals(normalizedKey)) {
+                question.setCorrectKey("B");
+            }
+        }
+
+        if (question.getType() == QuestionType.IDENTIFICATION) {
+            // Identification answers are encoded one per line in correctKey.
+            question.setOptions(new ArrayList<>());
+            if (question.getCorrectKey() != null) {
+                String normalizedAnswers = question.getCorrectKey().lines()
+                        .map(String::trim)
+                        .filter(line -> !line.isBlank())
+                        .distinct()
+                        .reduce((a, b) -> a + "\n" + b)
+                        .orElse("");
+                question.setCorrectKey(normalizedAnswers);
+            }
         }
     }
 }

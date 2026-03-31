@@ -130,15 +130,33 @@ public class Submission extends SoftDeletableEntity {
      * @param questionPoints the points to award if the answer is correct
      */
     public void grade(String correctAnswer, int questionPoints) {
-        this.isCorrect = correctAnswer != null
-                && correctAnswer.trim().equalsIgnoreCase(
-                        this.submittedAnswer != null ? this.submittedAnswer.trim() : "");
+        String normalizedSubmitted = normalizeAnswer(this.submittedAnswer);
+        this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
+                .map(Submission::normalizeAnswer)
+                .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedSubmitted));
         if (this.isCorrect) {
             this.awardedPoints = questionPoints;
         } else {
             this.awardedPoints = 0;
         }
         this.isGraded = true;
+    }
+
+    private static java.util.List<String> parseAcceptedAnswers(String correctAnswer) {
+        if (correctAnswer == null || correctAnswer.isBlank()) {
+            return java.util.List.of();
+        }
+        return correctAnswer.lines()
+                .map(String::trim)
+                .filter(line -> !line.isBlank())
+                .toList();
+    }
+
+    private static String normalizeAnswer(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 
     /**

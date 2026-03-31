@@ -150,13 +150,15 @@ const PlayerGame: React.FC = () => {
   // Check if answer was correct when answer is revealed
   useEffect(() => {
     if (gameState === 'ANSWER_REVEAL' && currentQuestion?.correctAnswer) {
-      if (selectedOption) {
+      if (currentQuestion.type === 'IDENTIFICATION') {
+        setIsCorrect(null);
+      } else if (selectedOption) {
         setIsCorrect(selectedOption === currentQuestion.correctAnswer);
       } else if (!submitted) {
         setIsCorrect(null); // No answer submitted
       }
     }
-  }, [gameState, currentQuestion?.correctAnswer, selectedOption, submitted]);
+  }, [gameState, currentQuestion?.correctAnswer, currentQuestion?.type, selectedOption, submitted]);
 
   // Auto-submit when timer expires (LINEAR mode only)
   useEffect(() => {
@@ -462,7 +464,16 @@ const PlayerGame: React.FC = () => {
                     )}
                   </>
                 )}
-                {isCorrect === null && !submitted && (
+                {isCorrect === null && currentQuestion.type === 'IDENTIFICATION' && (
+                  <>
+                    <div className="participant-result-icon" aria-hidden="true">
+                      <ListChecks className="participant-result-icon-svg" />
+                    </div>
+                    <h2 className="participant-result-title">Answer Recorded</h2>
+                    <p className="participant-result-hint">Your response was checked using accepted-answer matching.</p>
+                  </>
+                )}
+                {isCorrect === null && currentQuestion.type !== 'IDENTIFICATION' && !submitted && (
                   <>
                     <div className="participant-result-icon" aria-hidden="true">
                       <AlarmClock className="participant-result-icon-svg" />
