@@ -18,7 +18,7 @@ public record CreateQuestionRequest(
     @NotBlank(message = "Question text is required")
     String text,
     
-    @Schema(description = "Type of question (MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER)", example = "MULTIPLE_CHOICE", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Type of question (MULTIPLE_CHOICE, TRUE_FALSE, IDENTIFICATION)", example = "MULTIPLE_CHOICE", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "Question type is required")
     QuestionType type,
     
@@ -26,7 +26,7 @@ public record CreateQuestionRequest(
     @NotNull(message = "Difficulty is required")
     Difficulty difficulty,
     
-    @Schema(description = "The correct answer key (option letter for multiple choice, or answer text)", example = "A", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Correct answer payload. Use option key (A/B/C/D) for MULTIPLE_CHOICE, A or B for TRUE_FALSE, or newline-separated accepted answers for IDENTIFICATION", example = "A", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Correct answer key is required")
     String correctKey,
     

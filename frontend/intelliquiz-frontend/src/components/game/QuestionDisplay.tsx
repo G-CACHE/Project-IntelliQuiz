@@ -25,6 +25,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   variant = 'proctor',
 }) => {
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
+  const questionType = question.type || 'MULTIPLE_CHOICE';
+  const optionList = questionType === 'TRUE_FALSE'
+    ? (question.options.length >= 2 ? question.options.slice(0, 2) : ['True', 'False'])
+    : question.options;
 
   const getOptionClass = (option: string) => {
     const isSelected = selectedOption === option;
@@ -69,9 +73,32 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         </h2>
       </div>
 
-      {/* Options Grid */}
-      <div className={`${prefix}-answer-grid`}>
-        {question.options.map((option, index) => {
+      {/* Answer UI */}
+      {questionType === 'IDENTIFICATION' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            type="text"
+            value={selectedOption ?? ''}
+            onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
+            placeholder="Type your answer"
+            disabled={disabled}
+            className={`${prefix}-answer-btn`}
+            style={{
+              width: '100%',
+              cursor: disabled ? 'not-allowed' : 'text',
+              textAlign: 'left',
+              padding: '14px 16px',
+            }}
+          />
+          {showCorrectAnswer && correctAnswer && (
+            <div className={`${prefix}-question-card`} style={{ padding: '12px 16px' }}>
+              <p style={{ margin: 0, fontWeight: 700 }}>Accepted Answer: {correctAnswer}</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className={`${prefix}-answer-grid`}>
+          {optionList.map((option, index) => {
           const letter = String.fromCharCode(65 + index);
           const isSelected = selectedOption === option;
           const isCorrect = showCorrectAnswer && correctAnswer === option;
@@ -118,8 +145,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               )}
             </button>
           );
-        })}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 };

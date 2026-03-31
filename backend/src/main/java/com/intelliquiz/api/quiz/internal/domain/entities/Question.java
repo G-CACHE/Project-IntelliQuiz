@@ -99,6 +99,24 @@ public class Question extends SoftDeletableEntity {
             if (!isValidOptionKey()) {
                 throw new IllegalArgumentException("Correct key must be a valid option (A, B, C, D) for multiple choice questions");
             }
+            return;
+        }
+
+        if (this.type == QuestionType.TRUE_FALSE) {
+            if (options == null || options.size() < 2) {
+                throw new IllegalArgumentException("True/False questions must provide True and False options");
+            }
+            String key = correctKey == null ? "" : correctKey.trim().toUpperCase();
+            if (!"A".equals(key) && !"B".equals(key)) {
+                throw new IllegalArgumentException("Correct key for true/false questions must be A (True) or B (False)");
+            }
+            return;
+        }
+
+        if (this.type == QuestionType.IDENTIFICATION) {
+            if (correctKey == null || correctKey.isBlank()) {
+                throw new IllegalArgumentException("Identification questions must define at least one accepted answer");
+            }
         }
     }
 

@@ -77,7 +77,7 @@ public class AnswerDistributionService {
                 
                 // Count the option — submitted answers are option text
                 if (optionCounts.containsKey(trimmedAnswer)) {
-                    optionCounts.merge(trimmedAnswer, 1, Integer::sum);
+                    optionCounts.merge(trimmedAnswer, 1, (left, right) -> left + right);
                 }
                 
                 // Count correct/incorrect using resolved answer
@@ -122,6 +122,13 @@ public class AnswerDistributionService {
         if (answer == null || correctKey == null) {
             return false;
         }
-        return correctKey.trim().equalsIgnoreCase(answer.trim());
+        String normalizedAnswer = normalize(answer);
+        return correctKey.lines()
+                .map(AnswerDistributionService::normalize)
+                .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedAnswer));
+    }
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 }

@@ -15,13 +15,13 @@ public record UpdateQuestionRequest(
     @Schema(description = "Updated question text", example = "What is the capital of Germany?")
     String text,
     
-    @Schema(description = "Updated question type (MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER)", example = "MULTIPLE_CHOICE")
+    @Schema(description = "Updated question type (MULTIPLE_CHOICE, TRUE_FALSE, IDENTIFICATION)", example = "MULTIPLE_CHOICE")
     QuestionType type,
     
     @Schema(description = "Updated difficulty level (EASY, MEDIUM, HARD)", example = "HARD")
     Difficulty difficulty,
     
-    @Schema(description = "Updated correct answer key", example = "B")
+    @Schema(description = "Updated correct answer payload (A/B/C/D for MULTIPLE_CHOICE, A/B for TRUE_FALSE, newline-separated accepted answers for IDENTIFICATION)", example = "B")
     String correctKey,
     
     @Schema(description = "Updated points for correct answer", example = "15", minimum = "0")

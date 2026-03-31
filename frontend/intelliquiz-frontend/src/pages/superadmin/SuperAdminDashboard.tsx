@@ -184,18 +184,6 @@ export default function SuperAdminDashboard() {
               👤 Manage Users
             </a>
             <a
-              href="/superadmin/quizzes"
-              className="block px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-medium"
-            >
-              📋 Manage Quizzes
-            </a>
-            <a
-              href="/superadmin/editor"
-              className="block px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-            >
-              ✏️ Edit Quiz
-            </a>
-            <a
               href="/superadmin/permissions"
               className="block px-4 py-3 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium"
             >

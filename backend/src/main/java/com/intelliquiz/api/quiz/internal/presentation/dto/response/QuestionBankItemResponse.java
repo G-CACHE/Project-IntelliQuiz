@@ -22,7 +22,7 @@ public record QuestionBankItemResponse(
     @Schema(description = "The question text", example = "What is the capital of France?")
     String text,
 
-    @Schema(description = "Type of question (MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER)", example = "MULTIPLE_CHOICE")
+    @Schema(description = "Type of question (MULTIPLE_CHOICE, TRUE_FALSE, IDENTIFICATION)", example = "MULTIPLE_CHOICE")
     QuestionType type,
 
     @Schema(description = "Difficulty level (EASY, MEDIUM, HARD)", example = "MEDIUM")

@@ -528,7 +528,7 @@ export interface UpdateQuizRequest {
 export interface Question {
   id: number;
   text: string;
-  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   correctKey: string;
   points: number;
@@ -539,7 +539,7 @@ export interface Question {
 
 export interface CreateQuestionRequest {
   text: string;
-  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   correctKey: string;
   points: number;
@@ -549,7 +549,7 @@ export interface CreateQuestionRequest {
 
 export interface UpdateQuestionRequest {
   text?: string;
-  type?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  type?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
   correctKey?: string;
   points?: number;
@@ -687,6 +687,7 @@ export type GameState =
 export interface QuestionData {
   id: number;
   text: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
   options: string[];
   timeLimit: number;
   points: number;
@@ -714,7 +715,7 @@ export interface GameStateMessage {
 export interface QuestionPayload {
   questionId: number;
   text: string;
-  type: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
   options: string[];
   timeLimit: number;
   points: number;
@@ -843,7 +844,7 @@ export interface NavigateMessage {
 export interface QuestionBankItem {
   id: number;
   text: string;
-  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   correctKey: string;
   points: number;
