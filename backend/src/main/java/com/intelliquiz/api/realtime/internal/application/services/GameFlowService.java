@@ -7,6 +7,7 @@ import com.intelliquiz.api.submission.dto.SubmissionInfoDto;
 import com.intelliquiz.api.team.TeamFacade;
 import com.intelliquiz.api.team.dto.TeamInfoDto;
 import com.intelliquiz.api.shared.enums.NavigationMode;
+import com.intelliquiz.api.shared.enums.Difficulty;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.realtime.internal.domain.enums.GameState;
 import com.intelliquiz.api.realtime.internal.presentation.dto.*;
@@ -44,6 +45,15 @@ public class GameFlowService {
 
     // Quiz ID -> Set of team IDs that have submitted for current question
     private final Map<Long, Set<Long>> submittedTeams = new ConcurrentHashMap<>();
+    
+    // Quiz ID -> The difficulty level of the current/last shown question
+    private final Map<Long, String> currentRoundDifficulty = new ConcurrentHashMap<>();
+
+    // Quiz ID -> Next question index waiting for host confirmation during round announcement
+    private final Map<Long, Integer> pendingRoundQuestionIndex = new ConcurrentHashMap<>();
+
+    // Quiz ID -> Global timer seconds that should start when first round question is manually started
+    private final Map<Long, Integer> pendingGlobalTimerSeconds = new ConcurrentHashMap<>();
 
     public GameFlowService(
             QuizTimerService timerService,
@@ -110,6 +120,9 @@ public class GameFlowService {
             sessionManager.setNavigationMode(quizId, NavigationMode.TOURNAMENT);
         sessionManager.setCurrentState(quizId, GameState.BUFFER);
         sessionManager.setCurrentQuestionIndex(quizId, 0);
+        currentRoundDifficulty.remove(quizId);
+        pendingRoundQuestionIndex.remove(quizId);
+        pendingGlobalTimerSeconds.remove(quizId);
         
         // Start buffer countdown, then activate round (with global timer if set)
         timerService.startBufferCountdown(quizId, BUFFER_DURATION_SECONDS, roundName, () -> {
@@ -123,17 +136,13 @@ public class GameFlowService {
      * If globalTimeLimitSeconds = 0: shows first question (host-controlled with per-question timers).
      */
         private void activateTournamentRound(Long quizId, int globalTimeLimitSeconds) {
-        if (globalTimeLimitSeconds > 0) {
-            // Participant-paced with global timer: show first question and start global timer
-            showQuestion(quizId, 0);
-            timerService.startGlobalTimer(quizId, globalTimeLimitSeconds, () -> {
-                // Auto-end quiz when global timer expires
-                endQuiz(quizId);
-            });
-        } else {
-            // Host-paced with per-question timers: show first question (timer starts in showQuestion)
-            showQuestion(quizId, 0);
-        }
+            // Always show round announcement before first question in TOURNAMENT mode.
+            // First question starts only after host explicitly advances from BUFFER.
+            queueRoundAnnouncementForQuestion(quizId, 0, true);
+
+            if (globalTimeLimitSeconds > 0) {
+                pendingGlobalTimerSeconds.put(quizId, globalTimeLimitSeconds);
+            }
     }
 
     /**
@@ -141,7 +150,7 @@ public class GameFlowService {
      * When global timer is active, per-question timers are skipped.
      */
     public void showQuestion(Long quizId, int questionIndex) {
-        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+        List<QuestionInfoDto> questions = getTournamentQuestions(quizId);
         
         if (questionIndex >= questions.size()) {
             // No more questions — automatically end the quiz with final scoreboard
@@ -154,14 +163,19 @@ public class GameFlowService {
         sessionManager.setCurrentQuestionId(quizId, question.id());
         sessionManager.setCurrentState(quizId, GameState.ACTIVE);
         
+        // Track the current difficulty for round announcements
+        String difficulty = question.difficulty() != null ? 
+            question.difficulty().toString() : "UNKNOWN";
+        currentRoundDifficulty.put(quizId, difficulty);
+        
         // Clear submitted teams for new question
         submittedTeams.put(quizId, ConcurrentHashMap.newKeySet());
         
         // Broadcast combined game state + question (single message)
-        QuestionPayload payload = QuestionPayload.fromDto(question);
+        QuestionPayload payload = QuestionPayload.fromDto(question);        
         boolean participantNavEnabled = sessionManager.isParticipantNavigationEnabled(quizId);
         broadcastService.broadcastGameState(quizId, GameStateMessage.active(
-                quizId, questionIndex, questions.size(), question.difficulty(), payload, participantNavEnabled
+                quizId, questionIndex, questions.size(), difficulty, payload, participantNavEnabled
         ));
         
         // Only start per-question timer if participant-controlled navigation is NOT enabled
@@ -186,6 +200,9 @@ public class GameFlowService {
     @Transactional
     public void calculateAndRevealResults(Long quizId, Long questionId) {
         try {
+            sessionManager.setCurrentState(quizId, GameState.GRADING);
+            broadcastService.broadcastGameState(quizId, GameStateMessage.grading(quizId));
+
             QuestionInfoDto question = quizFacade.getQuestionForGrading(questionId);
             List<TeamInfoDto> teams = teamFacade.getTeamsByQuiz(quizId);
             
@@ -278,16 +295,6 @@ public class GameFlowService {
                 ));
             }
             
-            // If this was the last question, end immediately and show final results.
-            int currentQuestionIndex = sessionManager.getCurrentQuestionIndex(quizId);
-            int totalQuestions = quizFacade.getOrderedQuestions(quizId).size();
-            boolean isLastQuestion = totalQuestions > 0 && currentQuestionIndex >= (totalQuestions - 1);
-            if (isLastQuestion) {
-                logger.info("Last question graded for quiz {}. Ending quiz automatically.", quizId);
-                endQuiz(quizId);
-                return;
-            }
-
             // Calculate answer distribution (with fallback on error)
             AnswerDistribution distribution;
             try {
@@ -332,6 +339,22 @@ public class GameFlowService {
     public void advanceToNextQuestion(Long quizId) {
         GameState state = sessionManager.getCurrentState(quizId);
 
+        // Buffer can be either initial countdown or a difficulty announcement waiting for host confirmation.
+        if (state == GameState.BUFFER) {
+            Integer pendingIndex = pendingRoundQuestionIndex.remove(quizId);
+            if (pendingIndex == null) {
+                throw new IllegalStateException("Round buffer is still active. Wait for announcement before starting.");
+            }
+
+            showQuestion(quizId, pendingIndex);
+
+            Integer globalTimerSeconds = pendingGlobalTimerSeconds.remove(quizId);
+            if (globalTimerSeconds != null && globalTimerSeconds > 0) {
+                timerService.startGlobalTimer(quizId, globalTimerSeconds, () -> endQuiz(quizId));
+            }
+            return;
+        }
+
         // If host advances while question is still active, force grading first so points are not skipped.
         if (state == GameState.ACTIVE) {
             Optional<Long> currentQuestionId = sessionManager.getCurrentQuestionId(quizId);
@@ -343,7 +366,13 @@ public class GameFlowService {
         }
 
         int currentIndex = sessionManager.getCurrentQuestionIndex(quizId);
-        showQuestion(quizId, currentIndex + 1);
+        int nextIndex = currentIndex + 1;
+
+        if (queueRoundAnnouncementForQuestion(quizId, nextIndex, false)) {
+            return;
+        }
+
+        showQuestion(quizId, nextIndex);
     }
 
     /**
@@ -389,6 +418,94 @@ public class GameFlowService {
     }
 
     /**
+     * Broadcasts a difficulty round announcement to all participants.
+     * Displayed as a full-screen modal with the upcoming round's difficulty level.
+     */
+    private void broadcastRoundAnnouncement(Long quizId, String difficulty) {
+        String roundName = formatDifficultyName(difficulty);
+        sessionManager.setCurrentState(quizId, GameState.BUFFER);
+        broadcastService.broadcastGameState(quizId, GameStateMessage.buffer(
+                quizId, 
+                roundName, 
+                "Get ready for " + roundName + " questions!"
+        ));
+        logger.info("Broadcasting round announcement for {} round in quiz {}", difficulty, quizId);
+    }
+
+    /**
+     * Formats difficulty enum to human-readable round name.
+     */
+    private String formatDifficultyName(String difficulty) {
+        try {
+            Difficulty diff = Difficulty.valueOf(difficulty.toUpperCase());
+            return switch (diff) {
+                case EASY -> "Easy";
+                case MEDIUM -> "Medium";
+                case HARD -> "Hard";
+                default -> "Next";
+            };
+        } catch (Exception e) {
+            return "Next";
+        }
+    }
+
+    private boolean queueRoundAnnouncementForQuestion(Long quizId, int questionIndex, boolean forceAnnouncement) {
+        List<QuestionInfoDto> questions = getTournamentQuestions(quizId);
+        if (questionIndex >= questions.size()) {
+            endQuiz(quizId);
+            return true;
+        }
+
+        QuestionInfoDto nextQuestion = questions.get(questionIndex);
+        String nextDifficulty = nextQuestion.difficulty() != null
+                ? nextQuestion.difficulty().toString()
+                : "UNKNOWN";
+        String currentDifficulty = currentRoundDifficulty.getOrDefault(quizId, "");
+
+        boolean shouldAnnounce = forceAnnouncement
+                || currentDifficulty.isEmpty()
+                || !currentDifficulty.equals(nextDifficulty);
+
+        if (!shouldAnnounce) {
+            return false;
+        }
+
+        pendingRoundQuestionIndex.put(quizId, questionIndex);
+        broadcastRoundAnnouncement(quizId, nextDifficulty);
+        return true;
+    }
+
+    /**
+     * Tournament sequencing groups by difficulty (EASY -> MEDIUM -> HARD -> others)
+     * and keeps existing order inside each difficulty bucket.
+     */
+    private List<QuestionInfoDto> getTournamentQuestions(Long quizId) {
+        return quizFacade.getOrderedQuestions(quizId).stream()
+                .sorted(Comparator
+                        .comparingInt((QuestionInfoDto q) -> difficultyPriority(q.difficulty()))
+                        .thenComparingInt(QuestionInfoDto::orderIndex))
+                .toList();
+    }
+
+    private int difficultyPriority(String difficulty) {
+        if (difficulty == null || difficulty.isBlank()) {
+            return 3;
+        }
+
+        try {
+            Difficulty diff = Difficulty.valueOf(difficulty.trim().toUpperCase());
+            return switch (diff) {
+                case EASY -> 0;
+                case MEDIUM -> 1;
+                case HARD -> 2;
+                default -> 3;
+            };
+        } catch (IllegalArgumentException ex) {
+            return 3;
+        }
+    }
+
+    /**
      * Handles answer submission from a participant.
      */
     @Transactional
@@ -409,11 +526,9 @@ public class GameFlowService {
         NavigationMode navMode = sessionManager.getNavigationMode(quizId);
 
         if (navMode == NavigationMode.TOURNAMENT) {
-            // Tournament mode: validate timer and current question
-            if (!timerService.isTimerActive(quizId)) {
-                broadcastService.sendError(sessionId, ErrorMessage.timeExpired());
-                return;
-            }
+            // Tournament mode: validate against current active question.
+            // We intentionally avoid relying only on timerActive to reduce
+            // race conditions at the exact timeout boundary.
             Optional<Long> currentQuestionId = sessionManager.getCurrentQuestionId(quizId);
             if (currentQuestionId.isEmpty() || !currentQuestionId.get().equals(questionId)) {
                 broadcastService.sendError(sessionId, ErrorMessage.invalidQuestion());
@@ -665,6 +780,9 @@ public class GameFlowService {
         sessionManager.clearQuizSession(quizId);
         proctorSessionService.clearSession(quizId);
         submittedTeams.remove(quizId);
+        currentRoundDifficulty.remove(quizId);
+        pendingRoundQuestionIndex.remove(quizId);
+        pendingGlobalTimerSeconds.remove(quizId);
         
         logger.info("Ended quiz {}", quizId);
     }

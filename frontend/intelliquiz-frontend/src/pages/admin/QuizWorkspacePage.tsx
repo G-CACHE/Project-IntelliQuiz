@@ -4,6 +4,8 @@ import {
   BiArrowBack,
   BiBookContent,
   BiTrophy,
+  BiGroup,
+  BiUserPlus,
   BiCheckCircle,
   BiPauseCircle,
   BiCopy,
@@ -15,7 +17,7 @@ import {
   BiX,
   BiErrorCircle,
 } from 'react-icons/bi';
-import { useQuiz, useQuizStatusChange, useScoreboard, useTeams } from '../../hooks';
+import { useQuiz, useQuizStatusChange, useRegisterTeam, useScoreboard, useTeams } from '../../hooks';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
@@ -35,6 +37,7 @@ export default function QuizWorkspacePage() {
 
   const { data: quiz, isLoading, refetch: refetchQuiz } = useQuiz(parsedQuizId);
   const { data: teams = [] } = useTeams(parsedQuizId);
+  const registerTeam = useRegisterTeam(parsedQuizId);
   const { data: scoreboard = [], isLoading: scoreboardLoading, refetch: refetchScoreboard } = useScoreboard(parsedQuizId, { refetchInterval: 5000 });
   const statusChange = useQuizStatusChange();
   const { canEditQuiz, isSuperAdmin } = useAuth();
@@ -53,6 +56,11 @@ export default function QuizWorkspacePage() {
   const [settingsSnackbar, setSettingsSnackbar] = useState<string | null>(null);
   const [showScoreboardModal, setShowScoreboardModal] = useState(false);
   const [showViolationModal, setShowViolationModal] = useState(false);
+  const [showRegisterTeamModal, setShowRegisterTeamModal] = useState(false);
+  const [registerTeamName, setRegisterTeamName] = useState('');
+  const [registerTeamError, setRegisterTeamError] = useState<string | null>(null);
+  const [registerTeamSuccess, setRegisterTeamSuccess] = useState<string | null>(null);
+  const [copiedTeamId, setCopiedTeamId] = useState<number | null>(null);
   const [violationLogs, setViolationLogs] = useState<ViolationLogRecord[]>([]);
   const [violationLogsLoading, setViolationLogsLoading] = useState(false);
   const [violationLogsError, setViolationLogsError] = useState<string | null>(null);
@@ -68,6 +76,7 @@ export default function QuizWorkspacePage() {
   }, [quiz]);
 
   const modeLabel = normalizedAccessMode === 'RESTRICTED' ? 'Restricted Mode' : 'Public Mode';
+  const canManageRestrictedTeams = hasEdit && normalizedAccessMode === 'RESTRICTED' && !isArchived;
 
   useEffect(() => {
     if (!quiz) return;
@@ -84,6 +93,12 @@ export default function QuizWorkspacePage() {
     const timer = window.setTimeout(() => setSettingsSnackbar(null), 4000);
     return () => window.clearTimeout(timer);
   }, [settingsSnackbar]);
+
+  useEffect(() => {
+    if (!registerTeamSuccess) return;
+    const timer = window.setTimeout(() => setRegisterTeamSuccess(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [registerTeamSuccess]);
 
   useEffect(() => {
     if (!parsedQuizId) return;
@@ -174,6 +189,13 @@ export default function QuizWorkspacePage() {
     setTimeout(() => setCopiedProctorPin(false), 1500);
   };
 
+  const copyTeamAccessCode = async (teamId: number, accessCode: string) => {
+    if (!accessCode) return;
+    await navigator.clipboard.writeText(accessCode);
+    setCopiedTeamId(teamId);
+    setTimeout(() => setCopiedTeamId((prev) => (prev === teamId ? null : prev)), 1500);
+  };
+
   const handleRefreshViolationLogs = async () => {
     if (!parsedQuizId) return;
     try {
@@ -219,6 +241,31 @@ export default function QuizWorkspacePage() {
       setSettingsError(err instanceof Error ? err.message : 'Failed to save quiz settings.');
     } finally {
       setSettingsSaving(false);
+    }
+  };
+
+  const handleOpenRegisterModal = () => {
+    setRegisterTeamError(null);
+    setRegisterTeamSuccess(null);
+    setRegisterTeamName('');
+    setShowRegisterTeamModal(true);
+  };
+
+  const handleRegisterTeam = async () => {
+    if (!parsedQuizId || !canManageRestrictedTeams) return;
+    const trimmed = registerTeamName.trim();
+    if (!trimmed) {
+      setRegisterTeamError('Team name is required.');
+      return;
+    }
+
+    try {
+      setRegisterTeamError(null);
+      await registerTeam.mutateAsync({ name: trimmed });
+      setRegisterTeamSuccess(`Registered ${trimmed} successfully.`);
+      setRegisterTeamName('');
+    } catch (err) {
+      setRegisterTeamError(err instanceof Error ? err.message : 'Failed to register team.');
     }
   };
 
@@ -281,6 +328,20 @@ export default function QuizWorkspacePage() {
           <p className="admin-empty-text">Open anti-cheat reports and timestamps in a focused modal view.</p>
         </button>
 
+        {normalizedAccessMode === 'RESTRICTED' && (
+          <>
+            <button
+              className={`admin-card workspace-action-card ${canManageRestrictedTeams ? '' : 'is-disabled'}`}
+              style={{ textAlign: 'left', cursor: canManageRestrictedTeams ? 'pointer' : 'not-allowed' }}
+              onClick={() => canManageRestrictedTeams && handleOpenRegisterModal()}
+              disabled={!canManageRestrictedTeams}
+            >
+              <h3 className="admin-card-title"><BiGroup size={18} /> Manage Registered Teams</h3>
+              <p className="admin-empty-text">Register a team and view all team access codes in one modal.</p>
+            </button>
+          </>
+        )}
+
         <button
           className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' ? '' : 'is-disabled'}`}
           style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' ? 1 : 0.85 }}
@@ -324,7 +385,7 @@ export default function QuizWorkspacePage() {
           <p className="admin-empty-text" style={{ margin: 0 }}>
             {normalizedAccessMode === 'PUBLIC'
               ? 'Participants can join from the unified entry using quiz/team credentials.'
-              : 'Entry is controlled for this quiz mode.'}
+              : 'Entry is controlled by pre-registered team access codes for this quiz.'}
           </p>
         </div>
       </div>
@@ -495,6 +556,81 @@ export default function QuizWorkspacePage() {
             </div>
             <div className="admin-modal-footer">
               <button className="admin-btn admin-btn-primary" onClick={() => setShowScoreboardModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRegisterTeamModal && (
+        <div className="admin-modal-overlay" onClick={() => setShowRegisterTeamModal(false)}>
+          <div className="admin-modal workspace-modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2 className="admin-modal-title">Manage Registered Teams</h2>
+              <button onClick={() => setShowRegisterTeamModal(false)} className="admin-btn-icon workspace-modal-close"><BiX size={18} /></button>
+            </div>
+            <div className="admin-modal-body">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleRegisterTeam();
+                }}
+              >
+                <label className="admin-form-label" htmlFor="register-team-name">Team Name</label>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    id="register-team-name"
+                    className="admin-form-input"
+                    value={registerTeamName}
+                    onChange={(e) => setRegisterTeamName(e.target.value)}
+                    placeholder="Enter team name"
+                    maxLength={100}
+                    disabled={registerTeam.isPending}
+                    style={{ flex: 1, minWidth: 220 }}
+                  />
+                  <button
+                    type="submit"
+                    className="admin-btn admin-btn-primary"
+                    disabled={registerTeam.isPending || !registerTeamName.trim()}
+                  >
+                    <BiUserPlus size={16} /> {registerTeam.isPending ? 'Registering...' : 'Register Team'}
+                  </button>
+                </div>
+              </form>
+
+              {registerTeamError && <p className="admin-empty-text workspace-error-text" style={{ marginTop: 10 }}>{registerTeamError}</p>}
+              {registerTeamSuccess && <p className="admin-empty-text" style={{ marginTop: 10, color: '#065f46' }}>{registerTeamSuccess}</p>}
+
+              <div style={{ marginTop: 16 }}>
+                <h3 className="admin-card-title" style={{ marginBottom: 10 }}><BiGroup size={18} /> Registered Teams</h3>
+                {teams.length === 0 ? (
+                  <p className="admin-empty-text">No teams registered yet for this quiz.</p>
+                ) : (
+                  <div className="workspace-modal-list">
+                    {teams.map((team) => (
+                      <div key={team.id} className="workspace-modal-item workspace-log-row" style={{ alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                          <p className="workspace-log-team">{team.name}</p>
+                          <p className="workspace-log-type">Access Code: <strong>{team.accessCode}</strong></p>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <p className="workspace-log-time">{team.totalScore} pts</p>
+                          <button
+                            className="admin-btn admin-btn-secondary"
+                            onClick={() => void copyTeamAccessCode(team.id, team.accessCode)}
+                            type="button"
+                            aria-label={`Copy access code for ${team.name}`}
+                          >
+                            {copiedTeamId === team.id ? <BiCheck size={14} /> : <BiCopy size={14} />} {copiedTeamId === team.id ? 'Copied' : 'Copy Code'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="admin-modal-footer">
+              <button className="admin-btn admin-btn-primary" onClick={() => setShowRegisterTeamModal(false)} disabled={registerTeam.isPending}>Done</button>
             </div>
           </div>
         </div>

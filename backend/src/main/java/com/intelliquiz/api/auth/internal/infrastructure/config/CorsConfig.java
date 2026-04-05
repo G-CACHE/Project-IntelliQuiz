@@ -20,7 +20,7 @@ public class CorsConfig {
     @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175,https://localhost:3000,https://localhost:5173,https://localhost:5174,https://localhost:5175}")
     private String allowedOrigins;
 
-    @Value("${cors.allowed-origin-patterns:http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,http://192.168.*:*,https://192.168.*:*,http://10.*:*,https://10.*:*,http://172.16.*:*,https://172.16.*:*}")
+    @Value("${cors.allowed-origin-patterns:http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,http://192.168.*:*,https://192.168.*:*,http://10.*:*,https://10.*:*,http://172.16.*:*,https://172.16.*:*,https://*.ngrok-free.dev,https://*.ngrok.io}")
     private String allowedOriginPatterns;
 
     @Bean

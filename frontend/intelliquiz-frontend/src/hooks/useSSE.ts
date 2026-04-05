@@ -60,6 +60,7 @@ export function useSSE(
   const [kicked, setKicked] = useState(false)
   const [kickedTeams, setKickedTeams] = useState<KickedTeam[]>([])
   const [kickReason, setKickReason] = useState<string | null>(null)
+  const [currentRound, setCurrentRound] = useState<string | null>(null)
 
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectAttemptsRef = useRef(0)
@@ -83,12 +84,20 @@ export function useSSE(
   }
 
   const normalizeRankings = (raw: any[]): any[] => {
-    return raw.map((entry, idx) => ({
-      teamId: Number(entry.teamId ?? entry.id ?? 0),
-      teamName: String(entry.teamName ?? entry.name ?? `Team ${entry.teamId ?? entry.id ?? ''}`),
-      score: Number(entry.score ?? entry.totalScore ?? 0),
-      rank: Number(entry.rank ?? idx + 1),
-    }))
+    return raw.map((entry, idx) => {
+      // Backend sends totalScore for final team scoring; score is legacy field
+      // Always prefer totalScore for accuracy, especially after answer reveals
+      const totalScore = Number(entry.totalScore ?? entry.score ?? 0)
+      return {
+        teamId: Number(entry.teamId ?? entry.id ?? 0),
+        teamName: String(entry.teamName ?? entry.name ?? `Team ${entry.teamId ?? entry.id ?? ''}`),
+        score: totalScore,
+        rank: Number(entry.rank ?? idx + 1),
+        isCorrect: typeof entry.isCorrect === 'boolean' ? entry.isCorrect : undefined,
+        pointsEarned: Number(entry.pointsEarned ?? 0),
+        submittedAnswer: typeof entry.submittedAnswer === 'string' ? entry.submittedAnswer : undefined,
+      }
+    })
   }
 
   const refreshProctorSnapshot = useCallback(async () => {
@@ -196,6 +205,11 @@ export function useSSE(
 
         const mappedState = normalizeGameState(data.state ?? data.gameState)
         setGameState(mappedState)
+        
+        // Extract round name for difficulty level announcements
+        if (typeof data.currentRound === 'string') {
+          setCurrentRound(data.currentRound)
+        }
         
         // Extract participant navigation flag (true if participants can control next/previous)
         if (typeof data.participantNavigationEnabled === 'boolean') {
@@ -565,6 +579,7 @@ export function useSSE(
     gameState,
     participantNavigationEnabled,
     currentQuestion,
+    currentRound,
     questionNumber,
     totalQuestions,
     timeRemaining,
