@@ -97,7 +97,12 @@ public class SubmissionService {
         // Create and grade the submission
         Submission submission = new Submission(teamId, questionId, answer);
         submission.validateSubmittedAt();
-        submission.grade(questionInfo.correctKey(), questionInfo.points());
+        submission.grade(
+            questionInfo.correctKey(),
+            questionInfo.points(),
+            questionInfo.type(),
+            questionInfo.caseSensitive()
+        );
 
         // Update team score if correct
         if (submission.isCorrect()) {
@@ -179,11 +184,13 @@ public class SubmissionService {
      * Does NOT update team score — that is the caller's responsibility via TeamFacade.
      */
     public Submission gradeSubmission(Long teamId, Long questionId,
-                                       String correctKey, int points) {
+                           String correctKey, int points,
+                           com.intelliquiz.api.shared.enums.QuestionType questionType,
+                           boolean caseSensitive) {
         Submission submission = submissionRepository.findByTeamIdAndQuestionId(teamId, questionId)
                 .orElseThrow(() -> new EntityNotFoundException("Submission", 0L));
         if (!submission.isGraded()) {
-            submission.grade(correctKey, points);
+            submission.grade(correctKey, points, questionType, caseSensitive);
             submission = submissionRepository.save(submission);
 
             eventPublisher.publishEvent(new SubmissionGradedEvent(

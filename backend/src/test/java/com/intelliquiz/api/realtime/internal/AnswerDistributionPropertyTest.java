@@ -43,7 +43,7 @@ class AnswerDistributionPropertyTest {
         QuestionInfoDto question = new QuestionInfoDto(
                 questionId, "Test Question", QuestionType.MULTIPLE_CHOICE,
                 List.of("Option A", "Option B", "Option C", "Option D"),
-                "B", 10, 30, 1, "EASY"
+                "B", 10, 30, 1, "EASY", false
         );
         
         // Submissions use option TEXT (what the frontend actually sends)
@@ -97,7 +97,7 @@ class AnswerDistributionPropertyTest {
         
         QuestionInfoDto question = new QuestionInfoDto(
                 questionId, "Test Question", QuestionType.MULTIPLE_CHOICE,
-                List.of("Alpha", "Beta", "Gamma", "Delta"), "A", 10, 30, 1, "EASY"
+                List.of("Alpha", "Beta", "Gamma", "Delta"), "A", 10, 30, 1, "EASY", false
         );
         
         when(quizFacade.getQuestionForGrading(questionId)).thenReturn(question);
@@ -126,7 +126,7 @@ class AnswerDistributionPropertyTest {
         
         QuestionInfoDto question = new QuestionInfoDto(
                 questionId, "Test Question", QuestionType.MULTIPLE_CHOICE,
-                List.of("Alpha", "Beta", "Gamma", "Delta"), "C", 10, 30, 1, "EASY"
+                List.of("Alpha", "Beta", "Gamma", "Delta"), "C", 10, 30, 1, "EASY", false
         );
         
         // Submissions use option text (what the frontend sends)
@@ -168,7 +168,7 @@ class AnswerDistributionPropertyTest {
         
         QuestionInfoDto question = new QuestionInfoDto(
                 questionId, "What is the capital of France?", QuestionType.IDENTIFICATION,
-                List.of(), "Paris", 10, 30, 1, "EASY"
+                List.of(), "Paris", 10, 30, 1, "EASY", false
         );
         
         List<SubmissionInfoDto> submissions = List.of(

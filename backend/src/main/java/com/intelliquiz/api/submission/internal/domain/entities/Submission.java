@@ -1,11 +1,13 @@
 package com.intelliquiz.api.submission.internal.domain.entities;
 
 import com.intelliquiz.api.shared.domain.entities.SoftDeletableEntity;
+import com.intelliquiz.api.shared.enums.QuestionType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 /**
  * Submission entity representing a team's answer submission with correctness and points.
@@ -130,10 +132,25 @@ public class Submission extends SoftDeletableEntity {
      * @param questionPoints the points to award if the answer is correct
      */
     public void grade(String correctAnswer, int questionPoints) {
+        grade(correctAnswer, questionPoints, QuestionType.IDENTIFICATION, false);
+    }
+
+    /**
+     * Grades this submission with question context.
+     * For IDENTIFICATION, matching can be case-sensitive or case-insensitive.
+     * For other types, comparison keeps legacy case-insensitive behavior.
+     */
+    public void grade(String correctAnswer, int questionPoints, QuestionType questionType, boolean caseSensitive) {
         String normalizedSubmitted = normalizeAnswer(this.submittedAnswer);
-        this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
-                .map(Submission::normalizeAnswer)
-                .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedSubmitted));
+        if (questionType == QuestionType.IDENTIFICATION) {
+            this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
+                    .map(accepted -> normalizeIdentificationAnswer(accepted, caseSensitive))
+                    .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizeIdentificationAnswer(normalizedSubmitted, caseSensitive)));
+        } else {
+            this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
+                    .map(Submission::normalizeAnswer)
+                    .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedSubmitted.toUpperCase(Locale.ROOT)));
+        }
         if (this.isCorrect) {
             this.awardedPoints = questionPoints;
         } else {
@@ -156,7 +173,12 @@ public class Submission extends SoftDeletableEntity {
         if (value == null) {
             return "";
         }
-        return value.trim().replaceAll("\\s+", " ").toLowerCase();
+        return value.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+    }
+
+    private static String normalizeIdentificationAnswer(String value, boolean caseSensitive) {
+        String normalized = value == null ? "" : value.trim().replaceAll("\\s+", " ");
+        return caseSensitive ? normalized : normalized.toUpperCase(Locale.ROOT);
     }
 
     /**

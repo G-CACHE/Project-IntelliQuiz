@@ -8,6 +8,8 @@ import com.intelliquiz.api.realtime.internal.presentation.dto.TeamConnectionMess
 import com.intelliquiz.api.realtime.internal.presentation.dto.QuestionPayload;
 import com.intelliquiz.api.quiz.dto.QuestionInfoDto;
 import com.intelliquiz.api.quiz.QuizFacade;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.NavigationMode;
 import com.intelliquiz.api.team.TeamFacade;
 import com.intelliquiz.api.shared.enums.QuizStatus;
 import lombok.RequiredArgsConstructor;
@@ -268,11 +270,20 @@ public class QuizSSEController {
         String serializedState = gameState != null ? gameState.toString() : "UNKNOWN";
         int payloadTimeRemaining = timerService.getRemainingSeconds(quizId);
 
-        java.util.List<QuestionInfoDto> orderedQuestions = quizFacade.getOrderedQuestions(quizId);
+        java.util.List<QuestionInfoDto> orderedQuestions = getSessionOrderedQuestions(quizId);
         int payloadTotalQuestions = orderedQuestions.size();
 
+        QuestionPayload resolvedByQuestionId = quizSessionManager.getCurrentQuestionId(quizId)
+                .flatMap(currentQuestionId -> orderedQuestions.stream()
+                        .filter(q -> currentQuestionId.equals(q.id()))
+                        .findFirst())
+                .map(QuestionPayload::fromDto)
+                .orElse(null);
+
         final QuestionPayload currentQuestionPayload =
-            (safeQuestionIndex >= 0 && safeQuestionIndex < payloadTotalQuestions)
+            resolvedByQuestionId != null
+                ? resolvedByQuestionId
+                : (safeQuestionIndex >= 0 && safeQuestionIndex < payloadTotalQuestions)
                 ? QuestionPayload.fromDto(orderedQuestions.get(safeQuestionIndex))
                 : null;
 
@@ -287,6 +298,38 @@ public class QuizSSEController {
             public final Boolean timerActive = timerService.isTimerActive(quizId);
             public final java.time.LocalDateTime timestamp = java.time.LocalDateTime.now();
         };
+    }
+
+    private List<QuestionInfoDto> getSessionOrderedQuestions(Long quizId) {
+        List<QuestionInfoDto> orderedQuestions = quizFacade.getOrderedQuestions(quizId);
+        NavigationMode mode = quizSessionManager.getNavigationMode(quizId);
+        if (mode != NavigationMode.TOURNAMENT) {
+            return orderedQuestions;
+        }
+
+        return orderedQuestions.stream()
+                .sorted(Comparator
+                        .comparingInt((QuestionInfoDto q) -> difficultyPriority(q.difficulty()))
+                        .thenComparingInt(QuestionInfoDto::orderIndex))
+                .toList();
+    }
+
+    private int difficultyPriority(String difficulty) {
+        if (difficulty == null || difficulty.isBlank()) {
+            return 3;
+        }
+
+        try {
+            Difficulty diff = Difficulty.valueOf(difficulty.trim().toUpperCase());
+            return switch (diff) {
+                case EASY -> 0;
+                case MEDIUM -> 1;
+                case HARD -> 2;
+                default -> 3;
+            };
+        } catch (IllegalArgumentException ex) {
+            return 3;
+        }
     }
 
     private ParticipantAccessCheckResponse validateParticipantRealtimeAccess(

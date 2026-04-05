@@ -13,6 +13,7 @@ public record UpdateQuestionCommand(
     QuestionType type,
     Difficulty difficulty,
     String correctKey,
+    Boolean caseSensitive,
     int points,
     int timeLimit,
     List<String> options

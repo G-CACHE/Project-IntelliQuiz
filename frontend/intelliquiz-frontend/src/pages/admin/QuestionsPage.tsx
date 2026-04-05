@@ -45,6 +45,7 @@ const initialForm: CreateQuestionRequest = {
   points: 10,
   timeLimit: 30,
   options: ['', '', '', ''],
+  caseSensitive: false,
 };
 
 export default function AdminQuestionsPage() {
@@ -64,6 +65,7 @@ export default function AdminQuestionsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CreateQuestionRequest>(initialForm);
   const [bankLoading, setBankLoading] = useState(false);
+  const [sortingQuestions, setSortingQuestions] = useState(false);
   const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [bankSearch, setBankSearch] = useState('');
@@ -189,6 +191,7 @@ export default function AdminQuestionsPage() {
       points: question.points,
       timeLimit: question.timeLimit,
       options,
+      caseSensitive: question.caseSensitive ?? false,
     });
     setShowModal(true);
   };
@@ -307,8 +310,63 @@ export default function AdminQuestionsPage() {
     }
   };
 
+  const handleSortByDifficulty = async () => {
+    if (!hasEditPermission) {
+      setError('You do not have permission to edit this quiz');
+      return;
+    }
+    if (!isDraftQuiz) {
+      setError('Sorting is only available while the quiz is in Draft status.');
+      return;
+    }
+    if (questions.length <= 1) {
+      return;
+    }
+
+    const difficultyRank: Record<Question['difficulty'], number> = {
+      EASY: 0,
+      MEDIUM: 1,
+      HARD: 2,
+      TIE_BREAKER: 3,
+    };
+
+    const sortedIds = [...questions]
+      .sort((a, b) => {
+        const rankDiff = difficultyRank[a.difficulty] - difficultyRank[b.difficulty];
+        if (rankDiff !== 0) return rankDiff;
+        if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+        return a.id - b.id;
+      })
+      .map((q) => q.id);
+
+    const currentIds = questions.map((q) => q.id);
+    const unchanged = currentIds.length === sortedIds.length
+      && currentIds.every((id, idx) => id === sortedIds[idx]);
+
+    if (unchanged) {
+      setError('Questions are already ordered by difficulty.');
+      return;
+    }
+
+    try {
+      setSortingQuestions(true);
+      setError(null);
+      await questionsApi.reorder(quizIdNum, sortedIds);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sort questions by difficulty');
+    } finally {
+      setSortingQuestions(false);
+    }
+  };
+
   const getDifficultyBadge = (d: string) => {
-    const map: Record<string, string> = { EASY: 'admin-badge-success', MEDIUM: 'admin-badge-warning', HARD: 'admin-badge-primary' };
+    const map: Record<string, string> = {
+      EASY: 'admin-badge-success',
+      MEDIUM: 'admin-badge-warning',
+      HARD: 'admin-badge-primary',
+      TIE_BREAKER: 'admin-badge-gray',
+    };
     return map[d] || 'admin-badge-gray';
   };
 
@@ -345,6 +403,9 @@ export default function AdminQuestionsPage() {
           </div>
           {canEditContent && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
+                {sortingQuestions ? 'Sorting...' : 'Sort by Difficulty'}
+              </button>
               <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
                 <BiImport size={18} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
               </button>
@@ -492,11 +553,12 @@ export default function AdminQuestionsPage() {
                 </div>
                 <div className="admin-form-group">
                   <label className="admin-form-label">Difficulty *</label>
-                  <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' })}
+                  <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
                     className="admin-form-input admin-form-select">
                     <option value="EASY">Easy</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HARD">Hard</option>
+                    <option value="TIE_BREAKER">Tie Breaker</option>
                   </select>
                 </div>
                 <div className="admin-form-group">
@@ -599,8 +661,42 @@ export default function AdminQuestionsPage() {
                     placeholder={'Example:\nParis\nCity of Paris'}
                   />
                   <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                    Matching is case-insensitive and ignores extra spaces.
+                    {formData.caseSensitive
+                      ? 'Matching is case-sensitive and exact.'
+                      : 'Matching is case-insensitive and ignores extra spaces.'}
                   </p>
+                  
+                  {/* Case Sensitivity Toggle */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginTop: 12,
+                    padding: '10px 12px',
+                    borderRadius: 6,
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                  }}>
+                    <input
+                      type="checkbox"
+                      id="caseSensitiveToggle"
+                      checked={formData.caseSensitive ?? false}
+                      onChange={(e) => setFormData({ ...formData, caseSensitive: e.target.checked })}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <label
+                      htmlFor="caseSensitiveToggle"
+                      style={{
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: '#334155',
+                        margin: 0,
+                      }}
+                    >
+                      Case-Sensitive Matching
+                    </label>
+                  </div>
                 </div>
               )}
             </div>

@@ -165,6 +165,19 @@ public class ProctorSessionService {
                     kickedReasons.remove(quizId);
                 }
             }
+
+            // Re-entry approval must also clear device blacklist; otherwise access checks still reject join.
+            String teamDeviceId = teamToDeviceMapping.get(teamId);
+            if (teamDeviceId != null && !teamDeviceId.isBlank()) {
+                Set<String> blacklisted = blacklistedDevices.get(quizId);
+                if (blacklisted != null) {
+                    blacklisted.remove(teamDeviceId);
+                    if (blacklisted.isEmpty()) {
+                        blacklistedDevices.remove(quizId);
+                    }
+                }
+            }
+
             logger.info("Team {} approved to re-enter quiz {}", teamId, quizId);
         }
 

@@ -133,6 +133,7 @@ public class QuestionController {
                 request.type(),
                 request.difficulty(),
                 request.correctKey(),
+                request.caseSensitive(),
                 request.points(),
                 request.timeLimit(),
                 request.options()
@@ -181,6 +182,7 @@ public class QuestionController {
                 request.type(),
                 request.difficulty(),
                 request.correctKey(),
+                request.caseSensitive(),
                 request.points(),
                 request.timeLimit(),
                 request.options()

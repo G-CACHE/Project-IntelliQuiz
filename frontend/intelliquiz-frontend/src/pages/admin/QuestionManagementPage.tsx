@@ -8,7 +8,7 @@ import { ErrorBanner } from '../../components/common/ErrorBanner';
 interface Question {
   id: number;
   text: string;
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER';
   position: number;
   answers: Answer[];
 }
@@ -50,7 +50,7 @@ export default function QuestionManagementPage({
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
   const [formData, setFormData] = useState<{
     text: string;
-    difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+    difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER';
     answers: { text: string; isCorrect: boolean }[];
   }>({
     text: '',
@@ -176,6 +176,8 @@ export default function QuestionManagementPage({
         return 'bg-yellow-100 text-yellow-800';
       case 'HARD':
         return 'bg-red-100 text-red-800';
+      case 'TIE_BREAKER':
+        return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -364,12 +366,13 @@ export default function QuestionManagementPage({
               </label>
               <select
                 value={formData.difficulty}
-                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' })}
+                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="EASY">Easy</option>
                 <option value="MEDIUM">Medium</option>
                 <option value="HARD">Hard</option>
+                <option value="TIE_BREAKER">Tie Breaker</option>
               </select>
             </div>
 

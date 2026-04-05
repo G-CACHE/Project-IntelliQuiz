@@ -10,6 +10,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Question entity representing a quiz question with content, type, difficulty, and answer key.
@@ -43,6 +44,9 @@ public class Question extends SoftDeletableEntity {
 
     @Column(name = "correct_key", nullable = false)
     private String correctKey;
+
+    @Column(name = "case_sensitive", nullable = false)
+    private boolean caseSensitive;
 
     private int points;
 
@@ -82,7 +86,10 @@ public class Question extends SoftDeletableEntity {
         if (answer == null || correctKey == null) {
             return false;
         }
-        return correctKey.trim().equalsIgnoreCase(answer.trim());
+        String normalizedAnswer = normalizeAnswer(answer);
+        return correctKey.lines()
+                .map(this::normalizeAnswer)
+                .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedAnswer));
     }
 
     /**
@@ -198,6 +205,14 @@ public class Question extends SoftDeletableEntity {
         this.correctKey = correctKey;
     }
 
+    public boolean isCaseSensitive() {
+        return caseSensitive;
+    }
+
+    public void setCaseSensitive(boolean caseSensitive) {
+        this.caseSensitive = caseSensitive;
+    }
+
     public int getPoints() {
         return points;
     }
@@ -236,5 +251,16 @@ public class Question extends SoftDeletableEntity {
 
     public void removeOption(String option) {
         options.remove(option);
+    }
+
+    private String normalizeAnswer(String value) {
+        if (value == null) {
+            return "";
+        }
+        String normalized = value.trim().replaceAll("\\s+", " ");
+        if (this.type == QuestionType.IDENTIFICATION && !this.caseSensitive) {
+            return normalized.toUpperCase(Locale.ROOT);
+        }
+        return normalized;
     }
 }
