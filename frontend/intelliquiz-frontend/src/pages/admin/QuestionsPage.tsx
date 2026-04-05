@@ -64,6 +64,7 @@ export default function AdminQuestionsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CreateQuestionRequest>(initialForm);
   const [bankLoading, setBankLoading] = useState(false);
+  const [sortingQuestions, setSortingQuestions] = useState(false);
   const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [bankSearch, setBankSearch] = useState('');
@@ -307,8 +308,63 @@ export default function AdminQuestionsPage() {
     }
   };
 
+  const handleSortByDifficulty = async () => {
+    if (!hasEditPermission) {
+      setError('You do not have permission to edit this quiz');
+      return;
+    }
+    if (!isDraftQuiz) {
+      setError('Sorting is only available while the quiz is in Draft status.');
+      return;
+    }
+    if (questions.length <= 1) {
+      return;
+    }
+
+    const difficultyRank: Record<Question['difficulty'], number> = {
+      EASY: 0,
+      MEDIUM: 1,
+      HARD: 2,
+      TIE_BREAKER: 3,
+    };
+
+    const sortedIds = [...questions]
+      .sort((a, b) => {
+        const rankDiff = difficultyRank[a.difficulty] - difficultyRank[b.difficulty];
+        if (rankDiff !== 0) return rankDiff;
+        if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+        return a.id - b.id;
+      })
+      .map((q) => q.id);
+
+    const currentIds = questions.map((q) => q.id);
+    const unchanged = currentIds.length === sortedIds.length
+      && currentIds.every((id, idx) => id === sortedIds[idx]);
+
+    if (unchanged) {
+      setError('Questions are already ordered by difficulty.');
+      return;
+    }
+
+    try {
+      setSortingQuestions(true);
+      setError(null);
+      await questionsApi.reorder(quizIdNum, sortedIds);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sort questions by difficulty');
+    } finally {
+      setSortingQuestions(false);
+    }
+  };
+
   const getDifficultyBadge = (d: string) => {
-    const map: Record<string, string> = { EASY: 'admin-badge-success', MEDIUM: 'admin-badge-warning', HARD: 'admin-badge-primary' };
+    const map: Record<string, string> = {
+      EASY: 'admin-badge-success',
+      MEDIUM: 'admin-badge-warning',
+      HARD: 'admin-badge-primary',
+      TIE_BREAKER: 'admin-badge-gray',
+    };
     return map[d] || 'admin-badge-gray';
   };
 
@@ -345,6 +401,9 @@ export default function AdminQuestionsPage() {
           </div>
           {canEditContent && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
+                {sortingQuestions ? 'Sorting...' : 'Sort by Difficulty'}
+              </button>
               <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
                 <BiImport size={18} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
               </button>
@@ -492,11 +551,12 @@ export default function AdminQuestionsPage() {
                 </div>
                 <div className="admin-form-group">
                   <label className="admin-form-label">Difficulty *</label>
-                  <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' })}
+                  <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
                     className="admin-form-input admin-form-select">
                     <option value="EASY">Easy</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HARD">Hard</option>
+                    <option value="TIE_BREAKER">Tie Breaker</option>
                   </select>
                 </div>
                 <div className="admin-form-group">

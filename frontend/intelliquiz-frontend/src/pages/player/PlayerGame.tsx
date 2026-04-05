@@ -9,6 +9,7 @@ import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import AntiCheatWrapper from '../../components/game/AntiCheatWrapper';
 import QuestionPalette from '../../components/game/QuestionPalette';
+import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal';
 import '../../styles/participant.css';
 
 const PlayerGame: React.FC = () => {
@@ -29,6 +30,7 @@ const PlayerGame: React.FC = () => {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [questionReview, setQuestionReview] = useState<ParticipantQuestionResult[]>([]);
+  const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
 
   // Get session data
   const [session] = useState(() => {
@@ -62,6 +64,7 @@ const PlayerGame: React.FC = () => {
     gameState,
     participantNavigationEnabled,
     currentQuestion,
+    currentRound,
     questionNumber,
     totalQuestions,
     timeRemaining,
@@ -102,7 +105,8 @@ const PlayerGame: React.FC = () => {
   useEffect(() => {
     if (questionNumber !== lastQuestionNumber) {
       const questionId = Number(currentQuestion?.id ?? 0);
-      setSelectedOption(questionId > 0 ? (selectedAnswers[questionId] ?? null) : null);
+      // Only restore cached answers in participant-navigated mode.
+      setSelectedOption(canNavigate && questionId > 0 ? (selectedAnswers[questionId] ?? null) : null);
       if (!canNavigate) {
         setSubmitted(false);
       }
@@ -121,6 +125,13 @@ const PlayerGame: React.FC = () => {
       setIsCorrect(null);
     }
   }, [gameState, canNavigate]);
+
+  // Safety reset: if a new active question is running and timer has started, clear stale submitted lock.
+  useEffect(() => {
+    if (!canNavigate && gameState === 'QUESTION' && timeRemaining > 0) {
+      setSubmitted(false);
+    }
+  }, [canNavigate, gameState, timeRemaining, currentQuestion?.id]);
 
   // Redirect if kicked
   useEffect(() => {
@@ -147,33 +158,58 @@ const PlayerGame: React.FC = () => {
   // Navigate to final scoreboard — show inline instead of navigating away
   // (Removed: we now render FINAL_RESULTS inline in this component)
 
-  // Check if answer was correct when answer is revealed
+  // Use server-graded reveal result so correctness matches persisted score.
   useEffect(() => {
     if (gameState === 'ANSWER_REVEAL' && currentQuestion?.correctAnswer) {
       if (currentQuestion.type === 'IDENTIFICATION') {
         setIsCorrect(null);
-      } else if (selectedOption) {
-        setIsCorrect(selectedOption === currentQuestion.correctAnswer);
-      } else if (!submitted) {
-        setIsCorrect(null); // No answer submitted
+      } else {
+        const myResult = rankings.find((r: any) => r.teamId === session?.teamId);
+        if (myResult && typeof myResult.isCorrect === 'boolean') {
+          setIsCorrect(myResult.isCorrect);
+        } else if (!submitted) {
+          setIsCorrect(null); // No answer submitted
+        }
       }
     }
-  }, [gameState, currentQuestion?.correctAnswer, currentQuestion?.type, selectedOption, submitted]);
+  }, [gameState, currentQuestion?.correctAnswer, currentQuestion?.type, rankings, session?.teamId, submitted]);
+
+  const myRevealResult = rankings.find((r: any) => r.teamId === session?.teamId);
+  const revealPoints = typeof myRevealResult?.pointsEarned === 'number'
+    ? myRevealResult.pointsEarned
+    : (isCorrect ? currentQuestion?.points ?? 0 : 0);
 
   // Auto-submit when timer expires (LINEAR mode only)
   useEffect(() => {
-    if (!canNavigate && gameState === 'QUESTION' && timeRemaining <= 0 && !submitted && currentQuestion && session) {
-      if (selectedOption) {
-        // Auto-submit selected answer
+    if (!canNavigate && gameState === 'QUESTION' && timerTotalTime > 0 && timeRemaining <= 0 && !submitted && currentQuestion && session) {
+      const hasAnswer = typeof selectedOption === 'string' && selectedOption.trim().length > 0;
+
+      // Tournament mode fallback: submit typed identification answer at timeout.
+      if (hasAnswer && currentQuestion.type === 'IDENTIFICATION') {
         submitAnswer({
           teamId: session.teamId,
           questionId: currentQuestion.id,
           selectedOption,
         });
       }
-      setSubmitted(true);
+
+      // Only show "Answer Submitted" when an answer actually exists.
+      if (hasAnswer) {
+        setSubmitted(true);
+      } else {
+        setSubmitted(false);
+      }
     }
-  }, [canNavigate, gameState, timeRemaining, submitted, currentQuestion, session, selectedOption, submitAnswer]);
+  }, [canNavigate, gameState, timeRemaining, timerTotalTime, submitted, currentQuestion, session, selectedOption, submitAnswer]);
+
+  // Show round announcement when BUFFER state is received
+  useEffect(() => {
+    if (gameState === 'BUFFER' && currentRound) {
+      setShowRoundAnnouncement(true);
+      return;
+    }
+    setShowRoundAnnouncement(false);
+  }, [gameState, currentRound]);
 
   // Handle option selection — click to select/change freely (submitted on timer expiry in LINEAR mode)
   const handleSelectOption = useCallback((option: string) => {
@@ -205,8 +241,15 @@ const PlayerGame: React.FC = () => {
     }
 
     if (!submitted) {
-      // Tournament mode: selection is local until timer expiry.
+      // Tournament mode: persist updates immediately (including identification typing).
       setSelectedOption(option);
+      if (currentQuestion && session && timeRemaining > 0) {
+        void submitAnswer({
+          teamId: session.teamId,
+          questionId: Number(currentQuestion.id),
+          selectedOption: option,
+        });
+      }
     }
   }, [submitted, gameState, earlySubmittedQuiz, canNavigate, currentQuestion, session, timeRemaining, submitAnswer, questionNumber]);
 
@@ -270,6 +313,13 @@ const PlayerGame: React.FC = () => {
   return (
     <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION' && !earlySubmittedQuiz}>
     <div className="participant-page participant-game-page">
+      <RoundAnnouncementModal 
+        isVisible={showRoundAnnouncement}
+        roundName={currentRound || ''}
+        message={`Waiting for host to start ${currentRound || 'next'} round...`}
+        manualStart
+        manualStartLabel="Waiting for host..."
+      />
       {/* Sticky Header */}
       <div className="participant-game-header">
         <div className="participant-game-header-content">
@@ -447,7 +497,7 @@ const PlayerGame: React.FC = () => {
                       <CheckCircle2 className="participant-result-icon-svg" />
                     </div>
                     <h2 className="participant-result-title">Correct!</h2>
-                    <p className="participant-result-points">+{currentQuestion.points} points</p>
+                    <p className="participant-result-points">+{revealPoints} points</p>
                   </>
                 )}
                 {isCorrect === false && (

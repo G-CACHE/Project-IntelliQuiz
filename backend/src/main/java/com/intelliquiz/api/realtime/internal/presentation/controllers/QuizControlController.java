@@ -73,7 +73,7 @@ public class QuizControlController {
 
                 case NEXT_QUESTION:
                     gameFlowService.advanceToNextQuestion(quizId);
-                    newState = GameState.ACTIVE;
+                    newState = quizSessionManager.getCurrentState(quizId);
                     break;
 
                 case VIEW_LEADERBOARD:

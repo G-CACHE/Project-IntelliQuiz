@@ -529,7 +529,7 @@ export interface Question {
   id: number;
   text: string;
   type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER';
   correctKey: string;
   points: number;
   timeLimit: number;
@@ -540,7 +540,7 @@ export interface Question {
 export interface CreateQuestionRequest {
   text: string;
   type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER';
   correctKey: string;
   points: number;
   timeLimit: number;
@@ -550,7 +550,7 @@ export interface CreateQuestionRequest {
 export interface UpdateQuestionRequest {
   text?: string;
   type?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
-  difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER';
   correctKey?: string;
   points?: number;
   timeLimit?: number;
@@ -845,7 +845,7 @@ export interface QuestionBankItem {
   id: number;
   text: string;
   type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'IDENTIFICATION';
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER';
   correctKey: string;
   points: number;
   timeLimit: number;

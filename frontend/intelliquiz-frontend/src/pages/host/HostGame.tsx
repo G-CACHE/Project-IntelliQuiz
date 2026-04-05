@@ -7,6 +7,7 @@ import { clearSession, getProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
+import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal';
 import '../../styles/proctor.css';
 
 const HostGame: React.FC = () => {
@@ -35,7 +36,9 @@ const HostGame: React.FC = () => {
     error,
     gameState,
     participantNavigationEnabled,
+    connectedTeams,
     currentQuestion,
+    currentRound,
     questionNumber,
     totalQuestions,
     timeRemaining,
@@ -72,6 +75,30 @@ const HostGame: React.FC = () => {
     clearSession();
     navigate('/');
   };
+  
+  const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
+  const [startingRound, setStartingRound] = useState(false);
+
+  const handleStartRoundFromModal = async () => {
+    if (startingRound || gameState !== 'BUFFER') return;
+    setStartingRound(true);
+    try {
+      await sendCommand({ type: 'NEXT_QUESTION' });
+    } finally {
+      setStartingRound(false);
+    }
+  };
+  
+  // Show round announcement when BUFFER state is received
+  useEffect(() => {
+    if (gameState === 'BUFFER' && currentRound) {
+      setShowRoundAnnouncement(true);
+      return;
+    }
+    setShowRoundAnnouncement(false);
+    setStartingRound(false);
+  }, [gameState, currentRound]);
+  
   const isLastQuestion = totalQuestions > 0 && questionNumber >= totalQuestions;
   const gamePhaseLabel = gameState.replace(/_/g, ' ');
   const submittedTeamsCount = new Set(
@@ -144,8 +171,15 @@ const HostGame: React.FC = () => {
       case 'ANSWER_REVEAL':
         if (isLastQuestion) {
           return (
-            <div className="proctor-buffer-info">
-              <p>Final question complete. Finalizing results...</p>
+            <div className="proctor-actions">
+              <button
+                onClick={handleEndQuiz}
+                disabled={!connected}
+                className="proctor-btn-primary proctor-btn-large"
+              >
+                <BarChart3 size={20} aria-hidden="true" className="proctor-control-icon" />
+                View Result
+              </button>
             </div>
           );
         }
@@ -217,6 +251,14 @@ const HostGame: React.FC = () => {
 
   return (
     <div className="proctor-page proctor-game-page">
+      <RoundAnnouncementModal 
+        isVisible={showRoundAnnouncement}
+        roundName={currentRound || ''}
+        message={`Get ready for ${currentRound || 'next'} questions!`}
+        manualStart
+        onManualStart={handleStartRoundFromModal}
+        manualStartLabel={startingRound ? 'Starting...' : 'Click anywhere to start'}
+      />
       {/* Sticky Header */}
       <div className="proctor-game-header">
         <div className="proctor-game-header-content">
@@ -500,7 +542,7 @@ const HostGame: React.FC = () => {
                   <Users size={16} aria-hidden="true" />
                   <div>
                     <span className="proctor-controls-stat-label">Players Online</span>
-                    <strong className="proctor-controls-stat-value">{rankings.length}</strong>
+                    <strong className="proctor-controls-stat-value">{connectedTeams.length}</strong>
                   </div>
                 </div>
                 <div className="proctor-controls-stat">
