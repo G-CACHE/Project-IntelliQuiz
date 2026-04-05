@@ -43,7 +43,7 @@ class JitQuestionDeliveryPropertyTest {
     void mcqQuestionPayloadPreservesNonSensitiveFields() {
         QuestionInfoDto dto = new QuestionInfoDto(
                 100L, "What is 2+2?", QuestionType.MULTIPLE_CHOICE,
-                List.of("3", "4", "5", "6"), "B", 10, 30, 1, "EASY"
+                List.of("3", "4", "5", "6"), "B", 10, 30, 1, "EASY", false
         );
         
         QuestionPayload payload = QuestionPayload.fromDto(dto);
@@ -65,7 +65,7 @@ class JitQuestionDeliveryPropertyTest {
     void identificationQuestionPayloadHasEmptyOptions() {
         QuestionInfoDto dto = new QuestionInfoDto(
                 200L, "What is the capital of France?", QuestionType.IDENTIFICATION,
-                List.of(), "Paris", 15, 45, 2, "MEDIUM"
+                List.of(), "Paris", 15, 45, 2, "MEDIUM", false
         );
         
         QuestionPayload payload = QuestionPayload.fromDto(dto);
@@ -89,7 +89,7 @@ class JitQuestionDeliveryPropertyTest {
     ) {
         QuestionInfoDto dto = new QuestionInfoDto(
                 1L, text, QuestionType.MULTIPLE_CHOICE,
-                List.of("A", "B", "C", "D"), "A", points, timeLimit, 1, "EASY"
+                List.of("A", "B", "C", "D"), "A", points, timeLimit, 1, "EASY", false
         );
         
         QuestionPayload payload = QuestionPayload.fromDto(dto);

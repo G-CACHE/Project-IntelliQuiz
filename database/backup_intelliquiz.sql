@@ -106,6 +106,7 @@ CREATE TABLE public.question (
     time_limit integer,
     type character varying(255),
     quiz_id bigint NOT NULL,
+    case_sensitive boolean DEFAULT false NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     CONSTRAINT question_difficulty_check CHECK (((difficulty)::text = ANY (ARRAY[('EASY'::character varying)::text, ('MEDIUM'::character varying)::text, ('HARD'::character varying)::text, ('TIE_BREAKER'::character varying)::text]))),
     CONSTRAINT question_type_check CHECK (((type)::text = ANY (ARRAY[('MULTIPLE_CHOICE'::character varying)::text, ('IDENTIFICATION'::character varying)::text])))

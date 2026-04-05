@@ -23,6 +23,9 @@ public record UpdateQuestionRequest(
     
     @Schema(description = "Updated correct answer payload (A/B/C/D for MULTIPLE_CHOICE, A/B for TRUE_FALSE, newline-separated accepted answers for IDENTIFICATION)", example = "B")
     String correctKey,
+
+    @Schema(description = "Whether identification answer matching is case-sensitive. Ignored for non-identification questions.", example = "false")
+    Boolean caseSensitive,
     
     @Schema(description = "Updated points for correct answer", example = "15", minimum = "0")
     @Min(value = 0, message = "Points must be non-negative")

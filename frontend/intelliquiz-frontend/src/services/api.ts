@@ -535,6 +535,7 @@ export interface Question {
   timeLimit: number;
   orderIndex: number;
   options: string[];
+  caseSensitive?: boolean;
 }
 
 export interface CreateQuestionRequest {
@@ -545,6 +546,7 @@ export interface CreateQuestionRequest {
   points: number;
   timeLimit: number;
   options: string[];
+  caseSensitive?: boolean;
 }
 
 export interface UpdateQuestionRequest {
@@ -555,6 +557,7 @@ export interface UpdateQuestionRequest {
   points?: number;
   timeLimit?: number;
   options?: string[];
+  caseSensitive?: boolean;
 }
 
 export interface Team {
@@ -853,6 +856,7 @@ export interface QuestionBankItem {
   category?: string;
   isHarvested?: boolean;
   sourceQuizId?: number;
+  caseSensitive?: boolean;
 }
 
 // ==================== Question Bank API ====================

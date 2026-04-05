@@ -122,7 +122,8 @@ public class QuizFacade {
                 q.getId(), q.getText(), q.getType(), optionsCopy,
                 q.getCorrectKey(), q.getPoints(), q.getTimeLimit(),
                 q.getOrderIndex(),
-                q.getDifficulty() != null ? q.getDifficulty().name() : null);
+            q.getDifficulty() != null ? q.getDifficulty().name() : null,
+            q.isCaseSensitive());
     }
 
     /**

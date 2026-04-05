@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Application service for question management operations.
@@ -67,6 +68,7 @@ public class QuestionManagementService {
                 command.difficulty(),
                 command.correctKey()
         );
+        question.setCaseSensitive(Boolean.TRUE.equals(command.caseSensitive()));
         question.setPoints(command.points());
         question.setTimeLimit(command.timeLimit());
         if (command.options() != null) {
@@ -121,6 +123,9 @@ public class QuestionManagementService {
         }
         if (command.correctKey() != null) {
             question.setCorrectKey(command.correctKey());
+        }
+        if (command.caseSensitive() != null) {
+            question.setCaseSensitive(command.caseSensitive());
         }
         question.setPoints(command.points());
         question.setTimeLimit(command.timeLimit());
@@ -217,14 +222,19 @@ public class QuestionManagementService {
             // Identification answers are encoded one per line in correctKey.
             question.setOptions(new ArrayList<>());
             if (question.getCorrectKey() != null) {
+                boolean caseSensitive = question.isCaseSensitive();
                 String normalizedAnswers = question.getCorrectKey().lines()
                         .map(String::trim)
+                        .map(line -> caseSensitive ? line : line.toUpperCase(Locale.ROOT))
                         .filter(line -> !line.isBlank())
                         .distinct()
                         .reduce((a, b) -> a + "\n" + b)
                         .orElse("");
                 question.setCorrectKey(normalizedAnswers);
             }
+            return;
         }
+
+        question.setCaseSensitive(false);
     }
 }
