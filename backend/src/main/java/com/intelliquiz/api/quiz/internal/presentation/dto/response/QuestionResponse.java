@@ -26,6 +26,9 @@ public record QuestionResponse(
     
     @Schema(description = "The correct answer key", example = "A")
     String correctKey,
+
+    @Schema(description = "Whether identification matching is case-sensitive", example = "false")
+    boolean caseSensitive,
     
     @Schema(description = "Points awarded for correct answer", example = "10")
     int points,
@@ -49,6 +52,7 @@ public record QuestionResponse(
             question.getType(),
             question.getDifficulty(),
             question.getCorrectKey(),
+            question.isCaseSensitive(),
             question.getPoints(),
             question.getTimeLimit(),
             question.getOrderIndex(),

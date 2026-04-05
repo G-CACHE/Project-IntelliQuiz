@@ -38,12 +38,14 @@ public class SecurityConfig {
             
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
+                // Allow CORS preflight across API routes
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/access/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 // SSE + realtime quiz flow endpoints use access-code based session logic
                 .requestMatchers(HttpMethod.GET, "/api/quiz/*/stream", "/api/quiz/*/status", "/api/quiz/*/state", "/api/quiz/*/participant-access", "/api/quiz/*/participant-results", "/api/quiz/*/violations", "/api/quiz/*/proctor-snapshot").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/quiz/*/answer", "/api/quiz/*/command", "/api/quiz/*/violation", "/api/quiz/*/kick", "/api/quiz/*/auto-kick-threshold", "/api/quiz/*/approve-reentry", "/api/quiz/*/lock", "/api/quiz/*/unlock").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/quiz/*/answer", "/api/quiz/*/command", "/api/quiz/*/navigate", "/api/quiz/*/violation", "/api/quiz/*/kick", "/api/quiz/*/auto-kick-threshold", "/api/quiz/*/approve-reentry", "/api/quiz/*/lock", "/api/quiz/*/unlock").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/quiz/*/lock-status").permitAll()
                 // WebSocket endpoints - authentication handled by WebSocket interceptor
                 .requestMatchers("/ws/**").permitAll()

@@ -10,7 +10,8 @@ import java.util.List;
 public record QuestionInfoDto(Long id, String text, QuestionType type,
                                List<String> options, String correctKey,
                                int points, int timeLimit, int orderIndex,
-                               String difficulty) {
+                               String difficulty,
+                               boolean caseSensitive) {
 
     /**
      * Resolves the letter-based correctKey (A/B/C/D) to the actual option text.

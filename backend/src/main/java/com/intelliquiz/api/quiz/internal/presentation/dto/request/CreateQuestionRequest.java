@@ -29,6 +29,9 @@ public record CreateQuestionRequest(
     @Schema(description = "Correct answer payload. Use option key (A/B/C/D) for MULTIPLE_CHOICE, A or B for TRUE_FALSE, or newline-separated accepted answers for IDENTIFICATION", example = "A", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Correct answer key is required")
     String correctKey,
+
+    @Schema(description = "Whether identification answer matching is case-sensitive. Ignored for non-identification questions.", example = "false")
+    Boolean caseSensitive,
     
     @Schema(description = "Points awarded for correct answer", example = "10", minimum = "0", requiredMode = Schema.RequiredMode.REQUIRED)
     @Min(value = 0, message = "Points must be non-negative")

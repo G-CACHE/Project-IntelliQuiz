@@ -65,7 +65,7 @@ class DtoMappingPropertyTest {
         // Given
         List<String> options = List.of("A", "B", "C", "D");
         CreateQuestionRequest request = new CreateQuestionRequest(
-                text, type, difficulty, correctKey, points, timeLimit, options
+                text, type, difficulty, correctKey, false, points, timeLimit, options
         );
         
         // When
@@ -74,6 +74,7 @@ class DtoMappingPropertyTest {
                 request.type(),
                 request.difficulty(),
                 request.correctKey(),
+                request.caseSensitive(),
                 request.points(),
                 request.timeLimit(),
                 request.options()
