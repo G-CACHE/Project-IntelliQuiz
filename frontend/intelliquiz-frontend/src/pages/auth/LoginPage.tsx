@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiBrain, BiUser, BiLock } from 'react-icons/bi';
+import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiUser, BiLock } from 'react-icons/bi';
 import { authApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -215,7 +215,7 @@ export default function LoginPage() {
           justify-content: flex-start;
           padding: 28px;
           margin-left: 8px;
-          margin-top: 60px;
+          margin-top: 46px;
           gap: 16px;
         }
 
@@ -433,7 +433,7 @@ export default function LoginPage() {
 
       <section className="portal-login-panel">
         <div className="portal-login-brand">
-          <BiBrain size={18} /> IntelliQuiz Portal
+          IntelliQuiz Portal
         </div>
         <div className="portal-login-card">
           <h2>Sign In</h2>
