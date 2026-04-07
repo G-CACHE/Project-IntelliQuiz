@@ -402,7 +402,7 @@ export default function AdminQuestionsPage() {
             </div>
           </div>
           {canEditContent && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="questions-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
                 {sortingQuestions ? 'Sorting...' : 'Sort by Difficulty'}
               </button>
@@ -426,93 +426,95 @@ export default function AdminQuestionsPage() {
       )}
 
       {/* Questions List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="questions-list-container">
         {questions.length > 0 ? (
-          questions.map((q, idx) => (
-            <div key={q.id} className="admin-card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', gap: 16 }}>
-                <div style={{ 
-                  width: 40, height: 40, borderRadius: 10, 
-                  background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#8b5cf6', fontWeight: 700, fontSize: 14, flexShrink: 0
-                }}>
-                  {idx + 1}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <h4 style={{ color: '#1e293b', fontWeight: 600, margin: 0, fontSize: 15, lineHeight: 1.5 }}>{q.text}</h4>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
-                      <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <BiStar size={12} /> {q.points}
+          questions.map((q, idx) => {
+            const identificationAnswers = (q.correctKey || '')
+              .split(/\r?\n/)
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0);
+
+            return (
+              <div key={q.id} className="question-card">
+                <div className="question-card-header">
+                  <div className="question-number-badge">{idx + 1}</div>
+                  <div className="question-text-wrapper">
+                    <h4 className="question-text">{q.text}</h4>
+                    <div className="question-meta">
+                      <span className="question-meta-item">
+                        <BiStar size={14} /> {q.points} pts
                       </span>
-                      <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <BiTime size={12} /> {q.timeLimit}s
+                      <span className="question-meta-item">
+                        <BiTime size={14} /> {q.timeLimit}s
                       </span>
                       <span className={`admin-badge ${getDifficultyBadge(q.difficulty)}`}>{q.difficulty}</span>
                     </div>
                   </div>
-                  {q.type === 'IDENTIFICATION' ? (
-                    <div style={{
-                      borderRadius: 8,
-                      padding: '10px 12px',
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      fontSize: 13,
-                      color: '#334155',
-                    }}>
-                      Accepted answers: {q.correctKey.split(/\r?\n/).filter(Boolean).join(', ')}
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                      {q.options.map((option, optIdx) => {
-                        const key = OPTION_KEYS[optIdx];
-                        const isCorrect = key === q.correctKey;
-                        return (
-                          <div key={optIdx} style={{
-                            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-                            borderRadius: 8, fontSize: 13,
-                            background: isCorrect ? '#f0fdf4' : '#f8fafc',
-                            border: `1px solid ${isCorrect ? '#bbf7d0' : '#e2e8f0'}`,
-                            color: isCorrect ? '#16a34a' : '#64748b'
-                          }}>
-                            <span style={{ fontWeight: 600, minWidth: 18 }}>{key}.</span>
-                            {isCorrect && <BiCheck size={16} />}
-                            {option}
+                </div>
+
+                      {q.type === 'IDENTIFICATION' ? (
+                        <div className="question-options-wrapper">
+                          <div className="identification-answer">
+                            {identificationAnswers.length > 0
+                              ? identificationAnswers.map((answer, answerIdx) => (
+                                  <div key={answerIdx}>{answer}</div>
+                                ))
+                              : 'No accepted answer set'}
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {canEditContent && (
-                    <>
-                      <button className="admin-btn-icon" onClick={() => openEditModal(q)} title="Edit"><BiEdit size={16} /></button>
-                      <button className="admin-btn-icon danger" onClick={() => { setSelectedQuestion(q); setShowDeleteModal(true); }} title="Delete"><BiTrash size={16} /></button>
-                    </>
-                  )}
-                </div>
+                        </div>
+                      ) : (
+                        <div className="question-options-wrapper">
+                          <div className="question-options-grid">
+                            {q.options.map((option, optIdx) => {
+                              const key = OPTION_KEYS[optIdx] || String.fromCharCode(65 + optIdx);
+                              const isCorrect = q.correctKey === key;
+                              return (
+                                <div key={optIdx} className={`question-option ${isCorrect ? 'is-correct' : ''}`}>
+                                  <span className="question-option-key">{key}</span>
+                                  <span>{option}</span>
+                                  {isCorrect && <BiCheck size={16} />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {canEditContent && (
+                        <div className="question-actions">
+                          <button className="admin-btn admin-btn-secondary" onClick={() => openEditModal(q)} style={{ gap: 6 }}>
+                            <BiEdit size={16} /> Edit
+                          </button>
+                          <button
+                            className="admin-btn admin-btn-secondary"
+                            onClick={() => {
+                              setSelectedQuestion(q);
+                              setShowDeleteModal(true);
+                            }}
+                            style={{ gap: 6, color: '#dc2626' }}
+                          >
+                            <BiTrash size={16} /> Delete
+                          </button>
+                        </div>
+                      )}
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="admin-card">
-            <div className="admin-empty-state">
-              <div className="admin-empty-icon"><BiFile size={32} /></div>
-              <h3 className="admin-empty-title">No questions yet</h3>
-              <p className="admin-empty-text">{canEditContent ? 'Add questions to make your quiz complete' : 'Questions are view-only until the quiz is set back to Draft status.'}</p>
-              {canEditContent && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
-                    <BiImport size={16} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
-                  </button>
-                  <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                    <BiPlus size={16} /> Add First Question
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="admin-empty-state">
+            <div className="admin-empty-icon"><BiFile size={32} /></div>
+            <h3 className="admin-empty-title">No questions yet</h3>
+            <p className="admin-empty-text">{canEditContent ? 'Add questions to make your quiz complete' : 'Questions are view-only until the quiz is set back to Draft status.'}</p>
+            {canEditContent && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
+                  <BiImport size={16} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
+                </button>
+                <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                  <BiPlus size={16} /> Add First Question
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

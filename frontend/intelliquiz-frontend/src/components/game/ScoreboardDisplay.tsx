@@ -1,5 +1,7 @@
 import React from 'react';
-import { BiMedal, BiTrophy } from 'react-icons/bi';
+import { Users, Target } from 'lucide-react';
+import { GiTrophyCup, GiMedal, GiRibbonMedal } from 'react-icons/gi';
+import { FaStar } from 'react-icons/fa6';
 import type { RankingEntry } from '../../services/api';
 
 interface ScoreboardDisplayProps {
@@ -20,9 +22,16 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <BiTrophy />;
-    if (rank === 2) return <BiMedal />;
-    if (rank === 3) return <BiMedal />;
+    if (rank === 1) return <GiTrophyCup size={24} />;
+    if (rank === 2) return <GiMedal size={24} />;
+    if (rank === 3) return <GiRibbonMedal size={24} />;
+    return null;
+  };
+
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) return <GiTrophyCup size={22} />;
+    if (rank === 2) return <GiMedal size={22} />;
+    if (rank === 3) return <GiRibbonMedal size={22} />;
     return `#${rank}`;
   };
 
@@ -46,10 +55,12 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
     }
     return { ...team, displayRank: team.rank || actualRank };
   });
+  const isArcadeFinal = isFinal && variant === 'proctor';
 
   if (rankings.length === 0) {
     return (
       <div className={`${prefix}-scoreboard-empty`}>
+        <Users size={48} className={`${prefix}-scoreboard-empty-icon`} />
         <p>No scores yet</p>
       </div>
     );
@@ -67,40 +78,143 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
         )}
       </div>
 
-      {/* Podium for Final Results */}
-      {isFinal && rankings.length >= 3 && (
-        <div className={`${prefix}-podium`}>
-          {/* 2nd Place */}
-          <div className={`${prefix}-podium-item ${prefix}-podium-second`}>
-            <div className={`${prefix}-podium-icon`}><BiMedal /></div>
-            <div className={`${prefix}-podium-info`}>
-              <p className={`${prefix}-podium-name`}>{rankedTeams[1]?.teamName}</p>
-              <p className={`${prefix}-podium-score`}>{rankedTeams[1]?.score} pts</p>
+      {/* Top 3 Podium for Final Results */}
+      {isFinal && rankings.length >= 3 && !isArcadeFinal && (
+        <div className={`${prefix}-podium-container`}>
+          <div className={`${prefix}-podium`}>
+            {/* 2nd Place */}
+            <div className={`${prefix}-podium-item ${prefix}-podium-second`}>
+              <div className={`${prefix}-podium-rank-badge ${prefix}-podium-rank-silver`}>
+                <GiMedal size={32} />
+              </div>
+              <div className={`${prefix}-podium-avatar ${prefix}-podium-avatar-silver`}>
+                {getInitials(rankedTeams[1]?.teamName)}
+              </div>
+              <div className={`${prefix}-podium-info`}>
+                <p className={`${prefix}-podium-name`}>{rankedTeams[1]?.teamName}</p>
+                <p className={`${prefix}-podium-score`}>
+                  <FaStar size={13} />
+                  {rankedTeams[1]?.score} pts
+                </p>
+              </div>
+            </div>
+
+            {/* 1st Place */}
+            <div className={`${prefix}-podium-item ${prefix}-podium-first`}>
+              <div className={`${prefix}-podium-rank-badge ${prefix}-podium-rank-gold`}>
+                <GiTrophyCup size={38} />
+              </div>
+              <div className={`${prefix}-podium-avatar ${prefix}-podium-avatar-gold`}>
+                {getInitials(rankedTeams[0]?.teamName)}
+              </div>
+              <div className={`${prefix}-podium-info`}>
+                <p className={`${prefix}-podium-name`}>{rankedTeams[0]?.teamName}</p>
+                <p className={`${prefix}-podium-score`}>
+                  <FaStar size={14} />
+                  {rankedTeams[0]?.score} pts
+                </p>
+              </div>
+            </div>
+
+            {/* 3rd Place */}
+            <div className={`${prefix}-podium-item ${prefix}-podium-third`}>
+              <div className={`${prefix}-podium-rank-badge ${prefix}-podium-rank-bronze`}>
+                <GiRibbonMedal size={28} />
+              </div>
+              <div className={`${prefix}-podium-avatar ${prefix}-podium-avatar-bronze`}>
+                {getInitials(rankedTeams[2]?.teamName)}
+              </div>
+              <div className={`${prefix}-podium-info`}>
+                <p className={`${prefix}-podium-name`}>{rankedTeams[2]?.teamName}</p>
+                <p className={`${prefix}-podium-score`}>
+                  <FaStar size={13} />
+                  {rankedTeams[2]?.score} pts
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isArcadeFinal && (
+        <div className={`${prefix}-final-results-layout`}>
+          <div className={`${prefix}-final-showcase`}>
+            <div className={`${prefix}-final-podium-stage`}>
+              {rankedTeams.slice(0, 3).map((team, idx) => (
+                <div
+                  key={team.teamId}
+                  className={`${prefix}-final-podium-card ${prefix}-final-podium-card-${idx + 1}`}
+                >
+                  <div className={`${prefix}-final-podium-rank`}>{getRankBadge(team.displayRank)}</div>
+                  <div className={`${prefix}-final-podium-name`}>{team.teamName}</div>
+                  <div className={`${prefix}-final-podium-score`}>{team.score} pts</div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* 1st Place */}
-          <div className={`${prefix}-podium-item ${prefix}-podium-first`}>
-            <div className={`${prefix}-podium-icon`}><BiTrophy /></div>
-            <div className={`${prefix}-podium-info`}>
-              <p className={`${prefix}-podium-name`}>{rankedTeams[0]?.teamName}</p>
-              <p className={`${prefix}-podium-score`}>{rankedTeams[0]?.score} pts</p>
-            </div>
-          </div>
+          <div className={`${prefix}-final-list-wrap`}>
+            <div className={`${prefix}-rankings-list`}>
+              {rankedTeams.map((entry, index) => {
+                const isHighlighted = entry.teamId === highlightTeamId;
+                const isTopThree = entry.displayRank <= 3;
 
-          {/* 3rd Place */}
-          <div className={`${prefix}-podium-item ${prefix}-podium-third`}>
-            <div className={`${prefix}-podium-icon`}><BiMedal /></div>
-            <div className={`${prefix}-podium-info`}>
-              <p className={`${prefix}-podium-name`}>{rankedTeams[2]?.teamName}</p>
-              <p className={`${prefix}-podium-score`}>{rankedTeams[2]?.score} pts</p>
+                return (
+                  <div
+                    key={entry.teamId}
+                    className={`${prefix}-ranking-item ${
+                      entry.displayRank === 1 ? `${prefix}-ranking-gold` :
+                      entry.displayRank === 2 ? `${prefix}-ranking-silver` :
+                      entry.displayRank === 3 ? `${prefix}-ranking-bronze` :
+                      `${prefix}-ranking-default`
+                    } ${isHighlighted ? `${prefix}-ranking-highlight` : ''}`}
+                    style={{ ['--row-index' as string]: index } as React.CSSProperties}
+                  >
+                    <div className={`${prefix}-ranking-rank ${isTopThree ? `${prefix}-ranking-rank-top` : ''}`}>
+                      {isTopThree ? (
+                        <div className={`${prefix}-ranking-rank-icon-wrapper`}>
+                          {getRankIcon(entry.displayRank)}
+                        </div>
+                      ) : (
+                        <span className={`${prefix}-ranking-rank-number`}>#{entry.displayRank}</span>
+                      )}
+                    </div>
+
+                    <div className={`${prefix}-ranking-avatar ${prefix}-ranking-avatar-${index % 5}`}>
+                      {getInitials(entry.teamName)}
+                    </div>
+
+                    <div className={`${prefix}-ranking-team`}>
+                      <p className={`${prefix}-ranking-name`}>
+                        {entry.teamName}
+                      </p>
+                      {isHighlighted && (
+                        <span className={`${prefix}-ranking-badge`}>
+                          <Target size={12} />
+                          You
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={`${prefix}-ranking-score-container`}>
+                      <div className={`${prefix}-ranking-score-wrapper`}>
+                        <FaStar className={`${prefix}-ranking-score-icon`} />
+                        <p className={`${prefix}-ranking-score ${isTopThree ? `${prefix}-ranking-score-top` : ''}`}>
+                          {entry.score}
+                        </p>
+                      </div>
+                      <p className={`${prefix}-ranking-points-label`}>points</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       )}
 
       {/* Rankings List */}
-      <div className={`${prefix}-rankings-list`}>
+      {!isArcadeFinal && <div className={`${prefix}-rankings-list`}>
         {rankedTeams.map((entry, index) => {
           const isHighlighted = entry.teamId === highlightTeamId;
           const isTopThree = entry.displayRank <= 3;
@@ -118,7 +232,13 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
             >
               {/* Rank */}
               <div className={`${prefix}-ranking-rank ${isTopThree ? `${prefix}-ranking-rank-top` : ''}`}>
-                <span>{getRankIcon(entry.displayRank)}</span>
+                {isTopThree ? (
+                  <div className={`${prefix}-ranking-rank-icon-wrapper`}>
+                    {getRankIcon(entry.displayRank)}
+                  </div>
+                ) : (
+                  <span className={`${prefix}-ranking-rank-number`}>#{entry.displayRank}</span>
+                )}
               </div>
 
               {/* Team Avatar */}
@@ -132,21 +252,27 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
                   {entry.teamName}
                 </p>
                 {isHighlighted && (
-                  <p className={`${prefix}-ranking-label`}>Your Team</p>
+                  <span className={`${prefix}-ranking-badge`}>
+                    <Target size={12} />
+                    You
+                  </span>
                 )}
               </div>
 
               {/* Score */}
               <div className={`${prefix}-ranking-score-container`}>
-                <p className={`${prefix}-ranking-score ${isTopThree ? `${prefix}-ranking-score-top` : ''}`}>
-                  {entry.score}
-                </p>
+                <div className={`${prefix}-ranking-score-wrapper`}>
+                  <FaStar className={`${prefix}-ranking-score-icon`} />
+                  <p className={`${prefix}-ranking-score ${isTopThree ? `${prefix}-ranking-score-top` : ''}`}>
+                    {entry.score}
+                  </p>
+                </div>
                 <p className={`${prefix}-ranking-points-label`}>points</p>
               </div>
             </div>
           );
         })}
-      </div>
+      </div>}
     </div>
   );
 };

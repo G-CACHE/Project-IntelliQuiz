@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CircleX, AlarmClock, Trophy, Sparkles, ListChecks, Home } from 'lucide-react';
+import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, BarChart3 } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -345,7 +345,10 @@ const PlayerGame: React.FC = () => {
             
             {/* Timer — only show during active question, not buffer */}
             {gameState === 'QUESTION' && (
-              <div className="participant-timer-container">
+              <div className={`participant-timer-container ${
+                timeRemaining <= 3 ? 'participant-timer-critical' : 
+                timeRemaining <= 5 ? 'participant-timer-low' : ''
+              }`}>
                 <Timer 
                   timeRemaining={timeRemaining} 
                   totalTime={canNavigate ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
@@ -619,10 +622,8 @@ const PlayerGame: React.FC = () => {
             <div className="participant-final-results">
               {/* Celebration Header */}
               <div className="participant-final-banner">
-                <div className="participant-final-banner-emoji" aria-hidden="true">
+                <div className="participant-final-banner-icon-wrapper">
                   <Trophy className="participant-final-banner-icon" />
-                  <Sparkles className="participant-final-banner-spark participant-final-banner-spark-left" />
-                  <Sparkles className="participant-final-banner-spark participant-final-banner-spark-right" />
                 </div>
                 <h2 className="participant-final-banner-title">Quiz Complete!</h2>
                 <p className="participant-final-banner-subtitle">
@@ -633,27 +634,35 @@ const PlayerGame: React.FC = () => {
               {/* Player's Own Result Card */}
               {myFinalResult ? (
                   <div className="participant-final-result-card">
-                    <p className="participant-final-result-label">
-                      Your Result
-                    </p>
-                    <p className="participant-final-result-rank">
-                      #{myFinalResult.rank}
-                    </p>
-                    <p className="participant-final-result-score">
-                      {myFinalResult.score} points
-                    </p>
+                    <div className="participant-final-result-header">
+                      <Award className="participant-final-result-icon" />
+                      <p className="participant-final-result-label">Your Result</p>
+                    </div>
+                    <div className="participant-final-result-main">
+                      <div className="participant-final-result-rank-section">
+                        <span className="participant-final-result-rank-label">Rank</span>
+                        <p className="participant-final-result-rank">#{myFinalResult.rank}</p>
+                      </div>
+                      <div className="participant-final-result-divider"></div>
+                      <div className="participant-final-result-score-section">
+                        <span className="participant-final-result-score-label">Score</span>
+                        <p className="participant-final-result-score">{myFinalResult.score}</p>
+                      </div>
+                    </div>
                     <div className="participant-final-stats">
                       <div className="participant-final-stat-cell">
-                        <span>Teams</span>
-                        <strong>{rankings.length}</strong>
+                        <BarChart3 size={16} className="participant-final-stat-icon" />
+                        <div>
+                          <span>Teams</span>
+                          <strong>{rankings.length}</strong>
+                        </div>
                       </div>
                       <div className="participant-final-stat-cell">
-                        <span>Questions</span>
-                        <strong>{totalQuestions || 0}</strong>
-                      </div>
-                      <div className="participant-final-stat-cell">
-                        <span>Placement</span>
-                        <strong>#{myFinalResult.rank}</strong>
+                        <ListChecks size={16} className="participant-final-stat-icon" />
+                        <div>
+                          <span>Questions</span>
+                          <strong>{totalQuestions || 0}</strong>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -663,7 +672,7 @@ const PlayerGame: React.FC = () => {
                 rankings={rankings}
                 highlightTeamId={session.teamId}
                 isFinal={true}
-                title="Congratulations"
+                title="Final Rankings"
               />
 
               {/* Exit Button */}
@@ -674,7 +683,7 @@ const PlayerGame: React.FC = () => {
                   className="participant-btn-primary participant-btn-large participant-results-action"
                 >
                   <ListChecks size={20} aria-hidden="true" />
-                  {reviewLoading ? 'Loading...' : 'Show Answers'}
+                  {reviewLoading ? 'Loading...' : 'Review Answers'}
                 </button>
                 <button
                   onClick={() => navigate('/')}

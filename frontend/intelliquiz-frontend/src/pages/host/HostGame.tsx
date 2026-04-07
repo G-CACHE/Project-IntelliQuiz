@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Sparkles, Home, Medal } from 'lucide-react';
+import { Trophy, Home } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
@@ -78,6 +79,7 @@ const HostGame: React.FC = () => {
   
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   const [startingRound, setStartingRound] = useState(false);
+  const hasFiredFinalConfettiRef = useRef(false);
 
   const handleStartRoundFromModal = async () => {
     if (startingRound || gameState !== 'BUFFER') return;
@@ -98,6 +100,22 @@ const HostGame: React.FC = () => {
     setShowRoundAnnouncement(false);
     setStartingRound(false);
   }, [gameState, currentRound]);
+
+  useEffect(() => {
+    if (gameState !== 'FINAL_RESULTS' || hasFiredFinalConfettiRef.current) return;
+
+    hasFiredFinalConfettiRef.current = true;
+
+    confetti({
+      particleCount: 42,
+      spread: 58,
+      startVelocity: 24,
+      ticks: 180,
+      origin: { y: 0.28 },
+      colors: ['#f8d86b', '#f4b6c2', '#9dbdff', '#7a1733'],
+      scalar: 0.85,
+    });
+  }, [gameState]);
   
   const isLastQuestion = totalQuestions > 0 && questionNumber >= totalQuestions;
   const gamePhaseLabel = gameState.replace(/_/g, ' ');
@@ -465,8 +483,6 @@ const HostGame: React.FC = () => {
               <div className="proctor-host-final-banner">
                 <div className="proctor-host-final-icon" aria-hidden="true">
                   <Trophy className="proctor-host-final-icon-main" />
-                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-left" />
-                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-right" />
                 </div>
                 <h2 className="proctor-host-final-title">Quiz Complete</h2>
                 <p>Final results are in. Great run from every team.</p>
@@ -486,40 +502,10 @@ const HostGame: React.FC = () => {
                 </div>
               </div>
 
-              {rankings.length > 0 && (
-                <div className="proctor-host-final-winner-card">
-                  <span className="proctor-host-final-winner-label">Champion</span>
-                  <div className="proctor-host-final-winner-main">
-                    <h3>{rankings[0]?.teamName}</h3>
-                    <p>{rankings[0]?.score ?? 0} points</p>
-                  </div>
-                </div>
-              )}
-
-              {rankings.length > 0 && (
-                <div className="proctor-host-podium-grid">
-                  <div className="proctor-host-podium-title">Top 3 Teams</div>
-                  {rankings.slice(0, 3).map((team, idx) => (
-                    <div
-                      key={team.teamId}
-                      className={`proctor-host-podium-item ${idx === 0 ? 'is-first' : ''}`}
-                    >
-                      <div className="proctor-host-podium-medal">
-                        {idx === 0 ? <Trophy size={22} /> : <Medal size={22} />}
-                      </div>
-                      <p>{team.teamName}</p>
-                      <strong>{team.score} pts</strong>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="proctor-host-final-scoreboard">
-                <ScoreboardDisplay
-                  rankings={rankings}
-                  isFinal={true}
-                />
-              </div>
+              <ScoreboardDisplay
+                rankings={rankings}
+                isFinal={true}
+              />
 
               <div className="proctor-host-final-actions">
                 <button

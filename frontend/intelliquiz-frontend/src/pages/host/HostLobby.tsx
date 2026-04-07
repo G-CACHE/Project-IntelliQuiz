@@ -6,6 +6,7 @@ import { accessApi } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { getProctorSession, clearSession } from '../../services/sessionStorage';
 import TeamGrid from '../../components/game/TeamGrid';
+import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import '../../styles/proctor.css';
 
 const HostLobby: React.FC = () => {
@@ -86,6 +87,7 @@ const HostLobby: React.FC = () => {
     error,
     gameState,
     connectedTeams,
+    rankings,
     sendCommand,
     reconnect,
     disconnect,
@@ -143,90 +145,100 @@ const HostLobby: React.FC = () => {
 
   return (
     <div className="proctor-page">
-      {/* Page Header */}
       <div className="proctor-page-header">
-        <div className="proctor-header-decoration proctor-header-decoration-1"></div>
-        <div className="proctor-header-decoration proctor-header-decoration-2"></div>
-        <h1 className="proctor-page-title">{session.quizTitle}</h1>
-        <p className="proctor-page-subtitle">Proctor Lobby</p>
+        <div className="proctor-header-decoration proctor-header-decoration-1" />
+        <div className="proctor-header-decoration proctor-header-decoration-2" />
+        <div className="proctor-page-header-content">
+          <h1 className="proctor-page-title">{session.quizTitle}</h1>
+          <p className="proctor-page-subtitle">Proctor Lobby</p>
+        </div>
       </div>
 
       <div className="proctor-content">
         <div className="proctor-container">
-          {/* Proctor PIN Card */}
-          <div className="proctor-card proctor-pin-card">
-            <div className="proctor-pin-label">Proctor PIN</div>
-            <div className="proctor-pin-value">{session.proctorPin}</div>
-          </div>
-
-          {/* Connection Status */}
-          <div className="proctor-connection-status">
-            <span className={`proctor-status-dot ${
-              connected ? 'proctor-status-connected' : 
-              connecting ? 'proctor-status-connecting' : 
-              'proctor-status-disconnected'
-            }`}></span>
-            <span className="proctor-status-text">
-              {connected ? 'Connected to server' : 
-               connecting ? 'Connecting...' : 
-               'Disconnected'}
-            </span>
-            {!connected && !connecting && (
-              <button onClick={reconnect} className="proctor-btn-link">
-                Reconnect
-              </button>
-            )}
-          </div>
-
-          {/* Error Display */}
           {error && (
-            <div className="proctor-alert-error">
-              <span className="proctor-alert-icon" aria-hidden="true"><BiErrorCircle /></span>
-              <p>{error}</p>
+            <div className="proctor-alert proctor-alert-error">
+              <div className="proctor-alert-content">
+                <span className="proctor-alert-icon" aria-hidden="true"><BiErrorCircle /></span>
+                <p>{error}</p>
+              </div>
             </div>
           )}
 
-          {/* Teams Section */}
-          <div className="proctor-section">
-            <h2 className="proctor-section-title">
+          <div className="proctor-section proctor-lobby-teams-section">
+            <h2 className="proctor-section-title proctor-lobby-teams-title-row">
               <BiGroup aria-hidden="true" />
               <span>Connected Teams</span>
               <span className="proctor-badge-accent">{connectedTeams.length}</span>
             </h2>
-            
             <TeamGrid teams={connectedTeams} />
+            <p className="proctor-help-text proctor-lobby-footnote proctor-lobby-teams-help">
+              {connectedTeams.length === 0
+                ? 'Share team codes with participants to let them join'
+                : `${connectedTeams.length} team${connectedTeams.length !== 1 ? 's' : ''} ready to play`}
+            </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="proctor-actions">
-            <button
-              onClick={handleStartQuiz}
-              disabled={!connected || connectedTeams.length === 0}
-              className="proctor-btn-primary proctor-btn-large"
-            >
-              Start Quiz
-            </button>
-            <button
-              onClick={() => navigate('/proctor/dashboard')}
-              className="proctor-btn-secondary"
-              style={{ minWidth: 180 }}
-            >
-              Open Proctor Dashboard
-            </button>
-            <button
-              onClick={handleLeave}
-              className="proctor-btn-secondary"
-            >
-              Leave Lobby
-            </button>
-          </div>
+          <div className="proctor-lobby-bottom-stack">
+            <div className="proctor-card proctor-card-static proctor-lobby-status-card">
+              <h2 className="proctor-section-title">
+                <BiGroup aria-hidden="true" />
+                <span>Session Status</span>
+              </h2>
+              <div className="proctor-connection-status">
+                <span className={`proctor-status-dot ${
+                  connected ? 'proctor-status-connected' :
+                  connecting ? 'proctor-status-connecting' :
+                  'proctor-status-disconnected'
+                }`} />
+                <span className="proctor-status-text">
+                  {connected ? 'Connected to server' :
+                   connecting ? 'Connecting...' :
+                   'Disconnected'}
+                </span>
+                {!connected && !connecting && (
+                  <button onClick={reconnect} className="proctor-btn-link">
+                    Reconnect
+                  </button>
+                )}
+              </div>
+              <div className="proctor-actions proctor-lobby-action-grid">
+                <button
+                  onClick={handleStartQuiz}
+                  disabled={!connected || connectedTeams.length === 0}
+                  className="proctor-btn-primary proctor-btn-large"
+                >
+                  Start Quiz
+                </button>
+                <button
+                  onClick={() => navigate('/proctor/dashboard')}
+                  className="proctor-btn-secondary"
+                >
+                  Open Proctor Dashboard
+                </button>
+                <button
+                  onClick={handleLeave}
+                  className="proctor-btn-secondary"
+                >
+                  Leave Lobby
+                </button>
+              </div>
+            </div>
 
-          {/* Help Text */}
-          <p className="proctor-help-text">
-            {connectedTeams.length === 0
-              ? 'Share team codes with participants to let them join'
-              : `${connectedTeams.length} team${connectedTeams.length !== 1 ? 's' : ''} ready to play`}
-          </p>
+            <div className="proctor-card proctor-card-static proctor-lobby-ranking-card">
+              <h2 className="proctor-section-title">
+                <span>Ranking Preview</span>
+              </h2>
+              <ScoreboardDisplay
+                rankings={rankings}
+                isFinal={false}
+                title="Live Leaderboard"
+              />
+              <p className="proctor-help-text proctor-lobby-footnote">
+                Rankings refresh automatically as soon as answers are graded.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
