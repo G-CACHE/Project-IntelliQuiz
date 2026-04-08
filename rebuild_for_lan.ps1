@@ -27,22 +27,29 @@ if (!(Test-Path "images")) {
 
 # Export frontend
 Write-Host "  Exporting frontend..."
-docker save intelliquiz-frontend:latest | gzip > images/intelliquiz-frontend.tar.gz
+docker save intelliquiz-frontend:latest -o images/intelliquiz-frontend.tar
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Frontend export failed!" -ForegroundColor Red
     exit 1
 }
+# Compress with PowerShell
+Compress-Archive -Path images/intelliquiz-frontend.tar -DestinationPath images/intelliquiz-frontend.tar.gz -Force
+Remove-Item images/intelliquiz-frontend.tar
 
 # Export backend (if not already exported)
 if (!(Test-Path "images/intelliquiz-backend.tar.gz")) {
     Write-Host "  Exporting backend..."
-    docker save danielvictorioso/intelliquiz-backend:latest | gzip > images/intelliquiz-backend.tar.gz
+    docker save danielvictorioso/intelliquiz-backend:latest -o images/intelliquiz-backend.tar
+    Compress-Archive -Path images/intelliquiz-backend.tar -DestinationPath images/intelliquiz-backend.tar.gz -Force
+    Remove-Item images/intelliquiz-backend.tar
 }
 
 # Export database (if not already exported)
 if (!(Test-Path "images/intelliquiz-db.tar.gz")) {
     Write-Host "  Exporting database..."
-    docker save danielvictorioso/intelliquiz-db:latest | gzip > images/intelliquiz-db.tar.gz
+    docker save danielvictorioso/intelliquiz-db:latest -o images/intelliquiz-db.tar
+    Compress-Archive -Path images/intelliquiz-db.tar -DestinationPath images/intelliquiz-db.tar.gz -Force
+    Remove-Item images/intelliquiz-db.tar
 }
 
 Write-Host "OK - Images exported" -ForegroundColor Green
