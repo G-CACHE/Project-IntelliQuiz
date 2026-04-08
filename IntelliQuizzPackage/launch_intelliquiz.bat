@@ -87,11 +87,16 @@ echo.
 echo [4/4] Getting server information...
 timeout /t 5 /nobreak >nul
 
-REM Get server IP using ipconfig
+REM Get server IP using ipconfig (skip Docker and localhost IPs)
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /C:"IPv4 Address"') do (
     set IP_RAW=%%a
-    for /f "tokens=* delims= " %%b in ("!IP_RAW!") do set SERVER_IP=%%b
-    if not "!SERVER_IP!"=="127.0.0.1" goto :ip_found
+    for /f "tokens=* delims= " %%b in ("!IP_RAW!") do set TEMP_IP=%%b
+    REM Skip localhost, Docker (172.17-172.31), and link-local (169.254)
+    echo !TEMP_IP! | findstr /R "^127\. ^172\.1[7-9]\. ^172\.2[0-9]\. ^172\.3[0-1]\. ^169\.254\." >nul
+    if errorlevel 1 (
+        set SERVER_IP=!TEMP_IP!
+        goto :ip_found
+    )
 )
 :ip_found
 
