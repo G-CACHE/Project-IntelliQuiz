@@ -79,17 +79,50 @@ docker run -d --name intelliquiz_backend --network intelliquiz_network --network
 
 timeout /t 3 /nobreak >nul
 
-docker run -d --name intelliquiz_frontend --network intelliquiz_network -e VITE_API_BASE_URL=http://localhost:8090 -p 3000:3000 --restart always intelliquiz-frontend:latest
+docker run -d --name intelliquiz_frontend --network intelliquiz_network -p 3000:3000 --restart always intelliquiz-frontend:latest
 
 echo OK
 echo.
 
-echo [4/4] Opening browser...
-timeout /t 10 /nobreak >nul
+echo [4/4] Getting server information...
+timeout /t 5 /nobreak >nul
+
+REM Get server IP using ipconfig
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /C:"IPv4 Address"') do (
+    set IP_RAW=%%a
+    for /f "tokens=* delims= " %%b in ("!IP_RAW!") do set SERVER_IP=%%b
+    if not "!SERVER_IP!"=="127.0.0.1" goto :ip_found
+)
+:ip_found
+
 start http://localhost:3000
 
+cls
 echo.
-echo IntelliQuiz is running!
+echo ============================================================
+echo   IntelliQuiz is Running!
+echo ============================================================
 echo.
-timeout /t 3
+echo   SERVER ACCESS (on this machine):
+echo   http://localhost:3000
+echo.
+echo   PARTICIPANT ACCESS (from other devices):
+if defined SERVER_IP (
+    echo   http://!SERVER_IP!:3000
+    echo.
+    echo   SHARE THIS LINK WITH PARTICIPANTS:
+    echo   http://!SERVER_IP!:3000
+) else (
+    echo   Run 'ipconfig' to find your IP address
+    echo   Then share: http://[YOUR_IP]:3000
+)
+echo.
+echo   Note: Participants must be on the same network/LAN
+echo.
+echo ============================================================
+echo.
+echo   Press any key to close this window...
+echo   IntelliQuiz will continue running in the background.
+echo.
+pause >nul
 exit
