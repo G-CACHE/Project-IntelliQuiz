@@ -64,8 +64,10 @@ Source: "images\*.tar.gz"; DestDir: "{app}\images"; Flags: ignoreversion
 ; Docker Desktop Installer
 Source: "docker\DockerDesktopInstaller.exe"; DestDir: "{app}\docker"; Flags: ignoreversion
 
-; Documentation
+; Documentation and Access Information
 Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "ACCESS_INFO.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "LAN_ACCESS_GUIDE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
@@ -107,6 +109,25 @@ begin
   if not ((GetWindowsVersion >= $0A00)) then begin
     MsgBox('Windows 10 or later is required. You are running an older version.', mbError, MB_OK);
     Result := False;
+  end;
+end;
+
+// Show access information after installation
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  AccessInfoFile: String;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    AccessInfoFile := ExpandConstant('{app}\ACCESS_INFO.txt');
+    MsgBox('Installation complete!' + #13#10#13#10 + 
+           'IMPORTANT: To share IntelliQuiz with participants:' + #13#10 +
+           '1. Run IntelliQuiz from the desktop shortcut' + #13#10 +
+           '2. The launcher will display the participant access URL' + #13#10 +
+           '3. Share that URL with participants on the same network' + #13#10#13#10 +
+           'Example: http://10.243.101.147:3000' + #13#10#13#10 +
+           'See ACCESS_INFO.txt for detailed instructions.', 
+           mbInformation, MB_OK);
   end;
 end;
 
