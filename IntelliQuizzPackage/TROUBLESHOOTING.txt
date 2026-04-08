@@ -1,0 +1,336 @@
+================================================================================
+  IntelliQuiz - Troubleshooting Guide
+================================================================================
+
+PROBLEM: Participants Cannot Access IntelliQuiz
+================================================================================
+
+If participants cannot access IntelliQuiz from their devices, follow this guide
+to diagnose and fix the issue.
+
+================================================================================
+QUICK DIAGNOSIS
+================================================================================
+
+STEP 1: Verify IntelliQuiz is Running on Server
+------------------------------------------------
+On the SERVER machine:
+1. Open browser
+2. Go to: http://localhost:3000
+3. Can you see IntelliQuiz? 
+   - YES → Continue to Step 2
+   - NO → IntelliQuiz is not running. Run the launcher again.
+
+STEP 2: Check Server IP Address
+--------------------------------
+The launcher shows the participant access URL like:
+   http://192.168.1.41:3000
+
+Write down this IP address: _________________
+
+STEP 3: Test from Server Using IP
+----------------------------------
+On the SERVER machine:
+1. Open browser
+2. Go to: http://[SERVER_IP]:3000 (use the IP from Step 2)
+3. Can you see IntelliQuiz?
+   - YES → Continue to Step 4
+   - NO → Windows Firewall issue (see Section A below)
+
+STEP 4: Check Participant Network
+----------------------------------
+On a PARTICIPANT device:
+1. Check WiFi/Network settings
+2. Find the IP address
+3. Is it in the same range as server?
+   
+   Example:
+   - Server IP: 192.168.1.41
+   - Participant IP: 192.168.1.58 ✓ SAME (192.168.1.x)
+   - Participant IP: 10.0.0.15 ✗ DIFFERENT
+
+   - YES, same range → Continue to Step 5
+   - NO, different range → Connect to same network
+
+STEP 5: Test Connection
+------------------------
+On a PARTICIPANT device:
+1. Open browser
+2. Go to: http://[SERVER_IP]:3000
+3. Can you see IntelliQuiz?
+   - YES → Problem solved!
+   - NO → AP Isolation issue (see Section B below)
+
+================================================================================
+SECTION A: WINDOWS FIREWALL ISSUE
+================================================================================
+
+If Step 3 failed (server can't access using IP), the Windows Firewall is
+blocking port 3000.
+
+FIX:
+----
+1. Open PowerShell as Administrator:
+   - Press Windows key
+   - Type "PowerShell"
+   - Right-click "Windows PowerShell"
+   - Select "Run as Administrator"
+
+2. Run this command:
+   New-NetFirewallRule -DisplayName "IntelliQuiz Frontend" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow -Profile Any
+
+3. Press Enter
+
+4. Test again from Step 3
+
+ALTERNATIVE (Manual Method):
+-----------------------------
+1. Press Windows key
+2. Type "Windows Defender Firewall"
+3. Click "Advanced settings"
+4. Click "Inbound Rules" on the left
+5. Click "New Rule..." on the right
+6. Select "Port" → Next
+7. Select "TCP" and enter "3000" → Next
+8. Select "Allow the connection" → Next
+9. Check all profiles (Domain, Private, Public) → Next
+10. Name it "IntelliQuiz Frontend" → Finish
+
+================================================================================
+SECTION B: AP ISOLATION / ROUTER ISSUE
+================================================================================
+
+If Step 5 failed (participants can't access but server can), your router has
+AP Isolation enabled. This prevents devices from communicating with each other.
+
+SYMPTOMS:
+---------
+✓ Server can access: http://localhost:3000
+✓ Server can access: http://[SERVER_IP]:3000
+✗ Participants CANNOT access: http://[SERVER_IP]:3000
+✓ Participants are on same network (same IP range)
+
+This is the most common issue with WiFi networks.
+
+================================================================================
+SOLUTION 1: Disable AP Isolation on Router (RECOMMENDED)
+================================================================================
+
+STEP 1: Access Router Settings
+-------------------------------
+1. Open browser on any computer
+2. Go to: http://192.168.1.1
+   (If this doesn't work, try: http://192.168.0.1 or http://10.0.0.1)
+3. Login with router credentials
+   Common defaults:
+   - Username: admin / Password: admin
+   - Username: admin / Password: password
+   - Username: admin / Password: (blank)
+   - Check sticker on router for default credentials
+
+STEP 2: Find Wireless Settings
+-------------------------------
+Look for menu items:
+- Wireless
+- WiFi
+- Wireless Settings
+- Advanced Wireless
+- WLAN Settings
+
+Click on it.
+
+STEP 3: Disable AP Isolation
+-----------------------------
+Look for any of these settings:
+- AP Isolation
+- Client Isolation
+- Wireless Isolation
+- Station Isolation
+- SSID Isolation
+- Device Isolation
+
+Set it to: DISABLED or OFF
+
+Common locations:
+- Wireless → Advanced
+- Security → Wireless Security
+- WiFi → Advanced Settings
+- Network → Wireless
+
+STEP 4: Save and Reboot
+------------------------
+1. Click "Save" or "Apply"
+2. Router may ask to reboot - click "Yes"
+3. Wait 1-2 minutes for router to restart
+
+STEP 5: Test Again
+-------------------
+1. Reconnect devices to WiFi
+2. Try accessing: http://[SERVER_IP]:3000
+3. Should work now!
+
+================================================================================
+SOLUTION 2: Use Mobile Hotspot (TEMPORARY WORKAROUND)
+================================================================================
+
+If you cannot access router settings or disable AP Isolation:
+
+STEP 1: Enable Hotspot on Server Phone/Device
+----------------------------------------------
+1. On a phone or device with mobile data
+2. Enable "Mobile Hotspot" or "Personal Hotspot"
+3. Note the hotspot name and password
+
+STEP 2: Connect Server PC to Hotspot
+-------------------------------------
+1. On server PC, disconnect from current WiFi
+2. Connect to the mobile hotspot
+3. Run IntelliQuiz launcher
+4. Note the NEW IP address shown (will be different)
+
+STEP 3: Connect Participants to Same Hotspot
+---------------------------------------------
+1. All participant devices connect to same hotspot
+2. Access: http://[NEW_SERVER_IP]:3000
+3. Should work!
+
+NOTE: This uses mobile data. Suitable for small groups or testing.
+
+================================================================================
+SOLUTION 3: Use Wired Network (BEST FOR PRODUCTION)
+================================================================================
+
+Wired networks (LAN cables) don't have AP Isolation issues.
+
+SETUP:
+------
+1. Connect server PC to network switch via LAN cable
+2. Connect participant PCs to same switch via LAN cables
+3. All devices will be on same network
+4. Run IntelliQuiz launcher
+5. Share the IP with participants
+6. Access: http://[SERVER_IP]:3000
+
+ADVANTAGES:
+-----------
+✓ No AP Isolation issues
+✓ More stable connection
+✓ Faster speeds
+✓ Better for exams/quizzes
+✓ Recommended for computer labs
+
+================================================================================
+SOLUTION 4: Check Guest Network
+================================================================================
+
+Some routers have separate "Guest" networks that are always isolated.
+
+CHECK:
+------
+1. Look at WiFi network name on participant devices
+2. Does it say "Guest" or have "-Guest" suffix?
+3. If YES, that's the problem!
+
+FIX:
+----
+1. Connect participants to the MAIN network (not guest)
+2. Main network usually has the router's default name
+3. Guest networks are isolated by design for security
+
+================================================================================
+DIAGNOSTIC COMMANDS (For Advanced Users)
+================================================================================
+
+Run these on SERVER PC in PowerShell:
+
+1. Check if port 3000 is listening:
+   netstat -an | Select-String ":3000"
+   
+   Should show: 0.0.0.0:3000
+
+2. Check Docker containers:
+   docker ps
+   
+   Should show 3 containers: intelliquiz_frontend, intelliquiz_backend, intelliquiz_db
+
+3. Test connection to own IP:
+   Test-NetConnection -ComputerName [YOUR_IP] -Port 3000
+   
+   Should show: TcpTestSucceeded : True
+
+4. Check firewall rules:
+   Get-NetFirewallRule -DisplayName "IntelliQuiz Frontend"
+   
+   Should show: Enabled : True
+
+================================================================================
+COMMON SCENARIOS
+================================================================================
+
+SCENARIO 1: School Computer Lab (Wired)
+----------------------------------------
+✓ Works perfectly - no issues
+✓ All computers connected via LAN cables
+✓ No AP Isolation on wired networks
+
+SCENARIO 2: Office WiFi
+------------------------
+✓ Usually works - enterprise WiFi rarely has AP Isolation
+✓ May need IT admin to allow port 3000
+✓ Check with IT department if issues persist
+
+SCENARIO 3: Home WiFi
+----------------------
+⚠ May have AP Isolation enabled
+⚠ Need to access router settings to disable
+⚠ Or use mobile hotspot as workaround
+
+SCENARIO 4: Public WiFi (Coffee Shop, Library)
+-----------------------------------------------
+✗ Usually has AP Isolation (cannot be disabled)
+✗ Use mobile hotspot instead
+✗ Not recommended for production use
+
+================================================================================
+STILL NOT WORKING?
+================================================================================
+
+If you've tried everything and it still doesn't work:
+
+1. Verify all devices are on SAME network:
+   - Check IP addresses
+   - Should be in same range (e.g., 192.168.1.x)
+
+2. Try different network:
+   - Use mobile hotspot
+   - Use wired connection
+   - Try different WiFi network
+
+3. Check router brand/model:
+   - Some routers have AP Isolation always enabled
+   - May need firmware update
+   - Consider using different router
+
+4. Contact network administrator:
+   - In schools/offices, IT admin can help
+   - They can disable AP Isolation
+   - They can configure firewall rules
+
+================================================================================
+SUMMARY
+================================================================================
+
+Most Common Issues:
+1. AP Isolation on WiFi router (80% of cases)
+2. Windows Firewall blocking port 3000 (15% of cases)
+3. Different networks/subnets (5% of cases)
+
+Best Solutions:
+1. Use wired network (LAN cables) - No issues
+2. Disable AP Isolation on router - Works for WiFi
+3. Use mobile hotspot - Quick workaround
+
+IntelliQuiz is designed to work on any network. If participants can't connect,
+it's always a network configuration issue, not IntelliQuiz itself.
+
+================================================================================

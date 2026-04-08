@@ -1,0 +1,136 @@
+================================================================================
+  IntelliQuiz - LAN Access Configuration Guide
+================================================================================
+
+OVERVIEW:
+IntelliQuiz is now configured for intranet/LAN access. The server running
+the application can be accessed by any device on the same network.
+
+================================================================================
+HOW IT WORKS:
+================================================================================
+
+1. SERVER SETUP:
+   - Install IntelliQuiz on the server machine (e.g., IP: 10.243.101.147)
+   - Run the launcher - it will start all containers
+   - Containers bind to 0.0.0.0 (all network interfaces)
+
+2. PORTS EXPOSED:
+   - Frontend:  Port 3000 (accessible from LAN)
+   - Backend:   Port 8090 (accessible from LAN)
+   - Database:  Port 5434 (accessible from LAN if needed)
+
+3. CLIENT ACCESS:
+   Participants on the same network can access IntelliQuiz by opening:
+   
+   http://[SERVER_IP]:3000
+   
+   Examples:
+   - http://10.243.101.147:3000
+   - http://192.168.1.100:3000
+   - http://172.16.0.50:3000
+
+================================================================================
+TECHNICAL DETAILS:
+================================================================================
+
+NGINX PROXY:
+- Frontend uses nginx to serve static files
+- API calls to /api/* are proxied to backend container
+- No hardcoded localhost URLs - works from any IP
+
+DOCKER NETWORKING:
+- All containers on same Docker network (intelliquiz_network)
+- Frontend -> Backend communication via container names
+- External access via 0.0.0.0 binding
+
+API CONFIGURATION:
+- Frontend uses relative URLs (/api/*)
+- Nginx proxies to backend:8082
+- Clients don't need to know backend IP
+
+================================================================================
+FIREWALL CONFIGURATION:
+================================================================================
+
+Ensure Windows Firewall allows incoming connections on:
+- TCP Port 3000 (Frontend)
+- TCP Port 8090 (Backend - optional, if direct access needed)
+
+To allow through Windows Firewall:
+1. Open Windows Defender Firewall
+2. Click "Advanced settings"
+3. Click "Inbound Rules" -> "New Rule"
+4. Select "Port" -> Next
+5. Enter "3000" -> Next
+6. Allow the connection -> Next
+7. Apply to all profiles -> Next
+8. Name it "IntelliQuiz Frontend" -> Finish
+
+================================================================================
+FINDING SERVER IP ADDRESS:
+================================================================================
+
+On the server machine, run:
+   ipconfig
+
+Look for "IPv4 Address" under your active network adapter.
+Common formats:
+- 10.x.x.x (Class A private)
+- 172.16.x.x to 172.31.x.x (Class B private)
+- 192.168.x.x (Class C private)
+
+================================================================================
+TESTING LAN ACCESS:
+================================================================================
+
+1. On server machine:
+   - Open http://localhost:3000 (should work)
+   - Open http://[SERVER_IP]:3000 (should work)
+
+2. On client machine (same network):
+   - Open http://[SERVER_IP]:3000 (should work)
+   - If not working, check firewall settings
+
+3. Troubleshooting:
+   - Ping server from client: ping [SERVER_IP]
+   - Check if port is open: telnet [SERVER_IP] 3000
+   - Verify containers are running: docker ps
+
+================================================================================
+PRODUCTION vs DEVELOPMENT:
+================================================================================
+
+CURRENT SETUP (Production - Recommended):
+✓ Uses nginx to serve optimized static files
+✓ Fast, secure, and lightweight
+✓ Proper for production/intranet deployment
+✓ Small container size
+
+NOT USING (Development):
+✗ npm run dev --host (development server)
+✗ Larger container size
+✗ Slower performance
+✗ Not meant for production use
+
+================================================================================
+SECURITY NOTES:
+================================================================================
+
+1. This setup is designed for TRUSTED INTRANET use
+2. All devices on the LAN can access the application
+3. No additional authentication at network level
+4. Application-level authentication still required (login)
+5. For internet exposure, add HTTPS and additional security
+
+================================================================================
+SUPPORT:
+================================================================================
+
+If you need to change the port or configuration:
+1. Edit docker-compose.prod.yml (ports section)
+2. Edit IntelliQuizzPackage/launch_intelliquiz.bat (port mappings)
+3. Rebuild the frontend image if needed
+4. Rebuild the installer
+
+================================================================================
