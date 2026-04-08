@@ -72,6 +72,7 @@ const PlayerGame: React.FC = () => {
     rankings,
     kicked,
     kickReason,
+    isNavigating,
     submitAnswer,
     reconnect,
     reportViolation,
@@ -380,6 +381,7 @@ const PlayerGame: React.FC = () => {
                 currentQuestion={questionNumber}
                 answeredQuestions={answeredQuestions}
                 onNavigate={handleNavigate}
+                disabled={isNavigating}
               />
             </div>
           )}
@@ -408,15 +410,15 @@ const PlayerGame: React.FC = () => {
                   <div className="participant-navigation-section">
                     <button
                       onClick={() => handleNavigate(questionNumber - 2)}
-                      disabled={questionNumber <= 1}
-                      className={`participant-btn-secondary participant-btn-nav participant-btn-prev ${questionNumber <= 1 ? 'participant-btn-disabled' : ''}`}
+                      disabled={questionNumber <= 1 || isNavigating}
+                      className={`participant-btn-secondary participant-btn-nav participant-btn-prev ${(questionNumber <= 1 || isNavigating) ? 'participant-btn-disabled' : ''}`}
                     >
                       ← Previous
                     </button>
                     <button
                       onClick={() => handleNavigate(questionNumber)}
-                      disabled={questionNumber >= totalQuestions}
-                      className={`participant-btn-secondary participant-btn-nav participant-btn-next ${questionNumber >= totalQuestions ? 'participant-btn-disabled' : ''}`}
+                      disabled={questionNumber >= totalQuestions || isNavigating}
+                      className={`participant-btn-secondary participant-btn-nav participant-btn-next ${(questionNumber >= totalQuestions || isNavigating) ? 'participant-btn-disabled' : ''}`}
                     >
                       Next →
                     </button>

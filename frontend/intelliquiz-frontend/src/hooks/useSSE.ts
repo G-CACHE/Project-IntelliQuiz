@@ -61,12 +61,14 @@ export function useSSE(
   const [kickedTeams, setKickedTeams] = useState<KickedTeam[]>([])
   const [kickReason, setKickReason] = useState<string | null>(null)
   const [currentRound, setCurrentRound] = useState<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectAttemptsRef = useRef(0)
   const maxReconnectAttemptsRef = useRef(10)
   const questionNumberRef = useRef(0)
   const totalQuestionsRef = useRef(0)
+  const navigateRequestSeqRef = useRef(0)
 
   useEffect(() => {
     questionNumberRef.current = questionNumber
@@ -533,36 +535,61 @@ export function useSSE(
       return null
     }
 
-    const response = await fetch(
-      `/api/quiz/${quizIdStr}/navigate?teamId=${encodeURIComponent(String(teamId))}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ questionIndex }),
+    // Guard against overlapping navigation calls and stale response ordering.
+    const requestSeq = ++navigateRequestSeqRef.current
+    setIsNavigating(true)
+
+    try {
+      const response = await fetch(
+        `/api/quiz/${quizIdStr}/navigate?teamId=${encodeURIComponent(String(teamId))}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'Cache-Control': 'no-cache',
+          },
+          credentials: 'include',
+          cache: 'no-store',
+          body: JSON.stringify({ questionIndex }),
+        }
+      )
+
+      const rawBody = await response.text()
+      const data = rawBody ? JSON.parse(rawBody) : { message: response.statusText }
+      if (!response.ok) {
+        setError(data.message || 'Failed to navigate question')
+        return data
       }
-    )
 
-    const data = await response.json()
-    if (!response.ok) {
-      setError(data.message || 'Failed to navigate question')
+      // Ignore out-of-order/stale navigation responses.
+      if (requestSeq !== navigateRequestSeqRef.current) {
+        return data
+      }
+
+      const q = data.question
+      if (q) {
+        setQuestionNumber(questionIndex + 1)
+        setCurrentQuestion({
+          id: q.questionId ?? q.id,
+          text: q.text,
+          type: q.type ?? 'MULTIPLE_CHOICE',
+          options: q.options || [],
+          timeLimit: q.timeLimit || 30,
+          points: q.points || 0,
+          correctAnswer: q.correctAnswer,
+        })
+      }
+
       return data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to navigate question')
+      return null
+    } finally {
+      if (requestSeq === navigateRequestSeqRef.current) {
+        setIsNavigating(false)
+      }
     }
-
-    const q = data.question
-    if (q) {
-      setQuestionNumber(questionIndex + 1)
-      setCurrentQuestion({
-        id: q.questionId ?? q.id,
-        text: q.text,
-        options: q.options || [],
-        timeLimit: q.timeLimit || 30,
-        points: q.points || 0,
-        correctAnswer: q.correctAnswer,
-      })
-    }
-
-    return data
   }, [quizIdStr, teamId])
 
   useEffect(() => {
@@ -591,6 +618,7 @@ export function useSSE(
     kickedTeams,
     kicked,
     kickReason,
+    isNavigating,
     submitAnswer,
     sendCommand,
     reportViolation,

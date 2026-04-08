@@ -45,6 +45,7 @@ const initialForm: CreateQuestionRequest = {
   points: 10,
   timeLimit: 30,
   options: ['', '', '', ''],
+  caseSensitive: false,
 };
 
 export default function AdminQuestionsPage() {
@@ -190,6 +191,7 @@ export default function AdminQuestionsPage() {
       points: question.points,
       timeLimit: question.timeLimit,
       options,
+      caseSensitive: question.caseSensitive ?? false,
     });
     setShowModal(true);
   };
@@ -659,8 +661,42 @@ export default function AdminQuestionsPage() {
                     placeholder={'Example:\nParis\nCity of Paris'}
                   />
                   <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                    Matching is case-insensitive and ignores extra spaces.
+                    {formData.caseSensitive
+                      ? 'Matching is case-sensitive and exact.'
+                      : 'Matching is case-insensitive and ignores extra spaces.'}
                   </p>
+                  
+                  {/* Case Sensitivity Toggle */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginTop: 12,
+                    padding: '10px 12px',
+                    borderRadius: 6,
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                  }}>
+                    <input
+                      type="checkbox"
+                      id="caseSensitiveToggle"
+                      checked={formData.caseSensitive ?? false}
+                      onChange={(e) => setFormData({ ...formData, caseSensitive: e.target.checked })}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <label
+                      htmlFor="caseSensitiveToggle"
+                      style={{
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: '#334155',
+                        margin: 0,
+                      }}
+                    >
+                      Case-Sensitive Matching
+                    </label>
+                  </div>
                 </div>
               )}
             </div>

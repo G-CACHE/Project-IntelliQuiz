@@ -127,6 +127,7 @@ class RequestValidationPropertyTest {
                 QuestionType.MULTIPLE_CHOICE,
                 Difficulty.MEDIUM,
                 "A",
+                false,
                 points,
                 30,
                 List.of("A", "B", "C", "D")
@@ -143,6 +144,7 @@ class RequestValidationPropertyTest {
                 QuestionType.MULTIPLE_CHOICE,
                 Difficulty.MEDIUM,
                 "A",
+                false,
                 10,
                 timeLimit,
                 List.of("A", "B", "C", "D")

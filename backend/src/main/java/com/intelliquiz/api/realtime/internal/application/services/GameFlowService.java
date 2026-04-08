@@ -222,7 +222,8 @@ public class GameFlowService {
                         // Grade if not already graded — use resolved option text, not the letter key
                         if (!sub.isGraded()) {
                             sub = submissionFacade.gradeSubmission(team.id(), question.id(),
-                                    resolvedCorrectAnswer, question.points());
+                                    resolvedCorrectAnswer, question.points(),
+                                    question.type(), question.caseSensitive());
                             // Update team score if correct
                             if (sub.isCorrect()) {
                                 teamFacade.addPoints(team.id(), sub.awardedPoints());
