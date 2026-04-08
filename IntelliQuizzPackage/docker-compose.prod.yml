@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Container with persistent storage
+  db:
+    image: danielvictorioso/intelliquiz-db:latest
+    container_name: intelliquiz_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: intelliquiz
+      TZ: Asia/Manila
+    ports:
+      - "5434:5432"
+    volumes:
+      # Named volume - fixes permission issues with Podman
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - intelliquiz_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend Container with backup support
+  backend:
+    image: danielvictorioso/intelliquiz-backend:latest
+    container_name: intelliquiz_backend
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/intelliquiz
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: mysecretpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+      SSL_ENABLED: "false"
+      DISABLE_DOTENV: "true"
+      TZ: Asia/Manila
+      DB_URL: jdbc:postgresql://db:5432/intelliquiz
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: intelliquiz
+      DB_USERNAME: postgres
+      DB_PASSWORD: mysecretpassword
+      BACKUP_DIR: /app/backups
+    ports:
+      - "0.0.0.0:8090:8082"
+    volumes:
+      # Named volume for backups
+      - intelliquiz_backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - intelliquiz_network
+
+  # React Frontend Container
+  frontend:
+    image: localhost/intelliquiz-frontend:latest
+    container_name: intelliquiz_frontend
+    restart: always
+    ports:
+      - "0.0.0.0:3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - intelliquiz_network
+
+networks:
+  intelliquiz_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  intelliquiz_backups:
+    driver: local

@@ -61,8 +61,8 @@ Source: "scripts\load_images.ps1"; DestDir: "{app}"; Flags: ignoreversion
 ; Docker Images (compressed .tar.gz files)
 Source: "images\*.tar.gz"; DestDir: "{app}\images"; Flags: ignoreversion
 
-; Docker Desktop Installer
-Source: "docker\DockerDesktopInstaller.exe"; DestDir: "{app}\docker"; Flags: ignoreversion
+; Docker Desktop Installer - Commented out (too large, users should install separately)
+; Source: "docker\DockerDesktopInstaller.exe"; DestDir: "{app}\docker"; Flags: ignoreversion
 
 ; Documentation and Access Information
 Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
