@@ -68,6 +68,7 @@ Source: "images\*.tar.gz"; DestDir: "{app}\images"; Flags: ignoreversion
 Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "ACCESS_INFO.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LAN_ACCESS_GUIDE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "TROUBLESHOOTING.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
