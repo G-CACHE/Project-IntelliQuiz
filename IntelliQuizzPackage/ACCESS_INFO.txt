@@ -1,0 +1,97 @@
+================================================================================
+  IntelliQuiz - Access Information for Participants
+================================================================================
+
+HOW TO ACCESS INTELLIQUIZ:
+
+1. FIND THE SERVER IP ADDRESS:
+   - On the server machine (where IntelliQuiz is installed)
+   - Open Command Prompt or PowerShell
+   - Type: ipconfig
+   - Look for "IPv4 Address" (example: 10.243.101.147)
+
+2. SHARE THIS LINK WITH PARTICIPANTS:
+   
+   http://[SERVER_IP]:3000
+   
+   Replace [SERVER_IP] with the actual IP address from step 1.
+   
+   EXAMPLE:
+   If server IP is 10.243.101.147, participants should go to:
+   http://10.243.101.147:3000
+
+3. REQUIREMENTS:
+   - Participants must be on the SAME NETWORK/LAN as the server
+   - Same WiFi or wired network
+   - No internet required - this is an intranet system
+
+================================================================================
+QUICK SETUP GUIDE FOR ADMINS:
+================================================================================
+
+STEP 1: Install IntelliQuiz on the server machine
+   - Run IntelliQuizzInstaller.exe
+   - Wait for installation to complete
+
+STEP 2: Launch IntelliQuiz
+   - Double-click the IntelliQuiz shortcut on desktop
+   - OR run: C:\IntelliQuiz\launch_intelliquiz.bat
+   - The launcher will show the access URLs
+
+STEP 3: Share the participant link
+   - The launcher displays the participant access URL
+   - Share this link with all participants
+   - Example: http://10.243.101.147:3000
+
+STEP 4: Participants access the system
+   - Participants open the link in their browser
+   - They will see the IntelliQuiz login/access page
+   - No installation needed on participant devices!
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Participants can't access the link:
+   1. Check if they're on the same network
+   2. Check Windows Firewall on server (allow port 3000)
+   3. Verify IntelliQuiz is running: docker ps
+
+Server IP changed:
+   - Run ipconfig again to get new IP
+   - Share the new link with participants
+
+Need to stop IntelliQuiz:
+   - Run: docker stop intelliquiz_frontend intelliquiz_backend intelliquiz_db
+
+Need to restart IntelliQuiz:
+   - Double-click the desktop shortcut again
+   - OR run: C:\IntelliQuiz\launch_intelliquiz.bat
+
+================================================================================
+EXAMPLE SCENARIO:
+================================================================================
+
+Server Setup:
+   - Server machine IP: 10.243.101.147
+   - Admin installs IntelliQuiz on this machine
+   - Admin runs the launcher
+
+Participant Access:
+   - Participant 1 (laptop): Opens http://10.243.101.147:3000
+   - Participant 2 (phone): Opens http://10.243.101.147:3000
+   - Participant 3 (tablet): Opens http://10.243.101.147:3000
+   
+All participants see the same IntelliQuiz system!
+
+================================================================================
+PORTS USED:
+================================================================================
+
+Port 3000 - Frontend (participants access this)
+Port 8090 - Backend API (used internally)
+Port 5434 - Database (used internally)
+
+Only port 3000 needs to be accessible to participants.
+
+================================================================================

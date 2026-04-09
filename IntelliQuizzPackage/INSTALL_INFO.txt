@@ -1,0 +1,51 @@
+================================================================================
+  IntelliQuiz Installation Information
+================================================================================
+
+WELCOME TO INTELLIQUIZ!
+
+This installer will set up IntelliQuiz on your computer as a server that
+can be accessed by multiple participants on the same network.
+
+SYSTEM REQUIREMENTS:
+- Windows 10 or Windows 11 (64-bit)
+- 10 GB free disk space
+- 4 GB RAM minimum (8 GB recommended)
+- Virtualization enabled in BIOS
+- Docker Desktop (will be installed if not present)
+
+WHAT WILL BE INSTALLED:
+- IntelliQuiz application files
+- Docker images (Frontend, Backend, Database)
+- Launcher script for easy startup
+- Documentation and access guides
+
+INSTALLATION LOCATION:
+C:\IntelliQuiz
+
+AFTER INSTALLATION:
+1. A desktop shortcut will be created
+2. Double-click the shortcut to start IntelliQuiz
+3. The launcher will display the participant access URL
+4. Share that URL with participants on the same network
+
+NETWORK SETUP:
+- This is an INTRANET system (local network only)
+- Participants must be on the same WiFi/LAN as the server
+- No internet connection required for operation
+
+PARTICIPANT ACCESS:
+After starting IntelliQuiz, participants can access it by opening:
+http://[SERVER_IP]:3000
+
+Example: http://10.243.101.147:3000
+
+The launcher will automatically detect and display the correct URL.
+
+SUPPORT:
+For detailed instructions, see:
+- C:\IntelliQuiz\ACCESS_INFO.txt (How to share with participants)
+- C:\IntelliQuiz\LAN_ACCESS_GUIDE.txt (Technical details)
+- C:\IntelliQuiz\README.txt (General information)
+
+================================================================================
