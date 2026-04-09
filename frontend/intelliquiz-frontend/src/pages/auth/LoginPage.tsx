@@ -112,7 +112,7 @@ export default function LoginPage() {
 
         .portal-login-subtitle {
           margin: 0;
-          color: #4b3941;
+          color: #fff8df;
           font-size: 17px;
           max-width: 500px;
           position: relative;
@@ -122,13 +122,13 @@ export default function LoginPage() {
 
         @keyframes portal-float-rocket {
           0% {
-            transform: translateX(0) rotate(45deg);
+            transform: translateX(0) rotate(5deg);
           }
           50% {
-            transform: translateX(12px) rotate(45deg);
+            transform: translateX(12px) rotate(5deg);
           }
           100% {
-            transform: translateX(0) rotate(45deg);
+            transform: translateX(0) rotate(5deg);
           }
         }
 
@@ -146,14 +146,14 @@ export default function LoginPage() {
 
         .portal-hero-rocket {
           position: absolute;
-          right: 365px;
-          top: 252px;
+          right: 390px;
+          top: 277px;
           width: 146px;
           height: auto;
           z-index: 0;
           pointer-events: none;
           opacity: 1;
-          transform: rotate(50deg);
+          transform: rotate(5deg);
           filter: drop-shadow(4px 6px 0 rgba(17, 17, 17, 0.35));
           animation: portal-float-rocket 3.2s ease-in-out infinite;
         }
@@ -213,35 +213,38 @@ export default function LoginPage() {
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
+          width: 100%;
+          max-width: 500px;
           padding: 28px;
-          margin-left: 8px;
+          margin-left: 60px;
           margin-top: 46px;
           gap: 16px;
         }
 
-        .portal-login-card {
-          width: 100%;
-          max-width: 460px;
-          background: #ffffff;
-          border: 4px solid #111111;
-          border-radius: 10px;
-          padding: 28px;
-          box-shadow: 10px 10px 0 #111111;
-        }
-
-        .portal-login-card h2 {
+        .portal-login-panel h2 {
           margin: 0;
           color: #111111;
-          font-size: 28px;
+          font-size: 45px;
           font-weight: 900;
           letter-spacing: 0.02em;
+          width: 82%;
+          align-self: center;
+          text-align: center;
         }
 
-        .portal-login-card p {
+        .portal-login-form {
+          width: 82%;
+          max-width: 460px;
+        }
+
+        .portal-login-intro {
           margin: 8px 0 0;
           color: #2f2f2f;
-          font-size: 14px;
+          font-size: 18px;
           font-weight: 700;
+          width: 82%;
+          align-self: center;
+          text-align: center;
         }
 
         .portal-login-error {
@@ -366,6 +369,70 @@ export default function LoginPage() {
           letter-spacing: 0.03em;
         }
 
+        @media (min-width: 1920px) and (min-height: 1080px) {
+          .portal-login-shell {
+            width: 100%;
+            max-width: 1920px;
+            min-height: 1080px;
+            margin: 0 auto;
+            grid-template-columns: 0.95fr 1.05fr;
+          }
+
+          .portal-login-panel {
+            margin-top: 56px;
+            margin-left: 20px;
+            max-width: 560px;
+          }
+
+          .portal-login-panel h2,
+          .portal-login-intro {
+            width: 88%;
+          }
+
+          .portal-login-panel h2 {
+            font-size: 48px;
+          }
+
+          .portal-login-intro {
+            font-size: 19px;
+          }
+
+          .portal-login-form {
+            width: 88%;
+            max-width: 500px;
+          }
+
+          .portal-login-hero {
+            padding-top: 96px;
+            padding-right: 96px;
+          }
+
+          .portal-hero-rocket {
+            right: 410px;
+            top: 296px;
+          }
+
+          .portal-hero-question {
+            right: 52px;
+            bottom: 92px;
+          }
+
+          .portal-hero-symbol:nth-of-type(2) {
+            left: 106px;
+            top: 96px;
+          }
+
+          .portal-hero-symbol:nth-of-type(3) {
+            right: 72px;
+            top: 70px;
+          }
+
+          .portal-hero-symbol:nth-of-type(4) {
+            right: 214px;
+            bottom: 42px;
+          }
+        }
+
         @media (max-width: 960px) {
           .portal-login-shell {
             grid-template-columns: 1fr;
@@ -435,67 +502,65 @@ export default function LoginPage() {
         <div className="portal-login-brand">
           IntelliQuiz Portal
         </div>
-        <div className="portal-login-card">
-          <h2>Sign In</h2>
-          <p>Use your assigned account credentials.</p>
+        <h2>Sign In</h2>
+        <p className="portal-login-intro">Use your assigned account credentials.</p>
 
-          {error && (
-            <div className="portal-login-error">
-              <BiErrorCircle size={16} />
-              <span>{error}</span>
+        {error && (
+          <div className="portal-login-error">
+            <BiErrorCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form className="portal-login-form" onSubmit={handleSubmit}>
+          <div className="portal-field">
+            <label htmlFor="username">Username</label>
+            <div className="portal-input-wrap">
+              <BiUser size={16} className="portal-input-icon" />
+              <input
+                id="username"
+                className="portal-input"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                autoComplete="username"
+                disabled={loading}
+              />
             </div>
-          )}
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="portal-field">
-              <label htmlFor="username">Username</label>
-              <div className="portal-input-wrap">
-                <BiUser size={16} className="portal-input-icon" />
-                <input
-                  id="username"
-                  className="portal-input"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
-                  autoComplete="username"
-                  disabled={loading}
-                />
-              </div>
+          <div className="portal-field">
+            <label htmlFor="password">Password</label>
+            <div className="portal-input-wrap">
+              <BiLock size={16} className="portal-input-icon" />
+              <input
+                id="password"
+                className="portal-input"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoComplete="current-password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="portal-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <BiHide size={16} /> : <BiShow size={16} />}
+              </button>
             </div>
+          </div>
 
-            <div className="portal-field">
-              <label htmlFor="password">Password</label>
-              <div className="portal-input-wrap">
-                <BiLock size={16} className="portal-input-icon" />
-                <input
-                  id="password"
-                  className="portal-input"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  autoComplete="current-password"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="portal-toggle"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <BiHide size={16} /> : <BiShow size={16} />}
-                </button>
-              </div>
-            </div>
+          <button type="submit" className="portal-submit" disabled={loading}>
+            {loading ? 'Signing In...' : (<><BiLogIn size={18} /> Sign In</>)}
+          </button>
+        </form>
 
-            <button type="submit" className="portal-submit" disabled={loading}>
-              {loading ? 'Signing In...' : (<><BiLogIn size={18} /> Sign In</>)}
-            </button>
-          </form>
-
-          <p className="portal-note">IntelliQuiz v1.0.0</p>
-        </div>
+        <p className="portal-note">IntelliQuiz v1.0.0</p>
       </section>
 
       <section className="portal-login-hero">
