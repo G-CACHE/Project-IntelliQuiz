@@ -341,6 +341,12 @@ export default function AdminQuizzesPage() {
               <button onClick={() => setShowCreateModal(false)} className="admin-btn-icon quiz-list-modal-close"><BiX size={18} /></button>
             </div>
             <div className="admin-modal-body">
+              <div className="quiz-list-modal-copy">
+                <p className="quiz-list-modal-eyebrow">Quick setup</p>
+                <p className="quiz-list-modal-description">
+                  Start with the title and description. You can refine access, timing, and navigation in the quiz workspace after creation.
+                </p>
+              </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">Quiz Title *</label>
                 <input 
@@ -386,6 +392,12 @@ export default function AdminQuizzesPage() {
               <button onClick={() => setShowEditModal(false)} className="admin-btn-icon quiz-list-modal-close"><BiX size={18} /></button>
             </div>
             <div className="admin-modal-body">
+              <div className="quiz-list-modal-copy">
+                <p className="quiz-list-modal-eyebrow">Quiz basics</p>
+                <p className="quiz-list-modal-description">
+                  Update the title and description here. Advanced quiz settings stay available in the quiz workspace.
+                </p>
+              </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">Quiz Title *</label>
                 <input 
