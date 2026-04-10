@@ -240,19 +240,43 @@ Write-Host ""
 
 # STEP 6: Configure Docker to skip login
 Write-Host "[6/7] Configuring Docker Desktop..." -ForegroundColor Yellow
-$dockerConfigPath = "$env:APPDATA\Docker\settings.json"
-if (Test-Path $dockerConfigPath) {
-    try {
+
+# Wait for Docker Desktop to create its config directory
+$dockerConfigDir = "$env:APPDATA\Docker"
+$dockerConfigPath = "$dockerConfigDir\settings.json"
+
+# Create config directory if it doesn't exist
+if (-not (Test-Path $dockerConfigDir)) {
+    New-Item -ItemType Directory -Path $dockerConfigDir -Force | Out-Null
+    Write-Host "  Created Docker config directory" -ForegroundColor Gray
+}
+
+# Create or update settings.json
+try {
+    if (Test-Path $dockerConfigPath) {
+        # Update existing config
         $config = Get-Content $dockerConfigPath | ConvertFrom-Json
-        $config | Add-Member -NotePropertyName "analyticsEnabled" -NotePropertyValue $false -Force
-        $config | Add-Member -NotePropertyName "autoStart" -NotePropertyValue $false -Force
-        $config | ConvertTo-Json -Depth 10 | Set-Content $dockerConfigPath
-        Write-Host "  OK - Docker configured" -ForegroundColor Green
-    } catch {
-        Write-Host "  WARNING - Could not configure Docker settings" -ForegroundColor Yellow
+        Write-Host "  Found existing Docker settings" -ForegroundColor Gray
+    } else {
+        # Create new config with minimal settings
+        $config = @{
+            "settingsVersion" = 1
+        } | ConvertTo-Json | ConvertFrom-Json
+        Write-Host "  Creating new Docker settings" -ForegroundColor Gray
     }
-} else {
-    Write-Host "  OK - Docker will use default settings" -ForegroundColor Green
+    
+    # Apply settings
+    $config | Add-Member -NotePropertyName "analyticsEnabled" -NotePropertyValue $false -Force
+    $config | Add-Member -NotePropertyName "autoStart" -NotePropertyValue $false -Force
+    $config | Add-Member -NotePropertyName "displayedOnboarding" -NotePropertyValue $true -Force
+    $config | Add-Member -NotePropertyName "skipUpdateToWSLPrompt" -NotePropertyValue $true -Force
+    
+    # Save config
+    $config | ConvertTo-Json -Depth 10 | Set-Content $dockerConfigPath -Force
+    Write-Host "  OK - Docker configured (analytics disabled, auto-start disabled)" -ForegroundColor Green
+} catch {
+    Write-Host "  WARNING - Could not configure Docker settings" -ForegroundColor Yellow
+    Write-Host "  Docker will use default settings" -ForegroundColor Gray
 }
 Write-Host ""
 
