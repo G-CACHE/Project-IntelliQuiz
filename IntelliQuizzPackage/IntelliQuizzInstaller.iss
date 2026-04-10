@@ -36,6 +36,7 @@ Name: "{app}\data\backups"; Flags: uninsneveruninstall
 Name: "{app}\data\logs"; Flags: uninsneveruninstall
 Name: "{app}\images"
 Name: "{app}\docker"
+Name: "{app}\scripts"
 
 [InstallDelete]
 ; Force delete old launcher before installing new one
@@ -44,6 +45,7 @@ Type: files; Name: "{app}\scripts\load_images.ps1"
 Type: files; Name: "{app}\scripts\setup.ps1"
 Type: files; Name: "{app}\scripts\cleanup.ps1"
 Type: files; Name: "{app}\scripts\install_docker.ps1"
+Type: files; Name: "{app}\scripts\check_requirements.ps1"
 
 [Files]
 ; Docker Compose Configuration
@@ -53,10 +55,12 @@ Source: "docker-compose.prod.yml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "launch_intelliquiz.bat"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall
 
 ; PowerShell Scripts
-Source: "scripts\setup.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "scripts\cleanup.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "scripts\install_docker.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "scripts\load_images.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "scripts\setup_complete.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\setup.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\cleanup.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\install_docker.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\load_images.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\check_requirements.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 
 ; Docker Images (compressed .tar.gz files)
 Source: "images\*.tar.gz"; DestDir: "{app}\images"; Flags: ignoreversion
@@ -72,12 +76,12 @@ Source: "TROUBLESHOOTING.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
-; Install Docker Desktop and initialize
+; Run complete automated setup
 Filename: "powershell.exe"; \
-    Parameters: "-ExecutionPolicy Bypass -NoProfile -File ""{app}\setup.ps1"""; \
-    Flags: runhidden waituntilterminated; StatusMsg: "Setting up Docker Desktop..."
+    Parameters: "-ExecutionPolicy Bypass -NoProfile -File ""{app}\scripts\setup_complete.ps1"""; \
+    Flags: runhidden waituntilterminated; StatusMsg: "Setting up IntelliQuiz (this may take 10-15 minutes)..."
 
-; Launch IntelliQuiz after installation
+; Launch IntelliQuiz after installation (only if no restart needed)
 Filename: "{app}\launch_intelliquiz.bat"; \
     Flags: postinstall skipifsilent nowait; StatusMsg: "Starting IntelliQuiz..."; \
     Description: "Launch IntelliQuiz now"
@@ -144,4 +148,4 @@ Type: filesandordirs; Name: "{app}\docker"
 [CustomMessages]
 english.SetupWindowTitle=IntelliQuiz Installer
 english.WelcomeLabel1=Welcome to IntelliQuiz
-english.WelcomeLabel2=This installer will set up IntelliQuiz on your computer.%n%nFeatures:%n- One-click startup%n- Automatic port conflict resolution%n- No manual configuration needed%n%nRequirements:%n- Windows 10/11 (64-bit)%n- 10GB free space%n- Virtualization enabled
+english.WelcomeLabel2=This installer will set up IntelliQuiz on your computer.%n%nFeatures:%n- One-click startup%n- Automatic Docker installation%n- Automatic port conflict resolution%n- No manual configuration needed%n%nRequirements:%n- Windows 10/11 (64-bit)%n- 10GB free space%n- Internet connection (for Docker download)%n- Virtualization enabled in BIOS

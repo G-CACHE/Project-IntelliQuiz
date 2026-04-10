@@ -19,28 +19,55 @@ if (-not $isAdmin) {
     exit 1
 }
 
-# Step 1: Check Docker Desktop installation
+# Step 1: Check and Install Docker Desktop if needed
 Write-Host "Step 1: Checking Docker Desktop installation..." -ForegroundColor Yellow
-if (Get-Command docker -ErrorAction SilentlyContinue) {
+
+# Function to check if Docker is installed
+function Test-DockerInstalled {
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        return $true
+    }
+    if (Test-Path "C:\Program Files\Docker\Docker\Docker Desktop.exe") {
+        return $true
+    }
+    return $false
+}
+
+if (Test-DockerInstalled) {
     Write-Host "✓ Docker Desktop is already installed" -ForegroundColor Green
 } else {
-    Write-Host "Docker Desktop not found. Installing..." -ForegroundColor Yellow
+    Write-Host "Docker Desktop not found. Installing automatically..." -ForegroundColor Yellow
+    Write-Host ""
     
-    # Check if installer is bundled
-    $bundledInstaller = "$appDir\docker\DockerDesktopInstaller.exe"
-    if (Test-Path $bundledInstaller) {
-        Write-Host "Using bundled Docker Desktop installer..." -ForegroundColor Yellow
-        & $bundledInstaller install --quiet --accept-license
+    # Run the Docker installation script
+    $installDockerScript = "$appDir\scripts\install_docker.ps1"
+    if (Test-Path $installDockerScript) {
+        Write-Host "Running Docker installation script..." -ForegroundColor Yellow
+        & powershell.exe -ExecutionPolicy Bypass -NoProfile -File $installDockerScript
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host ""
+            Write-Host "ERROR: Docker Desktop installation failed" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "Please try one of these options:" -ForegroundColor Yellow
+            Write-Host "  1. Restart your computer and run the installer again" -ForegroundColor Yellow
+            Write-Host "  2. Install Docker Desktop manually from:" -ForegroundColor Yellow
+            Write-Host "     https://www.docker.com/products/docker-desktop" -ForegroundColor Yellow
+            Write-Host "  3. After installing Docker, run IntelliQuiz again" -ForegroundColor Yellow
+            Write-Host ""
+            Read-Host "Press Enter to exit"
+            exit 1
+        }
+        
+        Write-Host ""
+        Write-Host "✓ Docker Desktop installation completed" -ForegroundColor Green
     } else {
-        Write-Host "ERROR: Docker Desktop installer not found!" -ForegroundColor Red
+        Write-Host "ERROR: Docker installation script not found!" -ForegroundColor Red
         Write-Host "Please install Docker Desktop manually:" -ForegroundColor Yellow
         Write-Host "  Download from: https://www.docker.com/products/docker-desktop" -ForegroundColor Yellow
         Read-Host "Press Enter to exit"
         exit 1
     }
-    
-    Write-Host "Docker Desktop installation initiated. Waiting for startup..." -ForegroundColor Yellow
-    Start-Sleep -Seconds 30
 }
 
 Write-Host "✓ Docker Desktop is available" -ForegroundColor Green
