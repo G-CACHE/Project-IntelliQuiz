@@ -21,9 +21,33 @@ if errorlevel 1 (
     if exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" (
         set "PATH=%PATH%;C:\Program Files\Docker\Docker\resources\bin"
     ) else (
-        echo ERROR: Docker Desktop not installed
-        pause
-        exit /b 1
+        echo Docker Desktop not found. Installing automatically...
+        echo.
+        echo This will take 5-10 minutes. Please wait...
+        echo.
+        
+        REM Run Docker installation script
+        powershell.exe -ExecutionPolicy Bypass -NoProfile -File "C:\IntelliQuiz\scripts\install_docker.ps1"
+        
+        if errorlevel 1 (
+            echo.
+            echo ERROR: Docker Desktop installation failed
+            echo.
+            echo Please try:
+            echo   1. Restart your computer and run IntelliQuiz again
+            echo   2. Install Docker Desktop manually from:
+            echo      https://www.docker.com/products/docker-desktop
+            echo.
+            pause
+            exit /b 1
+        )
+        
+        echo.
+        echo Docker Desktop installed successfully!
+        echo.
+        
+        REM Update PATH for current session
+        set "PATH=%PATH%;C:\Program Files\Docker\Docker\resources\bin"
     )
 )
 echo OK
@@ -32,18 +56,29 @@ echo.
 echo [2/4] Starting Docker Desktop...
 docker info >nul 2>&1
 if errorlevel 1 (
+    echo   Docker not running. Starting Docker Desktop...
     start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+    echo   Waiting for Docker engine to start this may take 2-3 minutes...
     set RETRY=0
     :docker_wait
     timeout /t 5 /nobreak >nul
     docker info >nul 2>&1
     if errorlevel 1 (
-        set /a RETRY+=1
-        if !RETRY! LEQ 24 (
-            echo   Waiting... (!RETRY!/24)
+        set /a RETRY=RETRY+1
+        if !RETRY! LEQ 60 (
+            if !RETRY!==12 echo   Still starting... 1 minute elapsed
+            if !RETRY!==24 echo   Still starting... 2 minutes elapsed
+            if !RETRY!==36 echo   Still starting... 3 minutes elapsed
             goto :docker_wait
         ) else (
-            echo ERROR: Docker failed to start
+            echo.
+            echo ERROR: Docker engine did not start within 5 minutes
+            echo.
+            echo Docker Desktop UI is open but the engine is still initializing.
+            echo This is normal on first installation.
+            echo.
+            echo Please wait 2 more minutes then run IntelliQuiz again.
+            echo.
             pause
             exit /b 1
         )
