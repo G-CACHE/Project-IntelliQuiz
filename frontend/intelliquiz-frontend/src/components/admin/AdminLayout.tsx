@@ -111,7 +111,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-off-white)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: 'var(--font-body)' }}>
       {/* Top Navigation */}
       <header className="pb-nav">
         <div className="pb-nav-inner">
@@ -175,7 +175,7 @@ export default function AdminLayout() {
       </header>
 
       {/* Main Content */}
-      <main style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <main style={{ minHeight: 'calc(100vh - 64px)', background: '#ffffff' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
           <Outlet />
         </div>

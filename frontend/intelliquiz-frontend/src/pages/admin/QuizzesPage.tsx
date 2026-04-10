@@ -17,7 +17,7 @@ import { useQuizzes, useCreateQuiz, useUpdateQuiz, useQuizStatusChange, useDelet
 import { useAuth } from '../../contexts/AuthContext';
 import type { Quiz, CreateQuizRequest } from '../../services/api';
 import '../../styles/admin.css';
-import './AdminRedesign.css';
+import './QuizzesPage.css';
 
 export default function AdminQuizzesPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -166,7 +166,6 @@ export default function AdminQuizzesPage() {
           className="admin-btn quiz-list-create-btn"
           onClick={() => { resetForm(); setShowCreateModal(true); }}
         >
-          <BiBookOpen size={18} />
           Create Quiz
         </button>
       </div>
@@ -202,10 +201,10 @@ export default function AdminQuizzesPage() {
       )}
 
       {/* Filters */}
-      <div className="admin-card quiz-list-filter-card" style={{ marginBottom: 20, padding: 16 }}>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <div className="quiz-list-search-wrap" style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-            <BiSearch size={18} className="quiz-list-search-icon" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+      <div className="admin-card quiz-list-filter-card quiz-list-filter-bar">
+        <div className="quiz-list-filter-controls">
+          <div className="quiz-list-search-wrap">
+            <BiSearch size={18} className="quiz-list-search-icon" />
             <input
               type="text"
               placeholder="Search quizzes..."
@@ -218,8 +217,7 @@ export default function AdminQuizzesPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="admin-form-input admin-form-select"
-            style={{ width: 'auto', minWidth: 140 }}
+            className="admin-form-input admin-form-select quiz-list-status-select"
           >
             <option value="ALL">All Status</option>
             <option value="DRAFT">Draft</option>
