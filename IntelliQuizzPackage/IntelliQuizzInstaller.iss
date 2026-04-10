@@ -76,10 +76,10 @@ Source: "TROUBLESHOOTING.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
-; Run complete automated setup
+; Run complete automated setup (show window for debugging)
 Filename: "powershell.exe"; \
-    Parameters: "-ExecutionPolicy Bypass -NoProfile -File ""{app}\scripts\setup_complete.ps1"""; \
-    Flags: runhidden waituntilterminated; StatusMsg: "Setting up IntelliQuiz (this may take 10-15 minutes)..."
+    Parameters: "-ExecutionPolicy Bypass -NoProfile -WindowStyle Normal -File ""{app}\scripts\setup_complete.ps1"""; \
+    Flags: waituntilterminated; StatusMsg: "Setting up IntelliQuiz (this may take 10-15 minutes)..."
 
 ; Launch IntelliQuiz after installation (only if no restart needed)
 Filename: "{app}\launch_intelliquiz.bat"; \

@@ -282,10 +282,19 @@ Write-Host ""
 
 # STEP 7: Start Docker Desktop
 Write-Host "[7/7] Starting Docker Desktop..." -ForegroundColor Yellow
-docker info >$null 2>&1
-if ($LASTEXITCODE -ne 0) {
+try {
+    $dockerReady = $false
+    $null = docker info 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        $dockerReady = $true
+    }
+} catch {
+    $dockerReady = $false
+}
+
+if (-not $dockerReady) {
     if (Test-Path "C:\Program Files\Docker\Docker\Docker Desktop.exe") {
-        Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+        Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe" -ErrorAction SilentlyContinue
     }
     
     Write-Host "  Waiting for Docker to start..." -ForegroundColor Yellow
@@ -293,10 +302,15 @@ if ($LASTEXITCODE -ne 0) {
     $retryCount = 0
     while ($retryCount -lt $maxRetries) {
         Start-Sleep -Seconds 5
-        docker info >$null 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  OK - Docker is ready" -ForegroundColor Green
-            break
+        try {
+            $null = docker info 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "  OK - Docker is ready" -ForegroundColor Green
+                $dockerReady = $true
+                break
+            }
+        } catch {
+            # Docker not ready yet
         }
         $retryCount++
         if ($retryCount % 6 -eq 0) {
@@ -304,7 +318,7 @@ if ($LASTEXITCODE -ne 0) {
         }
     }
     
-    if ($retryCount -eq $maxRetries) {
+    if (-not $dockerReady) {
         Write-Host "  WARNING - Docker is taking longer than expected" -ForegroundColor Yellow
         Write-Host "  You may need to start Docker Desktop manually" -ForegroundColor Yellow
     }
@@ -322,25 +336,33 @@ Write-Host "OK - Data directories created" -ForegroundColor Green
 Write-Host ""
 
 # Final message
-Write-Log "============================================================" "Cyan"
-Write-Log "Setup Complete!" "Green"
-Write-Log "============================================================" "Cyan"
-Write-Log ""
-Write-Log "IntelliQuiz is ready to use!" "Green"
-Write-Log ""
-Write-Log "To start IntelliQuiz:" "Cyan"
-Write-Log "  - Double-click the IntelliQuiz desktop shortcut" "White"
-Write-Log "  - Or run: $appDir\launch_intelliquiz.bat" "White"
-Write-Log ""
-Write-Log "Setup log saved to: $logFile" "Gray"
-Write-Log ""
-Write-Host "Press Enter to close..." -ForegroundColor Gray
-Read-Host
-Write-Host "Press Enter to close this window..." -ForegroundColor Gray
-Read-Host
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "Setup Complete!" -ForegroundColor Green
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "IntelliQuiz is ready to use!" -ForegroundColor Green
+Write-Host ""
 
-# Optionally launch IntelliQuiz
-$launch = Read-Host "Would you like to launch IntelliQuiz now? (Y/N)"
-if ($launch -eq "Y" -or $launch -eq "y") {
-    Start-Process "$appDir\launch_intelliquiz.bat"
+# If this is a resume after restart, offer to launch IntelliQuiz
+if ($isResume) {
+    Write-Host "Setup log saved to: $appDir\setup.log" -ForegroundColor Gray
+    Write-Host ""
+    
+    $launch = Read-Host "Would you like to launch IntelliQuiz now? (Y/N)"
+    if ($launch -eq "Y" -or $launch -eq "y" -or $launch -eq "") {
+        Write-Host "Launching IntelliQuiz..." -ForegroundColor Green
+        Start-Process "$appDir\launch_intelliquiz.bat"
+    } else {
+        Write-Host ""
+        Write-Host "You can launch IntelliQuiz anytime from:" -ForegroundColor Cyan
+        Write-Host "  - Desktop shortcut" -ForegroundColor White
+        Write-Host "  - Start Menu" -ForegroundColor White
+    }
+} else {
+    # Normal installation (no restart) - let Inno Setup handle the launch
+    Write-Host "Setup log saved to: $appDir\setup.log" -ForegroundColor Gray
+    Write-Host ""
 }
+
+# Exit automatically
+exit 0
