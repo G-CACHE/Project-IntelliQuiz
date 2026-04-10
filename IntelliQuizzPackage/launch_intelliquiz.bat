@@ -63,11 +63,12 @@ if errorlevel 1 (
     docker info >nul 2>&1
     if errorlevel 1 (
         set /a RETRY+=1
-        if !RETRY! LEQ 24 (
-            echo   Waiting... (!RETRY!/24)
+        if !RETRY! LEQ 60 (
+            echo   Waiting... (!RETRY!/60)
             goto :docker_wait
         ) else (
-            echo ERROR: Docker failed to start
+            echo ERROR: Docker failed to start after 5 minutes
+            echo Please check Docker Desktop manually
             pause
             exit /b 1
         )
