@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
-  BiHomeAlt,
-  BiUser,
-  BiShield,
-  BiLogOut,
-  BiChevronDown,
-  BiData,
-  BiBookOpen,
-} from 'react-icons/bi';
+  Home,
+  User,
+  Shield,
+  LogOut,
+  ChevronDown,
+  Database,
+  BookOpen,
+} from 'lucide-react';
 import '../../styles/superadmin.css';
 import { authApi, currentUserApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,10 +20,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { path: '/superadmin', label: 'Dashboard', icon: <BiHomeAlt size={18} /> },
-  { path: '/superadmin/users', label: 'Users', icon: <BiUser size={18} /> },
-  { path: '/superadmin/permissions', label: 'Permissions', icon: <BiShield size={18} /> },
-  { path: '/superadmin/backups', label: 'Backups', icon: <BiData size={18} /> },
+  { path: '/superadmin', label: 'Dashboard', icon: <Home size={18} /> },
+  { path: '/superadmin/users', label: 'Users', icon: <User size={18} /> },
+  { path: '/superadmin/permissions', label: 'Permissions', icon: <Shield size={18} /> },
+  { path: '/superadmin/backups', label: 'Backups', icon: <Database size={18} /> },
 ];
 
 export default function SuperAdminLayout() {
@@ -114,11 +114,7 @@ export default function SuperAdminLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fffaf2', fontFamily: "'Nunito', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
-      `}</style>
-
+    <div style={{ minHeight: '100vh', background: 'var(--color-off-white)', fontFamily: 'var(--font-body)' }}>
       {/* Top Navigation */}
       <header className="pb-nav">
         <div className="pb-nav-inner">
@@ -128,7 +124,7 @@ export default function SuperAdminLayout() {
             className="pb-nav-logo-wrap"
           >
             <div className="pb-nav-logo-icon">
-              <BiBookOpen size={22} />
+              <BookOpen size={20} />
             </div>
             <span className="pb-nav-logo-text">IntelliQuiz</span>
           </div>
@@ -162,7 +158,7 @@ export default function SuperAdminLayout() {
                   <div className="pb-nav-profile-name">{username || 'Super Admin'}</div>
                   <div className="pb-nav-profile-role">Super Admin</div>
                 </div>
-                <BiChevronDown size={18} className={`pb-nav-chevron ${profileDropdownOpen ? 'open' : ''}`} />
+                <ChevronDown size={18} className={`pb-nav-chevron ${profileDropdownOpen ? 'open' : ''}`} />
               </button>
 
               {profileDropdownOpen && (
@@ -171,7 +167,7 @@ export default function SuperAdminLayout() {
                     onClick={handleLogout}
                     className="pb-nav-dropdown-item"
                   >
-                    <BiLogOut size={18} />
+                    <LogOut size={18} />
                     Logout
                   </button>
                 </div>

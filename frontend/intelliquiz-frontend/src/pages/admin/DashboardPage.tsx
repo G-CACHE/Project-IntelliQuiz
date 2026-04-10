@@ -1,26 +1,24 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BiBoltCircle,
+  BiBarChartAlt2,
   BiBookOpen,
   BiFile,
-  BiPlay,
+  BiFolderOpen,
+  BiLayer,
+  BiPlusCircle,
   BiRightArrowAlt,
-  BiStar,
+  BiRocket,
   BiTime,
-  BiTrendingUp,
-  BiTargetLock,
 } from 'react-icons/bi';
 import { useQuizzes } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
-import '../superadmin/DashboardPage.css';
 import './DashboardPage.css';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { canEditQuiz } = useAuth();
-  const username = localStorage.getItem('username') || 'Admin';
   
   // React Query hook
   const { data: allQuizzes = [], isLoading } = useQuizzes();
@@ -53,177 +51,127 @@ export default function AdminDashboardPage() {
     );
   }
 
+  const statItems = [
+    { key: 'total', label: 'Total Quizzes', value: stats.totalQuizzes, Icon: BiLayer },
+    { key: 'active', label: 'Live Now', value: stats.activeQuizzes, Icon: BiRocket },
+    { key: 'ready', label: 'Ready', value: stats.readyQuizzes, Icon: BiBarChartAlt2 },
+    { key: 'draft', label: 'Draft', value: stats.draftQuizzes, Icon: BiFile },
+  ] as const;
+
   return (
-    <div className="dashboard-kahoot admin-dashboard-shell">
-      <div className="dashboard-hero">
-        <div className="hero-background">
-          <div className="hero-shape shape-1"></div>
-          <div className="hero-shape shape-2"></div>
-          <div className="hero-shape shape-3"></div>
-          <div className="hero-dots"></div>
-        </div>
-
-        <div className="hero-content">
-          <div className="hero-left">
-            <div className="hero-greeting">
-              <BiBoltCircle className="greeting-icon" />
-              <span>Welcome back!</span>
-            </div>
-            <h1 className="hero-title">{username || 'AdminIT'}</h1>
-            <p className="hero-subtitle">Launch, track, and level up your quiz sessions from one command center.</p>
+    <div className="admin-dashboard-shell admin-clean-dashboard">
+      <section className="admin-clean-hero">
+        <div className="admin-clean-hero-content">
+          <div className="admin-clean-hero-left">
+            <span className="admin-clean-chip">Admin Workspace</span>
+            <h1 className="admin-clean-title">Quiz Dashboard</h1>
+            <p className="admin-clean-subtitle">
+              Create, organize, and monitor quizzes from one workspace.
+            </p>
           </div>
 
-          <div className="hero-right">
-            <button className="hero-cta" onClick={() => navigate('/admin/quizzes')}>
-              <BiPlay size={22} />
-              <span>Open Quizzes</span>
+          <div className="admin-clean-hero-right">
+            <button className="admin-clean-btn-primary" onClick={() => navigate('/admin/quizzes')}>
+              <BiFolderOpen size={18} /> Open Quizzes
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="stats-row admin-stats-row-4">
-        <div className="stat-card-kahoot red">
-          <div className="stat-card-inner">
-            <div className="stat-icon-wrap">
-              <BiBookOpen size={26} />
+      <section className="admin-clean-stats" aria-label="Dashboard statistics">
+        {statItems.map(({ key, label, value, Icon }) => (
+          <div key={key} className="admin-clean-stat-card">
+            <div className="admin-clean-stat-icon">
+              <Icon size={18} />
             </div>
-            <div className="stat-info">
-              <span className="stat-number">{stats.totalQuizzes}</span>
-              <span className="stat-text">Total Quizzes</span>
+            <div>
+              <p className="admin-clean-stat-value">{value}</p>
+              <p className="admin-clean-stat-label">{label}</p>
             </div>
           </div>
-          <div className="stat-decoration"></div>
-        </div>
+        ))}
+      </section>
 
-        <div className="stat-card-kahoot green">
-          <div className="stat-card-inner">
-            <div className="stat-icon-wrap">
-              <BiPlay size={26} />
-            </div>
-            <div className="stat-info">
-              <span className="stat-number">{stats.activeQuizzes}</span>
-              <span className="stat-text">Live Now</span>
-            </div>
-            {stats.activeQuizzes > 0 && <div className="live-pulse"></div>}
-          </div>
-          <div className="stat-decoration"></div>
-        </div>
-
-        <div className="stat-card-kahoot blue">
-          <div className="stat-card-inner">
-            <div className="stat-icon-wrap">
-              <BiTargetLock size={26} />
-            </div>
-            <div className="stat-info">
-              <span className="stat-number">{stats.readyQuizzes}</span>
-              <span className="stat-text">Ready</span>
-            </div>
-          </div>
-          <div className="stat-decoration"></div>
-        </div>
-
-        <div className="stat-card-kahoot yellow">
-          <div className="stat-card-inner">
-            <div className="stat-icon-wrap">
-              <BiFile size={26} />
-            </div>
-            <div className="stat-info">
-              <span className="stat-number">{stats.draftQuizzes}</span>
-              <span className="stat-text">Draft</span>
-            </div>
-          </div>
-          <div className="stat-decoration"></div>
-        </div>
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="dashboard-card actions-card">
-          <div className="card-header-kahoot">
-            <div className="card-title-wrap">
-              <BiBoltCircle className="card-icon" />
-              <h2>Quick Actions</h2>
-            </div>
+      <section className="admin-clean-main-grid">
+        <div className="admin-clean-panel admin-clean-panel-actions">
+          <div className="admin-clean-panel-head">
+            <h2><BiPlusCircle size={18} /> Quick Actions</h2>
           </div>
 
-          <div className="actions-grid actions-grid-admin">
-            <button className="action-btn red" onClick={() => navigate('/admin/quizzes')}>
-              <div className="action-icon">
-                <BiBookOpen size={24} />
-              </div>
-              <span>Create Quiz</span>
+          <div className="admin-clean-actions-grid">
+            <button className="admin-clean-action" onClick={() => navigate('/admin/quizzes')}>
+              <span className="admin-clean-action-icon"><BiBookOpen size={16} /></span>
+              <span>
+                <strong>Create Quiz</strong>
+                <small>Build a new question set</small>
+              </span>
             </button>
 
-            <button className="action-btn blue" onClick={() => navigate('/admin/quizzes')}>
-              <div className="action-icon">
-                <BiTrendingUp size={24} />
-              </div>
-              <span>Track Status</span>
+            <button className="admin-clean-action" onClick={() => navigate('/admin/quizzes')}>
+              <span className="admin-clean-action-icon"><BiBarChartAlt2 size={16} /></span>
+              <span>
+                <strong>Manage Quizzes</strong>
+                <small>Update and publish content</small>
+              </span>
             </button>
           </div>
 
-          <div className="fun-tip">
-            <div className="tip-icon"><BiStar size={22} /></div>
-            <div className="tip-content">
-              <strong>Tip</strong>
-              <p>Start with draft quizzes, then mark them ready when questions are polished.</p>
+          <div className="admin-clean-actions-note">
+            <h3>Recommended flow</h3>
+            <p>Draft quizzes first, then mark them ready before launching live sessions.</p>
+            <div className="admin-clean-actions-steps">
+              <span>Draft</span>
+              <span>Ready</span>
+              <span>Live</span>
             </div>
           </div>
         </div>
 
-        <div className="dashboard-card quizzes-card">
-          <div className="card-header-kahoot">
-            <div className="card-title-wrap">
-              <BiStar className="card-icon" />
-              <h2>Recent Quizzes</h2>
-            </div>
-            <button className="view-all-btn" onClick={() => navigate('/admin/quizzes')}>
+        <div className="admin-clean-panel">
+          <div className="admin-clean-panel-head admin-clean-panel-head-row">
+            <h2><BiBookOpen size={18} /> Recent Quizzes</h2>
+            <button className="admin-clean-btn-secondary" onClick={() => navigate('/admin/quizzes')}>
               View All <BiRightArrowAlt size={18} />
             </button>
           </div>
 
-          <div className="quizzes-list">
+          <div className="admin-clean-recent-list">
             {recentQuizzes.length > 0 ? (
-              recentQuizzes.map((quiz, index) => {
-                const colors = ['#7a1733', '#9f2346', '#d4a017', '#6f4e57'];
-                return (
-                <div 
-                  key={quiz.id} 
-                  className="quiz-item"
-                  onClick={() => canEditQuiz(quiz.id, quiz.createdByUserId) ? navigate(`/admin/quizzes/${quiz.id}/questions`) : navigate('/admin/quizzes')}
+              recentQuizzes.map((quiz) => (
+                <button
+                  key={quiz.id}
+                  className="admin-clean-quiz-row"
+                  onClick={() =>
+                    canEditQuiz(quiz.id, quiz.createdByUserId)
+                      ? navigate(`/admin/quizzes/${quiz.id}/questions`)
+                      : navigate('/admin/quizzes')
+                  }
                 >
-                  <div className="quiz-item-left">
-                    <div className="quiz-icon" style={{ background: colors[index % 4] }}>
-                      <BiBookOpen size={20} />
-                    </div>
-                    <div className="quiz-details">
-                      <h4>{quiz.title}</h4>
-                      <span className="quiz-meta">
-                        <BiTime size={12} style={{ marginRight: 4 }} />
-                        {quiz.questionCount || 0} questions
-                      </span>
-                    </div>
-                  </div>
-                  <div className={`quiz-status status-${getStatusClass(quiz.status)}`}>
-                    <span>{quiz.status}</span>
-                  </div>
-                </div>
-              );})
+                  <span className="admin-clean-quiz-icon"><BiBookOpen size={16} /></span>
+                  <span className="admin-clean-quiz-meta-wrap">
+                    <span className="admin-clean-quiz-title">{quiz.title}</span>
+                    <span className="admin-clean-quiz-meta">
+                      <BiTime size={12} /> {quiz.questionCount || 0} questions
+                    </span>
+                  </span>
+                  <span className={`admin-clean-status status-${getStatusClass(quiz.status)}`}>
+                    {quiz.status}
+                  </span>
+                </button>
+              ))
             ) : (
-              <div className="empty-quizzes">
-                <div className="empty-illustration">
-                  <BiBookOpen size={48} />
-                </div>
+              <div className="admin-clean-empty">
+                <div className="admin-clean-empty-icon"><BiBookOpen size={24} /></div>
                 <h3>No quizzes yet</h3>
-                <p>Click create quiz to build your first game-ready set.</p>
-                <button className="create-first-btn" onClick={() => navigate('/admin/quizzes')}>
-                  <BiBookOpen size={18} /> Create Your First Quiz
+                <p>Create your first quiz to get started.</p>
+                <button className="admin-clean-btn-primary" onClick={() => navigate('/admin/quizzes')}>
+                  <BiBookOpen size={16} /> Create First Quiz
                 </button>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

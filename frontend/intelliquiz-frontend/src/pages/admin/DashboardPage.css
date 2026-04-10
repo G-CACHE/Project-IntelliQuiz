@@ -1,42 +1,513 @@
-/* Admin dashboard specific overrides layered on top of superadmin DashboardPage.css */
+/* Admin dashboard clean minimalist system */
 
-.admin-stats-row-4 {
+.admin-clean-dashboard {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-clean-hero {
+  border: 1px solid #e3d6d9;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 88% -28%, rgba(201, 168, 76, 0.22), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fbf7f0 100%);
+  box-shadow: 0 16px 34px rgba(17, 17, 17, 0.08);
+  padding: 26px 28px;
+}
+
+.admin-clean-hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  align-items: start;
+  gap: 24px;
+}
+
+.admin-clean-hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-clean-chip {
+  border-radius: 999px;
+  border: 1px solid #ebdfc5;
+  background: #faf1da;
+  color: #7a1733;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+}
+
+.admin-clean-title {
+  margin: 0;
+  color: #111111;
+  font-family: var(--font-heading);
+  font-size: clamp(30px, 3.8vw, 46px);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+.admin-clean-subtitle {
+  margin: 0;
+  max-width: 100%;
+  color: #5b4e51;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.admin-clean-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  justify-self: end;
+  align-self: start;
+}
+
+.admin-clean-user {
+  margin: 2px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b6163;
+  font-size: 14px;
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.admin-clean-user strong {
+  color: #111111;
+}
+
+.admin-clean-btn-primary,
+.admin-clean-btn-secondary {
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.admin-clean-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 20px;
+  background: #7a1733;
+  border-color: #6b1028;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(122, 23, 51, 0.22);
+}
+
+.admin-clean-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  min-height: 38px;
+  background: #ffffff;
+  border-color: #dbcdd1;
+  color: #2c2c2c;
+}
+
+.admin-clean-btn-primary:focus-visible,
+.admin-clean-btn-secondary:focus-visible,
+.admin-clean-action:focus-visible,
+.admin-clean-quiz-row:focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+}
+
+.admin-clean-stats {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.actions-grid-admin {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.admin-clean-stat-card {
+  border: 1px solid #e2d7da;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(17, 17, 17, 0.06);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.quiz-status.status-draft {
-  background: rgba(111, 78, 87, 0.16);
-  color: #6f4e57;
+.admin-clean-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #eadfc2;
+  background: #faf2df;
+  color: #7a1733;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.quiz-status.status-ready {
-  background: rgba(212, 160, 23, 0.18);
-  color: #7c4b00;
+.admin-clean-stat-value {
+  margin: 0;
+  color: #111111;
+  font-size: 30px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  line-height: 1;
 }
 
-.quiz-status.status-active {
-  background: rgba(122, 23, 51, 0.18);
+.admin-clean-stat-label {
+  margin: 2px 0 0;
+  color: #6e6366;
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-clean-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start !important;
+}
+
+.admin-clean-panel {
+  border: 1px solid #e2d7da;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 24px rgba(17, 17, 17, 0.06);
+  padding: 16px;
+  height: auto !important;
+}
+
+.admin-clean-panel-actions {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-clean-panel-head {
+  margin-bottom: 12px;
+}
+
+.admin-clean-panel-head h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111111;
+  font-family: var(--font-heading);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.admin-clean-panel-head h2 svg {
   color: #7a1733;
 }
 
-.quiz-status.status-archived {
-  background: rgba(107, 79, 88, 0.16);
-  color: #6b4f58;
+.admin-clean-panel-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-clean-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-clean-action {
+  border: 1px solid #e4d8db;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcf9f5 100%);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-clean-actions-note {
+  border: 1px solid #eadfc2;
+  border-radius: 14px;
+  background: #fbf5e6;
+  padding: 12px;
+}
+
+.admin-clean-actions-note h3 {
+  margin: 0 0 4px;
+  color: #111111;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-clean-actions-note p {
+  margin: 0;
+  color: #6b6264;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-clean-actions-steps {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-clean-actions-steps span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #e1d3b0;
+  background: #ffffff;
+  color: #7a1733;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-clean-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #eadfc2;
+  background: #faf2df;
+  color: #7a1733;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-clean-action strong {
+  display: block;
+  color: #111111;
+  font-size: 15px;
+  line-height: 1.2;
+  font-family: var(--font-body);
+}
+
+.admin-clean-action small {
+  display: block;
+  margin-top: 2px;
+  color: #6b6264;
+  font-size: 12px;
+  font-family: var(--font-body);
+}
+
+.admin-clean-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-clean-quiz-row {
+  width: 100%;
+  border: 1px solid #e3d8db;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-clean-quiz-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #7a1733;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-clean-quiz-meta-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-clean-quiz-title {
+  color: #111111;
+  font-size: 17px;
+  line-height: 1.2;
+  font-family: var(--font-body);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-clean-quiz-meta {
+  margin-top: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b6264;
+  font-size: 12px;
+  font-family: var(--font-body);
+}
+
+.admin-clean-status {
+  border-radius: 999px;
+  border: 1px solid #ddd7d8;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+  color: #595356;
+  background: #f8f8f8;
+  flex-shrink: 0;
+}
+
+.admin-clean-status.status-ready {
+  background: #f5edd6;
+  border-color: #e7d2a0;
+  color: #7a5a13;
+}
+
+.admin-clean-status.status-active {
+  background: #f6e9ed;
+  border-color: #e5cad3;
+  color: #7a1733;
+}
+
+.admin-clean-status.status-draft {
+  background: #f7f4f4;
+  border-color: #e3d8db;
+  color: #6c6164;
+}
+
+.admin-clean-status.status-archived {
+  background: #f3f3f3;
+  border-color: #dfdfdf;
+  color: #666666;
+}
+
+.admin-clean-empty {
+  border: 1px dashed #d9d1d3;
+  border-radius: 14px;
+  background: #fcfaf7;
+  text-align: center;
+  padding: 20px;
+}
+
+.admin-clean-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 10px;
+  border-radius: 14px;
+  background: #f5edd6;
+  color: #7a1733;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-clean-empty h3 {
+  margin: 0 0 4px;
+  color: #111111;
+  font-family: var(--font-heading);
+}
+
+.admin-clean-empty p {
+  margin: 0 0 12px;
+  color: #6b6264;
+  font-size: 14px;
+  font-family: var(--font-body);
 }
 
 @media (max-width: 1100px) {
-  .admin-stats-row-4 {
+  .admin-clean-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-clean-main-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .actions-grid-admin,
-  .admin-stats-row-4 {
+  .admin-clean-dashboard {
+    gap: 14px;
+  }
+
+  .admin-clean-hero {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .admin-clean-hero-content {
     grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+  }
+
+  .admin-clean-hero-right,
+  .admin-clean-btn-primary {
+    width: 100%;
+  }
+
+  .admin-clean-hero-right {
+    align-items: flex-start;
+  }
+
+  .admin-clean-btn-primary {
+    justify-content: center;
+  }
+
+  .admin-clean-stats,
+  .admin-clean-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-clean-panel {
+    border-radius: 14px;
+  }
+
+  .admin-clean-panel-head h2 {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 1050px) {
+  .admin-clean-hero-content {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-clean-hero-right {
+    align-items: flex-start;
+    justify-self: start;
   }
 }
