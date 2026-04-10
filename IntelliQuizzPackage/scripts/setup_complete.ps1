@@ -302,3 +302,11 @@ Write-Host "To start IntelliQuiz:" -ForegroundColor Cyan
 Write-Host "  - Double-click the IntelliQuiz desktop shortcut" -ForegroundColor White
 Write-Host "  - Or run: $appDir\launch_intelliquiz.bat" -ForegroundColor White
 Write-Host ""
+Write-Host "Press Enter to close this window..." -ForegroundColor Gray
+Read-Host
+
+# Optionally launch IntelliQuiz
+$launch = Read-Host "Would you like to launch IntelliQuiz now? (Y/N)"
+if ($launch -eq "Y" -or $launch -eq "y") {
+    Start-Process "$appDir\launch_intelliquiz.bat"
+}
