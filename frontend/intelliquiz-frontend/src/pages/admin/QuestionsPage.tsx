@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   BiFile,
@@ -13,6 +13,8 @@ import {
   BiTime,
   BiStar,
   BiImport,
+  BiChevronLeft,
+  BiChevronRight,
 } from 'react-icons/bi';
 import { questionBankApi, questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest, type QuestionBankItem } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -53,6 +55,7 @@ export default function AdminQuestionsPage() {
   const navigate = useNavigate();
   const quizIdNum = quizId ? parseInt(quizId) : 0;
   const { canEditQuiz, isSuperAdmin } = useAuth();
+  const questionsPerPage = 5;
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -69,12 +72,16 @@ export default function AdminQuestionsPage() {
   const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [bankSearch, setBankSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   
   const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum, quiz?.createdByUserId);
   const isDraftQuiz = quiz?.status === 'DRAFT';
   const canEditContent = hasEditPermission && isDraftQuiz;
 
-  useEffect(() => { if (quizIdNum) loadData(); }, [quizIdNum]);
+  useEffect(() => {
+    if (quizIdNum) loadData();
+    setCurrentPage(1);
+  }, [quizIdNum]);
 
   const loadData = async () => {
     setLoading(true);
@@ -86,11 +93,39 @@ export default function AdminQuestionsPage() {
       ]);
       setQuiz(quizData);
       setQuestions(questionsData);
+      setCurrentPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / questionsPerPage));
+
+  const paginatedQuestions = useMemo(() => {
+    const startIndex = (currentPage - 1) * questionsPerPage;
+    return questions.slice(startIndex, startIndex + questionsPerPage);
+  }, [currentPage, questions]);
+
+  const startQuestionIndex = questions.length === 0 ? 0 : (currentPage - 1) * questionsPerPage + 1;
+  const endQuestionIndex = Math.min(currentPage * questionsPerPage, questions.length);
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const pages = new Set<number>([1, totalPages, currentPage]);
+    if (currentPage - 1 > 1) pages.add(currentPage - 1);
+    if (currentPage + 1 < totalPages) pages.add(currentPage + 1);
+
+    return Array.from(pages).sort((left, right) => left - right);
+  }, [currentPage, totalPages]);
+
+  const goToPage = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(nextPage);
   };
 
   const handleSave = async () => {
@@ -384,23 +419,27 @@ export default function AdminQuestionsPage() {
       {/* Page Header */}
       <div className="admin-page-header orange">
         <div className="admin-page-header-bg">
-          <div className="admin-page-header-shape shape-1" />
-          <div className="admin-page-header-shape shape-2" />
-          <div className="admin-page-header-dots" />
+            <div className="admin-page-header-shape shape-1" />
+            <div className="admin-page-header-shape shape-2" />
+            <div className="admin-page-header-dots" />
         </div>
         <div className="admin-page-header-content">
           <div className="admin-page-header-left">
             <button className="admin-btn-icon" onClick={() => navigate(`/admin/quizzes/${quizIdNum}`)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}>
               <BiArrowBack size={18} />
             </button>
-            <div className="admin-page-icon"><BiFile size={26} /></div>
             <div>
               <h1 className="admin-page-title">Questions</h1>
               <p className="admin-page-subtitle">
-                {quiz?.title || 'Quiz'} • {questions.length} questions {!canEditContent && <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}><BiLock size={12} style={{ verticalAlign: 'middle' }} /> View only</span>}
+                {quiz?.title || 'Quiz'} • {questions.length} questions
               </p>
             </div>
           </div>
+          {!canEditContent && (
+            <div className="questions-header-readonly">
+              <BiLock size={13} /> Read only
+            </div>
+          )}
           {canEditContent && (
             <div className="questions-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
@@ -428,7 +467,7 @@ export default function AdminQuestionsPage() {
       {/* Questions List */}
       <div className="questions-list-container">
         {questions.length > 0 ? (
-          questions.map((q, idx) => {
+          paginatedQuestions.map((q, idx) => {
             const identificationAnswers = (q.correctKey || '')
               .split(/\r?\n/)
               .map((line) => line.trim())
@@ -437,7 +476,7 @@ export default function AdminQuestionsPage() {
             return (
               <div key={q.id} className="question-card">
                 <div className="question-card-header">
-                  <div className="question-number-badge">{idx + 1}</div>
+                  <div className="question-number-badge">{startQuestionIndex + idx}</div>
                   <div className="question-text-wrapper">
                     <h4 className="question-text">{q.text}</h4>
                     <div className="question-meta">
@@ -518,6 +557,47 @@ export default function AdminQuestionsPage() {
           </div>
         )}
       </div>
+
+      {questions.length > questionsPerPage && (
+        <div className="questions-pagination-shell">
+          <p className="questions-pagination-summary">
+            Showing <strong>{startQuestionIndex}</strong> to <strong>{endQuestionIndex}</strong> of <strong>{questions.length}</strong> questions
+          </p>
+
+          <div className="questions-pagination-controls">
+            <button
+              type="button"
+              className="questions-pagination-nav"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <BiChevronLeft size={18} /> Previous
+            </button>
+
+            <div className="questions-pagination-pages">
+              {paginationPages.map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={`questions-pagination-page ${page === currentPage ? 'is-active' : ''}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="questions-pagination-nav"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next <BiChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {showModal && (
