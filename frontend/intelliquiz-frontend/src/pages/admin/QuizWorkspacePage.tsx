@@ -22,6 +22,7 @@ import { quizzesApi, violationApi, type ViolationLogRecord } from '../../service
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 import './AdminRedesign.css';
+import './QuizWorkspacePage.css';
 
 type ScoreboardRow = {
   teamId: number;
@@ -162,6 +163,10 @@ export default function QuizWorkspacePage() {
   const topEntry = sortedScoreboard[0] ?? null;
   const totalScorePoints = normalizedScoreboard.reduce((sum, row) => sum + row.score, 0);
 
+  const handleBackToQuizzes = () => {
+    navigate('/admin/quizzes', { replace: true });
+  };
+
   const statusActionLabel = useMemo(() => {
     if (!quiz) return '';
     if (quiz.status === 'DRAFT') return 'Mark Quiz Ready';
@@ -300,7 +305,7 @@ export default function QuizWorkspacePage() {
     <div className="quiz-workspace-shell">
       <div className="quiz-workspace-hero">
         <div className="quiz-workspace-hero-header">
-          <button className="quiz-workspace-back-btn" onClick={() => navigate('/admin/quizzes')}>
+          <button type="button" className="quiz-workspace-back-btn" onClick={handleBackToQuizzes} aria-label="Back to quizzes">
             <BiArrowBack size={20} />
           </button>
           <div className="quiz-workspace-hero-content">
@@ -601,26 +606,26 @@ export default function QuizWorkspacePage() {
             </div>
 
             <div className="quiz-workspace-code-grid">
-              <div className="admin-card workspace-code-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <div>
+              <div className="admin-card workspace-code-card">
+                <div className="workspace-code-copy">
                   <h4 style={{ margin: 0 }}>Quiz Code</h4>
                   <p className="admin-empty-text" style={{ margin: 0 }}>
                     Share this code with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code>
                   </p>
                 </div>
-                <button className="admin-btn admin-btn-secondary" onClick={copyQuizCode} disabled={!quiz.quizCode}>
+                <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyQuizCode} disabled={!quiz.quizCode}>
                   {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
                 </button>
               </div>
 
-              <div className="admin-card workspace-code-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <div>
+              <div className="admin-card workspace-code-card">
+                <div className="workspace-code-copy">
                   <h4 style={{ margin: 0 }}>Proctor PIN</h4>
                   <p className="admin-empty-text" style={{ margin: 0 }}>
                     Use this code for host access: <code>{quiz.proctorPin || 'UNAVAILABLE'}</code>
                   </p>
                 </div>
-                <button className="admin-btn admin-btn-secondary" onClick={copyProctorPin} disabled={!quiz.proctorPin}>
+                <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyProctorPin} disabled={!quiz.proctorPin}>
                   {copiedProctorPin ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedProctorPin ? 'Copied' : 'Copy PIN'}
                 </button>
               </div>
@@ -640,30 +645,30 @@ export default function QuizWorkspacePage() {
 
             <div className="workspace-summary-row">
               <div className="workspace-summary-card">
-                <div>
+                <div className="workspace-summary-copy">
                   <h3 className="workspace-summary-title">{isArchived ? 'Final Scoreboard' : 'Live Scoreboard'}</h3>
                   <p className="workspace-summary-text">Open rankings in a focused modal and refresh whenever needed.</p>
                 </div>
                 <div className="workspace-summary-actions">
-                  <button className="admin-btn admin-btn-secondary" onClick={() => refetchScoreboard()}>
+                  <button className="admin-btn admin-btn-secondary workspace-summary-button" onClick={() => refetchScoreboard()}>
                     <BiRefresh size={16} /> Refresh
                   </button>
-                  <button className="admin-btn admin-btn-primary" onClick={() => setShowScoreboardModal(true)}>
+                  <button className="admin-btn admin-btn-primary workspace-summary-button" onClick={() => setShowScoreboardModal(true)}>
                     <BiTrophy size={16} /> Open Scoreboard
                   </button>
                 </div>
               </div>
 
               <div className="workspace-summary-card">
-                <div>
+                <div className="workspace-summary-copy">
                   <h3 className="workspace-summary-title">Violation Log Reports</h3>
                   <p className="workspace-summary-text">Review persisted anti-cheat logs in a focused modal view.</p>
                 </div>
                 <div className="workspace-summary-actions">
-                  <button className="admin-btn admin-btn-secondary" onClick={handleRefreshViolationLogs}>
+                  <button className="admin-btn admin-btn-secondary workspace-summary-button" onClick={handleRefreshViolationLogs}>
                     <BiRefresh size={16} /> Refresh
                   </button>
-                  <button className="admin-btn admin-btn-primary" onClick={() => setShowViolationModal(true)}>
+                  <button className="admin-btn admin-btn-primary workspace-summary-button" onClick={() => setShowViolationModal(true)}>
                     <BiBookContent size={16} /> Open Logs
                   </button>
                 </div>
