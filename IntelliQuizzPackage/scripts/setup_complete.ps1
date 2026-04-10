@@ -45,27 +45,49 @@ if ($virtSupported -eq $false) {
 Write-Host "  OK - CPU supports virtualization" -ForegroundColor Green
 Write-Host ""
 
-# STEP 2: Check and enable Hyper-V/WSL2 features
+# STEP 2: Check and enable all required features at once
 Write-Host "[2/7] Checking Windows virtualization features..." -ForegroundColor Yellow
 $restartNeeded = $false
+$featuresEnabled = @()
 
 if (-not $hyperVPresent -and -not $isResume) {
-    Write-Host "  Hyper-V not enabled. Enabling required features..." -ForegroundColor Yellow
+    Write-Host "  Checking required features..." -ForegroundColor Yellow
+    
+    # Check which features need to be enabled
+    $hypervState = (Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -ErrorAction SilentlyContinue).State
+    $vmpState = (Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -ErrorAction SilentlyContinue).State
+    $wslState = (Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -ErrorAction SilentlyContinue).State
     
     try {
-        # Enable Hyper-V
-        $result1 = Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
-        if ($result1.RestartNeeded) { $restartNeeded = $true }
+        # Enable Hyper-V if needed
+        if ($hypervState -ne "Enabled") {
+            Write-Host "  - Enabling Hyper-V..." -ForegroundColor Yellow
+            $result1 = Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
+            if ($result1.RestartNeeded) { $restartNeeded = $true }
+            $featuresEnabled += "Hyper-V"
+        }
         
-        # Enable Virtual Machine Platform
-        $result2 = Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-        if ($result2.RestartNeeded) { $restartNeeded = $true }
+        # Enable Virtual Machine Platform if needed
+        if ($vmpState -ne "Enabled") {
+            Write-Host "  - Enabling Virtual Machine Platform..." -ForegroundColor Yellow
+            $result2 = Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+            if ($result2.RestartNeeded) { $restartNeeded = $true }
+            $featuresEnabled += "Virtual Machine Platform"
+        }
         
-        # Enable WSL2
-        $result3 = Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
-        if ($result3.RestartNeeded) { $restartNeeded = $true }
+        # Enable WSL2 if needed
+        if ($wslState -ne "Enabled") {
+            Write-Host "  - Enabling WSL2..." -ForegroundColor Yellow
+            $result3 = Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
+            if ($result3.RestartNeeded) { $restartNeeded = $true }
+            $featuresEnabled += "WSL2"
+        }
         
-        Write-Host "  OK - Features enabled" -ForegroundColor Green
+        if ($featuresEnabled.Count -gt 0) {
+            Write-Host "  OK - Enabled: $($featuresEnabled -join ', ')" -ForegroundColor Green
+        } else {
+            Write-Host "  OK - All features already enabled" -ForegroundColor Green
+        }
     } catch {
         Write-Host "  WARNING - Could not enable some features" -ForegroundColor Yellow
         Write-Host "  Docker Desktop will attempt to enable them during installation" -ForegroundColor Yellow
@@ -75,20 +97,36 @@ if (-not $hyperVPresent -and -not $isResume) {
 }
 Write-Host ""
 
-# STEP 3: Update WSL if needed
-Write-Host "[3/7] Checking WSL version..." -ForegroundColor Yellow
-try {
-    $wslVersion = wsl --version 2>&1
-    if ($LASTEXITCODE -ne 0 -or $wslVersion -match "not recognized") {
-        Write-Host "  WSL not installed or outdated. Updating..." -ForegroundColor Yellow
-        wsl --install --no-distribution 2>&1 | Out-Null
-        wsl --update 2>&1 | Out-Null
-        Write-Host "  OK - WSL updated" -ForegroundColor Green
-    } else {
-        Write-Host "  OK - WSL is up to date" -ForegroundColor Green
+# STEP 3: Install/Update WSL kernel
+Write-Host "[3/7] Checking WSL installation..." -ForegroundColor Yellow
+if (-not $isResume) {
+    try {
+        # Check if WSL is installed
+        $wslInstalled = $false
+        try {
+            $wslVersion = wsl --version 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                $wslInstalled = $true
+            }
+        } catch {
+            $wslInstalled = $false
+        }
+        
+        if (-not $wslInstalled) {
+            Write-Host "  WSL not installed. Installing..." -ForegroundColor Yellow
+            wsl --install --no-distribution 2>&1 | Out-Null
+            Write-Host "  OK - WSL installed" -ForegroundColor Green
+        } else {
+            Write-Host "  WSL already installed. Checking for updates..." -ForegroundColor Yellow
+            wsl --update 2>&1 | Out-Null
+            Write-Host "  OK - WSL is up to date" -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "  WARNING - Could not install/update WSL" -ForegroundColor Yellow
+        Write-Host "  WSL will be configured when Docker Desktop starts" -ForegroundColor Yellow
     }
-} catch {
-    Write-Host "  WARNING - Could not check WSL version" -ForegroundColor Yellow
+} else {
+    Write-Host "  OK - WSL check skipped (resuming after restart)" -ForegroundColor Green
 }
 Write-Host ""
 
