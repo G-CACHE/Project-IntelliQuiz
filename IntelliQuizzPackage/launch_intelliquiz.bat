@@ -58,17 +58,17 @@ docker info >nul 2>&1
 if errorlevel 1 (
     echo   Docker not running. Starting Docker Desktop...
     start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-    echo   Waiting for Docker engine to start (this may take 2-3 minutes)...
+    echo   Waiting for Docker engine to start this may take 2-3 minutes...
     set RETRY=0
     :docker_wait
     timeout /t 5 /nobreak >nul
     docker info >nul 2>&1
     if errorlevel 1 (
-        set /a RETRY+=1
+        set /a RETRY=RETRY+1
         if !RETRY! LEQ 60 (
-            if !RETRY! EQU 12 echo   Still starting... (1 minute elapsed)
-            if !RETRY! EQU 24 echo   Still starting... (2 minutes elapsed)
-            if !RETRY! EQU 36 echo   Still starting... (3 minutes elapsed)
+            if !RETRY!==12 echo   Still starting... 1 minute elapsed
+            if !RETRY!==24 echo   Still starting... 2 minutes elapsed
+            if !RETRY!==36 echo   Still starting... 3 minutes elapsed
             goto :docker_wait
         ) else (
             echo.
@@ -77,7 +77,7 @@ if errorlevel 1 (
             echo Docker Desktop UI is open but the engine is still initializing.
             echo This is normal on first installation.
             echo.
-            echo Please wait 2 more minutes, then run IntelliQuiz again.
+            echo Please wait 2 more minutes then run IntelliQuiz again.
             echo.
             pause
             exit /b 1

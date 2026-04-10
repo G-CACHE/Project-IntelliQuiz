@@ -1,15 +1,25 @@
 # IntelliQuiz Complete Automated Setup
 # Handles virtualization, WSL, Docker installation with smart restart detection
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"  # Changed from Stop to Continue
 $appDir = "C:\IntelliQuiz"
 $dataDir = "$appDir\data"
 $resumeMarker = "$appDir\.setup_resume"
+$logFile = "$appDir\setup.log"
 
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "IntelliQuiz Automated Setup" -ForegroundColor Cyan
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host ""
+# Function to log messages
+function Write-Log {
+    param($Message, $Color = "White")
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "[$timestamp] $Message"
+    Add-Content -Path $logFile -Value $logMessage
+    Write-Host $Message -ForegroundColor $Color
+}
+
+Write-Log "============================================================" "Cyan"
+Write-Log "IntelliQuiz Automated Setup" "Cyan"
+Write-Log "============================================================" "Cyan"
+Write-Log ""
 
 # Check if running as Administrator
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
@@ -99,34 +109,30 @@ Write-Host ""
 
 # STEP 3: Install/Update WSL kernel
 Write-Host "[3/7] Checking WSL installation..." -ForegroundColor Yellow
-if (-not $isResume) {
+try {
+    # Check if WSL is installed
+    $wslInstalled = $false
     try {
-        # Check if WSL is installed
-        $wslInstalled = $false
-        try {
-            $wslVersion = wsl --version 2>&1
-            if ($LASTEXITCODE -eq 0) {
-                $wslInstalled = $true
-            }
-        } catch {
-            $wslInstalled = $false
-        }
-        
-        if (-not $wslInstalled) {
-            Write-Host "  WSL not installed. Installing..." -ForegroundColor Yellow
-            wsl --install --no-distribution 2>&1 | Out-Null
-            Write-Host "  OK - WSL installed" -ForegroundColor Green
-        } else {
-            Write-Host "  WSL already installed. Checking for updates..." -ForegroundColor Yellow
-            wsl --update 2>&1 | Out-Null
-            Write-Host "  OK - WSL is up to date" -ForegroundColor Green
+        $wslVersion = wsl --version 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $wslInstalled = $true
         }
     } catch {
-        Write-Host "  WARNING - Could not install/update WSL" -ForegroundColor Yellow
-        Write-Host "  WSL will be configured when Docker Desktop starts" -ForegroundColor Yellow
+        $wslInstalled = $false
     }
-} else {
-    Write-Host "  OK - WSL check skipped (resuming after restart)" -ForegroundColor Green
+    
+    if (-not $wslInstalled) {
+        Write-Host "  WSL not installed. Installing..." -ForegroundColor Yellow
+        wsl --install --no-distribution 2>&1 | Out-Null
+        Write-Host "  OK - WSL installed" -ForegroundColor Green
+    } else {
+        Write-Host "  WSL already installed. Checking for updates..." -ForegroundColor Yellow
+        wsl --update 2>&1 | Out-Null
+        Write-Host "  OK - WSL is up to date" -ForegroundColor Green
+    }
+} catch {
+    Write-Host "  WARNING - Could not install/update WSL" -ForegroundColor Yellow
+    Write-Host "  WSL will be configured when Docker Desktop starts" -ForegroundColor Yellow
 }
 Write-Host ""
 
@@ -292,16 +298,20 @@ Write-Host "OK - Data directories created" -ForegroundColor Green
 Write-Host ""
 
 # Final message
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "Setup Complete!" -ForegroundColor Green
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "IntelliQuiz is ready to use!" -ForegroundColor Green
-Write-Host ""
-Write-Host "To start IntelliQuiz:" -ForegroundColor Cyan
-Write-Host "  - Double-click the IntelliQuiz desktop shortcut" -ForegroundColor White
-Write-Host "  - Or run: $appDir\launch_intelliquiz.bat" -ForegroundColor White
-Write-Host ""
+Write-Log "============================================================" "Cyan"
+Write-Log "Setup Complete!" "Green"
+Write-Log "============================================================" "Cyan"
+Write-Log ""
+Write-Log "IntelliQuiz is ready to use!" "Green"
+Write-Log ""
+Write-Log "To start IntelliQuiz:" "Cyan"
+Write-Log "  - Double-click the IntelliQuiz desktop shortcut" "White"
+Write-Log "  - Or run: $appDir\launch_intelliquiz.bat" "White"
+Write-Log ""
+Write-Log "Setup log saved to: $logFile" "Gray"
+Write-Log ""
+Write-Host "Press Enter to close..." -ForegroundColor Gray
+Read-Host
 Write-Host "Press Enter to close this window..." -ForegroundColor Gray
 Read-Host
 
