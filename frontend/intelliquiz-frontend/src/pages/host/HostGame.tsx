@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Home } from 'lucide-react';
+import { Trophy, Home, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
@@ -10,6 +10,7 @@ import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal';
 import '../../styles/proctor.css';
+import './HostLobby.css'; // Reuse some layout styles
 
 const HostGame: React.FC = () => {
   const navigate = useNavigate();
@@ -79,7 +80,56 @@ const HostGame: React.FC = () => {
   
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   const [startingRound, setStartingRound] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const hasFiredFinalConfettiRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Audio Synchronization Logic
+  useEffect(() => {
+    const audio = new Audio('/host-lobby.mp3');
+    audio.loop = true;
+    audio.muted = isMuted;
+    audioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const shouldPlay = [
+      'LOBBY', 
+      'BUFFER', 
+      'SCOREBOARD', 
+      'ROUND_SUMMARY', 
+      'FINAL_RESULTS'
+    ].includes(gameState);
+
+    const handleAudio = async () => {
+      try {
+        if (shouldPlay) {
+          if (audioRef.current?.paused) {
+            await audioRef.current.play();
+          }
+        } else {
+          audioRef.current?.pause();
+        }
+      } catch (err) {
+        console.log('Audio control failed:', err);
+      }
+    };
+
+    handleAudio();
+  }, [gameState]);
 
   const handleStartRoundFromModal = async () => {
     if (startingRound || gameState !== 'BUFFER') return;
@@ -267,6 +317,31 @@ const HostGame: React.FC = () => {
     }
   };
 
+  // If we are in Scoreboard or Round Summary, show FULL PAGE RANKING
+  if ((gameState === 'ROUND_SUMMARY' || gameState === 'SCOREBOARD') && !isClassMode) {
+    return (
+      <div className="full-page-ranking-container">
+        <header className="full-page-ranking-header">
+          <p className="host-lobby-subtitle" style={{ color: '#64748b' }}>Current Rankings</p>
+          <h1 className="ranking-title-gold">{session.quizTitle}</h1>
+          <div style={{ marginTop: '20px' }}>
+            <span className="host-lobby-badge">Round {currentRound} Summary</span>
+          </div>
+        </header>
+        
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 100px' }}>
+          <ScoreboardDisplay rankings={rankings} isFinal={false} />
+        </div>
+
+        <div className="proctor-game-controls" style={{ position: 'sticky', bottom: 0, width: '100%', padding: '20px' }}>
+           <div className="proctor-controls-shell" style={{ maxWidth: '600px', margin: '0 auto' }}>
+             {renderControls()}
+           </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="proctor-page proctor-game-page">
       <RoundAnnouncementModal 
@@ -284,26 +359,35 @@ const HostGame: React.FC = () => {
             <p className="proctor-game-question-info">
               Question {questionNumber} of {totalQuestions}
             </p>
-            <h1 className="proctor-game-title">{session.quizTitle}</h1>
+            <h1 className="proctor-game-title" style={{ color: 'var(--color-gold)' }}>{session.quizTitle}</h1>
           </div>
           
           <div className="proctor-game-header-right">
             {/* Connection Status */}
-            <div className="proctor-connection-status proctor-connection-compact">
-              <span className={`proctor-status-dot ${connected ? 'proctor-status-connected' : 'proctor-status-disconnected'}`}></span>
-              <span className="proctor-status-text">
-                {connected ? 'Live' : 'Disconnected'}
+            <div className="header-status-tag" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <span className={`status-dot ${connected ? 'status-connected' : 'status-disconnected'}`} />
+              <span style={{ color: 'white', fontSize: '11px', fontWeight: 800 }}>
+                {connected ? 'LIVE' : 'OFFLINE'}
               </span>
             </div>
+
+            <button 
+              className="header-icon-btn audio-toggle-btn" 
+              onClick={() => setIsMuted(!isMuted)}
+              title={isMuted ? "Unmute" : "Mute"}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', marginRight: '12px' }}
+            >
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
 
             <button
               onClick={handleOpenProctorMonitor}
               className="proctor-btn proctor-host-monitor-btn"
             >
-              Open Proctor Monitor
+              Monitor
             </button>
             
-            {/* Timer — hide the small header timer in CLASS mode (center timer only). */}
+            {/* Timer */}
             {(gameState === 'QUESTION' || gameState === 'PAUSED') && !isClassMode && (
               <div className="proctor-timer-container">
                 <Timer 
@@ -431,23 +515,6 @@ const HostGame: React.FC = () => {
                   <p>Correct Answer: {currentQuestion.correctAnswer}</p>
                 </div>
               )}
-              
-              {/* Team Results Summary */}
-              {rankings.length > 0 && (
-                <div className="proctor-host-reveal-results">
-                  <h3 className="proctor-host-reveal-title">
-                    Results
-                  </h3>
-                  <div className="proctor-host-reveal-list">
-                    {rankings.slice(0, 10).map((team) => (
-                      <div key={team.teamId} className="proctor-host-reveal-item">
-                        <span>{team.rank}. {team.teamName}</span>
-                        <span>{team.score} pts</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -467,13 +534,6 @@ const HostGame: React.FC = () => {
             </div>
           )}
 
-          {/* ROUND_SUMMARY/SCOREBOARD State */}
-          {(gameState === 'ROUND_SUMMARY' || gameState === 'SCOREBOARD') && (
-            <ScoreboardDisplay
-              rankings={rankings}
-              isFinal={false}
-            />
-          )}
 
           </section>
 
@@ -485,15 +545,10 @@ const HostGame: React.FC = () => {
                   <Trophy className="proctor-host-final-icon-main" />
                 </div>
                 <h2 className="proctor-host-final-title">Quiz Complete</h2>
-                <p>Final results are in. Great run from every team.</p>
                 <div className="proctor-host-final-metrics">
                   <div className="proctor-host-final-metric">
                     <span>Teams</span>
                     <strong>{rankings.length}</strong>
-                  </div>
-                  <div className="proctor-host-final-metric">
-                    <span>Questions</span>
-                    <strong>{totalQuestions || 0}</strong>
                   </div>
                   <div className="proctor-host-final-metric">
                     <span>Winning Score</span>
@@ -520,35 +575,36 @@ const HostGame: React.FC = () => {
           )}
 
           {/* Controls */}
-          <div className="proctor-game-controls">
-            <div className="proctor-controls-shell">
-              <p className="proctor-controls-label">Host Controls</p>
-              <div className="proctor-controls-stats">
-                <div className="proctor-controls-stat">
-                  <Users size={16} aria-hidden="true" />
-                  <div>
-                    <span className="proctor-controls-stat-label">Players Online</span>
-                    <strong className="proctor-controls-stat-value">{connectedTeams.length}</strong>
+          {gameState !== 'FINAL_RESULTS' && (
+            <div className="proctor-game-controls">
+              <div className="proctor-controls-shell">
+                <div className="proctor-controls-stats">
+                  <div className="proctor-controls-stat">
+                    <Users size={16} aria-hidden="true" />
+                    <div>
+                      <span className="proctor-controls-stat-label">Players Online</span>
+                      <strong className="proctor-controls-stat-value">{connectedTeams.length}</strong>
+                    </div>
+                  </div>
+                  <div className="proctor-controls-stat">
+                    <Gauge size={16} aria-hidden="true" />
+                    <div>
+                      <span className="proctor-controls-stat-label">Phase</span>
+                      <strong className="proctor-controls-stat-value">{gamePhaseLabel}</strong>
+                    </div>
+                  </div>
+                  <div className="proctor-controls-stat">
+                    <TimerIcon size={16} aria-hidden="true" />
+                    <div>
+                      <span className="proctor-controls-stat-label">Submissions</span>
+                      <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>
+                    </div>
                   </div>
                 </div>
-                <div className="proctor-controls-stat">
-                  <Gauge size={16} aria-hidden="true" />
-                  <div>
-                    <span className="proctor-controls-stat-label">Current Phase</span>
-                    <strong className="proctor-controls-stat-value">{gamePhaseLabel}</strong>
-                  </div>
-                </div>
-                <div className="proctor-controls-stat">
-                  <TimerIcon size={16} aria-hidden="true" />
-                  <div>
-                    <span className="proctor-controls-stat-label">Submitted Teams</span>
-                    <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>
-                  </div>
-                </div>
+                {renderControls()}
               </div>
-              {renderControls()}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
