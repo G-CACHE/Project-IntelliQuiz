@@ -5,7 +5,6 @@ import {
   BiBookContent,
   BiTrophy,
   BiGroup,
-  BiUserPlus,
   BiCheckCircle,
   BiPauseCircle,
   BiCopy,
@@ -175,6 +174,84 @@ export default function QuizWorkspacePage() {
     return 'No Status Action';
   }, [quiz]);
 
+  const workspaceGuide = useMemo(() => {
+    const configLocked = !hasEdit || !isDraftQuiz;
+
+    if (!quiz) {
+      return {
+        title: 'Workspace guide',
+        copy: 'This page is your quiz control center. Use it to set up questions, share access codes, monitor teams, and review reports.',
+        primaryLabel: 'Open questions',
+        primaryAction: () => navigate(`/admin/quizzes/${parsedQuizId}/questions`),
+        steps: [
+          'Review the quiz overview',
+          'Open questions and add content',
+          'Share quiz code and proctor PIN',
+        ],
+      };
+    }
+
+    if (quiz.status === 'DRAFT') {
+      return {
+        title: 'Start with setup',
+        copy: 'This draft workspace is where you prepare the quiz before going live. The fastest next step is to build or refine the question set.',
+        primaryLabel: 'Open questions',
+        primaryAction: () => navigate(`/admin/quizzes/${quiz.id}/questions`),
+        steps: [
+          'Add or update quiz questions',
+          'Adjust configuration if needed',
+          'Mark the quiz ready when finished',
+        ],
+        secondaryLabel: configLocked ? undefined : 'Open configuration',
+        secondaryAction: configLocked ? undefined : () => setActiveTab('config'),
+      };
+    }
+
+    if (quiz.status === 'READY') {
+      return {
+        title: 'Ready to launch',
+        copy: 'This workspace is prepared for participants. Next, verify access codes, register teams if needed, and start the live session.',
+        primaryLabel: 'Open codes',
+        primaryAction: () => setActiveTab('codes'),
+        steps: [
+          'Check quiz and proctor codes',
+          'Register teams if access is restricted',
+          'Switch to Actions when you are ready to launch',
+        ],
+        secondaryLabel: 'Open actions',
+        secondaryAction: () => setActiveTab('actions'),
+      };
+    }
+
+    if (quiz.status === 'ACTIVE') {
+      return {
+        title: 'Live session in progress',
+        copy: 'Use this workspace to monitor scores, watch for violations, and manage live session data while the quiz is running.',
+        primaryLabel: 'Open reports',
+        primaryAction: () => setActiveTab('reports'),
+        steps: [
+          'Monitor the scoreboard',
+          'Review violation reports',
+          'Use Actions for live controls',
+        ],
+        secondaryLabel: 'Open actions',
+        secondaryAction: () => setActiveTab('actions'),
+      };
+    }
+
+    return {
+      title: 'Finished quiz',
+      copy: 'This archived workspace is read-only for review. You can still inspect scores, access codes, and reports.',
+      primaryLabel: 'Open reports',
+      primaryAction: () => setActiveTab('reports'),
+      steps: [
+        'Review the final scoreboard',
+        'Inspect archived violation records',
+        'Use codes for reference only',
+      ],
+    };
+  }, [quiz, hasEdit, isDraftQuiz, navigate, parsedQuizId]);
+
   const handleStatusToggle = async () => {
     if (!quiz) return;
     setStatusError(null);
@@ -187,27 +264,62 @@ export default function QuizWorkspacePage() {
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.error("Clipboard API failed", err);
+      }
+    }
+
+    // Fallback for non-secure contexts (HTTP)
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error("Fallback copy failed", err);
+      return false;
+    }
+  };
+
   const copyQuizCode = async () => {
     const resolvedQuizCode = quiz?.quizCode || '';
     if (!resolvedQuizCode) return;
-    await navigator.clipboard.writeText(resolvedQuizCode);
-    setCopiedQuizCode(true);
-    setTimeout(() => setCopiedQuizCode(false), 1500);
+    const success = await copyToClipboard(resolvedQuizCode);
+    if (success) {
+      setCopiedQuizCode(true);
+      setTimeout(() => setCopiedQuizCode(false), 1500);
+    }
   };
 
   const copyProctorPin = async () => {
     const resolvedProctorPin = quiz?.proctorPin || '';
     if (!resolvedProctorPin) return;
-    await navigator.clipboard.writeText(resolvedProctorPin);
-    setCopiedProctorPin(true);
-    setTimeout(() => setCopiedProctorPin(false), 1500);
+    const success = await copyToClipboard(resolvedProctorPin);
+    if (success) {
+      setCopiedProctorPin(true);
+      setTimeout(() => setCopiedProctorPin(false), 1500);
+    }
   };
 
   const copyTeamAccessCode = async (teamId: number, accessCode: string) => {
     if (!accessCode) return;
-    await navigator.clipboard.writeText(accessCode);
-    setCopiedTeamId(teamId);
-    setTimeout(() => setCopiedTeamId((prev) => (prev === teamId ? null : prev)), 1500);
+    const success = await copyToClipboard(accessCode);
+    if (success) {
+      setCopiedTeamId(teamId);
+      setTimeout(() => setCopiedTeamId((prev) => (prev === teamId ? null : prev)), 1500);
+    }
   };
 
   const handleRefreshViolationLogs = async () => {
@@ -353,6 +465,33 @@ export default function QuizWorkspacePage() {
       </div>
 
       <div className="quiz-workspace-panel">
+
+        {/* GUIDE STRIP */}
+        <section className="quiz-workspace-guide" aria-label="Workspace guide">
+          <div className="quiz-workspace-guide-copy">
+            <p className="quiz-workspace-guide-eyebrow">Workspace guide</p>
+            <h2 className="quiz-workspace-guide-title">{workspaceGuide.title}</h2>
+            <p className="quiz-workspace-guide-text">{workspaceGuide.copy}</p>
+          </div>
+          <div className="quiz-workspace-guide-actions">
+            <button className="admin-btn admin-btn-primary quiz-workspace-guide-button" onClick={workspaceGuide.primaryAction}>
+              {workspaceGuide.primaryLabel}
+            </button>
+            {workspaceGuide.secondaryLabel && workspaceGuide.secondaryAction && (
+              <button className="admin-btn admin-btn-secondary quiz-workspace-guide-button" onClick={workspaceGuide.secondaryAction}>
+                {workspaceGuide.secondaryLabel}
+              </button>
+            )}
+          </div>
+          <div className="quiz-workspace-guide-steps">
+            {workspaceGuide.steps.map((step, index) => (
+              <div key={step} className="quiz-workspace-guide-step">
+                <span className="quiz-workspace-guide-step-index">{index + 1}</span>
+                <p>{step}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (

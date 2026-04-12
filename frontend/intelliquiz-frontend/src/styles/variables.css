@@ -9,20 +9,20 @@
   --font-mono: 'JetBrains Mono', monospace;
 
   /* === PRIMARY PALETTE === */
-  --color-maroon: #800020;
-  --color-maroon-dark: #5C0016;
-  --color-maroon-light: #A8002A;
-  --color-gold: #C9A84C;
-  --color-gold-light: #E8C97A;
-  --color-gold-subtle: #F5EDD6;
+  --color-maroon: #7a1733;
+  --color-maroon-dark: #561026;
+  --color-maroon-light: #9a2a4b;
+  --color-gold: #c2a04a;
+  --color-gold-light: #dbc078;
+  --color-gold-subtle: #eee5d1;
 
   /* === NEUTRALS === */
-  --color-black: #111111;
-  --color-charcoal: #2C2C2C;
-  --color-gray-dark: #6B6B6B;
-  --color-gray-mid: #B8B8B8;
-  --color-gray-light: #E8E8E8;
-  --color-off-white: #F9F7F4;
+  --color-black: #181218;
+  --color-charcoal: #332b31;
+  --color-gray-dark: #6e636b;
+  --color-gray-mid: #b6aeb3;
+  --color-gray-light: #dfd7dc;
+  --color-off-white: #f4f0ea;
   --color-white: #FFFFFF;
 
   /* === SEMANTIC / GAME STATE === */
@@ -43,17 +43,17 @@
   --color-timer-danger: #C0392B;
 
   /* === SHADOWS === */
-  --shadow-sm: 0 1px 3px rgba(17, 17, 17, 0.08), 0 1px 2px rgba(17, 17, 17, 0.04);
-  --shadow-md: 0 4px 12px rgba(17, 17, 17, 0.10), 0 2px 4px rgba(17, 17, 17, 0.06);
-  --shadow-lg: 0 8px 24px rgba(17, 17, 17, 0.12), 0 4px 8px rgba(17, 17, 17, 0.06);
-  --shadow-gold: 0 4px 16px rgba(201, 168, 76, 0.20);
-  --shadow-maroon: 0 4px 16px rgba(128, 0, 32, 0.20);
+  --shadow-sm: 0 1px 3px rgba(32, 20, 26, 0.08), 0 1px 2px rgba(32, 20, 26, 0.04);
+  --shadow-md: 0 4px 12px rgba(32, 20, 26, 0.12), 0 2px 4px rgba(32, 20, 26, 0.06);
+  --shadow-lg: 0 10px 24px rgba(32, 20, 26, 0.14), 0 4px 8px rgba(32, 20, 26, 0.06);
+  --shadow-gold: 0 4px 16px rgba(194, 160, 74, 0.24);
+  --shadow-maroon: 0 4px 16px rgba(122, 23, 51, 0.24);
 
   /* === BORDERS === */
-  --border-light: 1px solid #E8E8E8;
-  --border-mid: 1px solid #B8B8B8;
-  --border-gold: 1px solid #C9A84C;
-  --border-maroon: 1px solid #800020;
+  --border-light: 1px solid #dfd7dc;
+  --border-mid: 1px solid #b6aeb3;
+  --border-gold: 1px solid #c2a04a;
+  --border-maroon: 1px solid #7a1733;
 
   /* === BORDER RADIUS === */
   --radius-sm: 6px;
@@ -78,21 +78,21 @@
   --transition-slow: all 0.4s ease;
 
   /* === LEGACY COMPATIBILITY (for existing components) === */
-  --color-primary: #800020;
-  --color-primary-light: #A8002A;
-  --color-primary-dark: #5C0016;
-  --color-accent: #C9A84C;
-  --color-accent-light: #E8C97A;
+  --color-primary: #7a1733;
+  --color-primary-light: #9a2a4b;
+  --color-primary-dark: #561026;
+  --color-accent: #c2a04a;
+  --color-accent-light: #dbc078;
   --color-success: #1A7A4A;
   --color-success-light: #EBF7F1;
   --color-error: #C0392B;
   --color-error-light: #FDECEA;
   --color-warning: #D97706;
-  --bg-primary: #F9F7F4;
+  --bg-primary: #f4f0ea;
   --bg-card: #FFFFFF;
-  --text-primary: #111111;
-  --text-secondary: #6B6B6B;
-  --text-muted: #B8B8B8;
+  --text-primary: #181218;
+  --text-secondary: #6e636b;
+  --text-muted: #b6aeb3;
 }
 
 @keyframes pixel-jump {

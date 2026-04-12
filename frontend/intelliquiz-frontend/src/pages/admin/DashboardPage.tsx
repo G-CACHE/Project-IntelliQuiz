@@ -33,7 +33,7 @@ export default function AdminDashboardPage() {
     draftQuizzes: quizzes.filter(q => q.status === 'DRAFT').length,
   }), [quizzes]);
 
-  const recentQuizzes = useMemo(() => quizzes.slice(0, 5), [quizzes]);
+  const recentQuizzes = useMemo(() => quizzes.slice(0, 3), [quizzes]);
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = {
@@ -82,9 +82,9 @@ export default function AdminDashboardPage() {
         {statItems.map(({ key, label, value, Icon }) => (
           <div key={key} className="admin-clean-stat-card">
             <div className="admin-clean-stat-icon">
-              <Icon size={18} />
+              <Icon size={22} />
             </div>
-            <div>
+            <div className="admin-clean-stat-body">
               <p className="admin-clean-stat-value">{value}</p>
               <p className="admin-clean-stat-label">{label}</p>
             </div>
@@ -117,8 +117,10 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="admin-clean-actions-note">
-            <h3>Recommended flow</h3>
-            <p>Draft quizzes first, then mark them ready before launching live sessions.</p>
+            <div className="admin-clean-actions-note-text">
+              <h3>Recommended flow</h3>
+              <p>Draft quizzes first, then mark them ready before launching live sessions for your teams.</p>
+            </div>
             <div className="admin-clean-actions-steps">
               <span>Draft</span>
               <span>Ready</span>

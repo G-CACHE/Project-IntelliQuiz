@@ -427,87 +427,150 @@ const QuestionBankPage: React.FC = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }}>
           <div style={{
-            background: '#fff', borderRadius: '16px', padding: '32px',
-            maxWidth: '600px', width: '100%', maxHeight: '80vh', overflow: 'hidden',
-            display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            background: '#fff', borderRadius: '18px',
+            maxWidth: '650px', width: '100%', maxHeight: '85vh', overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
           }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px', fontFamily: 'Montserrat, sans-serif' }}>
-              <Download size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Import Questions to Quiz
-            </h3>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>
-              Select a target quiz and choose questions to import.
-            </p>
-
-            <select
-              value={selectedQuizForImport || ''}
-              onChange={(e) => setSelectedQuizForImport(parseInt(e.target.value) || null)}
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: '8px',
-                border: '1px solid #d1d5db', fontSize: '14px', marginBottom: '16px',
-              }}
-            >
-              <option value="">Select target quiz...</option>
-              {quizzes.map((q) => (
-                <option key={q.id} value={q.id}>{q.title}</option>
-              ))}
-            </select>
-
-            {/* Bank items to select */}
-            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '16px' }}>
-              {bankItems.map((item) => (
-                <label
-                  key={item.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                    background: selectedBankItems.has(item.id) ? '#f0fdf4' : '#fff',
-                    border: `1px solid ${selectedBankItems.has(item.id) ? '#86efac' : '#e5e7eb'}`,
-                    marginBottom: '6px',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedBankItems.has(item.id)}
-                    onChange={() => toggleBankItem(item.id)}
-                    style={{ width: '18px', height: '18px', accentColor: '#880015' }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: '#1f2937' }}>
-                      {item.text}
-                    </p>
-                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#9ca3af' }}>
-                      {item.type.replace('_', ' ')} · {item.difficulty} · {item.points} pts
-                    </p>
-                  </div>
-                </label>
-              ))}
+            {/* Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #7a1733 0%, #8d2144 54%, #b14062 100%)',
+              padding: '28px 32px', borderBottom: '1px solid #6b1028',
+              display: 'flex', alignItems: 'center', gap: '12px',
+            }}>
+              <Download size={20} style={{ color: '#fff', flexShrink: 0 }} />
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0, fontFamily: 'Montserrat, sans-serif' }}>
+                Import Questions from Bank
+              </h3>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>
+            {/* Content */}
+            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '32px' }}>
+              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px', margin: '0 0 24px 0' }}>
+                Select a target quiz and choose questions to import.
+              </p>
+
+              <select
+                value={selectedQuizForImport || ''}
+                onChange={(e) => setSelectedQuizForImport(parseInt(e.target.value) || null)}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: '10px',
+                  border: '1px solid #d1d5db', fontSize: '14px', marginBottom: '24px',
+                  fontFamily: 'inherit', backgroundColor: '#fff', color: '#374151',
+                }}
+              >
+                <option value="">Select target quiz...</option>
+                {quizzes.map((q) => (
+                  <option key={q.id} value={q.id}>{q.title}</option>
+                ))}
+              </select>
+
+              {/* Questions List */}
+              <div style={{ flex: 1, overflowY: 'auto', marginBottom: '24px', borderRadius: '10px', backgroundColor: '#f9fafb', padding: '16px' }}>
+                {bankItems.length > 0 ? (
+                  bankItems.map((item) => (
+                    <label
+                      key={item.id}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '14px',
+                        padding: '16px 14px', borderRadius: '10px', cursor: 'pointer',
+                        background: selectedBankItems.has(item.id) ? '#fef3f7' : 'transparent',
+                        border: `1.5px solid ${selectedBankItems.has(item.id) ? '#c9a84c' : 'transparent'}`,
+                        marginBottom: '10px', transition: 'all 0.2s',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedBankItems.has(item.id)}
+                        onChange={() => toggleBankItem(item.id)}
+                        style={{ width: '20px', height: '20px', accentColor: '#880015', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#1f2937' }}>
+                          {item.text}
+                        </p>
+                        <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#9ca3af' }}>
+                          {item.type.replace('_', ' ')} · {item.difficulty} · {item.points} pts
+                        </p>
+                      </div>
+                    </label>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '14px', padding: '20px' }}>
+                    No questions available in the bank.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '28px 32px',
+              backgroundColor: '#f9fafb',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '20px',
+            }}>
+              <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
                 {selectedBankItems.size} selected
               </span>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                {/* Cancel Button */}
                 <button
                   onClick={() => { setShowImportModal(false); setSelectedBankItems(new Set()); setSelectedQuizForImport(null); }}
                   style={{
-                    background: '#f3f4f6', color: '#374151', border: 'none',
-                    borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                    padding: '18px 52px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    height: '58px',
+                    backgroundColor: '#ffffff',
+                    color: '#374151',
+                    border: '1.5px solid #d1d5db',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s ease',
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
                 >
                   Cancel
                 </button>
+                
+                {/* Import Button */}
                 <button
                   onClick={handleImport}
                   disabled={!selectedQuizForImport || selectedBankItems.size === 0 || importing}
                   style={{
-                    background: (selectedQuizForImport && selectedBankItems.size > 0) ? '#880015' : '#d1d5db',
-                    color: '#fff', border: 'none', borderRadius: '8px',
-                    padding: '10px 20px', fontSize: '14px', fontWeight: 700,
+                    padding: '18px 52px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    height: '58px',
+                    backgroundColor: (selectedQuizForImport && selectedBankItems.size > 0) ? '#c9a84c' : '#e5e7eb',
+                    color: (selectedQuizForImport && selectedBankItems.size > 0) ? '#1f2937' : '#9ca3af',
+                    border: 'none',
+                    borderRadius: '8px',
                     cursor: (selectedQuizForImport && selectedBankItems.size > 0) ? 'pointer' : 'not-allowed',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s ease, color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedQuizForImport && selectedBankItems.size > 0) {
+                      e.currentTarget.style.backgroundColor = '#b8961c';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedQuizForImport && selectedBankItems.size > 0) {
+                      e.currentTarget.style.backgroundColor = '#c9a84c';
+                    }
                   }}
                 >
-                  {importing ? 'Importing...' : `Import ${selectedBankItems.size} Question(s)`}
+                  {importing ? 'Importing...' : `Import Selected (${selectedBankItems.size})`}
                 </button>
               </div>
             </div>

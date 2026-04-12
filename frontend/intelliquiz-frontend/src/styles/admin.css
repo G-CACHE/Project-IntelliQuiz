@@ -4,35 +4,42 @@
 /* ==================== CSS VARIABLES ==================== */
 :root {
   --admin-font: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
-  --admin-bg: #fffaf2;
+  --admin-bg: #f9fafb;
   --admin-white: #ffffff;
-  --admin-text: #241015;
-  --admin-text-secondary: #5d3a43;
-  --admin-text-muted: #8b6a74;
-  --admin-border: #e7d8dc;
-  --admin-primary: #7a1733;
-  --admin-primary-light: #9f2346;
-  --admin-accent: #d4a017;
-  --admin-accent-soft: #f7e3a0;
+  --admin-text: #111827;
+  --admin-text-secondary: #374151;
+  --admin-text-muted: #6b7280;
+  --admin-border: #e5e7eb;
+  --admin-primary: #880015;
+  --admin-primary-light: #a8002c;
+  --admin-primary-dark: #6b0f23;
+  --admin-accent: #ffd166;
+  --admin-accent-soft: #fff8e1;
+  --admin-teal: #0d9488;
+  --admin-teal-soft: #f0fdfa;
+  --admin-amber: #d97706;
+  --admin-amber-soft: #fffbeb;
+  --admin-emerald: #059669;
+  --admin-emerald-soft: #ecfdf5;
+  --admin-slate: #64748b;
+  --admin-slate-soft: #f8fafc;
   --admin-red: #ef4444;
   --admin-green: #22c55e;
-  --admin-blue: #9f2346;
+  --admin-blue: #3b82f6;
   --admin-purple: #8b5cf6;
-  --admin-pink: #b13a5d;
-  --admin-teal: #7a1733;
   --admin-orange: #f97316;
-  --pup-maroon-900: #5f1027;
-  --pup-maroon-800: #7a1733;
-  --pup-maroon-700: #9f2346;
-  --pup-gold-500: #d4a017;
-  --pup-gold-400: #f2c84b;
-  --pup-gold-200: #faedc0;
-  --pup-paper: #fffcf5;
-  --pup-ink: #241015;
+  --pup-maroon-900: #6b0f23;
+  --pup-maroon-800: #880015;
+  --pup-maroon-700: #a8002c;
+  --pup-gold-500: #ffd166;
+  --pup-gold-400: #ffe08a;
+  --pup-gold-200: #fff8e1;
+  --pup-paper: #ffffff;
+  --pup-ink: #111827;
   --admin-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --admin-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-  --admin-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-  --admin-shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  --admin-shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.06);
+  --admin-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.06);
+  --admin-shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
 }
 
 /* ==================== NAVIGATION - CLEAN PROFESSIONAL ==================== */
@@ -596,10 +603,11 @@
   height: 7px;
 }
 
-.admin-quiz-card-top.draft { background: linear-gradient(90deg, #8f6e78, #c7aeb6); }
-.admin-quiz-card-top.ready { background: linear-gradient(90deg, var(--pup-gold-500), var(--pup-gold-400)); }
-.admin-quiz-card-top.active { background: linear-gradient(90deg, var(--pup-maroon-700), #be4a67); }
-.admin-quiz-card-top.archived { background: linear-gradient(90deg, #6b4f58, #a0828b); }
+.admin-quiz-card-top.draft { background: linear-gradient(90deg, #64748b, #94a3b8); }
+.admin-quiz-card-top.ready { background: linear-gradient(90deg, #059669, #34d399); }
+.admin-quiz-card-top.done { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.admin-quiz-card-top.active { background: linear-gradient(90deg, #880015, #a8002c); }
+.admin-quiz-card-top.archived { background: linear-gradient(90deg, #9ca3af, #d1d5db); }
 
 .admin-quiz-card-body {
   padding: 20px;
@@ -679,23 +687,33 @@
 }
 
 .admin-badge-status.draft {
-  background: #f8ecef;
-  color: #7a1733;
+  background: #f8fafc;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
 }
 
 .admin-badge-status.ready {
-  background: #fff1c8;
-  color: #7c4b00;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1.5px solid #6ee7b7;
 }
 
 .admin-badge-status.active {
-  background: #f6d5df;
-  color: #7a1733;
+  background: #fff0f3;
+  color: #880015;
+  border: 1.5px solid #ffcdd5;
+}
+
+.admin-badge-status.done {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1.5px solid #bfdbfe;
 }
 
 .admin-badge-status.archived {
-  background: #efe7e9;
-  color: #6f4e57;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1.5px solid #d1d5db;
 }
 
 .admin-badge {

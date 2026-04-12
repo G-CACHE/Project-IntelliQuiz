@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Volume2, VolumeX } from 'lucide-react';
 import { accessApi, type QuizAccessResponse } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
+import { 
+  GiTrophyCup, 
+  GiGamepad, 
+  GiBrain, 
+  GiRocket, 
+  GiCheckeredFlag, 
+  GiJeweledChalice,
+  GiStarShuriken,
+  GiCrownedHeart
+} from 'react-icons/gi';
 import '../../styles/landing.css';
 
 const UniversalLogin: React.FC = () => {
@@ -13,6 +24,58 @@ const UniversalLogin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logoTapCount, setLogoTapCount] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Audio setup
+  useEffect(() => {
+    const audio = new Audio('/landing-page%20sounds.mp3');
+    audio.loop = true;
+    audio.volume = 1.0;
+    audioRef.current = audio;
+
+    const attemptPlay = () => {
+      if (audioRef.current && !isMuted) {
+        audioRef.current.play().catch(() => {
+          // Play failed, wait for interaction
+          console.log("Autoplay blocked, waiting for interaction...");
+        });
+      }
+    };
+
+    const handleInteraction = () => {
+      attemptPlay();
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+
+    // Initial attempt
+    attemptPlay();
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
+  // Sync mute state
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!isMuted) {
+        audioRef.current.play().catch(() => {});
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isMuted]);
+
+  const toggleMute = () => setIsMuted(prev => !prev);
 
   const extractErrorMessage = (err: unknown, fallback: string): string => {
     if (err instanceof Error && err.message) {
@@ -160,53 +223,81 @@ const UniversalLogin: React.FC = () => {
 
   return (
     <div className="landing-page">
-      <div className="landing-hero">
-        <div className="landing-orb landing-orb-left" aria-hidden="true"></div>
-        <div className="landing-orb landing-orb-right" aria-hidden="true"></div>
-        <div className="landing-grid-line" aria-hidden="true"></div>
-        <div className="landing-hero-content">
-          <p className="landing-hero-kicker">PUP Quiz Experience</p>
-          <h1 className="landing-hero-title" onClick={handleLogoTap}>IntelliQuiz</h1>
-          <p className="landing-hero-subtitle">Interactive Quiz Platform</p>
-        </div>
+      <button 
+        className="landing-audio-toggle" 
+        onClick={toggleMute} 
+        aria-label={isMuted ? "Unmute" : "Mute"}
+      >
+        {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+      </button>
+
+      <div className="landing-bg-icons">
+        <GiTrophyCup className="floating-icon icon-1" />
+        <GiGamepad className="floating-icon icon-2" />
+        <GiBrain className="floating-icon icon-3" />
+        <GiRocket className="floating-icon icon-4" />
+        <GiCheckeredFlag className="floating-icon icon-5" />
+        <GiJeweledChalice className="floating-icon icon-6" />
+        <GiStarShuriken className="floating-icon icon-7" />
+        <GiCrownedHeart className="floating-icon icon-8" />
+        <GiBrain className="floating-icon icon-9" />
+        <GiGamepad className="floating-icon icon-10" />
       </div>
+      
+      <div className="landing-container">
+        <header className="landing-header">
+          <h1 className="landing-title" onClick={handleLogoTap}>IntelliQuiz</h1>
+        </header>
 
-      <div className="landing-content">
-        <div className="landing-shell">
-          <aside className="landing-info-panel">
-            <h2 className="landing-info-title">Fast join, instant play</h2>
-            <p className="landing-info-copy">
-              Enter your quiz code to continue. IntelliQuiz detects your access type automatically and routes you to the correct experience.
-            </p>
-            <div className="landing-feature-list">
-              <span className="landing-feature-item">Realtime sync</span>
-              <span className="landing-feature-item">Role-aware access</span>
-              <span className="landing-feature-item">Live leaderboard</span>
-            </div>
-          </aside>
+        <section className="landing-join-card" aria-label="Join Quiz">
+          {!pendingPublicQuiz ? (
+            <form onSubmit={handleJoin} className="landing-form">
+              <input
+                id="landingCode"
+                type="text"
+                className="landing-input"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''));
+                  setError(null);
+                }}
+                placeholder="Game Code"
+                autoFocus
+                maxLength={24}
+                disabled={loading}
+              />
 
-          <section className="landing-auth-card" aria-label="Quiz Access">
-            <div className="landing-auth-header">
-              <p className="landing-auth-kicker">Access Portal</p>
-              <h3 className="landing-auth-title">
-                {!pendingPublicQuiz ? 'Enter your code to continue' : 'Set your team name'}
-              </h3>
-            </div>
+              {error && (
+                <p className="landing-error-text">{error}</p>
+              )}
 
-            {!pendingPublicQuiz ? (
-              <form onSubmit={handleJoin} className="landing-auth-form">
+              <button
+                type="submit"
+                className="landing-submit-btn"
+                disabled={loading || !code.trim()}
+              >
+                {loading ? 'Entering...' : 'Enter'}
+              </button>
+            </form>
+          ) : (
+            <div className="landing-public-flow">
+              <p className="landing-public-subtitle">
+                Joining <strong>{pendingPublicQuiz.title}</strong>
+              </p>
+
+              <form onSubmit={handlePublicJoin} className="landing-form">
                 <input
-                  id="landingCode"
+                  id="landingPublicName"
                   type="text"
-                  className="landing-entry-input"
-                  value={code}
+                  className="landing-input"
+                  value={participantName}
                   onChange={(e) => {
-                    setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''));
+                    setParticipantName(e.target.value);
                     setError(null);
                   }}
-                  placeholder="XXXX-XXXX"
+                  placeholder="Your Name"
                   autoFocus
-                  maxLength={24}
+                  maxLength={100}
                   disabled={loading}
                 />
 
@@ -214,71 +305,32 @@ const UniversalLogin: React.FC = () => {
                   <p className="landing-error-text">{error}</p>
                 )}
 
-                <button
-                  type="submit"
-                  className="landing-entry-btn"
-                  disabled={loading || !code.trim()}
-                >
-                  {loading ? 'Resolving...' : 'Join Quiz'}
-                </button>
-              </form>
-            ) : (
-              <>
-                <p className="landing-public-notice">
-                  Public mode detected for <strong>{pendingPublicQuiz.title}</strong>. Enter your participant/team name.
-                </p>
-
-                <form onSubmit={handlePublicJoin} className="landing-auth-form">
-                  <label htmlFor="landingPublicName" className="landing-input-label">Participant or Team Name</label>
-                  <input
-                    id="landingPublicName"
-                    type="text"
-                    className="landing-entry-input"
-                    value={participantName}
-                    onChange={(e) => {
-                      setParticipantName(e.target.value);
-                      setError(null);
-                    }}
-                    placeholder="Enter your name"
-                    autoFocus
-                    maxLength={100}
+                <div className="landing-actions">
+                  <button
+                    type="button"
+                    className="landing-btn-back"
+                    onClick={resetPublicJoin}
                     disabled={loading}
-                  />
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="landing-submit-btn"
+                    disabled={loading || !participantName.trim()}
+                  >
+                    {loading ? 'Joining...' : 'Go'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </section>
 
-                  {error && (
-                    <p className="landing-error-text">{error}</p>
-                  )}
-
-                  <div className="landing-public-actions">
-                    <button
-                      type="button"
-                      className="landing-entry-btn-secondary"
-                      onClick={resetPublicJoin}
-                      disabled={loading}
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="submit"
-                      className="landing-entry-btn"
-                      disabled={loading || !participantName.trim()}
-                    >
-                      {loading ? 'Joining...' : 'Continue'}
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-          </section>
-        </div>
-
+        <footer className="landing-minimal-footer">
+          <p>© 2026 IntelliQuiz</p>
+        </footer>
       </div>
-
-      <footer className="landing-footer">
-        <p className="landing-footer-text">
-          © 2026 IntelliQuiz. All rights reserved.
-        </p>
-      </footer>
     </div>
   );
 };
