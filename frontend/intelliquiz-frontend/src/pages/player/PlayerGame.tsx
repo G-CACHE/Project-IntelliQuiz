@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, BarChart3 } from 'lucide-react';
+import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, BarChart3, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -10,6 +10,7 @@ import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import AntiCheatWrapper from '../../components/game/AntiCheatWrapper';
 import QuestionPalette from '../../components/game/QuestionPalette';
 import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal';
+import { ConfettiCanvas, ErrorParticles } from '../../components/game/ResultEffects';
 import '../../styles/participant.css';
 
 const PlayerGame: React.FC = () => {
@@ -314,6 +315,10 @@ const PlayerGame: React.FC = () => {
   return (
     <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION' && !earlySubmittedQuiz}>
     <div className="participant-page participant-game-page">
+      {/* Visual Effects */}
+      {gameState === 'ANSWER_REVEAL' && isCorrect === true && <ConfettiCanvas />}
+      {gameState === 'ANSWER_REVEAL' && isCorrect === false && <ErrorParticles />}
+
       <RoundAnnouncementModal 
         isVisible={showRoundAnnouncement}
         roundName={currentRound || ''}
@@ -453,8 +458,10 @@ const PlayerGame: React.FC = () => {
                         <p className="participant-submitted-hint">Waiting for results...</p>
                       </div>
                     ) : selectedOption ? (
-                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
-                        <CheckCircle2 size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Selected - you can change your answer before time runs out
+                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#7a1733', marginTop: '16px', fontWeight: 700 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          Your answer is recorded — you can change it until time runs out
+                        </span>
                       </p>
                     ) : (
                       <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
@@ -488,7 +495,7 @@ const PlayerGame: React.FC = () => {
           )}
 
           {/* ANSWER_REVEAL State */}
-          {gameState === 'ANSWER_REVEAL' && currentQuestion && (
+          {(gameState === 'REVEAL' || gameState === 'ANSWER_REVEAL') && currentQuestion && (
             <div>
               {/* Result Banner */}
               <div className={`participant-result-banner ${
@@ -556,7 +563,7 @@ const PlayerGame: React.FC = () => {
             </div>
           )}
 
-          {/* SCOREBOARD / ROUND_SUMMARY State */}
+          {/* SCOREBOARD / ROUND_SUMMARY — full leaderboard, question hidden */}
           {(gameState === 'SCOREBOARD' || gameState === 'ROUND_SUMMARY') && (
             <div>
               <ScoreboardDisplay
@@ -611,7 +618,7 @@ const PlayerGame: React.FC = () => {
           {/* PAUSED State */}
           {gameState === 'PAUSED' && (
             <div className="participant-buffer-state">
-              <div className="participant-paused-icon">⏸</div>
+              <div className="participant-paused-icon"><PauseCircle size={48} /></div>
               <h2 className="participant-buffer-title">Quiz Paused</h2>
               <p className="participant-buffer-text">Waiting for the host to resume...</p>
             </div>

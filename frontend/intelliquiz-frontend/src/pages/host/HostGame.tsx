@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Trophy, Home, Volume2, VolumeX } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon } from 'lucide-react';
+import {
+  Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon, 
+  Hourglass, PauseCircle, MonitorPlay
+} from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
@@ -153,18 +155,7 @@ const HostGame: React.FC = () => {
 
   useEffect(() => {
     if (gameState !== 'FINAL_RESULTS' || hasFiredFinalConfettiRef.current) return;
-
     hasFiredFinalConfettiRef.current = true;
-
-    confetti({
-      particleCount: 42,
-      spread: 58,
-      startVelocity: 24,
-      ticks: 180,
-      origin: { y: 0.28 },
-      colors: ['#f8d86b', '#f4b6c2', '#9dbdff', '#7a1733'],
-      scalar: 0.85,
-    });
   }, [gameState]);
   
   const isLastQuestion = totalQuestions > 0 && questionNumber >= totalQuestions;
@@ -210,14 +201,16 @@ const HostGame: React.FC = () => {
       
       case 'PAUSED':
         return (
-          <button
-            onClick={handleResume}
-            disabled={!connected}
-            className="proctor-btn-success proctor-btn-large"
-          >
-            <Play size={20} aria-hidden="true" className="proctor-control-icon" />
-            Resume Quiz
-          </button>
+          <div className="proctor-actions">
+            <button
+              onClick={handleResume}
+              disabled={!connected}
+              className="proctor-btn-success proctor-btn-large"
+            >
+              <Play size={20} aria-hidden="true" className="proctor-control-icon" />
+              Resume Quiz
+            </button>
+          </div>
         );
       
       case 'BUFFER':
@@ -317,30 +310,7 @@ const HostGame: React.FC = () => {
     }
   };
 
-  // If we are in Scoreboard or Round Summary, show FULL PAGE RANKING
-  if ((gameState === 'ROUND_SUMMARY' || gameState === 'SCOREBOARD') && !isClassMode) {
-    return (
-      <div className="full-page-ranking-container">
-        <header className="full-page-ranking-header">
-          <p className="host-lobby-subtitle" style={{ color: '#64748b' }}>Current Rankings</p>
-          <h1 className="ranking-title-gold">{session.quizTitle}</h1>
-          <div style={{ marginTop: '20px' }}>
-            <span className="host-lobby-badge">Round {currentRound} Summary</span>
-          </div>
-        </header>
-        
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 100px' }}>
-          <ScoreboardDisplay rankings={rankings} isFinal={false} />
-        </div>
-
-        <div className="proctor-game-controls" style={{ position: 'sticky', bottom: 0, width: '100%', padding: '20px' }}>
-           <div className="proctor-controls-shell" style={{ maxWidth: '600px', margin: '0 auto' }}>
-             {renderControls()}
-           </div>
-        </div>
-      </div>
-    );
-  }
+  // Removing the full page early return for Scoreboard/Round Summary so they render inline with the question view.
 
   return (
     <div className="proctor-page proctor-game-page">
@@ -394,6 +364,7 @@ const HostGame: React.FC = () => {
                   timeRemaining={timeRemaining} 
                   totalTime={isClassMode ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
                   displayMode={isClassMode ? 'clock' : 'seconds'}
+                  showProgress={false}
                 />
               </div>
             )}
@@ -438,6 +409,7 @@ const HostGame: React.FC = () => {
 
           {(gameState === 'ACTIVE' || gameState === 'QUESTION') && !currentQuestion && !isClassMode && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
+              <MonitorPlay size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">
                 Live Audience View
               </h2>
@@ -492,7 +464,7 @@ const HostGame: React.FC = () => {
           {/* GRADING State */}
           {gameState === 'GRADING' && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
-              <div className="proctor-host-state-icon">⏳</div>
+              <Hourglass size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">Time&apos;s Up!</h2>
               <p className="proctor-host-panel-subtitle">Grading answers...</p>
             </div>
@@ -506,7 +478,7 @@ const HostGame: React.FC = () => {
                 questionNumber={questionNumber}
                 totalQuestions={totalQuestions}
                 correctAnswer={currentQuestion.correctAnswer}
-                showCorrectAnswer={true}
+                showCorrectAnswer={gameState === 'ANSWER_REVEAL'}
                 disabled={true}
               />
               
@@ -518,10 +490,17 @@ const HostGame: React.FC = () => {
             </div>
           )}
 
+          {/* SCOREBOARD / ROUND_SUMMARY — full leaderboard, question hidden */}
+          {(gameState === 'SCOREBOARD' || gameState === 'ROUND_SUMMARY') && (
+            <div style={{ padding: '0 8px' }}>
+              <ScoreboardDisplay rankings={rankings} isFinal={false} />
+            </div>
+          )}
+
           {/* PAUSED State */}
           {gameState === 'PAUSED' && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
-              <div className="proctor-host-state-icon">⏸️</div>
+              <PauseCircle size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">Quiz Paused</h2>
               <p className="proctor-host-panel-subtitle">
                 The timer has been paused. Click Resume to continue.
