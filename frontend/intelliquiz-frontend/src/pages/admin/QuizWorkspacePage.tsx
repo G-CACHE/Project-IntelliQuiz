@@ -15,6 +15,7 @@ import {
   BiCog,
   BiX,
   BiErrorCircle,
+  BiUserPlus,
 } from 'react-icons/bi';
 import { useQuiz, useQuizStatusChange, useRegisterTeam, useScoreboard, useTeams } from '../../hooks';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
