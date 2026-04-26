@@ -31,9 +31,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     ? (question.options.length >= 2 ? question.options.slice(0, 2) : ['True', 'False'])
     : question.options;
 
+  const normalize = (val: string | null | undefined) => (val || '').trim().toLowerCase();
+
   const getOptionClass = (option: string, letter: string) => {
-    const isSelected = selectedOption === option || selectedOption === letter;
-    const isCorrect = correctAnswer === option || correctAnswer === letter;
+    const normSelected = normalize(selectedOption);
+    const isSelected = normSelected === normalize(option) || normSelected === letter.toLowerCase();
+    const isCorrect = showCorrectAnswer && (normalize(correctAnswer) === normalize(option) || normalize(correctAnswer) === letter.toLowerCase());
     const isWrong = showCorrectAnswer && isSelected && !isCorrect;
 
     let classes = `${prefix}-answer-btn`;
@@ -61,39 +64,45 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     <div className={`${prefix}-question-display`}>
       {/* Question Header */}
       <div className={`${prefix}-question-header`}>
-        <p className={`${prefix}-question-number`}>
-          Question {questionNumber} of {totalQuestions}
-        </p>
-        <span className={`${prefix}-badge-accent`}>{question.points} pts</span>
+        <div className={`${prefix}-question-number-badge`}>
+          <span className={`${prefix}-question-number-label`}>Question</span>
+          <span className={`${prefix}-question-number-value`}>{questionNumber}</span>
+          <span className={`${prefix}-question-number-total`}>/ {totalQuestions}</span>
+        </div>
+        <div className={`${prefix}-badge-points`}>
+          <span className={`${prefix}-points-value`}>{question.points}</span>
+          <span className={`${prefix}-points-label`}>PTS</span>
+        </div>
       </div>
 
-      {/* Question Text */}
-      <div className={`${prefix}-question-card`}>
-        <h2 className={`${prefix}-question-text`}>
-          {question.text}
-        </h2>
+      {/* Question Card */}
+      <div className={`${prefix}-question-card-wrapper`}>
+        <div className={`${prefix}-question-card`}>
+          <h2 className={`${prefix}-question-text`}>
+            {question.text}
+          </h2>
+        </div>
+        <div className={`${prefix}-question-card-glow`}></div>
       </div>
 
       {/* Answer UI */}
       {questionType === 'IDENTIFICATION' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            type="text"
-            value={selectedOption ?? ''}
-            onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
-            placeholder="Type your answer"
-            disabled={disabled}
-            className={`${prefix}-answer-btn`}
-            style={{
-              width: '100%',
-              cursor: disabled ? 'not-allowed' : 'text',
-              textAlign: 'left',
-              padding: '14px 16px',
-            }}
-          />
+        <div className={`${prefix}-identification-container`}>
+          <div className={`${prefix}-input-wrapper`}>
+            <input
+              type="text"
+              value={selectedOption ?? ''}
+              onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
+              placeholder="Type your answer here..."
+              disabled={disabled}
+              className={`${prefix}-answer-input`}
+            />
+            <div className={`${prefix}-input-focus-border`}></div>
+          </div>
           {showCorrectAnswer && correctAnswer && (
-            <div className={`${prefix}-question-card`} style={{ padding: '12px 16px' }}>
-              <p style={{ margin: 0, fontWeight: 700 }}>Accepted Answer: {correctAnswer}</p>
+            <div className={`${prefix}-accepted-answer-card`}>
+              <div className={`${prefix}-accepted-label`}>Accepted Answer</div>
+              <div className={`${prefix}-accepted-value`}>{correctAnswer}</div>
             </div>
           )}
         </div>
@@ -101,8 +110,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <div className={`${prefix}-answer-grid`}>
           {optionList.map((option, index) => {
           const letter = String.fromCharCode(65 + index);
-          const isSelected = selectedOption === option || selectedOption === letter;
-          const isCorrect = showCorrectAnswer && (correctAnswer === option || correctAnswer === letter);
+          const normSelected = normalize(selectedOption);
+          const isSelected = normSelected === normalize(option) || normSelected === letter.toLowerCase();
+          
+          const normCorrect = normalize(correctAnswer);
+          const isCorrect = showCorrectAnswer && (normCorrect === normalize(option) || normCorrect === letter.toLowerCase());
 
           return (
             <button
@@ -125,9 +137,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               {showCorrectAnswer && (isCorrect || (isSelected && !isCorrect)) && (
                 <div className={`${prefix}-answer-indicator`}>
                   {isCorrect ? (
-                    <CheckCircle className={`${prefix}-answer-indicator-icon`} color="#ffffff" strokeWidth={2.5} />
+                    <CheckCircle className={`${prefix}-answer-indicator-icon`} color="#ffffff" strokeWidth={3} />
                   ) : (
-                    <XCircle className={`${prefix}-answer-indicator-icon`} color="#ffffff" strokeWidth={2.5} />
+                    <XCircle className={`${prefix}-answer-indicator-icon`} color="#ffffff" strokeWidth={3} />
                   )}
                 </div>
               )}
@@ -138,6 +150,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                   <Check className={`${prefix}-answer-selected-icon`} strokeWidth={4} />
                 </div>
               )}
+              
+              {/* Hover/Active Glow */}
+              <div className={`${prefix}-answer-glow`}></div>
             </button>
           );
           })}

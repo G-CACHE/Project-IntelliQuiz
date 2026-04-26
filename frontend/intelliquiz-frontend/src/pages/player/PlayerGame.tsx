@@ -411,6 +411,7 @@ const PlayerGame: React.FC = () => {
                   selectedOption={selectedOption}
                   onSelectOption={handleSelectOption}
                   disabled={submitted || (!canNavigate && timeRemaining <= 0)}
+                  variant="participant"
                 />
 
                 {/* Navigation Buttons for Participant-Navigated Quiz */}
@@ -555,6 +556,7 @@ const PlayerGame: React.FC = () => {
                 correctAnswer={currentQuestion.correctAnswer}
                 showCorrectAnswer={true}
                 disabled={true}
+                variant="participant"
               />
 
               <div className="participant-waiting-message">

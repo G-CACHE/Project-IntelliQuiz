@@ -12,7 +12,6 @@ Scope: Frontend only. Do not change backend, API, database, auth rules, or busin
 - Preserve all existing functionality and route behavior.
 
 ## Hard Constraints
-
 - Do not edit API calls, hooks, reducers, services, or route guards.
 - Do not rename data fields or component props tied to runtime logic.
 - Do not import style sheets across unrelated pages to borrow visuals.

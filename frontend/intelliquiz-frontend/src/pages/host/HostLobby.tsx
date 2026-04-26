@@ -314,7 +314,7 @@ const HostLobby: React.FC = () => {
               >
                 Launch Game Session
               </button>
-              <button className="palette-item-btn" onClick={() => navigate('/host/dashboard')}>
+              <button className="palette-item-btn" onClick={() => window.open('/proctor/dashboard', '_blank', 'noopener,noreferrer')}>
                 <LayoutDashboard size={18} />
                 Open Dashboard
               </button>
