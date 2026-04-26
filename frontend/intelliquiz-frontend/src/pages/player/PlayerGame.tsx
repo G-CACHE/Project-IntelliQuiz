@@ -4,6 +4,7 @@ import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, Bar
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
+import { parseSmartName } from '../../utils/nameUtils';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
@@ -333,7 +334,7 @@ const PlayerGame: React.FC = () => {
             <p className="participant-game-question-info participant-game-progress-chip">
               Q{questionNumber}/{totalQuestions}
             </p>
-            <p className="participant-game-team-name">{session.teamName}</p>
+            <p className="participant-game-team-name">{parseSmartName(session.teamName).name}</p>
           </div>
           
           <div className="participant-game-header-right">

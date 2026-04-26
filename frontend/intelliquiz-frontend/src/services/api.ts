@@ -75,6 +75,15 @@ export const accessApi = {
 
     return handleResponse<ParticipantAccessCheckResponse>(response);
   },
+
+  updateTeamName: async (teamId: number, newName: string, accessCode: string): Promise<void> => {
+    const response = await apiFetch(`${API_BASE_URL}/api/access/teams/${teamId}/name`, {
+      method: 'PUT',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ name: newName, accessCode }),
+    });
+    return handleResponse<void>(response);
+  },
 };
 
 // Current User API (for fetching own info and assignments)

@@ -5,6 +5,7 @@ import { getOrCreateDeviceId } from '../../services/deviceId';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
 import { useSSE } from '../../hooks/useSSE';
 import Timer from '../../components/game/Timer';
+import { parseSmartName } from '../../utils/nameUtils';
 import '../../styles/proctor.css';
 
 const Tooltip = ({ text }: { text: string }) => (
@@ -189,7 +190,7 @@ const ProctorDashboard: React.FC = () => {
     const counts: Record<number, { teamName: string; count: number; lastType: string }> = {};
     violations.forEach((v: ViolationNotification) => {
       counts[v.teamId] = {
-        teamName: v.teamName,
+        teamName: parseSmartName(v.teamName).name,
         count: v.totalCount,
         lastType: v.lastType,
       };
@@ -384,21 +385,24 @@ const ProctorDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {connectedTeams.map((team) => (
-                        <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                          <div>
-                            <strong style={{ fontSize: 14 }}>{team.name}</strong>
-                            {teamViolationCounts[team.id] && teamViolationCounts[team.id].count > 0 && (
-                              <p style={{ margin: 0, fontSize: 12, color: '#dc2626', fontWeight: 600 }}>
-                                {teamViolationCounts[team.id].count} Violations
-                              </p>
-                            )}
+                      {connectedTeams.map((team) => {
+                        const { name } = parseSmartName(team.name);
+                        return (
+                          <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                            <div>
+                              <strong style={{ fontSize: 14 }}>{name}</strong>
+                              {teamViolationCounts[team.id] && teamViolationCounts[team.id].count > 0 && (
+                                <p style={{ margin: 0, fontSize: 12, color: '#dc2626', fontWeight: 600 }}>
+                                  {teamViolationCounts[team.id].count} Violations
+                                </p>
+                              )}
+                            </div>
+                            <button onClick={() => setShowKickConfirm({ teamId: team.id, teamName: name })} className="proctor-btn proctor-btn-danger" style={{ padding: '6px 12px', fontSize: 12 }}>
+                              Kick
+                            </button>
                           </div>
-                          <button onClick={() => setShowKickConfirm({ teamId: team.id, teamName: team.name })} className="proctor-btn proctor-btn-danger" style={{ padding: '6px 12px', fontSize: 12 }}>
-                            Kick
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -463,7 +467,7 @@ const ProctorDashboard: React.FC = () => {
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
                         </div>
                         <div className="proctor-violation-details">
-                          <h4 className="proctor-violation-team-name">{v.teamName}</h4>
+                          <h4 className="proctor-violation-team-name">{parseSmartName(v.teamName).name}</h4>
                           <span className="proctor-violation-type">{formatViolationType(v.violationType)}</span>
                         </div>
                       </div>

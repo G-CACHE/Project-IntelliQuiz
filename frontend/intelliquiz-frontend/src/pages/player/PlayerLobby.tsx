@@ -5,6 +5,7 @@ import { useSSE } from '../../hooks/useSSE';
 import { accessApi } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { clearSession, getParticipantSession } from '../../services/sessionStorage';
+import { parseSmartName } from '../../utils/nameUtils';
 import '../../styles/participant.css';
 
 const PlayerLobby: React.FC = () => {
@@ -115,8 +116,28 @@ const PlayerLobby: React.FC = () => {
       <div className="participant-page-header">
         <div className="participant-header-decoration participant-header-decoration-1"></div>
         <div className="participant-header-decoration participant-header-decoration-2"></div>
-        <p className="participant-page-subtitle">Your Team</p>
-        <h1 className="participant-page-title">{session.teamName}</h1>
+        
+        {(() => {
+          const { name, avatarId } = parseSmartName(session.teamName);
+          return (
+            <>
+              <div className={`participant-lobby-avatar ${avatarId ? 'has-avatar' : ''}`}>
+                {avatarId ? (
+                  <img src={`/avatars/${avatarId}`} alt="" className="participant-lobby-avatar-img" />
+                ) : (
+                  <div className="participant-lobby-avatar-default">
+                    {name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="participant-header-content">
+                <p className="participant-page-subtitle">Your Team</p>
+                <h1 className="participant-page-title">{name}</h1>
+              </div>
+            </>
+          );
+        })()}
+
         <div className="participant-connection-badge">
           <span className={`participant-status-dot ${
             connected ? 'participant-status-connected' : 
@@ -157,40 +178,39 @@ const PlayerLobby: React.FC = () => {
             </div>
           )}
 
-          {/* Waiting Animation */}
-          {!error && (
-            <>
-              <div className="participant-waiting-spinner">
-                <div className="participant-spinner-outer"></div>
-                <div className="participant-spinner-inner"></div>
-              </div>
+          {/* Status & Info Group */}
+          <div className="participant-waiting-status-group">
+            <div className="participant-waiting-spinner">
+              <div className="participant-spinner-outer"></div>
+              <div className="participant-spinner-inner"></div>
+            </div>
 
+            <div className="participant-waiting-text-group">
               <h2 className="participant-waiting-title">
                 Waiting for host to start...
               </h2>
               <p className="participant-waiting-text">
                 Get ready! The quiz will begin soon.
               </p>
+            </div>
+          </div>
 
-              {/* Team Count */}
-              {connectedTeams.length > 0 && (
-                <div className="participant-team-count">
-                  <span className="participant-status-dot participant-status-connected"></span>
-                  <span>
-                    {connectedTeams.length} team{connectedTeams.length !== 1 ? 's' : ''} connected
-                  </span>
-                </div>
-              )}
-            </>
+          {/* Team Count */}
+          {connectedTeams.length > 0 && (
+            <div className="participant-team-count">
+              <span className="participant-status-dot participant-status-connected"></span>
+              <span>
+                {connectedTeams.length} team{connectedTeams.length !== 1 ? 's' : ''} connected
+              </span>
+            </div>
           )}
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="participant-footer">
-        <p className="participant-footer-text">
-          Stay on this page. You'll be automatically taken to the quiz when it starts.
-        </p>
+        
+        <div className="participant-footer">
+          <p className="participant-footer-text">
+            Stay on this page. You'll be automatically taken to the quiz when it starts.
+          </p>
+        </div>
       </div>
     </div>
   );

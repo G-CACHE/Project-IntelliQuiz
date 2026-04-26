@@ -126,6 +126,24 @@ public class TeamRegistrationService {
         return teamRepository.save(team);
     }
 
+    /**
+     * Updates a team's name if the provided access code matches.
+     * Used by participants to update their profile (e.g. adding an avatar).
+     */
+    public Team updateTeamNameWithAccessCode(Long teamId, String newName, String accessCode) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new EntityNotFoundException("Team", teamId));
+
+        if (!team.getAccessCode().equals(accessCode)) {
+            throw new IllegalArgumentException("Invalid access code");
+        }
+
+        assertQuizNotArchived(team.getQuizId());
+        
+        team.setName(newName);
+        return teamRepository.save(team);
+    }
+
     private void assertQuizNotArchived(Long quizId) {
         var quiz = quizFacade.findQuizInfo(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Target, Crown, TrendingUp, Zap, Sparkles, Trophy, Medal, Award, Flame, Star } from 'lucide-react';
 import type { RankingEntry } from '../../services/api';
+import { parseSmartName } from '../../utils/nameUtils';
 
 interface ScoreboardDisplayProps {
   rankings: RankingEntry[];
@@ -233,6 +234,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
       {/* ===== ROWS ===== */}
       <div style={S.list}>
         {ranked.map((entry, idx) => {
+          const { name, avatarId } = parseSmartName(entry.teamName);
           const isTop = entry.displayRank <= 3;
           const isHi = entry.teamId === highlightTeamId;
           const m = isTop ? RANK_META[entry.displayRank] : DEFAULT_META;
@@ -263,16 +265,23 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
               {/* === AVATAR === */}
               <div style={{
                 ...S.avatar,
-                background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
-                boxShadow: `0 4px 14px ${m.border}33`,
+                background: avatarId ? 'transparent' : AVATAR_COLORS[idx % AVATAR_COLORS.length],
+                boxShadow: avatarId ? 'none' : `0 4px 14px ${m.border}33`,
+                border: avatarId ? 'none' : S.avatar.border,
+                borderRadius: '12px',
+                overflow: 'hidden',
               }}>
-                {initials(entry.teamName)}
+                {avatarId ? (
+                  <img src={`/avatars/${avatarId}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  initials(name)
+                )}
               </div>
 
               {/* === TEAM INFO === */}
               <div style={S.info}>
                 <div style={S.nameRow}>
-                  <span style={{ ...S.name, color: m.text }}>{entry.teamName}</span>
+                  <span style={{ ...S.name, color: m.text }}>{name}</span>
                   {isHi && <span style={S.you}><Target size={10} /> You</span>}
                   {isTop && entry.displayRank === 1 && <Flame size={16} color="#ef4444" style={{ marginLeft: 4, animation: 'scoreFlicker 0.8s ease-in-out infinite alternate' }} />}
                 </div>

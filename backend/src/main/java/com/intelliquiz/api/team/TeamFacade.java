@@ -100,6 +100,13 @@ public class TeamFacade {
         });
     }
 
+    /**
+     * Updates a team's name if the provided access code matches.
+     */
+    public void updateTeamNameWithAccessCode(Long teamId, String newName, String accessCode) {
+        teamRegistrationService.updateTeamNameWithAccessCode(teamId, newName, accessCode);
+    }
+
     private TeamInfoDto toDto(Team team) {
         return new TeamInfoDto(
             team.getId(),

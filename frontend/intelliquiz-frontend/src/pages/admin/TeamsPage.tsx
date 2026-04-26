@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BiGroup, BiPlus, BiTrash, BiRefresh, BiSearch, BiX, BiErrorCircle, BiCopy, BiCheck } from 'react-icons/bi';
 import { teamsApi, quizzesApi, type Team, type Quiz } from '../../services/api';
+import { parseSmartName } from '../../utils/nameUtils';
 import { useAuth } from '../../contexts/AuthContext';
 import CustomSelect from '../../components/common/CustomSelect';
 import '../../styles/admin.css';
@@ -107,7 +108,10 @@ export default function AdminTeamsPage() {
     }
   };
 
-  const filteredTeams = teams.filter((t) => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredTeams = teams.filter((t) => {
+    const { name } = parseSmartName(t.name);
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
   const selectedQuiz = quizzes.find((q) => q.id === selectedQuizId);
 
   if (loading && quizzes.length === 0) {
@@ -212,16 +216,26 @@ export default function AdminTeamsPage() {
               {filteredTeams.length > 0 ? filteredTeams.map((t) => (
                 <tr key={t.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ 
-                        width: 40, height: 40, borderRadius: 10, 
-                        background: 'linear-gradient(135deg, var(--admin-accent), var(--admin-accent-light))', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' 
-                      }}>
-                        <BiGroup size={20} />
-                      </div>
-                      <span style={{ fontWeight: 600 }}>{t.name}</span>
-                    </div>
+                    {(() => {
+                      const { name, avatarId } = parseSmartName(t.name);
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ 
+                            width: 40, height: 40, borderRadius: 10, 
+                            background: avatarId ? 'transparent' : 'linear-gradient(135deg, var(--admin-accent), var(--admin-accent-light))', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000',
+                            overflow: 'hidden'
+                          }}>
+                            {avatarId ? (
+                              <img src={`/avatars/${avatarId}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            ) : (
+                              <BiGroup size={20} />
+                            )}
+                          </div>
+                          <span style={{ fontWeight: 600 }}>{name}</span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -308,7 +322,7 @@ export default function AdminTeamsPage() {
                   <BiTrash size={32} />
                 </div>
                 <p style={{ color: 'rgba(255,255,255,0.8)' }}>
-                  Are you sure you want to remove <strong style={{ color: '#fff' }}>{selectedTeam.name}</strong>?
+                  Are you sure you want to remove <strong style={{ color: '#fff' }}>{parseSmartName(selectedTeam.name).name}</strong>?
                 </p>
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>
                   This will also delete all their submissions.
