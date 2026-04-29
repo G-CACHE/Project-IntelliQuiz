@@ -214,11 +214,6 @@ const ProctorDashboard: React.FC = () => {
     [connectedTeams, submittedTeamIds]
   );
 
-  const pendingTeams = useMemo(
-    () => connectedTeams.filter((team) => !submittedTeamIds.has(team.id)),
-    [connectedTeams, submittedTeamIds]
-  );
-
   const handleThresholdChange = useCallback((value: number) => {
     setAutoKickThresholdLocal(value);
     setAutoKickThreshold(value);

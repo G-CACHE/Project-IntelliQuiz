@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, Crown, TrendingUp, Zap, Sparkles, Trophy, Medal, Award, Flame, Star } from 'lucide-react';
+import { Target, Crown, Sparkles, Trophy, Medal, Award, Star } from 'lucide-react';
 import type { RankingEntry } from '../../services/api';
 import { parseSmartName } from '../../utils/nameUtils';
 
@@ -502,8 +502,6 @@ const S: Record<string, React.CSSProperties> = {
     border: '2px solid rgba(212,175,55,0.2)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
     fontFamily: "'Montserrat', sans-serif",
   },
-  emptyTitle: { fontSize: '20px', fontWeight: 800, color: '#1f2937', margin: '16px 0 6px' },
-  emptySub: { fontSize: '14px', color: '#9ca3af', margin: 0 },
 
   // Footer
   footer: {
