@@ -98,6 +98,7 @@ export function useSSE(
         isCorrect: typeof entry.isCorrect === 'boolean' ? entry.isCorrect : undefined,
         pointsEarned: Number(entry.pointsEarned ?? 0),
         submittedAnswer: typeof entry.submittedAnswer === 'string' ? entry.submittedAnswer : undefined,
+        streak: Number(entry.streak ?? 0),
       }
     })
   }
@@ -244,8 +245,9 @@ export function useSSE(
           })
         }
 
-        if (Array.isArray(data.teamResults)) {
-          setRankings(normalizeRankings(data.teamResults))
+        const rankingsData = data.teamResults || data.rankings;
+        if (Array.isArray(rankingsData)) {
+          setRankings(normalizeRankings(rankingsData));
         }
       } catch {
         setError('Failed to parse game state event')
@@ -269,8 +271,9 @@ export function useSSE(
         const data = JSON.parse((evt as MessageEvent).data)
         setGameState('ANSWER_REVEAL')
 
-        if (Array.isArray(data.teamResults)) {
-          setRankings(normalizeRankings(data.teamResults))
+        const rankingsData = data.teamResults || data.rankings;
+        if (Array.isArray(rankingsData)) {
+          setRankings(normalizeRankings(rankingsData));
         }
 
         if (data.correctAnswer) {

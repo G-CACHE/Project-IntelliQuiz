@@ -14,6 +14,79 @@ import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal
 import { ConfettiCanvas, ErrorParticles } from '../../components/game/ResultEffects';
 import '../../styles/participant.css';
 
+// ======== STREAK NOTIFICATION COMPONENTS ========
+const StreakFire: React.FC<{ size?: number }> = ({ size = 64 }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: size, height: size + 8 }}>
+    <div style={{
+      position: 'absolute', width: '80%', height: '80%', borderRadius: '50%',
+      background: 'radial-gradient(circle, rgba(255,100,0,0.5) 0%, transparent 75%)',
+      filter: 'blur(12px)', animation: 'flameBloom 2s infinite alternate',
+      zIndex: 1
+    }} />
+    <img 
+      src="/effects/streak-fire.png" 
+      alt="Streak" 
+      style={{ 
+        width: size, height: 'auto', position: 'relative', zIndex: 2,
+        filter: 'drop-shadow(0 0 12px rgba(255, 69, 0, 0.7)) brightness(1.1)',
+        animation: 'flameBreathe 1.2s infinite ease-in-out'
+      }} 
+    />
+    {[...Array(4)].map((_, i) => (
+      <div key={i} style={{
+        position: 'absolute', width: '4px', height: '4px', borderRadius: '50%', background: '#FFF700',
+        bottom: '25%', left: `${35 + i * 12}%`, opacity: 0.8,
+        animation: `flameEmber ${1 + i * 0.3}s infinite linear`,
+        animationDelay: `${i * 0.4}s`, zIndex: 3
+      }} />
+    ))}
+  </div>
+);
+
+const StreakNotifier: React.FC<{ streak: number }> = ({ streak }) => {
+  if (streak < 3) return null;
+
+  return (
+    <div className="streak-pop-container">
+      <div className="streak-badge-main">
+        <StreakFire size={72} />
+        <div className="streak-info">
+          <span className="streak-number">{streak}x</span>
+          <span className="streak-text">STREAK!</span>
+        </div>
+      </div>
+      <style>{`
+        .streak-pop-container {
+          position: fixed; top: 120px; right: 20px; z-index: 1000;
+          animation: streakPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+          pointer-events: none;
+        }
+        .streak-badge-main {
+          display: flex; flex-direction: column; align-items: center;
+          padding: 16px; background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(12px); border-radius: 24px;
+          border: 2px solid #ff4500;
+          box-shadow: 0 8px 32px rgba(255, 69, 0, 0.4), inset 0 2px 8px rgba(255,255,255,0.2);
+        }
+        .streak-info { display: flex; flex-direction: column; align-items: center; margin-top: -8px; }
+        .streak-number { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 0 10px #ff4500; font-family: 'Montserrat', sans-serif; }
+        .streak-text { font-size: 12px; font-weight: 800; color: #ffb067; letter-spacing: 0.2em; text-transform: uppercase; }
+        
+        @keyframes streakPopIn { from { transform: translateX(100px) scale(0.5); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
+        @keyframes flameBloom { from { transform: scale(0.9); opacity: 0.3; } to { transform: scale(1.4); opacity: 0.7; } }
+        @keyframes flameBreathe {
+          0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.7)) brightness(1.1); }
+          50% { transform: scale(1.08) translateY(-2px); filter: drop-shadow(0 0 18px rgba(255, 80, 0, 0.9)) brightness(1.3); }
+        }
+        @keyframes flameEmber {
+          0% { transform: translateY(0) scale(1); opacity: 1; }
+          100% { transform: translateY(-45px) scale(0); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const PlayerGame: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -62,6 +135,7 @@ const PlayerGame: React.FC = () => {
   // WebSocket connection - pass teamCode as accessCode for authentication
   const {
     connected,
+    connecting,
     error,
     gameState,
     participantNavigationEnabled,
@@ -306,16 +380,20 @@ const PlayerGame: React.FC = () => {
     setIsCorrect(null);
   }, [navigateToQuestion, canNavigate, earlySubmittedQuiz]);
 
-  // Find current team score from rankings
-  const myTeamScore = rankings.find((r: any) => r.teamId === session?.teamId)?.score;
-  const myFinalResult = rankings.find((r: any) => r.teamId === session?.teamId);
   const classTimerExpired = canNavigate && timerTotalTime > 0 && timeRemaining <= 0;
+  const myRanking = rankings.find(r => r.teamId === session?.teamId);
+  const currentStreak = myRanking?.streak || 0;
+  const myTeamScore = myRanking?.score;
+  const myFinalResult = myRanking;
 
   if (!session) return null;
 
   return (
     <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION' && !earlySubmittedQuiz}>
-    <div className="participant-page participant-game-page">
+     <div className="participant-page participant-game-page">
+      {/* Streak Notifier - Private to player */}
+      <StreakNotifier streak={currentStreak} />
+
       {/* Visual Effects */}
       {gameState === 'ANSWER_REVEAL' && isCorrect === true && <ConfettiCanvas />}
       {gameState === 'ANSWER_REVEAL' && isCorrect === false && <ErrorParticles />}
@@ -347,7 +425,11 @@ const PlayerGame: React.FC = () => {
             )}
             
             {/* Connection Status */}
-            <span className={`participant-status-dot ${connected ? 'participant-status-connected' : 'participant-status-disconnected'}`}></span>
+            <span className={`participant-status-dot ${
+              connected ? 'participant-status-connected' : 
+              connecting ? 'participant-status-connecting' : 
+              'participant-status-disconnected'
+            }`}></span>
             
             {/* Timer — only show during active question, not buffer */}
             {gameState === 'QUESTION' && (

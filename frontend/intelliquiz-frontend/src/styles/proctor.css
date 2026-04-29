@@ -852,6 +852,7 @@
   margin: 0;
 }
 
+
 .proctor-violation-type {
   font-size: 12px;
   color: #6b7280;
@@ -1976,17 +1977,17 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 12px rgba(242, 200, 75, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.8);
-  background: radial-gradient(circle at top left, #ffe38f 0%, #d4af37 100%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  background: radial-gradient(circle at top left, #c2a04a 0%, #7a1733 100%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  color: #4a0c1e;
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff !important;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2000,12 +2001,10 @@
 }
 
 .proctor-timer-unit {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  opacity: 0.8;
+  font-size: 10px;
+  color: #ffffff !important;
+  font-weight: 700;
+  margin-left: 1px;
 }
 
 .proctor-timer-large .proctor-timer-unit {
@@ -2013,10 +2012,10 @@
 }
 
 .proctor-timer-low .proctor-timer-value {
-  background: radial-gradient(circle at top left, #ffb067 0%, #d97706 100%);
-  color: #ffffff;
-  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.5);
-  animation: smooth-pulse 1.2s infinite alternate;
+  background: radial-gradient(circle at top left, #ff9d47 0%, #d97706 100%);
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.4), inset 0 2px 6px rgba(255, 255, 255, 0.4);
+  animation: smooth-pulse 1s infinite alternate;
 }
 
 .proctor-timer-critical .proctor-timer-value {

@@ -116,19 +116,19 @@ const RANK_META: Record<number, {
   1: {
     bg: 'linear-gradient(135deg, #fbbf24, #d4af37, #b8860b)',
     rowBg: 'linear-gradient(135deg, #fef9c3 0%, #fde68a 40%, #fbbf24 100%)',
-    border: '#d4af37', text: '#78350f', glow: '0 6px 28px rgba(212,175,55,0.4)',
+    border: '#d4af37', text: '#78350f', glow: '0 4px 15px rgba(212,175,55,0.2)',
     barColor: '#d4af37', iconColor: '#78350f', accent: '#fef3c7',
   },
   2: {
     bg: 'linear-gradient(135deg, #d1d5db, #9ca3af, #6b7280)',
     rowBg: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 40%, #e5e7eb 100%)',
-    border: '#9ca3af', text: '#1f2937', glow: '0 4px 20px rgba(107,114,128,0.25)',
+    border: '#9ca3af', text: '#1f2937', glow: '0 4px 15px rgba(107,114,128,0.15)',
     barColor: '#6b7280', iconColor: '#374151', accent: '#f3f4f6',
   },
   3: {
     bg: 'linear-gradient(135deg, #f59e0b, #d97706, #b45309)',
     rowBg: 'linear-gradient(135deg, #fffbeb 0%, #fde68a 40%, #fdba74 100%)',
-    border: '#d97706', text: '#78350f', glow: '0 4px 20px rgba(217,119,6,0.3)',
+    border: '#d97706', text: '#78350f', glow: '0 4px 15px rgba(217,119,6,0.2)',
     barColor: '#d97706', iconColor: '#78350f', accent: '#fef3c7',
   },
 };
@@ -136,7 +136,7 @@ const RANK_META: Record<number, {
 const DEFAULT_META = {
   bg: 'linear-gradient(135deg, #9ca3af, #6b7280)',
   rowBg: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-  border: 'rgba(122,23,51,0.1)', text: '#374151', glow: '0 2px 10px rgba(0,0,0,0.04)',
+  border: '#e2e8f0', text: '#374151', glow: '0 2px 8px rgba(0,0,0,0.05)',
   barColor: '#7a1733', iconColor: '#6b7280', accent: '#f8fafc',
 };
 
@@ -193,10 +193,28 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
 
   if (!rankings.length) {
     return (
-      <div style={S.empty}>
-        <Crown size={52} color="#d4af37" />
-        <p style={S.emptyTitle}>No Scores Yet</p>
-        <p style={S.emptySub}>Waiting for participants...</p>
+      <div style={S.emptyCard}>
+        <div style={S.emptyIconPulse}>
+          <Trophy size={64} color="#d4af37" style={{ filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.4))' }} />
+        </div>
+        <h3 style={S.emptyTitle}>Synchronizing Leaderboard</h3>
+        <p style={S.emptySub}>Waiting for live data from the host...</p>
+        
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{
+            marginTop: '24px', padding: '8px 20px', borderRadius: '12px',
+            background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)',
+            color: '#4a0c1e', fontWeight: 700, fontSize: '13px', cursor: 'pointer',
+            fontFamily: "'Montserrat', sans-serif"
+          }}
+        >
+          Retry Sync
+        </button>
+
+        <div style={S.emptyLoadingBar}>
+          <div style={S.emptyLoadingProgress} />
+        </div>
       </div>
     );
   }
@@ -207,27 +225,31 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
 
       {/* ===== BANNER ===== */}
       <div style={S.bannerWrap}>
-        {/* Left arrow */}
-        <svg width="28" height="56" viewBox="0 0 28 56" style={{ flexShrink: 0 }}>
-          <polygon points="28,0 28,56 0,28" fill="#3a0a16" />
-          <polygon points="28,4 28,52 4,28" fill="#4a0c1e" />
+        {/* Left arrow - Refined Ribbon End */}
+        <svg width="32" height="64" viewBox="0 0 32 64" style={{ flexShrink: 0, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }}>
+          <polygon points="32,0 32,64 0,32" fill="#2d0811" />
+          <polygon points="32,4 32,60 8,32" fill="#4a0c1e" />
+          <path d="M32 4 L32 10 L20 32 L32 54 L32 60" fill="rgba(255,255,255,0.05)" />
         </svg>
+
         <div style={S.banner}>
-          <Sparkles size={18} color="#fde68a" />
-          {isFinal ? <Crown size={22} color="#fde68a" /> : <TrendingUp size={22} color="#fde68a" />}
+          <div style={S.bannerShine} />
           <h2 style={S.bannerText}>{title ?? (isFinal ? 'Final Results' : 'Ranking')}</h2>
-          <Sparkles size={18} color="#fde68a" />
         </div>
-        {/* Right arrow */}
-        <svg width="28" height="56" viewBox="0 0 28 56" style={{ flexShrink: 0 }}>
-          <polygon points="0,0 0,56 28,28" fill="#3a0a16" />
-          <polygon points="0,4 0,52 24,28" fill="#4a0c1e" />
+
+        {/* Right arrow - Refined Ribbon End */}
+        <svg width="32" height="64" viewBox="0 0 32 64" style={{ flexShrink: 0, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }}>
+          <polygon points="0,0 0,64 32,32" fill="#2d0811" />
+          <polygon points="0,4 0,60 24,32" fill="#4a0c1e" />
+          <path d="M0 4 L0 10 L12 32 L0 54 L0 60" fill="rgba(255,255,255,0.05)" />
         </svg>
       </div>
 
       {!isFinal && (
         <div style={S.liveWrap}>
-          <div style={S.liveBadge}><Zap size={11} /><span>LIVE</span></div>
+          <div style={S.liveBadge}>
+            <span>LIVE</span>
+          </div>
         </div>
       )}
 
@@ -247,8 +269,9 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
               style={{
                 ...S.row,
                 background: m.rowBg,
-                border: `2.5px solid ${isHi ? '#7a1733' : m.border}`,
-                boxShadow: isHi ? `0 0 0 4px rgba(122,23,51,0.12), ${m.glow}` : m.glow,
+                border: isHi ? `3px solid #d4af37` : `1px solid ${m.border}`,
+                boxShadow: isHi ? '0 12px 40px rgba(0,0,0,0.15)' : m.glow,
+                zIndex: isHi ? 10 : 1,
                 animationDelay: `${idx * 70}ms`,
               }}
             >
@@ -282,8 +305,12 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
               <div style={S.info}>
                 <div style={S.nameRow}>
                   <span style={{ ...S.name, color: m.text }}>{name}</span>
-                  {isHi && <span style={S.you}><Target size={10} /> You</span>}
-                  {isTop && entry.displayRank === 1 && <Flame size={16} color="#ef4444" style={{ marginLeft: 4, animation: 'scoreFlicker 0.8s ease-in-out infinite alternate' }} />}
+                  {isHi && (
+                    <div style={S.youBadge}>
+                      <Target size={11} color="#fff" />
+                      <span>YOU</span>
+                    </div>
+                  )}
                 </div>
                 {/* Progress bar */}
                 <div style={S.track}>
@@ -334,16 +361,26 @@ const S: Record<string, React.CSSProperties> = {
   // Banner
   bannerWrap: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, marginBottom: '6px', position: 'relative', zIndex: 1 },
   banner: {
-    display: 'flex', alignItems: 'center', gap: '12px',
-    padding: '14px 44px',
-    background: 'linear-gradient(135deg, #4a0c1e 0%, #7a1733 40%, #9f2346 100%)',
-    boxShadow: '0 8px 32px rgba(74,12,30,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-    border: '2px solid rgba(212,175,55,0.4)',
+    display: 'flex', alignItems: 'center', gap: '16px',
+    padding: '16px 52px',
+    background: 'linear-gradient(135deg, #4a0c1e 0%, #7a1733 40%, #8b111f 70%, #561026 100%)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.3)',
+    border: '3px solid #d4af37',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  bannerShine: {
+    position: 'absolute',
+    top: 0, left: '-100%', width: '50%', height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+    transform: 'skewX(-25deg)',
+    animation: 'shimmer 4s infinite',
   },
   bannerText: {
-    margin: 0, fontSize: '22px', fontWeight: 900, color: '#fde68a',
-    letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-    textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+    margin: 0, fontSize: '26px', fontWeight: 900, color: '#fde68a',
+    letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+    textShadow: '0 4px 12px rgba(0,0,0,0.6), 0 0 20px rgba(212,175,55,0.4)',
+    filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))',
   },
 
   // Live
@@ -366,6 +403,35 @@ const S: Record<string, React.CSSProperties> = {
     transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
     animation: 'scoreSlideIn 0.45s cubic-bezier(0.4,0,0.2,1) both',
     cursor: 'default', position: 'relative', overflow: 'hidden',
+  },
+
+  // Empty State
+  emptyCard: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    padding: '60px 40px', background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(16px)', borderRadius: '32px',
+    border: '1px solid rgba(255, 255, 255, 0.4)',
+    boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
+    margin: '40px auto', maxWidth: '600px', textAlign: 'center',
+  },
+  emptyIconPulse: {
+    marginBottom: '24px', animation: 'trophyFloat 3s infinite ease-in-out',
+  },
+  emptyTitle: {
+    fontFamily: "'Montserrat', sans-serif", fontWeight: 900, fontSize: '24px',
+    color: '#4a0c1e', margin: '0 0 8px', letterSpacing: '-0.01em',
+  },
+  emptySub: {
+    fontFamily: "'Montserrat', sans-serif", fontWeight: 500, fontSize: '15px',
+    color: '#6b7280', margin: 0,
+  },
+  emptyLoadingBar: {
+    width: '120px', height: '4px', background: 'rgba(0,0,0,0.05)',
+    borderRadius: '2px', marginTop: '32px', overflow: 'hidden',
+  },
+  emptyLoadingProgress: {
+    width: '40%', height: '100%', background: '#d4af37',
+    borderRadius: '2px', animation: 'syncProgress 2s infinite ease-in-out',
   },
 
   // Rank
@@ -392,13 +458,15 @@ const S: Record<string, React.CSSProperties> = {
 
   // Info
   info: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' },
-  nameRow: { display: 'flex', alignItems: 'center', gap: '8px' },
-  name: { fontWeight: 800, fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  you: {
-    display: 'inline-flex', alignItems: 'center', gap: '3px',
-    padding: '2px 9px', background: 'linear-gradient(135deg, #7a1733, #e11d48)',
-    color: '#fff', borderRadius: '9999px', fontSize: '9px', fontWeight: 800,
-    letterSpacing: '0.06em', flexShrink: 0, boxShadow: '0 2px 8px rgba(122,23,51,0.3)',
+  nameRow: { display: 'flex', alignItems: 'center', gap: '10px' },
+  name: { fontWeight: 800, fontSize: '17px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: "'Montserrat', sans-serif" },
+  youBadge: {
+    display: 'inline-flex', alignItems: 'center', gap: '4px',
+    padding: '4px 12px', background: 'linear-gradient(135deg, #880015 0%, #b11226 100%)',
+    color: '#fff', borderRadius: '50px', fontSize: '10px', fontWeight: 900,
+    letterSpacing: '0.08em', flexShrink: 0, 
+    boxShadow: '0 4px 12px rgba(136,0,21,0.3)',
+    animation: 'youPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1)',
   },
 
   // Progress
