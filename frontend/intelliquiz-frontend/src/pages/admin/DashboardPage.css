@@ -178,11 +178,11 @@
   color: #0d9488;
 }
 
-/* Amber — Live */
-.admin-clean-stat-card:nth-child(2)::after { background: #d97706; }
+/* Maroon — Live */
+.admin-clean-stat-card:nth-child(2)::after { background: #880015; }
 .admin-clean-stat-card:nth-child(2) .admin-clean-stat-icon {
-  background: #fffbeb;
-  color: #d97706;
+  background: #fff0f3;
+  color: #880015;
 }
 
 /* Emerald — Ready */
