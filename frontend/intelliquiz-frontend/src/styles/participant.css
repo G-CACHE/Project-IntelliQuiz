@@ -3589,6 +3589,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
   background: var(--color-secondary);
   color: var(--color-primary);
   border: var(--border-brutal);
@@ -3600,6 +3601,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
   background: var(--color-white);
   border: var(--border-brutal);
   color: var(--color-black);
@@ -3608,6 +3610,9 @@
 }
 
 .participant-home-action:hover {
+  background: #7a1733;
+  color: #fff;
+  border-color: #7a1733;
   transform: translate(-2px, -2px);
   box-shadow: var(--shadow-brutal-lg);
 }

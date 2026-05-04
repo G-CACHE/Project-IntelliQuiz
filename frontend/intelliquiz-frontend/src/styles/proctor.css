@@ -1792,6 +1792,21 @@
   box-shadow: var(--shadow-brutal-lg);
 }
 
+.proctor-home-action {
+  background: #7a1733 !important;
+  color: #fff !important;
+  border-color: #7a1733 !important;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.proctor-home-action:hover {
+  background: #65122a !important;
+  border-color: #65122a !important;
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
 /* ==================== BUFFER STATE ==================== */
 .proctor-buffer-state {
   text-align: center;

@@ -544,7 +544,7 @@ const HostGame: React.FC = () => {
               <div className="proctor-host-final-actions">
                 <button
                   onClick={handleExitHome}
-                  className="proctor-btn-primary proctor-btn-large"
+                  className="proctor-btn-primary proctor-btn-large proctor-home-action"
                 >
                   <Home size={20} aria-hidden="true" />
                   Go Home
