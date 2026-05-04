@@ -765,6 +765,8 @@ const PlayerGame: React.FC = () => {
                 highlightTeamId={session.teamId}
                 isFinal={true}
                 title="Final Rankings"
+                maxRanksToShow={10}
+                alwaysShowHighlighted={true}
               />
 
               {/* Exit Button */}
