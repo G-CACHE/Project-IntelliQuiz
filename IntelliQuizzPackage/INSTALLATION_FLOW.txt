@@ -1,0 +1,242 @@
+================================================================================
+                    INTELLIQUIZ INSTALLATION FLOW DIAGRAM
+================================================================================
+
+SCENARIO 1: FRESH INSTALLATION ON DEVICE WITHOUT DOCKER
+========================================================
+
+User runs IntelliQuizzInstaller.exe
+         |
+         v
+[Installer Starts]
+         |
+         v
+Copy files to C:\IntelliQuiz
+         |
+         v
+Run check_requirements.ps1
+         |
+         v
+[Check Windows version, disk space, etc.]
+         |
+         v
+Run setup.ps1
+         |
+         v
+[Check if Docker installed?]
+         |
+    NO   |   YES
+    |    |    |
+    v    |    v
+[Call install_docker.ps1]  [Skip to Step 2]
+    |    |
+    v    |
+[Download Docker Desktop (~500MB)]
+    |    |
+    v    |
+[Install Docker silently]
+    |    |
+    v    |
+[Start Docker Desktop]
+    |    |
+    v    |
+[Wait for Docker ready (up to 3 min)]
+    |    |
+    v    |
+[Docker installed!] <----+
+         |
+         v
+[Create data directories]
+         |
+         v
+[Setup auto-start task]
+         |
+         v
+[Create desktop shortcut]
+         |
+         v
+[Installation Complete!]
+         |
+         v
+[User clicks "Launch IntelliQuiz"]
+         |
+         v
+[IntelliQuiz starts]
+
+
+SCENARIO 2: RUNNING LAUNCHER ON DEVICE WITHOUT DOCKER
+======================================================
+
+User double-clicks IntelliQuiz shortcut
+         |
+         v
+[launch_intelliquiz.bat starts]
+         |
+         v
+[Check if running as Admin?]
+         |
+    NO   |   YES
+    |    |    |
+    v    |    v
+[Restart as Admin] [Continue]
+         |
+         v
+[Step 1/4: Check Docker Desktop]
+         |
+         v
+[Is docker.exe in PATH?]
+         |
+    NO   |   YES
+    |    |    |
+    v    |    v
+[Docker Desktop.exe exists?]  [Skip to Step 2]
+         |
+    NO   |   YES
+    |    |    |
+    v    |    v
+[Display: Installing Docker...] [Add to PATH, Skip to Step 2]
+    |    |
+    v    |
+[Run install_docker.ps1]
+    |    |
+    v    |
+[Download Docker Desktop]
+    |    |
+    v    |
+[Install Docker]
+    |    |
+    v    |
+[Start Docker]
+    |    |
+    v    |
+[Wait for ready]
+    |    |
+    v    |
+[Docker installed!] <----+
+         |
+         v
+[Step 2/4: Start Docker Desktop]
+         |
+         v
+[Is Docker running?]
+         |
+    NO   |   YES
+    |    |    |
+    v    |    v
+[Start Docker Desktop] [Skip to Step 3]
+    |    |
+    v    |
+[Wait for startup (up to 2 min)]
+         |
+         v
+[Step 3/4: Load and start containers]
+         |
+         v
+[Create networks and volumes]
+         |
+         v
+[Load Docker images from .tar.gz]
+         |
+         v
+[Start database container]
+         |
+         v
+[Start backend container]
+         |
+         v
+[Start frontend container]
+         |
+         v
+[Step 4/4: Get server information]
+         |
+         v
+[Detect local IP address]
+         |
+         v
+[Open browser to localhost:3000]
+         |
+         v
+[Display access URLs]
+         |
+         v
+[IntelliQuiz Running!]
+
+
+SCENARIO 3: RUNNING ON DEVICE WITH DOCKER ALREADY INSTALLED
+============================================================
+
+User runs IntelliQuizzInstaller.exe or launch_intelliquiz.bat
+         |
+         v
+[Check if Docker installed?]
+         |
+         v
+    [YES - Docker found!]
+         |
+         v
+[Skip Docker installation]
+         |
+         v
+[Continue with normal setup/launch]
+         |
+         v
+[Start Docker if not running]
+         |
+         v
+[Load and start containers]
+         |
+         v
+[IntelliQuiz Running!]
+
+
+KEY POINTS
+==========
+
+✓ Docker detection happens at TWO points:
+  1. During installer setup (setup.ps1)
+  2. Every time launcher runs (launch_intelliquiz.bat)
+
+✓ If Docker is missing at EITHER point:
+  - install_docker.ps1 is automatically called
+  - Docker is downloaded and installed
+  - No user intervention required
+
+✓ Installation is SILENT:
+  - Uses --quiet --accept-license flags
+  - No user prompts during Docker installation
+
+✓ Error handling:
+  - If download fails: Shows manual download link
+  - If installation fails: Suggests restart and retry
+  - If startup fails: Provides troubleshooting steps
+
+✓ Time estimates:
+  - With Docker: 2-3 minutes total
+  - Without Docker: 10-18 minutes total
+    (3-5 min download + 5-10 min install + 2-3 min startup)
+
+
+VERIFICATION COMMANDS
+=====================
+
+To verify Docker installation works:
+
+1. On a device WITHOUT Docker:
+   - Run: launch_intelliquiz.bat
+   - Expected: Docker will be automatically installed
+
+2. Check if Docker is installed:
+   - Run: docker --version
+   - Expected: Shows Docker version
+
+3. Check if Docker is running:
+   - Run: docker info
+   - Expected: Shows Docker system information
+
+4. Check IntelliQuiz containers:
+   - Run: docker ps
+   - Expected: Shows 3 running containers
+     (intelliquiz_db, intelliquiz_backend, intelliquiz_frontend)
+
+
+================================================================================

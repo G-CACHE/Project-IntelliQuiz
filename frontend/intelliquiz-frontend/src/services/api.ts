@@ -15,6 +15,10 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
     const error = await response.text();
     throw new Error(error || `HTTP ${response.status}`);
   }
+
+  if (response.status === 204 || response.status === 205) {
+    return null as T;
+  }
   
   const text = await response.text();
   if (!text) return {} as T;

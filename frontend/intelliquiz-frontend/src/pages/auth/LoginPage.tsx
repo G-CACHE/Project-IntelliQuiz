@@ -13,6 +13,22 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { refreshAuth } = useAuth();
 
+  const extractErrorMessage = (err: unknown, fallback: string): string => {
+    if (err instanceof Error && err.message) {
+      try {
+        const parsed = JSON.parse(err.message) as { message?: string; errorMessage?: string };
+        if (parsed?.message) return parsed.message;
+        if (parsed?.errorMessage) return parsed.errorMessage;
+      } catch {
+        // Not JSON; use the raw message.
+      }
+
+      return err.message;
+    }
+
+    return fallback;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return setError('Username is required');
@@ -34,7 +50,7 @@ export default function LoginPage() {
         setError('Invalid role');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(extractErrorMessage(err, 'Login failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -335,65 +351,64 @@ export default function LoginPage() {
           IntelliQuiz Portal
         </div>
         <div className="portal-login-card">
-          <h2>Sign In</h2>
-          <p>Use your assigned account credentials.</p>
+        <h2>Sign In</h2>
+        <p className="portal-login-intro">Use your assigned account credentials.</p>
 
-          {error && (
-            <div className="portal-login-error">
-              <BiErrorCircle size={16} />
-              <span>{error}</span>
+        {error && (
+          <div className="portal-login-error">
+            <BiErrorCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+        <form className="portal-login-form" onSubmit={handleSubmit}>
+          <div className="portal-field">
+            <label htmlFor="username">Username</label>
+            <div className="portal-input-wrap">
+              <BiUser size={16} className="portal-input-icon" />
+              <input
+                id="username"
+                className="portal-input"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                autoComplete="username"
+                disabled={loading}
+              />
             </div>
-          )}
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="portal-field">
-              <label htmlFor="username">Username</label>
-              <div className="portal-input-wrap">
-                <BiUser size={16} className="portal-input-icon" />
-                <input
-                  id="username"
-                  className="portal-input"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
-                  autoComplete="username"
-                  disabled={loading}
-                />
-              </div>
+          <div className="portal-field">
+            <label htmlFor="password">Password</label>
+            <div className="portal-input-wrap">
+              <BiLock size={16} className="portal-input-icon" />
+              <input
+                id="password"
+                className="portal-input"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoComplete="current-password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="portal-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <BiHide size={16} /> : <BiShow size={16} />}
+              </button>
             </div>
+          </div>
 
-            <div className="portal-field">
-              <label htmlFor="password">Password</label>
-              <div className="portal-input-wrap">
-                <BiLock size={16} className="portal-input-icon" />
-                <input
-                  id="password"
-                  className="portal-input"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  autoComplete="current-password"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="portal-toggle"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <BiHide size={16} /> : <BiShow size={16} />}
-                </button>
-              </div>
-            </div>
+          <button type="submit" className="portal-submit" disabled={loading}>
+            {loading ? 'Signing In...' : (<><BiLogIn size={18} /> Sign In</>)}
+          </button>
+        </form>
 
-            <button type="submit" className="portal-submit" disabled={loading}>
-              {loading ? 'Signing In...' : (<><BiLogIn size={18} /> Sign In</>)}
-            </button>
-          </form>
-
-          <p className="portal-note">IntelliQuiz v1.0.0</p>
+        <p className="portal-note">IntelliQuiz v1.0.0</p>
         </div>
       </section>
 

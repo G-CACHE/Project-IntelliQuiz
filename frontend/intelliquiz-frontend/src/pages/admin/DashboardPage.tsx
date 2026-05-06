@@ -42,6 +42,12 @@ export default function AdminDashboardPage() {
     return map[status] || 'draft';
   };
 
+  const getStatusLabel = (status: string) => {
+    if (status === 'ARCHIVED') return 'DONE';
+    if (status === 'ACTIVE') return 'LIVE NOW';
+    return status;
+  };
+
   if (isLoading) {
     return (
       <div className="admin-loading">
@@ -157,7 +163,7 @@ export default function AdminDashboardPage() {
                     </span>
                   </span>
                   <span className={`admin-clean-status status-${getStatusClass(quiz.status)}`}>
-                    {quiz.status}
+                    {getStatusLabel(quiz.status)}
                   </span>
                 </button>
               ))
