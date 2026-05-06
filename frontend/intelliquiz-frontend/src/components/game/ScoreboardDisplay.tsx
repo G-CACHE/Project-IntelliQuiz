@@ -10,6 +10,7 @@ interface ScoreboardDisplayProps {
   title?: string;
   maxRanksToShow?: number;
   alwaysShowHighlighted?: boolean;
+  maxVisibleRows?: number;
 }
 
 // ======== CANVAS PARTICLE BACKGROUND ========
@@ -151,7 +152,13 @@ const AVATAR_COLORS = [
 
 // ======== MAIN COMPONENT ========
 const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
-  rankings, highlightTeamId, isFinal = false, title, maxRanksToShow, alwaysShowHighlighted,
+  rankings,
+  highlightTeamId,
+  isFinal = false,
+  title,
+  maxRanksToShow,
+  alwaysShowHighlighted,
+  maxVisibleRows,
 }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [wrapSize, setWrapSize] = useState({ w: 900, h: 600 });
@@ -270,7 +277,16 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
       )}
 
       {/* ===== ROWS ===== */}
-      <div style={S.list}>
+      <div
+        style={{
+          ...S.list,
+          ...(maxVisibleRows ? {
+            maxHeight: `${maxVisibleRows * 90}px`,
+            overflowY: 'auto',
+            paddingRight: '6px',
+          } : {}),
+        }}
+      >
         {displayRankings.map((entry, idx) => {
           const { name, avatarId } = parseSmartName(entry.teamName);
           const isTop = entry.displayRank <= 3;

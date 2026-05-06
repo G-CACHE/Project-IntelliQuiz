@@ -539,6 +539,7 @@ const HostGame: React.FC = () => {
               <ScoreboardDisplay
                 rankings={rankings}
                 isFinal={true}
+                maxVisibleRows={10}
               />
 
               <div className="proctor-host-final-actions">

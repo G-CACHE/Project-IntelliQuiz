@@ -103,6 +103,7 @@ const HostScoreboard: React.FC = () => {
           <ScoreboardDisplay
             rankings={rankings}
             isFinal={isFinal}
+            maxVisibleRows={isFinal ? 10 : undefined}
           />
 
           {/* Controls */}
