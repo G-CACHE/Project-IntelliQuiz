@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle, XCircle, Check } from 'lucide-react';
 import type { QuestionData } from '../../services/api';
 
 interface QuestionDisplayProps {
@@ -30,9 +31,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     ? (question.options.length >= 2 ? question.options.slice(0, 2) : ['True', 'False'])
     : question.options;
 
-  const getOptionClass = (option: string) => {
-    const isSelected = selectedOption === option;
-    const isCorrect = correctAnswer === option;
+  const normalize = (val: string | null | undefined) => (val || '').trim().toLowerCase();
+
+  const getOptionClass = (option: string, letter: string) => {
+    const normSelected = normalize(selectedOption);
+    const isSelected = normSelected === normalize(option) || normSelected === letter.toLowerCase();
+    const isCorrect = showCorrectAnswer && (normalize(correctAnswer) === normalize(option) || normalize(correctAnswer) === letter.toLowerCase());
     const isWrong = showCorrectAnswer && isSelected && !isCorrect;
 
     let classes = `${prefix}-answer-btn`;
@@ -60,39 +64,45 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     <div className={`${prefix}-question-display`}>
       {/* Question Header */}
       <div className={`${prefix}-question-header`}>
-        <p className={`${prefix}-question-number`}>
-          Question {questionNumber} of {totalQuestions}
-        </p>
-        <span className={`${prefix}-badge-accent`}>{question.points} pts</span>
+        <div className={`${prefix}-question-number-badge`}>
+          <span className={`${prefix}-question-number-label`}>Question</span>
+          <span className={`${prefix}-question-number-value`}>{questionNumber}</span>
+          <span className={`${prefix}-question-number-total`}>/ {totalQuestions}</span>
+        </div>
+        <div className={`${prefix}-badge-points`}>
+          <span className={`${prefix}-points-value`}>{question.points}</span>
+          <span className={`${prefix}-points-label`}>PTS</span>
+        </div>
       </div>
 
-      {/* Question Text */}
-      <div className={`${prefix}-question-card`}>
-        <h2 className={`${prefix}-question-text`}>
-          {question.text}
-        </h2>
+      {/* Question Card */}
+      <div className={`${prefix}-question-card-wrapper`}>
+        <div className={`${prefix}-question-card`}>
+          <h2 className={`${prefix}-question-text`}>
+            {question.text}
+          </h2>
+        </div>
+        <div className={`${prefix}-question-card-glow`}></div>
       </div>
 
       {/* Answer UI */}
       {questionType === 'IDENTIFICATION' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            type="text"
-            value={selectedOption ?? ''}
-            onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
-            placeholder="Type your answer"
-            disabled={disabled}
-            className={`${prefix}-answer-btn`}
-            style={{
-              width: '100%',
-              cursor: disabled ? 'not-allowed' : 'text',
-              textAlign: 'left',
-              padding: '14px 16px',
-            }}
-          />
+        <div className={`${prefix}-identification-container`}>
+          <div className={`${prefix}-input-wrapper`}>
+            <input
+              type="text"
+              value={selectedOption ?? ''}
+              onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
+              placeholder="Type your answer here..."
+              disabled={disabled}
+              className={`${prefix}-answer-input`}
+            />
+            <div className={`${prefix}-input-focus-border`}></div>
+          </div>
           {showCorrectAnswer && correctAnswer && (
-            <div className={`${prefix}-question-card`} style={{ padding: '12px 16px' }}>
-              <p style={{ margin: 0, fontWeight: 700 }}>Accepted Answer: {correctAnswer}</p>
+            <div className={`${prefix}-accepted-answer-card`}>
+              <div className={`${prefix}-accepted-label`}>Accepted Answer</div>
+              <div className={`${prefix}-accepted-value`}>{correctAnswer}</div>
             </div>
           )}
         </div>
@@ -100,15 +110,18 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <div className={`${prefix}-answer-grid`}>
           {optionList.map((option, index) => {
           const letter = String.fromCharCode(65 + index);
-          const isSelected = selectedOption === option;
-          const isCorrect = showCorrectAnswer && correctAnswer === option;
+          const normSelected = normalize(selectedOption);
+          const isSelected = normSelected === normalize(option) || normSelected === letter.toLowerCase();
+          
+          const normCorrect = normalize(correctAnswer);
+          const isCorrect = showCorrectAnswer && (normCorrect === normalize(option) || normCorrect === letter.toLowerCase());
 
           return (
             <button
               key={index}
               onClick={() => !disabled && onSelectOption?.(option)}
               disabled={disabled}
-              className={getOptionClass(option)}
+              className={getOptionClass(option, letter)}
             >
               {/* Option Letter Badge */}
               <div className={`${prefix}-answer-letter`}>
@@ -124,13 +137,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               {showCorrectAnswer && (isCorrect || (isSelected && !isCorrect)) && (
                 <div className={`${prefix}-answer-indicator`}>
                   {isCorrect ? (
-                    <svg className={`${prefix}-answer-indicator-icon`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircle className={`${prefix}-answer-indicator-icon`} color="#ffffff" strokeWidth={3} />
                   ) : (
-                    <svg className={`${prefix}-answer-indicator-icon`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    <XCircle className={`${prefix}-answer-indicator-icon`} color="#ffffff" strokeWidth={3} />
                   )}
                 </div>
               )}
@@ -138,11 +147,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               {/* Selection Indicator */}
               {isSelected && !showCorrectAnswer && (
                 <div className={`${prefix}-answer-selected-indicator`}>
-                  <svg className={`${prefix}-answer-selected-icon`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                  <Check className={`${prefix}-answer-selected-icon`} strokeWidth={4} />
                 </div>
               )}
+              
+              {/* Hover/Active Glow */}
+              <div className={`${prefix}-answer-glow`}></div>
             </button>
           );
           })}

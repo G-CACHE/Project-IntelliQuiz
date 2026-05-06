@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
-  BiHomeAlt,
-  BiBookOpen,
-  BiLogOut,
-  BiChevronDown,
-} from 'react-icons/bi';
+  Home,
+  BookOpen,
+  LogOut,
+  ChevronDown,
+} from 'lucide-react';
 import '../../styles/admin.css';
 import { authApi, currentUserApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,8 +28,8 @@ export default function AdminLayout() {
 
   // Build nav items based on user's permissions
   const navItems: NavItem[] = [
-    { path: '/admin', label: 'Dashboard', icon: <BiHomeAlt size={18} /> },
-    { path: '/admin/quizzes', label: 'My Quizzes', icon: <BiBookOpen size={18} /> },
+    { path: '/admin', label: 'Dashboard', icon: <Home size={18} /> },
+    { path: '/admin/quizzes', label: 'My Quizzes', icon: <BookOpen size={18} /> },
   ];
 
   useEffect(() => {
@@ -111,12 +111,8 @@ export default function AdminLayout() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fffaf2', fontFamily: "'Nunito', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
-      `}</style>
-
-      {/* Top Navigation - Same as SuperAdmin */}
+    <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: 'var(--font-body)' }}>
+      {/* Top Navigation */}
       <header className="pb-nav">
         <div className="pb-nav-inner">
           {/* Logo */}
@@ -125,7 +121,7 @@ export default function AdminLayout() {
             className="pb-nav-logo-wrap"
           >
             <div className="pb-nav-logo-icon">
-              <BiBookOpen size={22} />
+              <BookOpen size={20} />
             </div>
             <span className="pb-nav-logo-text">IntelliQuiz</span>
           </div>
@@ -159,7 +155,7 @@ export default function AdminLayout() {
                   <div className="pb-nav-profile-name">{username || 'Admin'}</div>
                   <div className="pb-nav-profile-role">Admin</div>
                 </div>
-                <BiChevronDown size={18} className={`pb-nav-chevron ${profileDropdownOpen ? 'open' : ''}`} />
+                <ChevronDown size={18} className={`pb-nav-chevron ${profileDropdownOpen ? 'open' : ''}`} />
               </button>
 
               {profileDropdownOpen && (
@@ -168,7 +164,7 @@ export default function AdminLayout() {
                     onClick={handleLogout}
                     className="pb-nav-dropdown-item"
                   >
-                    <BiLogOut size={18} />
+                    <LogOut size={18} />
                     Logout
                   </button>
                 </div>
@@ -179,7 +175,7 @@ export default function AdminLayout() {
       </header>
 
       {/* Main Content */}
-      <main style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <main style={{ minHeight: 'calc(100vh - 64px)', background: '#ffffff' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
           <Outlet />
         </div>

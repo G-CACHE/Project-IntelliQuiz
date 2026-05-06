@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { accessApi, type QuizAccessResponse } from '../../services/api';
+import { Volume2, VolumeX } from 'lucide-react';
+import { accessApi, type QuizAccessResponse, type TeamResponse } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
+import { formatSmartName, parseSmartName } from '../../utils/nameUtils';
+import { 
+  GiTrophyCup, 
+  GiGamepad, 
+  GiBrain, 
+  GiRocket, 
+  GiCheckeredFlag, 
+  GiJeweledChalice,
+  GiStarShuriken,
+  GiCrownedHeart
+} from 'react-icons/gi';
 import '../../styles/landing.css';
 
 const UniversalLogin: React.FC = () => {
@@ -10,9 +22,77 @@ const UniversalLogin: React.FC = () => {
   const [code, setCode] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [pendingPublicQuiz, setPendingPublicQuiz] = useState<QuizAccessResponse | null>(null);
+  const [pendingRestrictedTeam, setPendingRestrictedTeam] = useState<{ team: TeamResponse; quiz: QuizAccessResponse } | null>(null);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [showAvatarSelection, setShowAvatarSelection] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logoTapCount, setLogoTapCount] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const AVATARS = [
+    '1st-avatar.png',
+    '2nd-avatar.png',
+    '3rd-avatar.png',
+    '4th-avatar.png',
+    '5th-avatar.png',
+    '6th-avatar.png',
+    '7th-avatar.png',
+    '8th-avatar.png',
+    '9th-avatar.png',
+    '10th-avatar.png',
+  ];
+
+  // Audio setup
+  useEffect(() => {
+    const audio = new Audio('/landing-page%20sounds.mp3');
+    audio.loop = true;
+    audio.volume = 1.0;
+    audioRef.current = audio;
+
+    const attemptPlay = () => {
+      if (audioRef.current && !isMuted) {
+        audioRef.current.play().catch(() => {
+          // Play failed, wait for interaction
+          console.log("Autoplay blocked, waiting for interaction...");
+        });
+      }
+    };
+
+    const handleInteraction = () => {
+      attemptPlay();
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+
+    // Initial attempt
+    attemptPlay();
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
+  // Sync mute state
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!isMuted) {
+        audioRef.current.play().catch(() => {});
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isMuted]);
+
+  const toggleMute = () => setIsMuted(prev => !prev);
 
   const extractErrorMessage = (err: unknown, fallback: string): string => {
     if (err instanceof Error && err.message) {
@@ -58,7 +138,7 @@ const UniversalLogin: React.FC = () => {
         return;
       }
 
-      if (result.routeType === 'PARTICIPANT' && result.team) {
+      if (result.routeType === 'PARTICIPANT' && result.team && result.quiz) {
         const access = await accessApi.checkParticipantAccess(
           result.team.quizId,
           result.team.id,
@@ -70,19 +150,28 @@ const UniversalLogin: React.FC = () => {
           return;
         }
 
-        saveParticipantSession(
-          result.team.quizId,
-          result.team.id,
-          result.team.name,
-          result.team.accessCode,
-        );
-        navigate('/player/lobby');
+        // If team already has an avatar in their name, we can skip or show selection
+        const { avatarId } = parseSmartName(result.team.name);
+        if (avatarId) {
+          saveParticipantSession(
+            result.team.quizId,
+            result.team.id,
+            result.team.name,
+            result.team.accessCode,
+          );
+          navigate('/player/lobby');
+        } else {
+          // Show avatar selection for restricted team
+          setPendingRestrictedTeam({ team: result.team, quiz: result.quiz });
+          setShowAvatarSelection(true);
+        }
         return;
       }
 
       // Public quiz pre-join path: code resolved to PARTICIPANT quiz but no team yet.
       if (result.routeType === 'PARTICIPANT' && result.quiz?.accessMode === 'PUBLIC' && !result.team) {
         setPendingPublicQuiz(result.quiz);
+        setShowAvatarSelection(false);
         setError(null);
         return;
       }
@@ -95,47 +184,65 @@ const UniversalLogin: React.FC = () => {
     }
   };
 
-  const handlePublicJoin = async (e: React.FormEvent) => {
+  const handlePublicNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pendingPublicQuiz) return;
     if (!participantName.trim()) {
       setError('Enter your participant or team name.');
       return;
     }
+    setShowAvatarSelection(true);
+  };
 
+  const handleAvatarConfirm = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const joined = await accessApi.joinPublicQuiz(
-        pendingPublicQuiz.id,
-        participantName.trim(),
-        getOrCreateDeviceId(),
-      );
-      if (joined.routeType === 'PARTICIPANT' && joined.team) {
-        const access = await accessApi.checkParticipantAccess(
-          joined.team.quizId,
-          joined.team.id,
+      if (pendingPublicQuiz) {
+        // Handle Public Join
+        const smartName = formatSmartName(participantName.trim(), selectedAvatar);
+        const joined = await accessApi.joinPublicQuiz(
+          pendingPublicQuiz.id,
+          smartName,
           getOrCreateDeviceId(),
         );
 
-        if (!access.allowed) {
-          setError(access.message || 'You cannot rejoin this quiz right now. Please contact the proctor/admin.');
-          return;
+        if (joined.routeType === 'PARTICIPANT' && joined.team) {
+          saveParticipantSession(
+            joined.team.quizId,
+            joined.team.id,
+            joined.team.name,
+            joined.team.accessCode,
+          );
+          navigate('/player/lobby');
+        } else {
+          setError(joined.errorMessage || 'Unable to join this quiz right now.');
+        }
+      } else if (pendingRestrictedTeam) {
+        // Handle Restricted Join (Update name if possible, or just proceed)
+        // For now, since we can't update backend name for restricted teams easily,
+        // we store the avatar selection in the name ONLY if we have an API.
+        // If we don't, we can store it in local storage for the current user.
+        
+        // Let's try to update the name via API (I will add this endpoint)
+        const smartName = formatSmartName(pendingRestrictedTeam.team.name, selectedAvatar);
+        
+        try {
+          await accessApi.updateTeamName(pendingRestrictedTeam.team.id, smartName, pendingRestrictedTeam.team.accessCode);
+        } catch (err) {
+          console.warn('Failed to update name with avatar, proceeding anyway', err);
         }
 
         saveParticipantSession(
-          joined.team.quizId,
-          joined.team.id,
-          joined.team.name,
-          joined.team.accessCode,
+          pendingRestrictedTeam.team.quizId,
+          pendingRestrictedTeam.team.id,
+          smartName,
+          pendingRestrictedTeam.team.accessCode,
         );
         navigate('/player/lobby');
-        return;
       }
-
-      setError(joined.errorMessage || 'Unable to join this quiz right now.');
     } catch (err) {
-      setError(extractErrorMessage(err, 'Unable to join this quiz right now.'));
+      setError(extractErrorMessage(err, 'Unable to join right now.'));
     } finally {
       setLoading(false);
     }
@@ -143,7 +250,10 @@ const UniversalLogin: React.FC = () => {
 
   const resetPublicJoin = () => {
     setPendingPublicQuiz(null);
+    setPendingRestrictedTeam(null);
+    setShowAvatarSelection(false);
     setParticipantName('');
+    setSelectedAvatar(null);
     setError(null);
   };
 
@@ -160,51 +270,46 @@ const UniversalLogin: React.FC = () => {
 
   return (
     <div className="landing-page">
-      <div className="landing-hero">
-        <div className="landing-orb landing-orb-left" aria-hidden="true"></div>
-        <div className="landing-orb landing-orb-right" aria-hidden="true"></div>
-        <div className="landing-grid-line" aria-hidden="true"></div>
-        <div className="landing-hero-content">
-          <p className="landing-hero-kicker">PUP Quiz Experience</p>
-          <h1 className="landing-hero-title" onClick={handleLogoTap}>IntelliQuiz</h1>
-          <p className="landing-hero-subtitle">Interactive Quiz Platform</p>
-        </div>
+      <button 
+        className="landing-audio-toggle" 
+        onClick={toggleMute} 
+        aria-label={isMuted ? "Unmute" : "Mute"}
+      >
+        {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+      </button>
+
+      <div className="landing-bg-icons">
+        <GiTrophyCup className="floating-icon icon-1" />
+        <GiGamepad className="floating-icon icon-2" />
+        <GiBrain className="floating-icon icon-3" />
+        <GiRocket className="floating-icon icon-4" />
+        <GiCheckeredFlag className="floating-icon icon-5" />
+        <GiJeweledChalice className="floating-icon icon-6" />
+        <GiStarShuriken className="floating-icon icon-7" />
+        <GiCrownedHeart className="floating-icon icon-8" />
+        <GiBrain className="floating-icon icon-9" />
+        <GiGamepad className="floating-icon icon-10" />
       </div>
+      
+      <div className={`landing-container ${showAvatarSelection ? 'avatar-step' : ''}`}>
+        <header className="landing-header">
+          <h1 className="landing-title" onClick={handleLogoTap}>IntelliQuiz</h1>
+        </header>
 
-      <div className="landing-content">
-        <div className="landing-shell">
-          <aside className="landing-info-panel">
-            <h2 className="landing-info-title">Fast join, instant play</h2>
-            <p className="landing-info-copy">
-              Enter your quiz code to continue. IntelliQuiz detects your access type automatically and routes you to the correct experience.
-            </p>
-            <div className="landing-feature-list">
-              <span className="landing-feature-item">Realtime sync</span>
-              <span className="landing-feature-item">Role-aware access</span>
-              <span className="landing-feature-item">Live leaderboard</span>
-            </div>
-          </aside>
-
-          <section className="landing-auth-card" aria-label="Quiz Access">
-            <div className="landing-auth-header">
-              <p className="landing-auth-kicker">Access Portal</p>
-              <h3 className="landing-auth-title">
-                {!pendingPublicQuiz ? 'Enter your code to continue' : 'Set your team name'}
-              </h3>
-            </div>
-
-            {!pendingPublicQuiz ? (
-              <form onSubmit={handleJoin} className="landing-auth-form">
+        <section className={`landing-join-card ${showAvatarSelection ? 'wide' : ''}`} aria-label="Join Quiz">
+          {!showAvatarSelection ? (
+            !pendingPublicQuiz ? (
+              <form onSubmit={handleJoin} className="landing-form">
                 <input
                   id="landingCode"
                   type="text"
-                  className="landing-entry-input"
+                  className="landing-input"
                   value={code}
                   onChange={(e) => {
                     setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''));
                     setError(null);
                   }}
-                  placeholder="XXXX-XXXX"
+                  placeholder="Game Code"
                   autoFocus
                   maxLength={24}
                   disabled={loading}
@@ -216,30 +321,29 @@ const UniversalLogin: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="landing-entry-btn"
+                  className="landing-submit-btn"
                   disabled={loading || !code.trim()}
                 >
-                  {loading ? 'Resolving...' : 'Join Quiz'}
+                  {loading ? 'Entering...' : 'Enter'}
                 </button>
               </form>
             ) : (
-              <>
-                <p className="landing-public-notice">
-                  Public mode detected for <strong>{pendingPublicQuiz.title}</strong>. Enter your participant/team name.
+              <div className="landing-public-flow">
+                <p className="landing-public-subtitle">
+                  Joining <strong>{pendingPublicQuiz.title}</strong>
                 </p>
 
-                <form onSubmit={handlePublicJoin} className="landing-auth-form">
-                  <label htmlFor="landingPublicName" className="landing-input-label">Participant or Team Name</label>
+                <form onSubmit={handlePublicNameSubmit} className="landing-form">
                   <input
                     id="landingPublicName"
                     type="text"
-                    className="landing-entry-input"
+                    className="landing-input"
                     value={participantName}
                     onChange={(e) => {
                       setParticipantName(e.target.value);
                       setError(null);
                     }}
-                    placeholder="Enter your name"
+                    placeholder="Your Name"
                     autoFocus
                     maxLength={100}
                     disabled={loading}
@@ -249,10 +353,10 @@ const UniversalLogin: React.FC = () => {
                     <p className="landing-error-text">{error}</p>
                   )}
 
-                  <div className="landing-public-actions">
+                  <div className="landing-actions">
                     <button
                       type="button"
-                      className="landing-entry-btn-secondary"
+                      className="landing-btn-back"
                       onClick={resetPublicJoin}
                       disabled={loading}
                     >
@@ -260,25 +364,80 @@ const UniversalLogin: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="landing-entry-btn"
+                      className="landing-submit-btn"
                       disabled={loading || !participantName.trim()}
                     >
-                      {loading ? 'Joining...' : 'Continue'}
+                      {loading ? 'Next' : 'Next'}
                     </button>
                   </div>
                 </form>
-              </>
-            )}
-          </section>
-        </div>
+              </div>
+            )
+          ) : (
+            <div className="landing-avatar-selection">
+              <h3 className="landing-avatar-title">Choose Your Avatar</h3>
+              <p className="landing-avatar-subtitle">Make your team stand out!</p>
+              
+              <div className="landing-avatar-options">
+                <label className="landing-default-toggle">
+                  <input
+                    type="checkbox"
+                    checked={selectedAvatar === null}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedAvatar(null);
+                      else setSelectedAvatar(AVATARS[0]);
+                    }}
+                  />
+                  <span className="landing-toggle-slider"></span>
+                  <span className="landing-toggle-label">Use Default Initial Avatar</span>
+                </label>
+              </div>
 
+              <div className={`landing-avatar-grid ${selectedAvatar === null ? 'disabled' : ''}`}>
+                {AVATARS.map((avatar, idx) => (
+                  <button
+                    key={avatar}
+                    className={`landing-avatar-item ${selectedAvatar === avatar ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedAvatar(avatar);
+                    }}
+                    disabled={selectedAvatar === null}
+                  >
+                    <img src={`/avatars/${avatar}`} alt={`Avatar ${idx + 1}`} className="landing-avatar-img" />
+                  </button>
+                ))}
+              </div>
+
+              {error && (
+                <p className="landing-error-text">{error}</p>
+              )}
+
+              <div className="landing-actions">
+                <button
+                  type="button"
+                  className="landing-btn-back"
+                  onClick={() => setShowAvatarSelection(false)}
+                  disabled={loading}
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  className="landing-submit-btn"
+                  onClick={handleAvatarConfirm}
+                  disabled={loading}
+                >
+                  {loading ? 'Joining...' : 'Let\'s Go!'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <footer className="landing-minimal-footer">
+          <p>© 2026 IntelliQuiz</p>
+        </footer>
       </div>
-
-      <footer className="landing-footer">
-        <p className="landing-footer-text">
-          © 2026 IntelliQuiz. All rights reserved.
-        </p>
-      </footer>
     </div>
   );
 };

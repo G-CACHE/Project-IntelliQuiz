@@ -287,6 +287,24 @@ public class QuizSSEController {
                 ? QuestionPayload.fromDto(orderedQuestions.get(safeQuestionIndex))
                 : null;
 
+        // Calculate current rankings for the initial snapshot
+        List<com.intelliquiz.api.team.dto.TeamInfoDto> leaderboard = teamFacade.getTeamsByQuiz(quizId).stream()
+                .sorted(Comparator.comparingInt(com.intelliquiz.api.team.dto.TeamInfoDto::totalScore).reversed())
+                .toList();
+
+        List<Object> rankings = new ArrayList<>();
+        int rank = 1;
+        for (com.intelliquiz.api.team.dto.TeamInfoDto team : leaderboard) {
+            final int itemRank = rank++;
+            rankings.add(new Object() {
+                public final Long teamId = team.id();
+                public final String teamName = team.name();
+                public final Integer totalScore = team.totalScore();
+                public final Integer score = team.totalScore();
+                public final Integer rank = itemRank;
+            });
+        }
+
         return new Object() {
             public final String state = serializedState;
             public final String gameState = serializedState;
@@ -296,6 +314,8 @@ public class QuizSSEController {
             public final QuestionPayload currentQuestion = currentQuestionPayload;
             public final Boolean participantNavigationEnabled = quizSessionManager.isParticipantNavigationEnabled(quizId);
             public final Boolean timerActive = timerService.isTimerActive(quizId);
+            public final java.util.List<Object> teamResults = rankings;
+            public final java.util.List<Object> rankingsData = rankings;
             public final java.time.LocalDateTime timestamp = java.time.LocalDateTime.now();
         };
     }

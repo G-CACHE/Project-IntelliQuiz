@@ -4,6 +4,7 @@ import com.intelliquiz.api.auth.internal.application.services.AccessResolutionRe
 import com.intelliquiz.api.auth.internal.application.services.AccessResolutionService;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
 import com.intelliquiz.api.auth.internal.presentation.dto.request.PublicJoinRequest;
+import com.intelliquiz.api.auth.internal.presentation.dto.request.UpdateTeamNameRequest;
 import com.intelliquiz.api.auth.internal.presentation.dto.response.AccessResolutionResponse;
 import com.intelliquiz.api.quiz.QuizFacade;
 import com.intelliquiz.api.quiz.dto.QuizInfoDto;
@@ -234,5 +235,27 @@ public class AccessController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Updates a team's name (used for setting avatars).
+     * Requires the team's access code for verification.
+     */
+    @PutMapping("/teams/{teamId}/name")
+    @Operation(
+            summary = "Update team name",
+            description = "Updates a team's name. Requires the team's access code for verification. Useful for setting avatars in names."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Name updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or access code"),
+            @ApiResponse(responseCode = "404", description = "Team not found")
+    })
+    public ResponseEntity<Void> updateTeamName(
+            @PathVariable Long teamId,
+            @Valid @RequestBody UpdateTeamNameRequest request) {
+        
+        teamFacade.updateTeamNameWithAccessCode(teamId, request.name(), request.accessCode());
+        return ResponseEntity.ok().build();
     }
 }

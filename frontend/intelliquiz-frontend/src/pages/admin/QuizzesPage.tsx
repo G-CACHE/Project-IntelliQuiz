@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBookOpen,
   BiEdit,
   BiPause,
   BiCheckCircle,
+  BiPlayCircle,
   BiSearch,
   BiX,
   BiErrorCircle,
@@ -17,11 +18,18 @@ import { useQuizzes, useCreateQuiz, useUpdateQuiz, useQuizStatusChange, useDelet
 import { useAuth } from '../../contexts/AuthContext';
 import type { Quiz, CreateQuizRequest } from '../../services/api';
 import '../../styles/admin.css';
-import './AdminRedesign.css';
+import './QuizzesPage.css';
 
 export default function AdminQuizzesPage() {
+  const quizzesPerPage = 6;
+  const guideVisibilityStorageKey = 'intelliquiz.admin.quizzes.walkthrough.visible';
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isGuideExpanded, setIsGuideExpanded] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem(guideVisibilityStorageKey) !== '0';
+  });
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
@@ -48,7 +56,7 @@ export default function AdminQuizzesPage() {
 
   // Filter quizzes based on search/status (backend already filters by createdByUserId)
   const filteredQuizzes = useMemo(() => {
-    let filtered = quizzes;
+    let filtered = [...quizzes];
     
     if (searchQuery) {
       filtered = filtered.filter((q) =>
@@ -59,8 +67,26 @@ export default function AdminQuizzesPage() {
     if (statusFilter !== 'ALL') {
       filtered = filtered.filter((q) => q.status === statusFilter);
     }
+
+    filtered.sort((a, b) => b.id - a.id);
+
     return filtered;
   }, [quizzes, searchQuery, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuizzes.length / quizzesPerPage));
+
+  const paginatedQuizzes = useMemo(() => {
+    const start = (currentPage - 1) * quizzesPerPage;
+    return filteredQuizzes.slice(start, start + quizzesPerPage);
+  }, [filteredQuizzes, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   const quizStats = useMemo(() => {
     const draft = quizzes.filter((quiz) => quiz.status === 'DRAFT').length;
@@ -74,6 +100,115 @@ export default function AdminQuizzesPage() {
       active,
     };
   }, [quizzes, filteredQuizzes]);
+
+  const editableQuizzes = useMemo(
+    () => quizzes.filter((quiz) => canEditQuiz(quiz.id, quiz.createdByUserId)),
+    [quizzes, canEditQuiz]
+  );
+
+  const firstQuizNeedingQuestions = useMemo(
+    () => editableQuizzes.find((quiz) => (quiz.questionCount || 0) === 0) || null,
+    [editableQuizzes]
+  );
+
+  const firstDraftQuiz = useMemo(
+    () => editableQuizzes.find((quiz) => quiz.status === 'DRAFT') || null,
+    [editableQuizzes]
+  );
+
+  const firstReadyQuiz = useMemo(
+    () => editableQuizzes.find((quiz) => quiz.status === 'READY') || null,
+    [editableQuizzes]
+  );
+
+  const walkthroughSteps = useMemo(
+    () => [
+      {
+        id: 'create',
+        label: 'Create a quiz',
+        hint: 'Start by creating your first quiz shell.',
+        done: quizStats.total > 0,
+        actionLabel: quizStats.total > 0 ? 'Create another' : 'Create now',
+        onAction: () => {
+          resetForm();
+          setShowCreateModal(true);
+        },
+      },
+      {
+        id: 'questions',
+        label: 'Add question content',
+        hint: 'Populate your quiz so teams can answer meaningful rounds.',
+        done: editableQuizzes.some((quiz) => (quiz.questionCount || 0) > 0),
+        actionLabel: firstQuizNeedingQuestions ? 'Add questions' : 'Open question sets',
+        onAction: () => {
+          if (firstQuizNeedingQuestions) {
+            navigate(`/admin/quizzes/${firstQuizNeedingQuestions.id}/questions`);
+            return;
+          }
+          if (editableQuizzes[0]) {
+            navigate(`/admin/quizzes/${editableQuizzes[0].id}/questions`);
+          }
+        },
+      },
+      {
+        id: 'ready',
+        label: 'Mark quiz as ready',
+        hint: 'Move draft quizzes into ready state before launch.',
+        done: quizStats.ready > 0 || quizStats.active > 0,
+        actionLabel: firstDraftQuiz ? 'Mark next draft ready' : 'Review drafts',
+        onAction: () => {
+          if (firstDraftQuiz) {
+            void statusChange.mutateAsync({ id: firstDraftQuiz.id, action: 'ready' }).catch((err) => {
+              console.error('Failed to ready quiz:', err);
+            });
+            return;
+          }
+          if (editableQuizzes[0]) {
+            navigate(`/admin/quizzes/${editableQuizzes[0].id}`);
+          }
+        },
+      },
+      {
+        id: 'launch',
+        label: 'Launch live session',
+        hint: 'Activate a ready quiz when your teams are set.',
+        done: quizStats.active > 0,
+        actionLabel: firstReadyQuiz ? 'Launch ready quiz' : 'Go to workspace',
+        onAction: () => {
+          if (firstReadyQuiz) {
+            void statusChange.mutateAsync({ id: firstReadyQuiz.id, action: 'activate' }).catch((err) => {
+              console.error('Failed to launch quiz:', err);
+            });
+            return;
+          }
+          if (editableQuizzes[0]) {
+            navigate(`/admin/quizzes/${editableQuizzes[0].id}`);
+          }
+        },
+      },
+    ],
+    [
+      quizStats,
+      editableQuizzes,
+      firstQuizNeedingQuestions,
+      firstDraftQuiz,
+      firstReadyQuiz,
+      navigate,
+      statusChange,
+    ]
+  );
+
+  const recommendedQuiz = firstQuizNeedingQuestions || firstDraftQuiz || firstReadyQuiz || editableQuizzes[0] || null;
+
+  const toggleGuideVisibility = () => {
+    setIsGuideExpanded((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(guideVisibilityStorageKey, next ? '1' : '0');
+      }
+      return next;
+    });
+  };
 
   const handleCreate = async () => {
     if (!formData.title.trim()) return;
@@ -166,33 +301,89 @@ export default function AdminQuizzesPage() {
           className="admin-btn quiz-list-create-btn"
           onClick={() => { resetForm(); setShowCreateModal(true); }}
         >
-          <BiBookOpen size={18} />
           Create Quiz
         </button>
       </div>
 
-      <div className="quiz-list-stats-row">
-        <div className="quiz-list-stat-chip">
-          <span className="quiz-list-stat-label">Total</span>
-          <span className="quiz-list-stat-value">{quizStats.total}</span>
+
+      <section className="quiz-list-journey admin-card" aria-label="Admin walkthrough">
+        <div className="quiz-list-journey-head">
+          <div>
+            <p className="quiz-list-journey-eyebrow">Admin walkthrough</p>
+            <h2 className="quiz-list-journey-title">Do this next</h2>
+            <p className="quiz-list-journey-copy">
+              Follow this guided flow to build, prepare, and launch without missing steps.
+            </p>
+          </div>
         </div>
-        <div className="quiz-list-stat-chip">
-          <span className="quiz-list-stat-label">Filtered</span>
-          <span className="quiz-list-stat-value">{quizStats.filtered}</span>
+
+        <div className="quiz-list-guide-controls">
+          <button
+            type="button"
+            className="admin-btn quiz-list-guide-trigger"
+            onClick={toggleGuideVisibility}
+            aria-expanded={isGuideExpanded}
+            aria-controls="admin-walkthrough-steps"
+          >
+            {isGuideExpanded ? 'Hide walkthrough' : 'Show walkthrough'}
+          </button>
         </div>
-        <div className="quiz-list-stat-chip">
-          <span className="quiz-list-stat-label">Draft</span>
-          <span className="quiz-list-stat-value">{quizStats.draft}</span>
-        </div>
-        <div className="quiz-list-stat-chip">
-          <span className="quiz-list-stat-label">Ready</span>
-          <span className="quiz-list-stat-value">{quizStats.ready}</span>
-        </div>
-        <div className="quiz-list-stat-chip">
-          <span className="quiz-list-stat-label">Live</span>
-          <span className="quiz-list-stat-value">{quizStats.active}</span>
-        </div>
-      </div>
+
+        {isGuideExpanded && (
+          <>
+            <div id="admin-walkthrough-steps" className="quiz-list-journey-grid">
+              {walkthroughSteps.map((step, index) => (
+                <div
+                  key={step.id}
+                  className={`quiz-list-journey-step ${step.done ? 'is-complete' : 'is-pending'}`}
+                  onClick={step.onAction}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      step.onAction();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${step.label}. ${step.actionLabel}`}
+                >
+                  <div className="quiz-list-journey-step-top">
+                    <span className="quiz-list-journey-step-index">Step {index + 1}</span>
+                  </div>
+                  <h3 className="quiz-list-journey-step-title">{step.label}</h3>
+                  <p className="quiz-list-journey-step-copy">{step.hint}</p>
+                  <button
+                    type="button"
+                    className="admin-btn quiz-list-journey-btn"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      step.onAction();
+                    }}
+                  >
+                    {step.id === 'launch' ? <BiPlayCircle size={16} /> : <BiCheckCircle size={16} />}
+                    {step.actionLabel}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {recommendedQuiz && (
+              <div className="quiz-list-journey-callout">
+                <p>
+                  Recommended quiz: <strong>{recommendedQuiz.title}</strong>
+                </p>
+                <button
+                  type="button"
+                  className="admin-btn quiz-list-journey-callout-btn"
+                  onClick={() => navigate(`/admin/quizzes/${recommendedQuiz.id}`)}
+                >
+                  Open workspace
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Error Alert */}
       {error && (
@@ -202,10 +393,10 @@ export default function AdminQuizzesPage() {
       )}
 
       {/* Filters */}
-      <div className="admin-card quiz-list-filter-card" style={{ marginBottom: 20, padding: 16 }}>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <div className="quiz-list-search-wrap" style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-            <BiSearch size={18} className="quiz-list-search-icon" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+      <div className="admin-card quiz-list-filter-card quiz-list-filter-bar">
+        <div className="quiz-list-filter-controls">
+          <div className="quiz-list-search-wrap">
+            <BiSearch size={18} className="quiz-list-search-icon" />
             <input
               type="text"
               placeholder="Search quizzes..."
@@ -218,8 +409,7 @@ export default function AdminQuizzesPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="admin-form-input admin-form-select"
-            style={{ width: 'auto', minWidth: 140 }}
+            className="admin-form-input admin-form-select quiz-list-status-select"
           >
             <option value="ALL">All Status</option>
             <option value="DRAFT">Draft</option>
@@ -233,10 +423,10 @@ export default function AdminQuizzesPage() {
       {/* Quizzes Grid */}
       <div className="admin-quiz-grid">
         {filteredQuizzes.length > 0 ? (
-          filteredQuizzes.map((quiz) => (
+          paginatedQuizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className="admin-quiz-card quiz-list-card"
+              className={`admin-quiz-card quiz-list-card status-${getStatusClass(quiz.status)}`}
               onClick={() => navigate(`/admin/quizzes/${quiz.id}`)}
               role="button"
               tabIndex={0}
@@ -333,6 +523,28 @@ export default function AdminQuizzesPage() {
         )}
       </div>
 
+      {filteredQuizzes.length > quizzesPerPage && (
+        <div className="quiz-list-pagination" aria-label="Quiz pagination">
+          <button
+            type="button"
+            className="admin-btn quiz-list-page-btn"
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className="quiz-list-page-indicator">Page {currentPage} of {totalPages}</span>
+          <button
+            type="button"
+            className="admin-btn quiz-list-page-btn"
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
 
       {/* Create Quiz Modal */}
       {showCreateModal && (
@@ -343,6 +555,12 @@ export default function AdminQuizzesPage() {
               <button onClick={() => setShowCreateModal(false)} className="admin-btn-icon quiz-list-modal-close"><BiX size={18} /></button>
             </div>
             <div className="admin-modal-body">
+              <div className="quiz-list-modal-copy">
+                <p className="quiz-list-modal-eyebrow">Quick setup</p>
+                <p className="quiz-list-modal-description">
+                  Start with the title and description. You can refine access, timing, and navigation in the quiz workspace after creation.
+                </p>
+              </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">Quiz Title *</label>
                 <input 
@@ -388,6 +606,12 @@ export default function AdminQuizzesPage() {
               <button onClick={() => setShowEditModal(false)} className="admin-btn-icon quiz-list-modal-close"><BiX size={18} /></button>
             </div>
             <div className="admin-modal-body">
+              <div className="quiz-list-modal-copy">
+                <p className="quiz-list-modal-eyebrow">Quiz basics</p>
+                <p className="quiz-list-modal-description">
+                  Update the title and description here. Advanced quiz settings stay available in the quiz workspace.
+                </p>
+              </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">Quiz Title *</label>
                 <input 

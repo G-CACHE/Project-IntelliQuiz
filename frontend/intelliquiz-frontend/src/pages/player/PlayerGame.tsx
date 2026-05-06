@@ -1,16 +1,91 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CircleX, AlarmClock, Trophy, Sparkles, ListChecks, Home } from 'lucide-react';
+import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, BarChart3, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
+import { parseSmartName } from '../../utils/nameUtils';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import AntiCheatWrapper from '../../components/game/AntiCheatWrapper';
 import QuestionPalette from '../../components/game/QuestionPalette';
 import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal';
+import { ConfettiCanvas, ErrorParticles } from '../../components/game/ResultEffects';
 import '../../styles/participant.css';
+
+// ======== STREAK NOTIFICATION COMPONENTS ========
+const StreakFire: React.FC<{ size?: number }> = ({ size = 64 }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: size, height: size + 8 }}>
+    <div style={{
+      position: 'absolute', width: '80%', height: '80%', borderRadius: '50%',
+      background: 'radial-gradient(circle, rgba(255,100,0,0.5) 0%, transparent 75%)',
+      filter: 'blur(12px)', animation: 'flameBloom 2s infinite alternate',
+      zIndex: 1
+    }} />
+    <img 
+      src="/effects/streak-fire.png" 
+      alt="Streak" 
+      style={{ 
+        width: size, height: 'auto', position: 'relative', zIndex: 2,
+        filter: 'drop-shadow(0 0 12px rgba(255, 69, 0, 0.7)) brightness(1.1)',
+        animation: 'flameBreathe 1.2s infinite ease-in-out'
+      }} 
+    />
+    {[...Array(4)].map((_, i) => (
+      <div key={i} style={{
+        position: 'absolute', width: '4px', height: '4px', borderRadius: '50%', background: '#FFF700',
+        bottom: '25%', left: `${35 + i * 12}%`, opacity: 0.8,
+        animation: `flameEmber ${1 + i * 0.3}s infinite linear`,
+        animationDelay: `${i * 0.4}s`, zIndex: 3
+      }} />
+    ))}
+  </div>
+);
+
+const StreakNotifier: React.FC<{ streak: number }> = ({ streak }) => {
+  if (streak < 3) return null;
+
+  return (
+    <div className="streak-pop-container">
+      <div className="streak-badge-main">
+        <StreakFire size={72} />
+        <div className="streak-info">
+          <span className="streak-number">{streak}x</span>
+          <span className="streak-text">STREAK!</span>
+        </div>
+      </div>
+      <style>{`
+        .streak-pop-container {
+          position: fixed; top: 120px; right: 20px; z-index: 1000;
+          animation: streakPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+          pointer-events: none;
+        }
+        .streak-badge-main {
+          display: flex; flex-direction: column; align-items: center;
+          padding: 16px; background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(12px); border-radius: 24px;
+          border: 2px solid #ff4500;
+          box-shadow: 0 8px 32px rgba(255, 69, 0, 0.4), inset 0 2px 8px rgba(255,255,255,0.2);
+        }
+        .streak-info { display: flex; flex-direction: column; align-items: center; margin-top: -8px; }
+        .streak-number { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 0 10px #ff4500; font-family: 'Montserrat', sans-serif; }
+        .streak-text { font-size: 12px; font-weight: 800; color: #ffb067; letter-spacing: 0.2em; text-transform: uppercase; }
+        
+        @keyframes streakPopIn { from { transform: translateX(100px) scale(0.5); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
+        @keyframes flameBloom { from { transform: scale(0.9); opacity: 0.3; } to { transform: scale(1.4); opacity: 0.7; } }
+        @keyframes flameBreathe {
+          0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.7)) brightness(1.1); }
+          50% { transform: scale(1.08) translateY(-2px); filter: drop-shadow(0 0 18px rgba(255, 80, 0, 0.9)) brightness(1.3); }
+        }
+        @keyframes flameEmber {
+          0% { transform: translateY(0) scale(1); opacity: 1; }
+          100% { transform: translateY(-45px) scale(0); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const PlayerGame: React.FC = () => {
   const navigate = useNavigate();
@@ -60,6 +135,7 @@ const PlayerGame: React.FC = () => {
   // WebSocket connection - pass teamCode as accessCode for authentication
   const {
     connected,
+    connecting,
     error,
     gameState,
     participantNavigationEnabled,
@@ -304,16 +380,24 @@ const PlayerGame: React.FC = () => {
     setIsCorrect(null);
   }, [navigateToQuestion, canNavigate, earlySubmittedQuiz]);
 
-  // Find current team score from rankings
-  const myTeamScore = rankings.find((r: any) => r.teamId === session?.teamId)?.score;
-  const myFinalResult = rankings.find((r: any) => r.teamId === session?.teamId);
   const classTimerExpired = canNavigate && timerTotalTime > 0 && timeRemaining <= 0;
+  const myRanking = rankings.find(r => r.teamId === session?.teamId);
+  const currentStreak = myRanking?.streak || 0;
+  const myTeamScore = myRanking?.score;
+  const myFinalResult = myRanking;
 
   if (!session) return null;
 
   return (
     <AntiCheatWrapper onViolation={reportViolation} enabled={gameState === 'QUESTION' && !earlySubmittedQuiz}>
-    <div className="participant-page participant-game-page">
+     <div className="participant-page participant-game-page">
+      {/* Streak Notifier - Private to player */}
+      <StreakNotifier streak={currentStreak} />
+
+      {/* Visual Effects */}
+      {gameState === 'ANSWER_REVEAL' && isCorrect === true && <ConfettiCanvas />}
+      {gameState === 'ANSWER_REVEAL' && isCorrect === false && <ErrorParticles />}
+
       <RoundAnnouncementModal 
         isVisible={showRoundAnnouncement}
         roundName={currentRound || ''}
@@ -328,7 +412,7 @@ const PlayerGame: React.FC = () => {
             <p className="participant-game-question-info participant-game-progress-chip">
               Q{questionNumber}/{totalQuestions}
             </p>
-            <p className="participant-game-team-name">{session.teamName}</p>
+            <p className="participant-game-team-name">{parseSmartName(session.teamName).name}</p>
           </div>
           
           <div className="participant-game-header-right">
@@ -341,11 +425,18 @@ const PlayerGame: React.FC = () => {
             )}
             
             {/* Connection Status */}
-            <span className={`participant-status-dot ${connected ? 'participant-status-connected' : 'participant-status-disconnected'}`}></span>
+            <span className={`participant-status-dot ${
+              connected ? 'participant-status-connected' : 
+              connecting ? 'participant-status-connecting' : 
+              'participant-status-disconnected'
+            }`}></span>
             
             {/* Timer — only show during active question, not buffer */}
             {gameState === 'QUESTION' && (
-              <div className="participant-timer-container">
+              <div className={`participant-timer-container ${
+                timeRemaining <= 3 ? 'participant-timer-critical' : 
+                timeRemaining <= 5 ? 'participant-timer-low' : ''
+              }`}>
                 <Timer 
                   timeRemaining={timeRemaining} 
                   totalTime={canNavigate ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
@@ -403,6 +494,7 @@ const PlayerGame: React.FC = () => {
                   selectedOption={selectedOption}
                   onSelectOption={handleSelectOption}
                   disabled={submitted || (!canNavigate && timeRemaining <= 0)}
+                  variant="participant"
                 />
 
                 {/* Navigation Buttons for Participant-Navigated Quiz */}
@@ -450,8 +542,10 @@ const PlayerGame: React.FC = () => {
                         <p className="participant-submitted-hint">Waiting for results...</p>
                       </div>
                     ) : selectedOption ? (
-                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#10b981', marginTop: '16px', fontWeight: 600 }}>
-                        <CheckCircle2 size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Selected - you can change your answer before time runs out
+                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#7a1733', marginTop: '16px', fontWeight: 700 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          Your answer is recorded — you can change it until time runs out
+                        </span>
                       </p>
                     ) : (
                       <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
@@ -485,7 +579,7 @@ const PlayerGame: React.FC = () => {
           )}
 
           {/* ANSWER_REVEAL State */}
-          {gameState === 'ANSWER_REVEAL' && currentQuestion && (
+          {(gameState === 'REVEAL' || gameState === 'ANSWER_REVEAL') && currentQuestion && (
             <div>
               {/* Result Banner */}
               <div className={`participant-result-banner ${
@@ -545,6 +639,7 @@ const PlayerGame: React.FC = () => {
                 correctAnswer={currentQuestion.correctAnswer}
                 showCorrectAnswer={true}
                 disabled={true}
+                variant="participant"
               />
 
               <div className="participant-waiting-message">
@@ -553,7 +648,7 @@ const PlayerGame: React.FC = () => {
             </div>
           )}
 
-          {/* SCOREBOARD / ROUND_SUMMARY State */}
+          {/* SCOREBOARD / ROUND_SUMMARY — full leaderboard, question hidden */}
           {(gameState === 'SCOREBOARD' || gameState === 'ROUND_SUMMARY') && (
             <div>
               <ScoreboardDisplay
@@ -608,7 +703,7 @@ const PlayerGame: React.FC = () => {
           {/* PAUSED State */}
           {gameState === 'PAUSED' && (
             <div className="participant-buffer-state">
-              <div className="participant-paused-icon">⏸</div>
+              <div className="participant-paused-icon"><PauseCircle size={48} /></div>
               <h2 className="participant-buffer-title">Quiz Paused</h2>
               <p className="participant-buffer-text">Waiting for the host to resume...</p>
             </div>
@@ -619,10 +714,8 @@ const PlayerGame: React.FC = () => {
             <div className="participant-final-results">
               {/* Celebration Header */}
               <div className="participant-final-banner">
-                <div className="participant-final-banner-emoji" aria-hidden="true">
+                <div className="participant-final-banner-icon-wrapper">
                   <Trophy className="participant-final-banner-icon" />
-                  <Sparkles className="participant-final-banner-spark participant-final-banner-spark-left" />
-                  <Sparkles className="participant-final-banner-spark participant-final-banner-spark-right" />
                 </div>
                 <h2 className="participant-final-banner-title">Quiz Complete!</h2>
                 <p className="participant-final-banner-subtitle">
@@ -633,27 +726,35 @@ const PlayerGame: React.FC = () => {
               {/* Player's Own Result Card */}
               {myFinalResult ? (
                   <div className="participant-final-result-card">
-                    <p className="participant-final-result-label">
-                      Your Result
-                    </p>
-                    <p className="participant-final-result-rank">
-                      #{myFinalResult.rank}
-                    </p>
-                    <p className="participant-final-result-score">
-                      {myFinalResult.score} points
-                    </p>
+                    <div className="participant-final-result-header">
+                      <Award className="participant-final-result-icon" />
+                      <p className="participant-final-result-label">Your Result</p>
+                    </div>
+                    <div className="participant-final-result-main">
+                      <div className="participant-final-result-rank-section">
+                        <span className="participant-final-result-rank-label">Rank</span>
+                        <p className="participant-final-result-rank">#{myFinalResult.rank}</p>
+                      </div>
+                      <div className="participant-final-result-divider"></div>
+                      <div className="participant-final-result-score-section">
+                        <span className="participant-final-result-score-label">Score</span>
+                        <p className="participant-final-result-score">{myFinalResult.score}</p>
+                      </div>
+                    </div>
                     <div className="participant-final-stats">
                       <div className="participant-final-stat-cell">
-                        <span>Teams</span>
-                        <strong>{rankings.length}</strong>
+                        <BarChart3 size={16} className="participant-final-stat-icon" />
+                        <div>
+                          <span>Teams</span>
+                          <strong>{rankings.length}</strong>
+                        </div>
                       </div>
                       <div className="participant-final-stat-cell">
-                        <span>Questions</span>
-                        <strong>{totalQuestions || 0}</strong>
-                      </div>
-                      <div className="participant-final-stat-cell">
-                        <span>Placement</span>
-                        <strong>#{myFinalResult.rank}</strong>
+                        <ListChecks size={16} className="participant-final-stat-icon" />
+                        <div>
+                          <span>Questions</span>
+                          <strong>{totalQuestions || 0}</strong>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -663,7 +764,7 @@ const PlayerGame: React.FC = () => {
                 rankings={rankings}
                 highlightTeamId={session.teamId}
                 isFinal={true}
-                title="Congratulations"
+                title="Final Rankings"
               />
 
               {/* Exit Button */}
@@ -674,7 +775,7 @@ const PlayerGame: React.FC = () => {
                   className="participant-btn-primary participant-btn-large participant-results-action"
                 >
                   <ListChecks size={20} aria-hidden="true" />
-                  {reviewLoading ? 'Loading...' : 'Show Answers'}
+                  {reviewLoading ? 'Loading...' : 'Review Answers'}
                 </button>
                 <button
                   onClick={() => navigate('/')}

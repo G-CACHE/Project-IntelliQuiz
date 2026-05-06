@@ -1,123 +1,98 @@
-/* IntelliQuiz - CSS Root Variables */
-/* Color Palette: #880015 (Primary), #f8c107 (Accent), #FFFFFF (White), #000000 (Black) */
+/* IntelliQuiz - Aurum Design System */
+/* Clean, Professional, Quizlet-inspired */
 
 :root {
-  /* PixelBrute Typography */
-  --font-display: 'Press Start 2P', monospace;
-  --font-heading: 'Boogaloo', cursive;
-  --font-body: 'Nunito', sans-serif;
-  --font-mono: 'Share Tech Mono', monospace;
+  /* === FONTS === */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* PixelBrute Palette */
-  --color-secondary: #5B21FF;
-  --color-accent-pink: #FF2D78;
-  --color-accent-green: #00E87A;
-  --color-accent-orange: #FF6B00;
-  --color-cream: #FFF8DC;
-  --color-correct: #00E87A;
-  --color-wrong: #FF2D78;
-  --color-timer-ok: #FFE500;
-  --color-timer-warn: #FF6B00;
-  --color-timer-danger: #FF2D78;
-  --color-rank-1: #FFD700;
-  --color-rank-2: #C0C0C0;
-  --color-rank-3: #CD7F32;
+  /* === PRIMARY PALETTE === */
+  --color-maroon: #7a1733;
+  --color-maroon-dark: #561026;
+  --color-maroon-light: #9a2a4b;
+  --color-gold: #c2a04a;
+  --color-gold-light: #dbc078;
+  --color-gold-subtle: #eee5d1;
 
-  /* PixelBrute Border & Shadow */
-  --shadow-brutal: 4px 4px 0px #0D0D0D;
-  --shadow-brutal-lg: 6px 6px 0px #0D0D0D;
-  --shadow-brutal-hover: 2px 2px 0px #0D0D0D;
-  --border-brutal: 3px solid #0D0D0D;
-  --border-radius-pixel: 4px;
-  --border-radius-card: 8px;
-  --border-radius-btn: 6px;
-
-  /* Primary Colors - Maroon */
-  --color-primary: #880015;
-  --color-primary-light: #a30018;
-  --color-primary-dark: #6b0012;
-  --color-primary-darker: #5a0010;
-
-  /* Accent Colors - Gold */
-  --color-accent: #f8c107;
-  --color-accent-light: #ffd23d;
-  --color-accent-dark: #e0a800;
-
-  /* Neutral Colors */
+  /* === NEUTRALS === */
+  --color-black: #181218;
+  --color-charcoal: #332b31;
+  --color-gray-dark: #6e636b;
+  --color-gray-mid: #b6aeb3;
+  --color-gray-light: #dfd7dc;
+  --color-off-white: #f4f0ea;
   --color-white: #FFFFFF;
-  --color-black: #000000;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
 
-  /* Semantic Colors */
-  --color-success: #10b981;
-  --color-success-light: #d1fae5;
-  --color-warning: #f59e0b;
-  --color-warning-light: #fef3c7;
-  --color-error: #ef4444;
-  --color-error-light: #fee2e2;
-  --color-info: #3b82f6;
-  --color-info-light: #dbeafe;
+  /* === SEMANTIC / GAME STATE === */
+  --color-correct: #1A7A4A;
+  --color-correct-bg: #EBF7F1;
+  --color-wrong: #C0392B;
+  --color-wrong-bg: #FDECEA;
+  --color-pending: #C9A84C;
 
-  /* Typography */
-  --font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
+  /* === LEADERBOARD RANKS === */
+  --color-rank-1: #C9A84C;
+  --color-rank-2: #9E9E9E;
+  --color-rank-3: #A0522D;
 
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  /* === TIMER STATES === */
+  --color-timer-ok: #1A7A4A;
+  --color-timer-warn: #D97706;
+  --color-timer-danger: #C0392B;
 
-  /* Border Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  /* === SHADOWS === */
+  --shadow-sm: 0 1px 3px rgba(32, 20, 26, 0.08), 0 1px 2px rgba(32, 20, 26, 0.04);
+  --shadow-md: 0 4px 12px rgba(32, 20, 26, 0.12), 0 2px 4px rgba(32, 20, 26, 0.06);
+  --shadow-lg: 0 10px 24px rgba(32, 20, 26, 0.14), 0 4px 8px rgba(32, 20, 26, 0.06);
+  --shadow-gold: 0 4px 16px rgba(194, 160, 74, 0.24);
+  --shadow-maroon: 0 4px 16px rgba(122, 23, 51, 0.24);
+
+  /* === BORDERS === */
+  --border-light: 1px solid #dfd7dc;
+  --border-mid: 1px solid #b6aeb3;
+  --border-gold: 1px solid #c2a04a;
+  --border-maroon: 1px solid #7a1733;
+
+  /* === BORDER RADIUS === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  /* === SPACING SCALE === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 300ms ease;
-  --transition-slow: 500ms ease;
+  /* === TRANSITIONS === */
+  --transition-fast: all 0.15s ease;
+  --transition-base: all 0.25s ease;
+  --transition-slow: all 0.4s ease;
 
-  /* Background Colors (Light Theme - Default) */
-  --bg-primary: #f8f9fa;
-  --bg-secondary: #f3f4f6;
-  --bg-card: #ffffff;
-
-  /* Text Colors */
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-
-  /* Border Colors */
-  --border-primary: rgba(248, 193, 7, 0.3);
-  --border-secondary: #e5e7eb;
+  /* === LEGACY COMPATIBILITY (for existing components) === */
+  --color-primary: #7a1733;
+  --color-primary-light: #9a2a4b;
+  --color-primary-dark: #561026;
+  --color-accent: #c2a04a;
+  --color-accent-light: #dbc078;
+  --color-success: #1A7A4A;
+  --color-success-light: #EBF7F1;
+  --color-error: #C0392B;
+  --color-error-light: #FDECEA;
+  --color-warning: #D97706;
+  --bg-primary: #f4f0ea;
+  --bg-card: #FFFFFF;
+  --text-primary: #181218;
+  --text-secondary: #6e636b;
+  --text-muted: #b6aeb3;
 }
 
 @keyframes pixel-jump {
@@ -148,3 +123,63 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
 }
+
+
+/* === SMOOTH ANIMATIONS === */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(201, 168, 76, 0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flash-border {
+  0%, 100% { border-color: var(--color-gold); }
+  50% { border-color: transparent; }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* === UTILITY CLASSES === */
+.text-maroon { color: var(--color-maroon); }
+.text-gold { color: var(--color-gold); }
+.text-muted { color: var(--color-gray-dark); }
+.bg-maroon { background-color: var(--color-maroon); }
+.bg-gold-subtle { background-color: var(--color-gold-subtle); }
+.icon-gold { color: var(--color-gold); }
+.icon-maroon { color: var(--color-maroon); }

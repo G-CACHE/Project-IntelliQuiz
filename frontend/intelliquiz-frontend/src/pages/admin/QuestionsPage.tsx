@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   BiFile,
@@ -13,11 +13,14 @@ import {
   BiTime,
   BiStar,
   BiImport,
+  BiChevronLeft,
+  BiChevronRight,
 } from 'react-icons/bi';
 import { questionBankApi, questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest, type QuestionBankItem } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 import './AdminRedesign.css';
+import './QuestionsPage.css';
 
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
 const QUESTION_TYPES: Array<{ value: CreateQuestionRequest['type']; label: string }> = [
@@ -53,6 +56,7 @@ export default function AdminQuestionsPage() {
   const navigate = useNavigate();
   const quizIdNum = quizId ? parseInt(quizId) : 0;
   const { canEditQuiz, isSuperAdmin } = useAuth();
+  const questionsPerPage = 5;
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -69,12 +73,16 @@ export default function AdminQuestionsPage() {
   const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [bankSearch, setBankSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   
   const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum, quiz?.createdByUserId);
   const isDraftQuiz = quiz?.status === 'DRAFT';
   const canEditContent = hasEditPermission && isDraftQuiz;
 
-  useEffect(() => { if (quizIdNum) loadData(); }, [quizIdNum]);
+  useEffect(() => {
+    if (quizIdNum) loadData();
+    setCurrentPage(1);
+  }, [quizIdNum]);
 
   const loadData = async () => {
     setLoading(true);
@@ -86,11 +94,39 @@ export default function AdminQuestionsPage() {
       ]);
       setQuiz(quizData);
       setQuestions(questionsData);
+      setCurrentPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / questionsPerPage));
+
+  const paginatedQuestions = useMemo(() => {
+    const startIndex = (currentPage - 1) * questionsPerPage;
+    return questions.slice(startIndex, startIndex + questionsPerPage);
+  }, [currentPage, questions]);
+
+  const startQuestionIndex = questions.length === 0 ? 0 : (currentPage - 1) * questionsPerPage + 1;
+  const endQuestionIndex = Math.min(currentPage * questionsPerPage, questions.length);
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const pages = new Set<number>([1, totalPages, currentPage]);
+    if (currentPage - 1 > 1) pages.add(currentPage - 1);
+    if (currentPage + 1 < totalPages) pages.add(currentPage + 1);
+
+    return Array.from(pages).sort((left, right) => left - right);
+  }, [currentPage, totalPages]);
+
+  const goToPage = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(nextPage);
   };
 
   const handleSave = async () => {
@@ -382,27 +418,31 @@ export default function AdminQuestionsPage() {
   return (
     <div>
       {/* Page Header */}
-      <div className="admin-page-header orange">
+      <div className="admin-page-header questions-page-header">
         <div className="admin-page-header-bg">
-          <div className="admin-page-header-shape shape-1" />
-          <div className="admin-page-header-shape shape-2" />
-          <div className="admin-page-header-dots" />
+            <div className="admin-page-header-shape shape-1" />
+            <div className="admin-page-header-shape shape-2" />
+            <div className="admin-page-header-dots" />
         </div>
-        <div className="admin-page-header-content">
-          <div className="admin-page-header-left">
+        <div className="admin-page-header-content questions-page-header-content">
+          <div className="admin-page-header-left questions-page-header-left">
             <button className="admin-btn-icon" onClick={() => navigate(`/admin/quizzes/${quizIdNum}`)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}>
               <BiArrowBack size={18} />
             </button>
-            <div className="admin-page-icon"><BiFile size={26} /></div>
             <div>
               <h1 className="admin-page-title">Questions</h1>
               <p className="admin-page-subtitle">
-                {quiz?.title || 'Quiz'} • {questions.length} questions {!canEditContent && <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}><BiLock size={12} style={{ verticalAlign: 'middle' }} /> View only</span>}
+                {quiz?.title || 'Quiz'} • {questions.length} questions
               </p>
             </div>
           </div>
+          {!canEditContent && (
+            <div className="questions-header-readonly">
+              <BiLock size={13} /> Read only
+            </div>
+          )}
           {canEditContent && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="questions-header-actions">
               <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
                 {sortingQuestions ? 'Sorting...' : 'Sort by Difficulty'}
               </button>
@@ -426,106 +466,149 @@ export default function AdminQuestionsPage() {
       )}
 
       {/* Questions List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="questions-list-container">
         {questions.length > 0 ? (
-          questions.map((q, idx) => (
-            <div key={q.id} className="admin-card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', gap: 16 }}>
-                <div style={{ 
-                  width: 40, height: 40, borderRadius: 10, 
-                  background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#8b5cf6', fontWeight: 700, fontSize: 14, flexShrink: 0
-                }}>
-                  {idx + 1}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <h4 style={{ color: '#1e293b', fontWeight: 600, margin: 0, fontSize: 15, lineHeight: 1.5 }}>{q.text}</h4>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
-                      <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <BiStar size={12} /> {q.points}
+          paginatedQuestions.map((q, idx) => {
+            const identificationAnswers = (q.correctKey || '')
+              .split(/\r?\n/)
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0);
+
+            return (
+              <div key={q.id} className="question-card">
+                <div className="question-card-header">
+                  <div className="question-number-badge">{startQuestionIndex + idx}</div>
+                  <div className="question-text-wrapper">
+                    <h4 className="question-text">{q.text}</h4>
+                    <div className="question-meta">
+                      <span className="question-meta-item">
+                        <BiStar size={14} /> {q.points} pts
                       </span>
-                      <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <BiTime size={12} /> {q.timeLimit}s
+                      <span className="question-meta-item">
+                        <BiTime size={14} /> {q.timeLimit}s
                       </span>
                       <span className={`admin-badge ${getDifficultyBadge(q.difficulty)}`}>{q.difficulty}</span>
                     </div>
                   </div>
-                  {q.type === 'IDENTIFICATION' ? (
-                    <div style={{
-                      borderRadius: 8,
-                      padding: '10px 12px',
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      fontSize: 13,
-                      color: '#334155',
-                    }}>
-                      Accepted answers: {q.correctKey.split(/\r?\n/).filter(Boolean).join(', ')}
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                      {q.options.map((option, optIdx) => {
-                        const key = OPTION_KEYS[optIdx];
-                        const isCorrect = key === q.correctKey;
-                        return (
-                          <div key={optIdx} style={{
-                            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-                            borderRadius: 8, fontSize: 13,
-                            background: isCorrect ? '#f0fdf4' : '#f8fafc',
-                            border: `1px solid ${isCorrect ? '#bbf7d0' : '#e2e8f0'}`,
-                            color: isCorrect ? '#16a34a' : '#64748b'
-                          }}>
-                            <span style={{ fontWeight: 600, minWidth: 18 }}>{key}.</span>
-                            {isCorrect && <BiCheck size={16} />}
-                            {option}
+                </div>
+
+                      {q.type === 'IDENTIFICATION' ? (
+                        <div className="question-options-wrapper">
+                          <div className="identification-answer">
+                            {identificationAnswers.length > 0
+                              ? identificationAnswers.map((answer, answerIdx) => (
+                                  <div key={answerIdx}>{answer}</div>
+                                ))
+                              : 'No accepted answer set'}
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {canEditContent && (
-                    <>
-                      <button className="admin-btn-icon" onClick={() => openEditModal(q)} title="Edit"><BiEdit size={16} /></button>
-                      <button className="admin-btn-icon danger" onClick={() => { setSelectedQuestion(q); setShowDeleteModal(true); }} title="Delete"><BiTrash size={16} /></button>
-                    </>
-                  )}
-                </div>
+                        </div>
+                      ) : (
+                        <div className="question-options-wrapper">
+                          <div className="question-options-grid">
+                            {q.options.map((option, optIdx) => {
+                              const key = OPTION_KEYS[optIdx] || String.fromCharCode(65 + optIdx);
+                              const isCorrect = q.correctKey === key;
+                              return (
+                                <div key={optIdx} className={`question-option ${isCorrect ? 'is-correct' : ''}`}>
+                                  <span className="question-option-key">{key}</span>
+                                  <span>{option}</span>
+                                  {isCorrect && <BiCheck size={16} />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {canEditContent && (
+                        <div className="question-actions">
+                          <button className="admin-btn admin-btn-secondary" onClick={() => openEditModal(q)} style={{ gap: 6 }}>
+                            <BiEdit size={16} /> Edit
+                          </button>
+                          <button
+                            className="admin-btn admin-btn-secondary"
+                            onClick={() => {
+                              setSelectedQuestion(q);
+                              setShowDeleteModal(true);
+                            }}
+                            style={{ gap: 6, color: '#dc2626' }}
+                          >
+                            <BiTrash size={16} /> Delete
+                          </button>
+                        </div>
+                      )}
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="admin-card">
-            <div className="admin-empty-state">
-              <div className="admin-empty-icon"><BiFile size={32} /></div>
-              <h3 className="admin-empty-title">No questions yet</h3>
-              <p className="admin-empty-text">{canEditContent ? 'Add questions to make your quiz complete' : 'Questions are view-only until the quiz is set back to Draft status.'}</p>
-              {canEditContent && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
-                    <BiImport size={16} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
-                  </button>
-                  <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                    <BiPlus size={16} /> Add First Question
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="admin-empty-state">
+            <div className="admin-empty-icon"><BiFile size={32} /></div>
+            <h3 className="admin-empty-title">No questions yet</h3>
+            <p className="admin-empty-text">{canEditContent ? 'Add questions to make your quiz complete' : 'Questions are view-only until the quiz is set back to Draft status.'}</p>
+            {canEditContent && (
+              <div className="questions-empty-actions">
+                <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
+                  <BiImport size={16} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
+                </button>
+                <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                  <BiPlus size={16} /> Add First Question
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
+      {questions.length > questionsPerPage && (
+        <div className="questions-pagination-shell">
+          <p className="questions-pagination-summary">
+            Showing <strong>{startQuestionIndex}</strong> to <strong>{endQuestionIndex}</strong> of <strong>{questions.length}</strong> questions
+          </p>
+
+          <div className="questions-pagination-controls">
+            <button
+              type="button"
+              className="questions-pagination-nav"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <BiChevronLeft size={18} /> Previous
+            </button>
+
+            <div className="questions-pagination-pages">
+              {paginationPages.map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={`questions-pagination-page ${page === currentPage ? 'is-active' : ''}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="questions-pagination-nav"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next <BiChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="admin-modal" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #fa709a, #fee140)' }}>
+          <div className="admin-modal questions-editor-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header questions-editor-modal-header">
               <h2 className="admin-modal-title">{isEditing ? 'Edit' : 'Add'} Question</h2>
               <button onClick={() => setShowModal(false)} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
             </div>
-            <div className="admin-modal-body">
+            <div className="admin-modal-body questions-editor-modal-body">
               {error && (
                 <div className="admin-alert admin-alert-error" style={{ marginBottom: 16 }}>
                   <div className="admin-alert-content"><BiErrorCircle size={16} /><span>{error}</span></div>
@@ -538,23 +621,23 @@ export default function AdminQuestionsPage() {
                   className="admin-form-input admin-form-textarea" placeholder="Enter the question" rows={3} />
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-                <div className="admin-form-group">
+              <div className="questions-editor-fields-grid">
+                <div className="admin-form-group questions-editor-type-group">
                   <label className="admin-form-label">Type *</label>
                   <select
                     value={formData.type}
                     onChange={(e) => handleTypeChange(e.target.value as CreateQuestionRequest['type'])}
-                    className="admin-form-input admin-form-select"
+                    className="admin-form-input admin-form-select questions-editor-type-select"
                   >
                     {QUESTION_TYPES.map((typeOption) => (
                       <option key={typeOption.value} value={typeOption.value}>{typeOption.label}</option>
                     ))}
                   </select>
                 </div>
-                <div className="admin-form-group">
+                <div className="admin-form-group questions-editor-difficulty-group">
                   <label className="admin-form-label">Difficulty *</label>
                   <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
-                    className="admin-form-input admin-form-select">
+                    className="admin-form-input admin-form-select questions-editor-difficulty-select">
                     <option value="EASY">Easy</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HARD">Hard</option>
@@ -576,29 +659,16 @@ export default function AdminQuestionsPage() {
               {formData.type === 'MULTIPLE_CHOICE' && (
                 <div className="admin-form-group">
                   <label className="admin-form-label">Answer Options * (click letter to mark correct)</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="questions-editor-options-list">
                     {formData.options.map((option, idx) => {
                       const key = OPTION_KEYS[idx];
                       const isCorrect = formData.correctKey === key;
                       return (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div key={idx} className="questions-editor-option-row">
                           <button
                             type="button"
                             onClick={() => setFormData({ ...formData, correctKey: key })}
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 8,
-                              border: `2px solid ${isCorrect ? '#16a34a' : '#e2e8f0'}`,
-                              background: isCorrect ? '#16a34a' : 'transparent',
-                              color: isCorrect ? 'white' : '#64748b',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'all 0.2s ease',
-                            }}
+                            className={`questions-editor-option-toggle${isCorrect ? ' selected' : ''}`}
                           >
                             {isCorrect ? <BiCheck size={20} /> : key}
                           </button>
@@ -606,15 +676,14 @@ export default function AdminQuestionsPage() {
                             type="text"
                             value={option}
                             onChange={(e) => updateOption(idx, e.target.value)}
-                            className="admin-form-input"
-                            style={{ flex: 1 }}
+                            className="admin-form-input questions-editor-option-input"
                             placeholder={`Option ${key}`}
                           />
                         </div>
                       );
                     })}
                   </div>
-                  <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                  <p className="questions-editor-helper-text">
                     Click the letter button to mark the correct answer
                   </p>
                 </div>
@@ -623,7 +692,7 @@ export default function AdminQuestionsPage() {
               {formData.type === 'TRUE_FALSE' && (
                 <div className="admin-form-group">
                   <label className="admin-form-label">Correct Answer *</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div className="questions-editor-truefalse-grid">
                     {DEFAULT_TRUE_FALSE_OPTIONS.map((option, idx) => {
                       const key = idx === 0 ? 'A' : 'B';
                       const isCorrect = formData.correctKey === key;
@@ -632,15 +701,7 @@ export default function AdminQuestionsPage() {
                           key={option}
                           type="button"
                           onClick={() => setFormData({ ...formData, correctKey: key })}
-                          className="admin-form-input"
-                          style={{
-                            minHeight: 44,
-                            border: `2px solid ${isCorrect ? '#16a34a' : '#e2e8f0'}`,
-                            background: isCorrect ? '#f0fdf4' : '#ffffff',
-                            color: isCorrect ? '#15803d' : '#334155',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                          }}
+                          className={`questions-editor-truefalse-btn${isCorrect ? ' selected' : ''}`}
                         >
                           {isCorrect ? <><BiCheck size={16} /> {option}</> : option}
                         </button>
@@ -660,39 +721,24 @@ export default function AdminQuestionsPage() {
                     rows={4}
                     placeholder={'Example:\nParis\nCity of Paris'}
                   />
-                  <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                  <p className="questions-editor-helper-text">
                     {formData.caseSensitive
                       ? 'Matching is case-sensitive and exact.'
                       : 'Matching is case-insensitive and ignores extra spaces.'}
                   </p>
                   
                   {/* Case Sensitivity Toggle */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: 12,
-                    padding: '10px 12px',
-                    borderRadius: 6,
-                    background: '#f8fafc',
-                    border: '1px solid #cbd5e1',
-                  }}>
+                  <div className="questions-editor-case-toggle">
                     <input
                       type="checkbox"
                       id="caseSensitiveToggle"
                       checked={formData.caseSensitive ?? false}
                       onChange={(e) => setFormData({ ...formData, caseSensitive: e.target.checked })}
-                      style={{ cursor: 'pointer' }}
+                      className="questions-editor-case-checkbox"
                     />
                     <label
                       htmlFor="caseSensitiveToggle"
-                      style={{
-                        cursor: 'pointer',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        color: '#334155',
-                        margin: 0,
-                      }}
+                      className="questions-editor-case-label"
                     >
                       Case-Sensitive Matching
                     </label>
@@ -700,7 +746,7 @@ export default function AdminQuestionsPage() {
                 </div>
               )}
             </div>
-            <div className="admin-modal-footer">
+            <div className="admin-modal-footer questions-editor-modal-footer">
               <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
               <button onClick={handleSave} className="admin-btn admin-btn-primary">{isEditing ? 'Update' : 'Add'} Question</button>
             </div>
@@ -783,33 +829,23 @@ export default function AdminQuestionsPage() {
                     <p className="admin-empty-text" style={{ marginTop: 6 }}>No questions match your search.</p>
                   )}
 
-                  <div style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+                  <div className="questions-bank-list">
                     {filteredBankQuestions.map((item) => {
                       const selected = selectedBankIds.includes(item.id);
                       return (
                         <label
                           key={item.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: 10,
-                            padding: '12px 14px',
-                            borderRadius: 8,
-                            border: `1px solid ${selected ? '#d4a017' : '#e2e8f0'}`,
-                            background: selected ? '#fff7ed' : '#ffffff',
-                            cursor: 'pointer',
-                            boxShadow: selected ? '0 6px 14px rgba(212,160,23,0.22)' : 'none',
-                          }}
+                          className={`questions-bank-item${selected ? ' selected' : ''}`}
                         >
                           <input
                             type="checkbox"
                             checked={selected}
                             onChange={() => toggleBankSelection(item.id)}
-                            style={{ marginTop: 2, accentColor: '#9f2346' }}
+                            className="questions-bank-item-toggle"
                           />
-                          <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, color: '#1e293b', fontWeight: 600, fontSize: 14 }}>{item.text}</p>
-                            <p className="admin-empty-text" style={{ margin: '4px 0 0' }}>
+                          <div className="questions-bank-item-content">
+                            <p className="questions-bank-item-title">{item.text}</p>
+                            <p className="questions-bank-item-meta">
                               {item.difficulty} • {item.points} pts • {item.timeLimit}s
                             </p>
                           </div>
@@ -820,7 +856,7 @@ export default function AdminQuestionsPage() {
                 </>
               )}
             </div>
-            <div className="admin-modal-footer">
+            <div className="admin-modal-footer questions-bank-modal-footer">
               <button onClick={() => setShowBankModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
               <button
                 onClick={handleImportFromBank}

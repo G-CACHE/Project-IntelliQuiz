@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Sparkles, Home, Medal } from 'lucide-react';
-import { Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon } from 'lucide-react';
+import { Trophy, Home, Volume2, VolumeX } from 'lucide-react';
+import {
+  Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon, 
+  Hourglass, PauseCircle, MonitorPlay
+} from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { clearSession, getProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
@@ -9,6 +12,7 @@ import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
 import RoundAnnouncementModal from '../../components/game/RoundAnnouncementModal';
 import '../../styles/proctor.css';
+import './HostLobby.css'; // Reuse some layout styles
 
 const HostGame: React.FC = () => {
   const navigate = useNavigate();
@@ -78,6 +82,56 @@ const HostGame: React.FC = () => {
   
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   const [startingRound, setStartingRound] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const hasFiredFinalConfettiRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Audio Synchronization Logic
+  useEffect(() => {
+    const audio = new Audio('/host-lobby.mp3');
+    audio.loop = true;
+    audio.muted = isMuted;
+    audioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const shouldPlay = [
+      'LOBBY', 
+      'BUFFER', 
+      'SCOREBOARD', 
+      'ROUND_SUMMARY', 
+      'FINAL_RESULTS'
+    ].includes(gameState);
+
+    const handleAudio = async () => {
+      try {
+        if (shouldPlay) {
+          if (audioRef.current?.paused) {
+            await audioRef.current.play();
+          }
+        } else {
+          audioRef.current?.pause();
+        }
+      } catch (err) {
+        console.log('Audio control failed:', err);
+      }
+    };
+
+    handleAudio();
+  }, [gameState]);
 
   const handleStartRoundFromModal = async () => {
     if (startingRound || gameState !== 'BUFFER') return;
@@ -98,6 +152,11 @@ const HostGame: React.FC = () => {
     setShowRoundAnnouncement(false);
     setStartingRound(false);
   }, [gameState, currentRound]);
+
+  useEffect(() => {
+    if (gameState !== 'FINAL_RESULTS' || hasFiredFinalConfettiRef.current) return;
+    hasFiredFinalConfettiRef.current = true;
+  }, [gameState]);
   
   const isLastQuestion = totalQuestions > 0 && questionNumber >= totalQuestions;
   const gamePhaseLabel = gameState.replace(/_/g, ' ');
@@ -142,14 +201,16 @@ const HostGame: React.FC = () => {
       
       case 'PAUSED':
         return (
-          <button
-            onClick={handleResume}
-            disabled={!connected}
-            className="proctor-btn-success proctor-btn-large"
-          >
-            <Play size={20} aria-hidden="true" className="proctor-control-icon" />
-            Resume Quiz
-          </button>
+          <div className="proctor-actions">
+            <button
+              onClick={handleResume}
+              disabled={!connected}
+              className="proctor-btn-success proctor-btn-large"
+            >
+              <Play size={20} aria-hidden="true" className="proctor-control-icon" />
+              Resume Quiz
+            </button>
+          </div>
         );
       
       case 'BUFFER':
@@ -249,6 +310,8 @@ const HostGame: React.FC = () => {
     }
   };
 
+  // Removing the full page early return for Scoreboard/Round Summary so they render inline with the question view.
+
   return (
     <div className="proctor-page proctor-game-page">
       <RoundAnnouncementModal 
@@ -266,32 +329,42 @@ const HostGame: React.FC = () => {
             <p className="proctor-game-question-info">
               Question {questionNumber} of {totalQuestions}
             </p>
-            <h1 className="proctor-game-title">{session.quizTitle}</h1>
+            <h1 className="proctor-game-title" style={{ color: 'var(--color-gold)' }}>{session.quizTitle}</h1>
           </div>
           
           <div className="proctor-game-header-right">
             {/* Connection Status */}
-            <div className="proctor-connection-status proctor-connection-compact">
-              <span className={`proctor-status-dot ${connected ? 'proctor-status-connected' : 'proctor-status-disconnected'}`}></span>
-              <span className="proctor-status-text">
-                {connected ? 'Live' : 'Disconnected'}
+            <div className="header-status-tag" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <span className={`status-dot ${connected ? 'status-connected' : 'status-disconnected'}`} />
+              <span style={{ color: 'white', fontSize: '11px', fontWeight: 800 }}>
+                {connected ? 'LIVE' : 'OFFLINE'}
               </span>
             </div>
+
+            <button 
+              className="header-icon-btn audio-toggle-btn" 
+              onClick={() => setIsMuted(!isMuted)}
+              title={isMuted ? "Unmute" : "Mute"}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', marginRight: '12px' }}
+            >
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
 
             <button
               onClick={handleOpenProctorMonitor}
               className="proctor-btn proctor-host-monitor-btn"
             >
-              Open Proctor Monitor
+              Monitor
             </button>
             
-            {/* Timer — hide the small header timer in CLASS mode (center timer only). */}
+            {/* Timer */}
             {(gameState === 'QUESTION' || gameState === 'PAUSED') && !isClassMode && (
               <div className="proctor-timer-container">
                 <Timer 
                   timeRemaining={timeRemaining} 
                   totalTime={isClassMode ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
                   displayMode={isClassMode ? 'clock' : 'seconds'}
+                  showProgress={false}
                 />
               </div>
             )}
@@ -336,6 +409,7 @@ const HostGame: React.FC = () => {
 
           {(gameState === 'ACTIVE' || gameState === 'QUESTION') && !currentQuestion && !isClassMode && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
+              <MonitorPlay size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">
                 Live Audience View
               </h2>
@@ -390,7 +464,7 @@ const HostGame: React.FC = () => {
           {/* GRADING State */}
           {gameState === 'GRADING' && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
-              <div className="proctor-host-state-icon">⏳</div>
+              <Hourglass size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">Time&apos;s Up!</h2>
               <p className="proctor-host-panel-subtitle">Grading answers...</p>
             </div>
@@ -404,7 +478,7 @@ const HostGame: React.FC = () => {
                 questionNumber={questionNumber}
                 totalQuestions={totalQuestions}
                 correctAnswer={currentQuestion.correctAnswer}
-                showCorrectAnswer={true}
+                showCorrectAnswer={gameState === 'ANSWER_REVEAL'}
                 disabled={true}
               />
               
@@ -413,30 +487,20 @@ const HostGame: React.FC = () => {
                   <p>Correct Answer: {currentQuestion.correctAnswer}</p>
                 </div>
               )}
-              
-              {/* Team Results Summary */}
-              {rankings.length > 0 && (
-                <div className="proctor-host-reveal-results">
-                  <h3 className="proctor-host-reveal-title">
-                    Results
-                  </h3>
-                  <div className="proctor-host-reveal-list">
-                    {rankings.slice(0, 10).map((team) => (
-                      <div key={team.teamId} className="proctor-host-reveal-item">
-                        <span>{team.rank}. {team.teamName}</span>
-                        <span>{team.score} pts</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+            </div>
+          )}
+
+          {/* SCOREBOARD / ROUND_SUMMARY — full leaderboard, question hidden */}
+          {(gameState === 'SCOREBOARD' || gameState === 'ROUND_SUMMARY') && (
+            <div style={{ padding: '0 8px' }}>
+              <ScoreboardDisplay rankings={rankings} isFinal={false} />
             </div>
           )}
 
           {/* PAUSED State */}
           {gameState === 'PAUSED' && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
-              <div className="proctor-host-state-icon">⏸️</div>
+              <PauseCircle size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">Quiz Paused</h2>
               <p className="proctor-host-panel-subtitle">
                 The timer has been paused. Click Resume to continue.
@@ -449,13 +513,6 @@ const HostGame: React.FC = () => {
             </div>
           )}
 
-          {/* ROUND_SUMMARY/SCOREBOARD State */}
-          {(gameState === 'ROUND_SUMMARY' || gameState === 'SCOREBOARD') && (
-            <ScoreboardDisplay
-              rankings={rankings}
-              isFinal={false}
-            />
-          )}
 
           </section>
 
@@ -465,19 +522,12 @@ const HostGame: React.FC = () => {
               <div className="proctor-host-final-banner">
                 <div className="proctor-host-final-icon" aria-hidden="true">
                   <Trophy className="proctor-host-final-icon-main" />
-                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-left" />
-                  <Sparkles className="proctor-host-final-icon-spark proctor-host-final-icon-spark-right" />
                 </div>
                 <h2 className="proctor-host-final-title">Quiz Complete</h2>
-                <p>Final results are in. Great run from every team.</p>
                 <div className="proctor-host-final-metrics">
                   <div className="proctor-host-final-metric">
                     <span>Teams</span>
                     <strong>{rankings.length}</strong>
-                  </div>
-                  <div className="proctor-host-final-metric">
-                    <span>Questions</span>
-                    <strong>{totalQuestions || 0}</strong>
                   </div>
                   <div className="proctor-host-final-metric">
                     <span>Winning Score</span>
@@ -486,40 +536,10 @@ const HostGame: React.FC = () => {
                 </div>
               </div>
 
-              {rankings.length > 0 && (
-                <div className="proctor-host-final-winner-card">
-                  <span className="proctor-host-final-winner-label">Champion</span>
-                  <div className="proctor-host-final-winner-main">
-                    <h3>{rankings[0]?.teamName}</h3>
-                    <p>{rankings[0]?.score ?? 0} points</p>
-                  </div>
-                </div>
-              )}
-
-              {rankings.length > 0 && (
-                <div className="proctor-host-podium-grid">
-                  <div className="proctor-host-podium-title">Top 3 Teams</div>
-                  {rankings.slice(0, 3).map((team, idx) => (
-                    <div
-                      key={team.teamId}
-                      className={`proctor-host-podium-item ${idx === 0 ? 'is-first' : ''}`}
-                    >
-                      <div className="proctor-host-podium-medal">
-                        {idx === 0 ? <Trophy size={22} /> : <Medal size={22} />}
-                      </div>
-                      <p>{team.teamName}</p>
-                      <strong>{team.score} pts</strong>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="proctor-host-final-scoreboard">
-                <ScoreboardDisplay
-                  rankings={rankings}
-                  isFinal={true}
-                />
-              </div>
+              <ScoreboardDisplay
+                rankings={rankings}
+                isFinal={true}
+              />
 
               <div className="proctor-host-final-actions">
                 <button
@@ -534,35 +554,36 @@ const HostGame: React.FC = () => {
           )}
 
           {/* Controls */}
-          <div className="proctor-game-controls">
-            <div className="proctor-controls-shell">
-              <p className="proctor-controls-label">Host Controls</p>
-              <div className="proctor-controls-stats">
-                <div className="proctor-controls-stat">
-                  <Users size={16} aria-hidden="true" />
-                  <div>
-                    <span className="proctor-controls-stat-label">Players Online</span>
-                    <strong className="proctor-controls-stat-value">{connectedTeams.length}</strong>
+          {gameState !== 'FINAL_RESULTS' && (
+            <div className="proctor-game-controls">
+              <div className="proctor-controls-shell">
+                <div className="proctor-controls-stats">
+                  <div className="proctor-controls-stat">
+                    <Users size={16} aria-hidden="true" />
+                    <div>
+                      <span className="proctor-controls-stat-label">Players Online</span>
+                      <strong className="proctor-controls-stat-value">{connectedTeams.length}</strong>
+                    </div>
+                  </div>
+                  <div className="proctor-controls-stat">
+                    <Gauge size={16} aria-hidden="true" />
+                    <div>
+                      <span className="proctor-controls-stat-label">Phase</span>
+                      <strong className="proctor-controls-stat-value">{gamePhaseLabel}</strong>
+                    </div>
+                  </div>
+                  <div className="proctor-controls-stat">
+                    <TimerIcon size={16} aria-hidden="true" />
+                    <div>
+                      <span className="proctor-controls-stat-label">Submissions</span>
+                      <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>
+                    </div>
                   </div>
                 </div>
-                <div className="proctor-controls-stat">
-                  <Gauge size={16} aria-hidden="true" />
-                  <div>
-                    <span className="proctor-controls-stat-label">Current Phase</span>
-                    <strong className="proctor-controls-stat-value">{gamePhaseLabel}</strong>
-                  </div>
-                </div>
-                <div className="proctor-controls-stat">
-                  <TimerIcon size={16} aria-hidden="true" />
-                  <div>
-                    <span className="proctor-controls-stat-label">Submitted Teams</span>
-                    <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>
-                  </div>
-                </div>
+                {renderControls()}
               </div>
-              {renderControls()}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

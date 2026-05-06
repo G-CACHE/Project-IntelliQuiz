@@ -5,7 +5,6 @@ import {
   BiBookContent,
   BiTrophy,
   BiGroup,
-  BiUserPlus,
   BiCheckCircle,
   BiPauseCircle,
   BiCopy,
@@ -16,12 +15,14 @@ import {
   BiCog,
   BiX,
   BiErrorCircle,
+  BiUserPlus,
 } from 'react-icons/bi';
 import { useQuiz, useQuizStatusChange, useRegisterTeam, useScoreboard, useTeams } from '../../hooks';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 import './AdminRedesign.css';
+import './QuizWorkspacePage.css';
 
 type ScoreboardRow = {
   teamId: number;
@@ -64,6 +65,7 @@ export default function QuizWorkspacePage() {
   const [violationLogs, setViolationLogs] = useState<ViolationLogRecord[]>([]);
   const [violationLogsLoading, setViolationLogsLoading] = useState(false);
   const [violationLogsError, setViolationLogsError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'actions' | 'config' | 'reports' | 'codes'>('overview');
 
   const hasEdit = !!quiz && (isSuperAdmin() || canEditQuiz(quiz.id, quiz.createdByUserId));
   const isDraftQuiz = quiz?.status === 'DRAFT';
@@ -153,6 +155,18 @@ export default function QuizWorkspacePage() {
     return teamBasedScoreboard;
   }, [scoreboard, teams, isArchived]);
 
+  const sortedScoreboard = useMemo(
+    () => [...normalizedScoreboard].sort((a, b) => a.rank - b.rank),
+    [normalizedScoreboard],
+  );
+
+  const topEntry = sortedScoreboard[0] ?? null;
+  const totalScorePoints = normalizedScoreboard.reduce((sum, row) => sum + row.score, 0);
+
+  const handleBackToQuizzes = () => {
+    navigate('/admin/quizzes', { replace: true });
+  };
+
   const statusActionLabel = useMemo(() => {
     if (!quiz) return '';
     if (quiz.status === 'DRAFT') return 'Mark Quiz Ready';
@@ -160,6 +174,84 @@ export default function QuizWorkspacePage() {
     if (quiz.status === 'ACTIVE') return 'End Live Session';
     return 'No Status Action';
   }, [quiz]);
+
+  const workspaceGuide = useMemo(() => {
+    const configLocked = !hasEdit || !isDraftQuiz;
+
+    if (!quiz) {
+      return {
+        title: 'Workspace guide',
+        copy: 'This page is your quiz control center. Use it to set up questions, share access codes, monitor teams, and review reports.',
+        primaryLabel: 'Open questions',
+        primaryAction: () => navigate(`/admin/quizzes/${parsedQuizId}/questions`),
+        steps: [
+          'Review the quiz overview',
+          'Open questions and add content',
+          'Share quiz code and proctor PIN',
+        ],
+      };
+    }
+
+    if (quiz.status === 'DRAFT') {
+      return {
+        title: 'Start with setup',
+        copy: 'This draft workspace is where you prepare the quiz before going live. The fastest next step is to build or refine the question set.',
+        primaryLabel: 'Open questions',
+        primaryAction: () => navigate(`/admin/quizzes/${quiz.id}/questions`),
+        steps: [
+          'Add or update quiz questions',
+          'Adjust configuration if needed',
+          'Mark the quiz ready when finished',
+        ],
+        secondaryLabel: configLocked ? undefined : 'Open configuration',
+        secondaryAction: configLocked ? undefined : () => setActiveTab('config'),
+      };
+    }
+
+    if (quiz.status === 'READY') {
+      return {
+        title: 'Ready to launch',
+        copy: 'This workspace is prepared for participants. Next, verify access codes, register teams if needed, and start the live session.',
+        primaryLabel: 'Open codes',
+        primaryAction: () => setActiveTab('codes'),
+        steps: [
+          'Check quiz and proctor codes',
+          'Register teams if access is restricted',
+          'Switch to Actions when you are ready to launch',
+        ],
+        secondaryLabel: 'Open actions',
+        secondaryAction: () => setActiveTab('actions'),
+      };
+    }
+
+    if (quiz.status === 'ACTIVE') {
+      return {
+        title: 'Live session in progress',
+        copy: 'Use this workspace to monitor scores, watch for violations, and manage live session data while the quiz is running.',
+        primaryLabel: 'Open reports',
+        primaryAction: () => setActiveTab('reports'),
+        steps: [
+          'Monitor the scoreboard',
+          'Review violation reports',
+          'Use Actions for live controls',
+        ],
+        secondaryLabel: 'Open actions',
+        secondaryAction: () => setActiveTab('actions'),
+      };
+    }
+
+    return {
+      title: 'Finished quiz',
+      copy: 'This archived workspace is read-only for review. You can still inspect scores, access codes, and reports.',
+      primaryLabel: 'Open reports',
+      primaryAction: () => setActiveTab('reports'),
+      steps: [
+        'Review the final scoreboard',
+        'Inspect archived violation records',
+        'Use codes for reference only',
+      ],
+    };
+  }, [quiz, hasEdit, isDraftQuiz, navigate, parsedQuizId]);
 
   const handleStatusToggle = async () => {
     if (!quiz) return;
@@ -173,27 +265,62 @@ export default function QuizWorkspacePage() {
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.error("Clipboard API failed", err);
+      }
+    }
+
+    // Fallback for non-secure contexts (HTTP)
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error("Fallback copy failed", err);
+      return false;
+    }
+  };
+
   const copyQuizCode = async () => {
     const resolvedQuizCode = quiz?.quizCode || '';
     if (!resolvedQuizCode) return;
-    await navigator.clipboard.writeText(resolvedQuizCode);
-    setCopiedQuizCode(true);
-    setTimeout(() => setCopiedQuizCode(false), 1500);
+    const success = await copyToClipboard(resolvedQuizCode);
+    if (success) {
+      setCopiedQuizCode(true);
+      setTimeout(() => setCopiedQuizCode(false), 1500);
+    }
   };
 
   const copyProctorPin = async () => {
     const resolvedProctorPin = quiz?.proctorPin || '';
     if (!resolvedProctorPin) return;
-    await navigator.clipboard.writeText(resolvedProctorPin);
-    setCopiedProctorPin(true);
-    setTimeout(() => setCopiedProctorPin(false), 1500);
+    const success = await copyToClipboard(resolvedProctorPin);
+    if (success) {
+      setCopiedProctorPin(true);
+      setTimeout(() => setCopiedProctorPin(false), 1500);
+    }
   };
 
   const copyTeamAccessCode = async (teamId: number, accessCode: string) => {
     if (!accessCode) return;
-    await navigator.clipboard.writeText(accessCode);
-    setCopiedTeamId(teamId);
-    setTimeout(() => setCopiedTeamId((prev) => (prev === teamId ? null : prev)), 1500);
+    const success = await copyToClipboard(accessCode);
+    if (success) {
+      setCopiedTeamId(teamId);
+      setTimeout(() => setCopiedTeamId((prev) => (prev === teamId ? null : prev)), 1500);
+    }
   };
 
   const handleRefreshViolationLogs = async () => {
@@ -287,244 +414,409 @@ export default function QuizWorkspacePage() {
   const formatViolationType = (value: string): string =>
     value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 
-  const topEntry = normalizedScoreboard.length > 0
-    ? [...normalizedScoreboard].sort((a, b) => a.rank - b.rank)[0]
-    : null;
-
-  const totalScorePoints = normalizedScoreboard.reduce((sum, row) => sum + row.score, 0);
-
   return (
     <div className="quiz-workspace-shell">
       <div className="quiz-workspace-hero">
-        <div className="quiz-workspace-hero-top">
-          <button className="quiz-workspace-back-btn" onClick={() => navigate('/admin/quizzes')}>
-            <BiArrowBack size={18} />
+        <div className="quiz-workspace-hero-header">
+          <button type="button" className="quiz-workspace-back-btn" onClick={handleBackToQuizzes} aria-label="Back to quizzes">
+            <BiArrowBack size={20} />
           </button>
+          <div className="quiz-workspace-hero-content">
+            <h1 className="quiz-workspace-title">{quiz.title}</h1>
+            <p className="quiz-workspace-subtitle">{modeLabel} workspace controls and reports</p>
+          </div>
           <span className="quiz-workspace-status-pill">{quiz.status}</span>
         </div>
-        <h1 className="quiz-workspace-title">{quiz.title}</h1>
-        <p className="quiz-workspace-subtitle">{modeLabel} workspace controls and reports</p>
       </div>
 
-      <div className="admin-grid-2 quiz-workspace-actions" style={{ marginBottom: 20 }}>
-        <button
-          className={`admin-card workspace-action-card ${hasEdit ? '' : 'is-disabled'}`}
-          style={{ textAlign: 'left', cursor: hasEdit ? 'pointer' : 'not-allowed' }}
-          onClick={() => hasEdit && navigate(`/admin/quizzes/${quiz.id}/questions`)}
-        >
-          <h3 className="admin-card-title"><BiBookContent size={18} /> Questions</h3>
-          <p className="admin-empty-text">
-            {isDraftQuiz ? 'Create and manage quiz questions for this quiz.' : 'View questions only. Editing is locked outside Draft status.'}
-          </p>
-        </button>
+      {/* Tabs Navigation */}
+      <div className="quiz-workspace-tabs-container">
+        <div className="quiz-workspace-tabs">
+          <button
+            className={`quiz-workspace-tab ${activeTab === 'overview' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button
+            className={`quiz-workspace-tab ${activeTab === 'actions' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('actions')}
+          >
+            Actions
+          </button>
+          <button
+            className={`quiz-workspace-tab ${activeTab === 'config' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('config')}
+          >
+            Configuration
+          </button>
+          <button
+            className={`quiz-workspace-tab ${activeTab === 'codes' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('codes')}
+          >
+            Codes
+          </button>
+          <button
+            className={`quiz-workspace-tab ${activeTab === 'reports' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('reports')}
+          >
+            Reports
+          </button>
+        </div>
+      </div>
 
-        <button className="admin-card workspace-action-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setShowScoreboardModal(true)}>
-          <h3 className="admin-card-title"><BiTrophy size={18} /> Scoreboard</h3>
-          <p className="admin-empty-text">Open full rankings in a focused modal view.</p>
-        </button>
+      <div className="quiz-workspace-panel">
 
-        <button className="admin-card workspace-action-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setShowViolationModal(true)}>
-          <h3 className="admin-card-title"><BiBookContent size={18} /> Violation Logs</h3>
-          <p className="admin-empty-text">Open anti-cheat reports and timestamps in a focused modal view.</p>
-        </button>
-
-        {normalizedAccessMode === 'RESTRICTED' && (
-          <>
-            <button
-              className={`admin-card workspace-action-card ${canManageRestrictedTeams ? '' : 'is-disabled'}`}
-              style={{ textAlign: 'left', cursor: canManageRestrictedTeams ? 'pointer' : 'not-allowed' }}
-              onClick={() => canManageRestrictedTeams && handleOpenRegisterModal()}
-              disabled={!canManageRestrictedTeams}
-            >
-              <h3 className="admin-card-title"><BiGroup size={18} /> Manage Registered Teams</h3>
-              <p className="admin-empty-text">Register a team and view all team access codes in one modal.</p>
+        {/* GUIDE STRIP */}
+        <section className="quiz-workspace-guide" aria-label="Workspace guide">
+          <div className="quiz-workspace-guide-copy">
+            <p className="quiz-workspace-guide-eyebrow">Workspace guide</p>
+            <h2 className="quiz-workspace-guide-title">{workspaceGuide.title}</h2>
+            <p className="quiz-workspace-guide-text">{workspaceGuide.copy}</p>
+          </div>
+          <div className="quiz-workspace-guide-actions">
+            <button className="admin-btn admin-btn-primary quiz-workspace-guide-button" onClick={workspaceGuide.primaryAction}>
+              {workspaceGuide.primaryLabel}
             </button>
-          </>
+            {workspaceGuide.secondaryLabel && workspaceGuide.secondaryAction && (
+              <button className="admin-btn admin-btn-secondary quiz-workspace-guide-button" onClick={workspaceGuide.secondaryAction}>
+                {workspaceGuide.secondaryLabel}
+              </button>
+            )}
+          </div>
+          <div className="quiz-workspace-guide-steps">
+            {workspaceGuide.steps.map((step, index) => (
+              <div key={step} className="quiz-workspace-guide-step">
+                <span className="quiz-workspace-guide-step-index">{index + 1}</span>
+                <p>{step}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* OVERVIEW TAB */}
+        {activeTab === 'overview' && (
+          <div className="quiz-workspace-tab-content">
+            <div style={{ marginBottom: 24 }}>
+              <h2 className="quiz-workspace-section-title" style={{ marginBottom: 16 }}>Quiz Snapshot</h2>
+              <div className="workspace-insights-grid quiz-workspace-overview">
+                <div className="workspace-insight-card">
+                  <p className="workspace-insight-label">Participants</p>
+                  <p className="workspace-insight-value">{teams.length}</p>
+                  <p className="workspace-insight-note">Current participant groups in this quiz</p>
+                </div>
+                <div className="workspace-insight-card">
+                  <p className="workspace-insight-label">Total Score Points</p>
+                  <p className="workspace-insight-value">{totalScorePoints}</p>
+                  <p className="workspace-insight-note">Combined points across all participants</p>
+                </div>
+                <div className="workspace-insight-card">
+                  <p className="workspace-insight-label">Top Team</p>
+                  <p className="workspace-insight-value">{topEntry ? topEntry.teamName : 'N/A'}</p>
+                  <p className="workspace-insight-note">{topEntry ? `${topEntry.score} pts` : 'No rankings yet'}</p>
+                </div>
+                <div className="workspace-insight-card">
+                  <p className="workspace-insight-label">Violation Records</p>
+                  <p className="workspace-insight-value">{violationLogs.length}</p>
+                  <p className="workspace-insight-note">Persisted anti-cheat entries</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="quiz-workspace-section-title" style={{ marginBottom: 16 }}>Quick Actions</h2>
+              <div className="admin-grid-2 quiz-workspace-actions">
+                <button
+                  className={`admin-card workspace-action-card ${hasEdit ? '' : 'is-disabled'}`}
+                  style={{ textAlign: 'left', cursor: hasEdit ? 'pointer' : 'not-allowed' }}
+                  onClick={() => hasEdit && navigate(`/admin/quizzes/${quiz.id}/questions`)}
+                >
+                  <h3 className="admin-card-title"><BiBookContent size={18} /> Questions</h3>
+                  <p className="admin-empty-text">
+                    {isDraftQuiz ? 'Create and manage quiz questions for this quiz.' : 'View questions only. Editing is locked outside Draft status.'}
+                  </p>
+                </button>
+
+                <button className="admin-card workspace-action-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setShowScoreboardModal(true)}>
+                  <h3 className="admin-card-title"><BiTrophy size={18} /> Scoreboard</h3>
+                  <p className="admin-empty-text">Open full rankings in a focused modal view.</p>
+                </button>
+
+                <button className="admin-card workspace-action-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setShowViolationModal(true)}>
+                  <h3 className="admin-card-title"><BiBookContent size={18} /> Violation Logs</h3>
+                  <p className="admin-empty-text">Open anti-cheat reports and timestamps in a focused modal view.</p>
+                </button>
+
+                {normalizedAccessMode === 'RESTRICTED' && (
+                  <button
+                    className={`admin-card workspace-action-card ${canManageRestrictedTeams ? '' : 'is-disabled'}`}
+                    style={{ textAlign: 'left', cursor: canManageRestrictedTeams ? 'pointer' : 'not-allowed' }}
+                    onClick={() => canManageRestrictedTeams && handleOpenRegisterModal()}
+                    disabled={!canManageRestrictedTeams}
+                  >
+                    <h3 className="admin-card-title"><BiGroup size={18} /> Manage Registered Teams</h3>
+                    <p className="admin-empty-text">Register a team and view all team access codes in one modal.</p>
+                  </button>
+                )}
+
+                <button
+                  className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' ? '' : 'is-disabled'}`}
+                  style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' ? 1 : 0.85 }}
+                  onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && handleStatusToggle()}
+                  disabled={statusChange.isPending}
+                >
+                  <h3 className="admin-card-title">
+                    {quiz.status === 'READY' ? <BiPauseCircle size={18} /> : <BiCheckCircle size={18} />} Status Toggle
+                  </h3>
+                  <p className="admin-empty-text">{statusActionLabel}</p>
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
-        <button
-          className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' ? '' : 'is-disabled'}`}
-          style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' ? 1 : 0.85 }}
-          onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && handleStatusToggle()}
-          disabled={statusChange.isPending}
-        >
-          <h3 className="admin-card-title">
-            {quiz.status === 'READY' ? <BiPauseCircle size={18} /> : <BiCheckCircle size={18} />} Status Toggle
-          </h3>
-          <p className="admin-empty-text">{statusActionLabel}</p>
-        </button>
-      </div>
+        {/* ACTIONS TAB */}
+        {activeTab === 'actions' && (
+          <div className="quiz-workspace-tab-content">
+            <div style={{ marginBottom: 16 }}>
+              <h2 className="quiz-workspace-section-title" style={{ marginBottom: 12 }}>Workspace Actions</h2>
+              <p className="quiz-workspace-section-text">Use these cards for the day-to-day controls of this quiz.</p>
+            </div>
 
-      <div className="workspace-insights-grid">
-        <div className="workspace-insight-card">
-          <p className="workspace-insight-label">Participants</p>
-          <p className="workspace-insight-value">{teams.length}</p>
-          <p className="workspace-insight-note">Current participant groups in this quiz</p>
-        </div>
-        <div className="workspace-insight-card">
-          <p className="workspace-insight-label">Total Score Points</p>
-          <p className="workspace-insight-value">{totalScorePoints}</p>
-          <p className="workspace-insight-note">Combined points across all participants</p>
-        </div>
-        <div className="workspace-insight-card">
-          <p className="workspace-insight-label">Top Team</p>
-          <p className="workspace-insight-value">{topEntry ? topEntry.teamName : 'N/A'}</p>
-          <p className="workspace-insight-note">{topEntry ? `${topEntry.score} pts` : 'No rankings yet'}</p>
-        </div>
-        <div className="workspace-insight-card">
-          <p className="workspace-insight-label">Violation Records</p>
-          <p className="workspace-insight-value">{violationLogs.length}</p>
-          <p className="workspace-insight-note">Persisted anti-cheat entries</p>
-        </div>
-      </div>
+            <div className="admin-grid-2 quiz-workspace-actions">
+              <button
+                className={`admin-card workspace-action-card ${hasEdit ? '' : 'is-disabled'}`}
+                style={{ textAlign: 'left', cursor: hasEdit ? 'pointer' : 'not-allowed' }}
+                onClick={() => hasEdit && navigate(`/admin/quizzes/${quiz.id}/questions`)}
+              >
+                <h3 className="admin-card-title"><BiBookContent size={18} /> Questions</h3>
+                <p className="admin-empty-text">
+                  {isDraftQuiz ? 'Create and manage quiz questions for this quiz.' : 'View questions only. Editing is locked outside Draft status.'}
+                </p>
+              </button>
 
-      <div className="admin-card workspace-info-strip" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {normalizedAccessMode === 'PUBLIC' ? <BiGlobe size={20} /> : <BiLockAlt size={20} />}
-        <div>
-          <h4 style={{ margin: 0 }}>{modeLabel}</h4>
-          <p className="admin-empty-text" style={{ margin: 0 }}>
-            {normalizedAccessMode === 'PUBLIC'
-              ? 'Participants can join from the unified entry using quiz/team credentials.'
-              : 'Entry is controlled by pre-registered team access codes for this quiz.'}
-          </p>
-        </div>
-      </div>
+              <button className="admin-card workspace-action-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setShowScoreboardModal(true)}>
+                <h3 className="admin-card-title"><BiTrophy size={18} /> Scoreboard</h3>
+                <p className="admin-empty-text">Open full rankings in a focused modal view.</p>
+              </button>
 
-      <div className="admin-card workspace-config-card" style={{ marginTop: 12 }}>
-        <h3 className="admin-card-title" style={{ marginBottom: 12 }}><BiCog size={18} /> Quiz Configuration</h3>
-        {!hasEdit ? (
-          <p className="admin-empty-text">You do not have permission to edit this quiz configuration.</p>
-        ) : !isDraftQuiz ? (
-          <p className="admin-empty-text">Configuration is locked because this quiz is not in Draft status.</p>
-        ) : (
-          <>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-              <div>
-                <label className="admin-form-label">Access Mode</label>
-                <select
-                  className="admin-form-input admin-form-select"
-                  value={settingsDraft.accessMode}
-                  disabled={!canEditDraftOnly || settingsSaving}
-                  onChange={(e) => setSettingsDraft((prev) => ({ ...prev, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' }))}
+              <button className="admin-card workspace-action-card" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setShowViolationModal(true)}>
+                <h3 className="admin-card-title"><BiBookContent size={18} /> Violation Logs</h3>
+                <p className="admin-empty-text">Open anti-cheat reports and timestamps in a focused modal view.</p>
+              </button>
+
+              {normalizedAccessMode === 'RESTRICTED' && (
+                <button
+                  className={`admin-card workspace-action-card ${canManageRestrictedTeams ? '' : 'is-disabled'}`}
+                  style={{ textAlign: 'left', cursor: canManageRestrictedTeams ? 'pointer' : 'not-allowed' }}
+                  onClick={() => canManageRestrictedTeams && handleOpenRegisterModal()}
+                  disabled={!canManageRestrictedTeams}
                 >
-                  <option value="RESTRICTED">Restricted</option>
-                  <option value="PUBLIC">Public</option>
-                </select>
-              </div>
+                  <h3 className="admin-card-title"><BiGroup size={18} /> Manage Registered Teams</h3>
+                  <p className="admin-empty-text">Register a team and view all team access codes in one modal.</p>
+                </button>
+              )}
+
+              <button
+                className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' ? '' : 'is-disabled'}`}
+                style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' ? 1 : 0.85 }}
+                onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && handleStatusToggle()}
+                disabled={statusChange.isPending}
+              >
+                <h3 className="admin-card-title">
+                  {quiz.status === 'READY' ? <BiPauseCircle size={18} /> : <BiCheckCircle size={18} />} Status Toggle
+                </h3>
+                <p className="admin-empty-text">{statusActionLabel}</p>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* CONFIGURATION TAB */}
+        {activeTab === 'config' && (
+          <div className="quiz-workspace-tab-content">
+            <div className="quiz-workspace-section-header">
               <div>
-                <label className="admin-form-label">Quiz Mode</label>
-                <select
-                  className="admin-form-input admin-form-select"
-                  value={settingsDraft.navigationMode}
-                  disabled={!canEditDraftOnly || settingsSaving}
-                  onChange={(e) => setSettingsDraft((prev) => ({ ...prev, navigationMode: e.target.value as 'TOURNAMENT' | 'CLASS' }))}
-                >
-                  <option value="TOURNAMENT">Tournament</option>
-                  <option value="CLASS">Class</option>
-                </select>
+                <h2 className="quiz-workspace-section-title">Configuration</h2>
+                <p className="quiz-workspace-section-text">Review the access mode details and quiz settings in one place.</p>
               </div>
-              {settingsDraft.navigationMode === 'CLASS' && (
-                <div>
-                  <label className="admin-form-label">Quiz Duration (minutes)</label>
-                  <input
-                    type="number"
-                    min={1}
-                    className="admin-form-input"
-                    value={settingsDraft.globalTimeLimitMinutes}
-                    disabled={!canEditDraftOnly || settingsSaving}
-                    onChange={(e) => setSettingsDraft((prev) => ({ ...prev, globalTimeLimitMinutes: Number(e.target.value || 0) }))}
-                  />
-                  {invalidClassTimer && (
-                    <p className="admin-form-hint admin-form-hint-error" style={{ marginTop: 6 }}>
-                      Please enter at least 1 minute.
-                    </p>
-                  )}
-                </div>
+            </div>
+
+            <div className="admin-card workspace-info-strip" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {normalizedAccessMode === 'PUBLIC' ? <BiGlobe size={20} /> : <BiLockAlt size={20} />}
+              <div>
+                <h4 style={{ margin: 0 }}>{modeLabel}</h4>
+                <p className="admin-empty-text" style={{ margin: 0 }}>
+                  {normalizedAccessMode === 'PUBLIC'
+                    ? 'Participants can join from the unified entry using quiz/team credentials.'
+                    : 'Entry is controlled by pre-registered team access codes for this quiz.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="admin-card workspace-config-card" style={{ marginTop: 12 }}>
+              <h3 className="admin-card-title" style={{ marginBottom: 12 }}><BiCog size={18} /> Quiz Configuration</h3>
+              {!hasEdit ? (
+                <p className="admin-empty-text">You do not have permission to edit this quiz configuration.</p>
+              ) : !isDraftQuiz ? (
+                <p className="admin-empty-text">Configuration is locked because this quiz is not in Draft status.</p>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                    <div>
+                      <label className="admin-form-label">Access Mode</label>
+                      <select
+                        className="admin-form-input admin-form-select"
+                        value={settingsDraft.accessMode}
+                        disabled={!canEditDraftOnly || settingsSaving}
+                        onChange={(e) => setSettingsDraft((prev) => ({ ...prev, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' }))}
+                      >
+                        <option value="RESTRICTED">Restricted</option>
+                        <option value="PUBLIC">Public</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="admin-form-label">Quiz Mode</label>
+                      <select
+                        className="admin-form-input admin-form-select"
+                        value={settingsDraft.navigationMode}
+                        disabled={!canEditDraftOnly || settingsSaving}
+                        onChange={(e) => setSettingsDraft((prev) => ({ ...prev, navigationMode: e.target.value as 'TOURNAMENT' | 'CLASS' }))}
+                      >
+                        <option value="TOURNAMENT">Tournament</option>
+                        <option value="CLASS">Class</option>
+                      </select>
+                    </div>
+                    {settingsDraft.navigationMode === 'CLASS' && (
+                      <div>
+                        <label className="admin-form-label">Quiz Duration (minutes)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="admin-form-input"
+                          value={settingsDraft.globalTimeLimitMinutes}
+                          disabled={!canEditDraftOnly || settingsSaving}
+                          onChange={(e) => setSettingsDraft((prev) => ({ ...prev, globalTimeLimitMinutes: Number(e.target.value || 0) }))}
+                        />
+                        {invalidClassTimer && (
+                          <p className="admin-form-hint admin-form-hint-error" style={{ marginTop: 6 }}>
+                            Please enter at least 1 minute.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <label className="admin-form-label" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={settingsDraft.randomizeQuestions}
+                      onChange={(e) => setSettingsDraft((prev) => ({ ...prev, randomizeQuestions: e.target.checked }))}
+                      disabled={settingsDraft.navigationMode !== 'CLASS' || !canEditDraftOnly || settingsSaving}
+                    />
+                    Randomize question order per participant
+                  </label>
+
+                  {settingsError && <p className="admin-empty-text workspace-error-text">{settingsError}</p>}
+                  <div style={{ marginTop: 12 }}>
+                    <button className="admin-btn admin-btn-primary" onClick={handleSaveSettings} disabled={settingsSaving || !canEditDraftOnly}>
+                      {settingsSaving ? 'Saving...' : 'Save Configuration'}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
 
-            <label className="admin-form-label" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type="checkbox"
-                checked={settingsDraft.randomizeQuestions}
-                onChange={(e) => setSettingsDraft((prev) => ({ ...prev, randomizeQuestions: e.target.checked }))}
-                disabled={settingsDraft.navigationMode !== 'CLASS' || !canEditDraftOnly || settingsSaving}
-              />
-              Randomize question order per participant
-            </label>
-
-            {settingsError && <p className="admin-empty-text workspace-error-text">{settingsError}</p>}
-            <div style={{ marginTop: 12 }}>
-              <button className="admin-btn admin-btn-primary" onClick={handleSaveSettings} disabled={settingsSaving || !canEditDraftOnly}>
-                {settingsSaving ? 'Saving...' : 'Save Configuration'}
-              </button>
-            </div>
-          </>
+            {settingsSnackbar && (
+              <div className="admin-snackbar" role="status" aria-live="polite">
+                {settingsSnackbar}
+              </div>
+            )}
+          </div>
         )}
-      </div>
 
-      {settingsSnackbar && (
-        <div className="admin-snackbar" role="status" aria-live="polite">
-          {settingsSnackbar}
-        </div>
-      )}
+        {/* CODES TAB */}
+        {activeTab === 'codes' && (
+          <div className="quiz-workspace-tab-content">
+            <div className="quiz-workspace-section-header">
+              <div>
+                <h2 className="quiz-workspace-section-title">Access Codes</h2>
+                <p className="quiz-workspace-section-text">Share the quiz code and proctor PIN from these dedicated cards.</p>
+              </div>
+            </div>
 
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginTop: 12 }}>
-        <div className="admin-card workspace-code-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <h4 style={{ margin: 0 }}>Quiz Code</h4>
-            <p className="admin-empty-text" style={{ margin: 0 }}>
-              Share this code with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code>
-            </p>
-          </div>
-          <button className="admin-btn admin-btn-secondary" onClick={copyQuizCode} disabled={!quiz.quizCode}>
-            {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
-          </button>
-        </div>
+            <div className="quiz-workspace-code-grid">
+              <div className="admin-card workspace-code-card">
+                <div className="workspace-code-copy">
+                  <h4 style={{ margin: 0 }}>Quiz Code</h4>
+                  <p className="admin-empty-text" style={{ margin: 0 }}>
+                    Share this code with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code>
+                  </p>
+                </div>
+                <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyQuizCode} disabled={!quiz.quizCode}>
+                  {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
+                </button>
+              </div>
 
-        <div className="admin-card workspace-code-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <h4 style={{ margin: 0 }}>Proctor PIN</h4>
-            <p className="admin-empty-text" style={{ margin: 0 }}>
-              Use this code for host access: <code>{quiz.proctorPin || 'UNAVAILABLE'}</code>
-            </p>
+              <div className="admin-card workspace-code-card">
+                <div className="workspace-code-copy">
+                  <h4 style={{ margin: 0 }}>Proctor PIN</h4>
+                  <p className="admin-empty-text" style={{ margin: 0 }}>
+                    Use this code for host access: <code>{quiz.proctorPin || 'UNAVAILABLE'}</code>
+                  </p>
+                </div>
+                <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyProctorPin} disabled={!quiz.proctorPin}>
+                  {copiedProctorPin ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedProctorPin ? 'Copied' : 'Copy PIN'}
+                </button>
+              </div>
+            </div>
           </div>
-          <button className="admin-btn admin-btn-secondary" onClick={copyProctorPin} disabled={!quiz.proctorPin}>
-            {copiedProctorPin ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedProctorPin ? 'Copied' : 'Copy PIN'}
-          </button>
-        </div>
-      </div>
+        )}
 
-      <div className="workspace-summary-row">
-        <div className="workspace-summary-card">
-          <div>
-            <h3 className="workspace-summary-title">{isArchived ? 'Final Scoreboard' : 'Live Scoreboard'}</h3>
-            <p className="workspace-summary-text">Open rankings in a focused modal and refresh whenever needed.</p>
-          </div>
-          <div className="workspace-summary-actions">
-            <button className="admin-btn admin-btn-secondary" onClick={() => refetchScoreboard()}>
-              <BiRefresh size={16} /> Refresh
-            </button>
-            <button className="admin-btn admin-btn-primary" onClick={() => setShowScoreboardModal(true)}>
-              <BiTrophy size={16} /> Open Scoreboard
-            </button>
-          </div>
-        </div>
+        {/* REPORTS TAB */}
+        {activeTab === 'reports' && (
+          <div className="quiz-workspace-tab-content">
+            <div className="quiz-workspace-section-header">
+              <div>
+                <h2 className="quiz-workspace-section-title">Reports</h2>
+                <p className="quiz-workspace-section-text">Use the following actions to reopen live scoreboard and violation summaries quickly.</p>
+              </div>
+            </div>
 
-        <div className="workspace-summary-card">
-          <div>
-            <h3 className="workspace-summary-title">Violation Log Reports</h3>
-            <p className="workspace-summary-text">Review persisted anti-cheat logs in a focused modal view.</p>
+            <div className="workspace-summary-row">
+              <div className="workspace-summary-card">
+                <div className="workspace-summary-copy">
+                  <h3 className="workspace-summary-title">{isArchived ? 'Final Scoreboard' : 'Live Scoreboard'}</h3>
+                  <p className="workspace-summary-text">Open rankings in a focused modal and refresh whenever needed.</p>
+                </div>
+                <div className="workspace-summary-actions">
+                  <button className="admin-btn admin-btn-secondary workspace-summary-button" onClick={() => refetchScoreboard()}>
+                    <BiRefresh size={16} /> Refresh
+                  </button>
+                  <button className="admin-btn admin-btn-primary workspace-summary-button" onClick={() => setShowScoreboardModal(true)}>
+                    <BiTrophy size={16} /> Open Scoreboard
+                  </button>
+                </div>
+              </div>
+
+              <div className="workspace-summary-card">
+                <div className="workspace-summary-copy">
+                  <h3 className="workspace-summary-title">Violation Log Reports</h3>
+                  <p className="workspace-summary-text">Review persisted anti-cheat logs in a focused modal view.</p>
+                </div>
+                <div className="workspace-summary-actions">
+                  <button className="admin-btn admin-btn-secondary workspace-summary-button" onClick={handleRefreshViolationLogs}>
+                    <BiRefresh size={16} /> Refresh
+                  </button>
+                  <button className="admin-btn admin-btn-primary workspace-summary-button" onClick={() => setShowViolationModal(true)}>
+                    <BiBookContent size={16} /> Open Logs
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="workspace-summary-actions">
-            <button className="admin-btn admin-btn-secondary" onClick={handleRefreshViolationLogs}>
-              <BiRefresh size={16} /> Refresh
-            </button>
-            <button className="admin-btn admin-btn-primary" onClick={() => setShowViolationModal(true)}>
-              <BiBookContent size={16} /> Open Logs
-            </button>
-          </div>
-        </div>
+        )}
+
       </div>
 
       {showScoreboardModal && (

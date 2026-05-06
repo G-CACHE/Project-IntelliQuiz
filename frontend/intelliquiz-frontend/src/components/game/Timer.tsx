@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface TimerProps {
   timeRemaining: number;
@@ -20,8 +20,20 @@ const Timer: React.FC<TimerProps> = ({
   const percentage = totalTime > 0 ? (timeRemaining / totalTime) * 100 : 0;
   const isLow = timeRemaining <= 5;
   const isCritical = timeRemaining <= 3;
+  const prevTimeRef = useRef(timeRemaining);
+  const [tickAnimation, setTickAnimation] = React.useState(false);
 
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
+
+  // Trigger tick animation when time changes
+  useEffect(() => {
+    if (prevTimeRef.current !== timeRemaining && timeRemaining > 0) {
+      setTickAnimation(true);
+      const timer = setTimeout(() => setTickAnimation(false), 500);
+      prevTimeRef.current = timeRemaining;
+      return () => clearTimeout(timer);
+    }
+  }, [timeRemaining]);
 
   const getTimerClass = () => {
     let classes = `${prefix}-timer`;
@@ -38,6 +50,12 @@ const Timer: React.FC<TimerProps> = ({
     return classes;
   };
 
+  const getValueClass = () => {
+    let classes = `${prefix}-timer-value`;
+    if (tickAnimation) classes += ' tick-animation';
+    return classes;
+  };
+
   const minutes = Math.floor(Math.max(0, timeRemaining) / 60);
   const seconds = Math.max(0, timeRemaining) % 60;
   const secondsPadded = String(seconds).padStart(2, '0');
@@ -45,7 +63,7 @@ const Timer: React.FC<TimerProps> = ({
   return (
     <div className={getTimerClass()}>
       {/* Time Display */}
-      <div className={`${prefix}-timer-value`}>
+      <div className={getValueClass()}>
         {displayMode === 'clock' ? (
           <>
             {minutes}m:{secondsPadded}

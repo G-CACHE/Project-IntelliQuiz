@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ConnectedTeam } from '../../hooks/useSSE';
+import { parseSmartName } from '../../utils/nameUtils';
 
 interface TeamGridProps {
   teams: ConnectedTeam[];
@@ -24,24 +25,31 @@ const TeamGrid: React.FC<TeamGridProps> = ({ teams, highlightTeamId, variant = '
 
   return (
     <div className={`${prefix}-team-grid`}>
-      {teams.map((team, index) => (
-        <div
-          key={team.id}
-          className={`${prefix}-team-card ${highlightTeamId === team.id ? `${prefix}-team-card-highlight` : ''}`}
-          style={{ animationDelay: `${index * 50}ms` }}
-        >
-          <div className={`${prefix}-team-avatar ${prefix}-team-avatar-${index % 5}`} aria-hidden="true">
-            {(team.name?.trim()?.charAt(0) || '?').toUpperCase()}
-          </div>
-          <div className={`${prefix}-team-status`}>
-            <span className={`${prefix}-status-dot ${prefix}-status-connected`}></span>
-            <span className={`${prefix}-team-status-text`}>Connected</span>
-          </div>
-          <p className={`${prefix}-team-name`} title={team.name}>
-            {team.name}
-          </p>
-        </div>
-      ))}
+        {teams.map((team, index) => {
+          const { name, avatarId } = parseSmartName(team.name);
+          return (
+            <div
+              key={team.id}
+              className={`${prefix}-team-card ${highlightTeamId === team.id ? `${prefix}-team-card-highlight` : ''}`}
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className={`${prefix}-team-avatar ${prefix}-team-avatar-${index % 5} ${avatarId ? 'has-avatar' : ''}`} aria-hidden="true">
+                {avatarId ? (
+                  <img src={`/avatars/${avatarId}`} alt="" className={`${prefix}-team-avatar-img`} />
+                ) : (
+                  (name?.trim()?.charAt(0) || '?').toUpperCase()
+                )}
+              </div>
+              <div className={`${prefix}-team-status`}>
+                <span className={`${prefix}-status-dot ${prefix}-status-connected`}></span>
+                <span className={`${prefix}-team-status-text`}>Connected</span>
+              </div>
+              <p className={`${prefix}-team-name`} title={name}>
+                {name}
+              </p>
+            </div>
+          );
+        })}
     </div>
   );
 };
