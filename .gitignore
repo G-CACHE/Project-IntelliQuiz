@@ -75,3 +75,7 @@ frontend/**/coverage/
 GenerateHash.java
 generate_hash.py
 generate-bcrypt.sh
+
+# IntelliQuizzPackage
+IntelliQuizzPackage/images/*.tar.gz
+IntelliQuizzPackage/output/
