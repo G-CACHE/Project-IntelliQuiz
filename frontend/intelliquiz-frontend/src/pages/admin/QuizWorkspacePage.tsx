@@ -560,15 +560,15 @@ export default function QuizWorkspacePage() {
                 )}
 
                 <button
-                  className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' ? '' : 'is-disabled'}`}
-                  style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' ? 1 : 0.85 }}
-                  onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && handleStatusToggle()}
-                  disabled={statusChange.isPending}
+                  className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' ? '' : 'is-disabled'}`}
+                  style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' ? 1 : 0.85 }}
+                  onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' && handleStatusToggle()}
+                  disabled={statusChange.isPending || quiz.status === 'ACTIVE'}
                 >
                   <h3 className="admin-card-title">
                     {quiz.status === 'READY' ? <BiPauseCircle size={18} /> : <BiCheckCircle size={18} />} Status Toggle
                   </h3>
-                  <p className="admin-empty-text">{statusActionLabel}</p>
+                  <p className="admin-empty-text">{quiz.status === 'ACTIVE' ? 'Status is locked while quiz is live. End session to change.' : statusActionLabel}</p>
                 </button>
               </div>
             </div>
@@ -618,15 +618,15 @@ export default function QuizWorkspacePage() {
               )}
 
               <button
-                className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' ? '' : 'is-disabled'}`}
-                style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' ? 1 : 0.85 }}
-                onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && handleStatusToggle()}
-                disabled={statusChange.isPending}
+                className={`admin-card workspace-action-card ${hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' ? '' : 'is-disabled'}`}
+                style={{ textAlign: 'left', cursor: hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' ? 'pointer' : 'not-allowed', opacity: hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' ? 1 : 0.85 }}
+                onClick={() => hasEdit && quiz.status !== 'ARCHIVED' && quiz.status !== 'ACTIVE' && handleStatusToggle()}
+                disabled={statusChange.isPending || quiz.status === 'ACTIVE'}
               >
                 <h3 className="admin-card-title">
                   {quiz.status === 'READY' ? <BiPauseCircle size={18} /> : <BiCheckCircle size={18} />} Status Toggle
                 </h3>
-                <p className="admin-empty-text">{statusActionLabel}</p>
+                <p className="admin-empty-text">{quiz.status === 'ACTIVE' ? 'Status is locked while quiz is live. End session to change.' : statusActionLabel}</p>
               </button>
             </div>
           </div>

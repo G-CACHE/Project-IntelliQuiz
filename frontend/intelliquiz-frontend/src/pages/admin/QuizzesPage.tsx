@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/queryClient';
+import { useActiveQuiz } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBookOpen,
   BiEdit,
-  BiPause,
   BiCheckCircle,
   BiPlayCircle,
   BiSearch,
@@ -48,11 +50,31 @@ export default function AdminQuizzesPage() {
   const { canEditQuiz, canViewQuiz } = useAuth();
   
   // React Query hooks
+  const queryClient = useQueryClient();
   const { data: quizzes = [], isLoading, error } = useQuizzes();
+  const activeQuizQuery = useActiveQuiz();
   const createQuiz = useCreateQuiz();
   const updateQuiz = useUpdateQuiz();
   const deleteQuiz = useDeleteQuiz();
   const statusChange = useQuizStatusChange();
+
+  // Keep quizzes cache in sync with active quiz runtime state (reflect live sessions started outside this page)
+  useEffect(() => {
+    if (!activeQuizQuery.isSuccess) return;
+
+    const active = activeQuizQuery.data;
+    queryClient.setQueryData(queryKeys.quizzes, (old: any) => {
+      if (!old || !Array.isArray(old)) return old;
+      return old.map((q: any) => {
+        // Only upgrade to ACTIVE if this quiz matches the active one
+        if (active && q.id === active.id) {
+          return { ...q, status: 'ACTIVE', isLiveSession: true };
+        }
+        // Don't downgrade - trust server state for other quizzes
+        return q;
+      });
+    });
+  }, [activeQuizQuery.data, activeQuizQuery.isSuccess, queryClient]);
 
   // Filter quizzes based on search/status (backend already filters by createdByUserId)
   const filteredQuizzes = useMemo(() => {
@@ -120,6 +142,13 @@ export default function AdminQuizzesPage() {
     () => editableQuizzes.find((quiz) => quiz.status === 'READY') || null,
     [editableQuizzes]
   );
+
+  const editableNonArchivedQuizzes = useMemo(
+    () => editableQuizzes.filter((quiz) => quiz.status !== 'ARCHIVED'),
+    [editableQuizzes]
+  );
+
+  const allEditableQuizzesArchived = editableQuizzes.length > 0 && editableQuizzes.every((quiz) => quiz.status === 'ARCHIVED');
 
   const walkthroughSteps = useMemo(
     () => [
@@ -198,7 +227,7 @@ export default function AdminQuizzesPage() {
     ]
   );
 
-  const recommendedQuiz = firstQuizNeedingQuestions || firstDraftQuiz || firstReadyQuiz || editableQuizzes[0] || null;
+  const recommendedQuiz = firstQuizNeedingQuestions || firstDraftQuiz || firstReadyQuiz || editableNonArchivedQuizzes[0] || null;
 
   const toggleGuideVisibility = () => {
     setIsGuideExpanded((prev) => {
@@ -278,7 +307,11 @@ export default function AdminQuizzesPage() {
     return map[status] || 'draft';
   };
 
-  const getStatusLabel = (status: string) => status === 'ARCHIVED' ? 'DONE' : status;
+  const getStatusLabel = (status: string) => {
+    if (status === 'ARCHIVED') return 'DONE';
+    if (status === 'ACTIVE') return 'LIVE NOW';
+    return status;
+  };
 
   if (isLoading) {
     return (
@@ -331,20 +364,21 @@ export default function AdminQuizzesPage() {
 
         {isGuideExpanded && (
           <>
-            <div id="admin-walkthrough-steps" className="quiz-list-journey-grid">
+            <div id="admin-walkthrough-steps" className={`quiz-list-journey-grid ${allEditableQuizzesArchived ? 'is-disabled' : ''}`}>
               {walkthroughSteps.map((step, index) => (
                 <div
                   key={step.id}
-                  className={`quiz-list-journey-step ${step.done ? 'is-complete' : 'is-pending'}`}
-                  onClick={step.onAction}
+                  className={`quiz-list-journey-step ${step.done ? 'is-complete' : 'is-pending'} ${allEditableQuizzesArchived ? 'is-disabled' : ''}`}
+                  onClick={allEditableQuizzesArchived ? undefined : step.onAction}
                   onKeyDown={(event) => {
+                    if (allEditableQuizzesArchived) return;
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       step.onAction();
                     }
                   }}
                   role="button"
-                  tabIndex={0}
+                  tabIndex={allEditableQuizzesArchived ? -1 : 0}
                   aria-label={`${step.label}. ${step.actionLabel}`}
                 >
                   <div className="quiz-list-journey-step-top">
@@ -357,8 +391,11 @@ export default function AdminQuizzesPage() {
                     className="admin-btn quiz-list-journey-btn"
                     onClick={(event) => {
                       event.stopPropagation();
-                      step.onAction();
+                      if (!allEditableQuizzesArchived) {
+                        step.onAction();
+                      }
                     }}
+                    disabled={allEditableQuizzesArchived}
                   >
                     {step.id === 'launch' ? <BiPlayCircle size={16} /> : <BiCheckCircle size={16} />}
                     {step.actionLabel}
@@ -414,7 +451,7 @@ export default function AdminQuizzesPage() {
             <option value="ALL">All Status</option>
             <option value="DRAFT">Draft</option>
             <option value="READY">Ready</option>
-            <option value="ACTIVE">Active</option>
+            <option value="ACTIVE">Live</option>
             <option value="ARCHIVED">Archived</option>
           </select>
         </div>
@@ -467,17 +504,12 @@ export default function AdminQuizzesPage() {
                       <BiCheckCircle size={16} />
                     </button>
                   )}
-                  {quiz.status === 'ACTIVE' && canEditQuiz(quiz.id, quiz.createdByUserId) && (
-                    <button className="admin-btn-icon" onClick={(e) => { e.stopPropagation(); handleStatusChange(quiz.id, 'deactivate'); }} title="End Session">
-                      <BiPause size={16} />
-                    </button>
-                  )}
-                  {quiz.status === 'DRAFT' && canEditQuiz(quiz.id, quiz.createdByUserId) && (
+                  {(quiz.status === 'DRAFT' || quiz.status === 'READY') && canEditQuiz(quiz.id, quiz.createdByUserId) && (
                     <button className="admin-btn-icon" onClick={(e) => { e.stopPropagation(); setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '', accessMode: quiz.accessMode || 'RESTRICTED', navigationMode: quiz.navigationMode || 'TOURNAMENT', globalTimeLimitSeconds: quiz.globalTimeLimitSeconds || 0, randomizeQuestions: !!quiz.randomizeQuestions }); setShowEditModal(true); }} title="Edit">
                       <BiEdit size={16} />
                     </button>
                   )}
-                  {canEditQuiz(quiz.id, quiz.createdByUserId) && (
+                  {quiz.status !== 'ACTIVE' && canEditQuiz(quiz.id, quiz.createdByUserId) && (
                     <button
                       className="admin-btn-icon danger"
                       onClick={(e) => { e.stopPropagation(); handleDeleteQuiz(quiz); }}
