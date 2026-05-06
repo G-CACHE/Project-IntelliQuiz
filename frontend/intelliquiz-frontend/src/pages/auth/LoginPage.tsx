@@ -13,6 +13,22 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { refreshAuth } = useAuth();
 
+  const extractErrorMessage = (err: unknown, fallback: string): string => {
+    if (err instanceof Error && err.message) {
+      try {
+        const parsed = JSON.parse(err.message) as { message?: string; errorMessage?: string };
+        if (parsed?.message) return parsed.message;
+        if (parsed?.errorMessage) return parsed.errorMessage;
+      } catch {
+        // Not JSON; use the raw message.
+      }
+
+      return err.message;
+    }
+
+    return fallback;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return setError('Username is required');
@@ -34,7 +50,7 @@ export default function LoginPage() {
         setError('Invalid role');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(extractErrorMessage(err, 'Login failed. Please try again.'));
     } finally {
       setLoading(false);
     }
