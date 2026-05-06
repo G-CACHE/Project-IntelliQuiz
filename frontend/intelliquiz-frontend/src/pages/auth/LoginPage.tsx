@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiUser, BiLock } from 'react-icons/bi';
-import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiUser, BiLock } from 'react-icons/bi';
 import { authApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -334,8 +333,8 @@ export default function LoginPage() {
       <section className="portal-login-panel">
         <div className="portal-login-brand">
           IntelliQuiz Portal
-          IntelliQuiz Portal
         </div>
+        <div className="portal-login-card">
         <h2>Sign In</h2>
         <p className="portal-login-intro">Use your assigned account credentials.</p>
 
@@ -345,7 +344,6 @@ export default function LoginPage() {
             <span>{error}</span>
           </div>
         )}
-
         <form className="portal-login-form" onSubmit={handleSubmit}>
           <div className="portal-field">
             <label htmlFor="username">Username</label>
@@ -395,6 +393,7 @@ export default function LoginPage() {
         </form>
 
         <p className="portal-note">IntelliQuiz v1.0.0</p>
+        </div>
       </section>
 
       <section className="portal-login-hero">
