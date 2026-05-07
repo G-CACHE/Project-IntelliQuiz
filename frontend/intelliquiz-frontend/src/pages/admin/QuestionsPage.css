@@ -3,11 +3,11 @@
 .questions-page-header {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #7a1733 0%, #8d2144 54%, #b14062 100%) !important;
-  border: 1px solid #6b1028 !important;
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f3ec 100%) !important;
+  border: 1px solid rgba(122, 23, 51, 0.12) !important;
   border-radius: 22px !important;
   padding: 22px 28px !important;
-  box-shadow: 0 14px 28px rgba(95, 16, 39, 0.16) !important;
+  box-shadow: 0 14px 28px rgba(95, 16, 39, 0.08) !important;
 }
 
 .questions-page-header .admin-page-header-bg {
@@ -28,9 +28,17 @@
   min-width: 0 !important;
 }
 
+.questions-page-question-count {
+  margin: 0 !important;
+  color: #5b2437 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+}
+
 .questions-page-header .admin-page-title {
   margin: 0 !important;
-  color: #ffffff !important;
+  color: #2f3747 !important;
   font-size: clamp(38px, 4.6vw, 56px) !important;
   line-height: 1.02 !important;
   letter-spacing: -0.02em !important;
@@ -38,7 +46,7 @@
 
 .questions-page-header .admin-page-subtitle {
   margin: 6px 0 0 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #5b2437 !important;
   font-size: 15px !important;
   font-weight: 600 !important;
 }
@@ -47,9 +55,9 @@
   width: 46px !important;
   height: 46px !important;
   border-radius: 14px !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
-  background: rgba(255, 255, 255, 0.16) !important;
-  color: #ffffff !important;
+  border: 1px solid rgba(122, 23, 51, 0.14) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: #7a1733 !important;
 }
 
 .questions-header-actions {
@@ -74,6 +82,28 @@
 
 .questions-header-actions .admin-btn-primary {
   min-width: 170px !important;
+}
+
+.questions-header-actions .admin-btn-secondary {
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%) !important;
+  color: #ffffff !important;
+  border-color: #7a1733 !important;
+  box-shadow: 0 4px 14px rgba(122, 23, 51, 0.24) !important;
+}
+
+.questions-header-actions .admin-btn-secondary:hover {
+  box-shadow: 0 6px 18px rgba(122, 23, 51, 0.3) !important;
+}
+
+.questions-header-actions .admin-btn-primary {
+  background: linear-gradient(135deg, var(--pup-gold-500) 0%, var(--pup-gold-400) 100%) !important;
+  color: #2b1a00 !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(212, 160, 23, 0.4) !important;
+}
+
+.questions-header-actions .admin-btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.5) !important;
 }
 
 .questions-header-actions .admin-btn svg {

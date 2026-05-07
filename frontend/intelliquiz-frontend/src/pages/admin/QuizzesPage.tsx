@@ -7,7 +7,6 @@ import {
   BiBookOpen,
   BiEdit,
   BiCheckCircle,
-  BiPlayCircle,
   BiSearch,
   BiX,
   BiErrorCircle,
@@ -24,14 +23,9 @@ import './QuizzesPage.css';
 
 export default function AdminQuizzesPage() {
   const quizzesPerPage = 6;
-  const guideVisibilityStorageKey = 'intelliquiz.admin.quizzes.walkthrough.visible';
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isGuideExpanded, setIsGuideExpanded] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem(guideVisibilityStorageKey) !== '0';
-  });
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
@@ -148,107 +142,20 @@ export default function AdminQuizzesPage() {
     [editableQuizzes]
   );
 
-  const allEditableQuizzesArchived = editableQuizzes.length > 0 && editableQuizzes.every((quiz) => quiz.status === 'ARCHIVED');
-
-  const walkthroughSteps = useMemo(
-    () => [
-      {
-        id: 'create',
-        label: 'Create a quiz',
-        hint: 'Start by creating your first quiz shell.',
-        done: quizStats.total > 0,
-        actionLabel: quizStats.total > 0 ? 'Create another' : 'Create now',
-        onAction: () => {
-          resetForm();
-          setShowCreateModal(true);
-        },
-      },
-      {
-        id: 'questions',
-        label: 'Add question content',
-        hint: 'Populate your quiz so teams can answer meaningful rounds.',
-        done: editableQuizzes.some((quiz) => (quiz.questionCount || 0) > 0),
-        actionLabel: firstQuizNeedingQuestions ? 'Add questions' : 'Open question sets',
-        onAction: () => {
-          if (firstQuizNeedingQuestions) {
-            navigate(`/admin/quizzes/${firstQuizNeedingQuestions.id}/questions`);
-            return;
-          }
-          if (editableQuizzes[0]) {
-            navigate(`/admin/quizzes/${editableQuizzes[0].id}/questions`);
-          }
-        },
-      },
-      {
-        id: 'ready',
-        label: 'Mark quiz as ready',
-        hint: 'Move draft quizzes into ready state before launch.',
-        done: quizStats.ready > 0 || quizStats.active > 0,
-        actionLabel: firstDraftQuiz ? 'Mark next draft ready' : 'Review drafts',
-        onAction: () => {
-          if (firstDraftQuiz) {
-            void statusChange.mutateAsync({ id: firstDraftQuiz.id, action: 'ready' }).catch((err) => {
-              console.error('Failed to ready quiz:', err);
-            });
-            return;
-          }
-          if (editableQuizzes[0]) {
-            navigate(`/admin/quizzes/${editableQuizzes[0].id}`);
-          }
-        },
-      },
-      {
-        id: 'launch',
-        label: 'Launch live session',
-        hint: 'Activate a ready quiz when your teams are set.',
-        done: quizStats.active > 0,
-        actionLabel: firstReadyQuiz ? 'Launch ready quiz' : 'Go to workspace',
-        onAction: () => {
-          if (firstReadyQuiz) {
-            void statusChange.mutateAsync({ id: firstReadyQuiz.id, action: 'activate' }).catch((err) => {
-              console.error('Failed to launch quiz:', err);
-            });
-            return;
-          }
-          if (editableQuizzes[0]) {
-            navigate(`/admin/quizzes/${editableQuizzes[0].id}`);
-          }
-        },
-      },
-    ],
-    [
-      quizStats,
-      editableQuizzes,
-      firstQuizNeedingQuestions,
-      firstDraftQuiz,
-      firstReadyQuiz,
-      navigate,
-      statusChange,
-    ]
-  );
-
-  const recommendedQuiz = firstQuizNeedingQuestions || firstDraftQuiz || firstReadyQuiz || editableNonArchivedQuizzes[0] || null;
-
-  const toggleGuideVisibility = () => {
-    setIsGuideExpanded((prev) => {
-      const next = !prev;
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(guideVisibilityStorageKey, next ? '1' : '0');
-      }
-      return next;
-    });
-  };
-
   const handleCreate = async () => {
     if (!formData.title.trim()) return;
     try {
       setCreatingQuiz(true);
-      await createQuiz.mutateAsync({
+      const created = await createQuiz.mutateAsync({
         title: formData.title,
         description: formData.description,
       });
       setShowCreateModal(false);
       resetForm();
+      // navigate to created quiz workspace if API returned the new quiz
+      if (created && typeof created.id === 'number') {
+        navigate(`/admin/quizzes/${created.id}`);
+      }
     } catch (err) {
       console.error('Failed to create quiz:', err);
     } finally {
@@ -337,90 +244,6 @@ export default function AdminQuizzesPage() {
           Create Quiz
         </button>
       </div>
-
-
-      <section className="quiz-list-journey admin-card" aria-label="Admin walkthrough">
-        <div className="quiz-list-journey-head">
-          <div>
-            <p className="quiz-list-journey-eyebrow">Admin walkthrough</p>
-            <h2 className="quiz-list-journey-title">Do this next</h2>
-            <p className="quiz-list-journey-copy">
-              Follow this guided flow to build, prepare, and launch without missing steps.
-            </p>
-          </div>
-        </div>
-
-        <div className="quiz-list-guide-controls">
-          <button
-            type="button"
-            className="admin-btn quiz-list-guide-trigger"
-            onClick={toggleGuideVisibility}
-            aria-expanded={isGuideExpanded}
-            aria-controls="admin-walkthrough-steps"
-          >
-            {isGuideExpanded ? 'Hide walkthrough' : 'Show walkthrough'}
-          </button>
-        </div>
-
-        {isGuideExpanded && (
-          <>
-            <div id="admin-walkthrough-steps" className={`quiz-list-journey-grid ${allEditableQuizzesArchived ? 'is-disabled' : ''}`}>
-              {walkthroughSteps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className={`quiz-list-journey-step ${step.done ? 'is-complete' : 'is-pending'} ${allEditableQuizzesArchived ? 'is-disabled' : ''}`}
-                  onClick={allEditableQuizzesArchived ? undefined : step.onAction}
-                  onKeyDown={(event) => {
-                    if (allEditableQuizzesArchived) return;
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      step.onAction();
-                    }
-                  }}
-                  role="button"
-                  tabIndex={allEditableQuizzesArchived ? -1 : 0}
-                  aria-label={`${step.label}. ${step.actionLabel}`}
-                >
-                  <div className="quiz-list-journey-step-top">
-                    <span className="quiz-list-journey-step-index">Step {index + 1}</span>
-                  </div>
-                  <h3 className="quiz-list-journey-step-title">{step.label}</h3>
-                  <p className="quiz-list-journey-step-copy">{step.hint}</p>
-                  <button
-                    type="button"
-                    className="admin-btn quiz-list-journey-btn"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      if (!allEditableQuizzesArchived) {
-                        step.onAction();
-                      }
-                    }}
-                    disabled={allEditableQuizzesArchived}
-                  >
-                    {step.id === 'launch' ? <BiPlayCircle size={16} /> : <BiCheckCircle size={16} />}
-                    {step.actionLabel}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {recommendedQuiz && (
-              <div className="quiz-list-journey-callout">
-                <p>
-                  Recommended quiz: <strong>{recommendedQuiz.title}</strong>
-                </p>
-                <button
-                  type="button"
-                  className="admin-btn quiz-list-journey-callout-btn"
-                  onClick={() => navigate(`/admin/quizzes/${recommendedQuiz.id}`)}
-                >
-                  Open workspace
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </section>
 
       {/* Error Alert */}
       {error && (

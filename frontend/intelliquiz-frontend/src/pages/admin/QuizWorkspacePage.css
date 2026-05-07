@@ -86,6 +86,108 @@
   white-space: nowrap;
 }
 
+/* Status pill button - Draft/Ready */
+.status-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.status-pill-btn.is-ready {
+  background: #10b981;
+  color: #ffffff;
+}
+.status-pill-btn.is-ready:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+.status-pill-btn.is-draft {
+  background: #d1d5db;
+  color: #374151;
+}
+.status-pill-btn.is-draft:hover:not(:disabled) {
+  background: #c4cfd8;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.status-pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-pill-btn .pill-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+  font-weight: 600;
+  opacity: 0.7;
+  transition: opacity 180ms ease, transform 180ms ease, color 180ms ease;
+}
+.status-pill-btn .pill-sep {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  flex: 0 0 auto;
+  text-align: center;
+  opacity: 0.6;
+  padding: 0;
+}
+.status-pill-btn.is-draft .pill-draft.active { font-weight: 900; color: #111827; }
+.status-pill-btn.is-draft .pill-ready.active { font-weight: 700; color: rgba(55,65,81,0.8); }
+.status-pill-btn.is-ready .pill-ready.active { font-weight: 900; color: #ffffff; }
+.status-pill-btn.is-ready .pill-draft.active { font-weight: 700; color: rgba(255,255,255,0.9); opacity: 0.9; }
+
+/* Highlighter that slides between Draft and Ready */
+.status-pill-btn { position: relative; overflow: visible; }
+.status-pill-btn .pill-highlighter {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 0;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.06);
+  transition: left 260ms cubic-bezier(.2,.9,.2,1), width 260ms cubic-bezier(.2,.9,.2,1), background 220ms ease, box-shadow 220ms ease;
+  z-index: 0;
+  pointer-events: none;
+  box-shadow: none;
+}
+.status-pill-btn .pill-label.active { opacity: 1; transform: translateY(-1px); }
+.status-pill-btn.is-ready .pill-highlighter { background: linear-gradient(180deg,#10b981 0%,#059669 100%); box-shadow: 0 8px 24px rgba(16,185,129,0.24); }
+.status-pill-btn.is-draft .pill-highlighter { background: rgba(156,163,175,0.18); box-shadow: 0 6px 18px rgba(99,102,106,0.06); }
+.status-pill-btn .pill-sep { position: relative; z-index: 2; }
+
+/* Emphasize active label with stronger contrast and slight lift */
+.status-pill-btn .pill-label.active { transform: translateY(-1px); }
+
+/* Grid container for configuration section */
+.config-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Manage registered teams full card */
+.manage-registered-full-card {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
 .quiz-workspace-title {
   margin: 0;
   font-size: clamp(30px, 4vw, 46px);
@@ -663,6 +765,9 @@
 }
 
 @media (max-width: 1100px) {
+  .config-grid-container {
+    grid-template-columns: 1fr;
+  }
   .quiz-workspace-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
