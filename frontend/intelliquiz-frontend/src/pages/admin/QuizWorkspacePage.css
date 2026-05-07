@@ -187,6 +187,21 @@
   gap: 8px;
 }
 
+/* Maroon border and title alignment for Manage Registered Teams */
+.manage-registered-full-card {
+  border: 1px solid #7a1733;
+  background: linear-gradient(180deg, #fffaf6 0%, #ffffff 100%);
+}
+.manage-registered-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 
 .quiz-workspace-title {
   margin: 0;

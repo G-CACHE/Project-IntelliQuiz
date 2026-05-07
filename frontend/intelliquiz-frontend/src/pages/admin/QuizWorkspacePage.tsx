@@ -480,7 +480,7 @@ export default function QuizWorkspacePage() {
                     </div>
                   </div>
                   <div className="admin-card manage-registered-full-card">
-                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, marginBottom: 8 }}><BiGroup size={16} style={{ marginRight: 8 }} /> Manage Registered Teams</h4>
+                    <h4 className="manage-registered-title"><BiGroup size={16} /> Manage Registered Teams</h4>
                     <p className="admin-empty-text" style={{ margin: '0 0 12px' }}>Register teams and view access codes.</p>
                     <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenRegisterModal()} disabled={!canManageRestrictedTeams}>
                       Open
