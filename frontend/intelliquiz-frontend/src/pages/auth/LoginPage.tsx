@@ -154,7 +154,7 @@ export default function LoginPage() {
 
         .portal-login-card {
           width: 100%;
-          background: linear-gradient(180deg, rgba(122,23,51,0.12), rgba(122,23,51,0.08));
+          background: #ffffff;
           border-radius: 32px;
           padding: 18px 40px 40px 40px ;
           box-shadow: var(--shadow-md);
@@ -165,7 +165,7 @@ export default function LoginPage() {
 
         .portal-login-card h2 {
           margin: 0;
-          color: #ffffff;
+          color: var(--color-maroon);
           font-size: 38px;
           font-weight: 800;
           letter-spacing: -0.5px;
@@ -175,7 +175,7 @@ export default function LoginPage() {
 
         .portal-login-card p {
           margin: 12px 0 0;
-          color: var(--text-secondary);
+          color: rgba(122,23,51,0.8);
           font-size: 15px;
           font-weight: 600;
           text-align: center;
@@ -202,7 +202,7 @@ export default function LoginPage() {
         .portal-field label {
           display: block;
           margin-bottom: 8px;
-          color: #ffffff;
+          color: var(--color-maroon);
           font-size: 12px;
           font-weight: 700;
           text-transform: uppercase;
@@ -227,7 +227,7 @@ export default function LoginPage() {
         .portal-input {
           width: 100%;
           box-sizing: border-box;
-          border: 4px solid rgba(255,255,255,0.06);
+          border: 1px solid #c9c9c9;
           background: rgba(255,255,255,0.85);
           border-radius: 16px;
           padding: 14px 16px 14px 50px;
@@ -317,7 +317,7 @@ export default function LoginPage() {
 
         .portal-note {
           margin-top: 16px;
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(122,23,51,0.65);
           font-size: 12px;
           text-align: center;
           font-weight: 600;
