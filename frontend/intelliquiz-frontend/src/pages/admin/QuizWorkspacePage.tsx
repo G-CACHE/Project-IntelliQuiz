@@ -5,7 +5,7 @@ import {
   BiBookContent,
   BiTrophy,
   BiGroup,
-  
+  BiTrash,
   BiCopy,
   BiCheck,
   BiLockAlt,
@@ -16,7 +16,7 @@ import {
   BiErrorCircle,
   BiUserPlus,
 } from 'react-icons/bi';
-import { useQuiz, useQuizStatusChange, useRegisterTeam, useScoreboard, useTeams } from '../../hooks';
+import { useQuiz, useQuizStatusChange, useRegisterTeam, useDeleteTeam, useScoreboard, useTeams } from '../../hooks';
 import QuestionsPage from './QuestionsPage';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -39,6 +39,7 @@ export default function QuizWorkspacePage() {
   const { data: quiz, isLoading, refetch: refetchQuiz } = useQuiz(parsedQuizId);
   const { data: teams = [] } = useTeams(parsedQuizId);
   const registerTeam = useRegisterTeam(parsedQuizId);
+  const deleteTeam = useDeleteTeam(parsedQuizId);
   
   const { data: scoreboard = [], isLoading: scoreboardLoading, refetch: refetchScoreboard } = useScoreboard(parsedQuizId, { refetchInterval: 5000 });
   const statusChange = useQuizStatusChange();
@@ -62,6 +63,8 @@ export default function QuizWorkspacePage() {
   const [registerTeamName, setRegisterTeamName] = useState('');
   const [registerTeamError, setRegisterTeamError] = useState<string | null>(null);
   const [registerTeamSuccess, setRegisterTeamSuccess] = useState<string | null>(null);
+  const [showDeleteTeamModal, setShowDeleteTeamModal] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState<{ id: number; name: string } | null>(null);
   const [copiedTeamId, setCopiedTeamId] = useState<number | null>(null);
   const [violationLogs, setViolationLogs] = useState<ViolationLogRecord[]>([]);
   const [violationLogsLoading, setViolationLogsLoading] = useState(false);
@@ -338,7 +341,7 @@ export default function QuizWorkspacePage() {
     if (!parsedQuizId || !canManageRestrictedTeams) return;
     const trimmed = registerTeamName.trim();
     if (!trimmed) {
-      setRegisterTeamError('Team name is required.');
+      setRegisterTeamError('You need to enter a name first to register.');
       return;
     }
 
@@ -349,6 +352,26 @@ export default function QuizWorkspacePage() {
       setRegisterTeamName('');
     } catch (err) {
       setRegisterTeamError(err instanceof Error ? err.message : 'Failed to register team.');
+    }
+  };
+
+  const handleOpenDeleteTeamModal = (teamId: number, teamName: string) => {
+    setTeamToDelete({ id: teamId, name: teamName });
+    setShowDeleteTeamModal(true);
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!teamToDelete || !canManageRestrictedTeams) return;
+
+    try {
+      await deleteTeam.mutateAsync(teamToDelete.id);
+      setRegisterTeamSuccess(`Deleted ${teamToDelete.name} successfully.`);
+      setShowDeleteTeamModal(false);
+      setTeamToDelete(null);
+    } catch (err) {
+      setRegisterTeamError(err instanceof Error ? err.message : 'Failed to delete team.');
+      setShowDeleteTeamModal(false);
+      setTeamToDelete(null);
     }
   };
 
@@ -763,6 +786,15 @@ export default function QuizWorkspacePage() {
                           >
                             {copiedTeamId === team.id ? <BiCheck size={14} /> : <BiCopy size={14} />} {copiedTeamId === team.id ? 'Copied' : 'Copy Code'}
                           </button>
+                          <button
+                            className="admin-btn admin-btn-secondary"
+                            onClick={() => handleOpenDeleteTeamModal(team.id, team.name)}
+                            type="button"
+                            aria-label={`Delete ${team.name}`}
+                            style={{ color: '#dc2626' }}
+                          >
+                            <BiTrash size={14} /> Delete
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -772,6 +804,42 @@ export default function QuizWorkspacePage() {
             </div>
             <div className="admin-modal-footer">
               <button className="admin-btn admin-btn-primary" onClick={() => setShowRegisterTeamModal(false)} disabled={registerTeam.isPending}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Team Confirmation Modal */}
+      {showDeleteTeamModal && teamToDelete && (
+        <div className="admin-modal-overlay" onClick={() => setShowDeleteTeamModal(false)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #7a1733, #9f2346)' }}>
+              <h2 className="admin-modal-title">Delete Team</h2>
+              <button onClick={() => setShowDeleteTeamModal(false)} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
+            </div>
+            <div className="admin-modal-body">
+              <div style={{ textAlign: 'center', padding: 16 }}>
+                <div style={{
+                  width: 64, height: 64, margin: '0 auto 16px',
+                  background: '#fef2f2', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444'
+                }}>
+                  <BiTrash size={28} />
+                </div>
+                <p style={{ color: '#64748b', fontSize: 14, marginBottom: 12 }}>Are you sure you want to delete this team?</p>
+                <p style={{ padding: 12, background: '#f8fafc', borderRadius: 8, color: '#1e293b', fontWeight: 500, fontSize: 13 }}>
+                  "{teamToDelete.name}"
+                </p>
+                <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12, fontWeight: 600 }}>
+                  This action cannot be undone. All team data and scores will be permanently deleted.
+                </p>
+              </div>
+            </div>
+            <div className="admin-modal-footer">
+              <button onClick={() => setShowDeleteTeamModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+              <button onClick={handleDeleteTeam} className="admin-btn admin-btn-danger" disabled={deleteTeam.isPending}>
+                {deleteTeam.isPending ? 'Deleting...' : 'Delete Team'}
+              </button>
             </div>
           </div>
         </div>
