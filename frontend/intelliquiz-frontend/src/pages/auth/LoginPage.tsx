@@ -88,7 +88,7 @@ export default function LoginPage() {
           justify-content: center;
           gap: 10px;
           width: auto;
-          background: #d4b91e;
+          background: #ebcd21;
           border: none;
           border-radius: 12px;
           padding: 10px 18px;
@@ -154,7 +154,7 @@ export default function LoginPage() {
 
         .portal-login-card {
           width: 100%;
-          background: #ffffff;
+          background: rgba(255, 255, 255, 0.9);
           border-radius: 32px;
           padding: 18px 40px 40px 40px ;
           box-shadow: var(--shadow-md);
