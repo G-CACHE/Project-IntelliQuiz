@@ -86,6 +86,242 @@
   white-space: nowrap;
 }
 
+/* Status pill button - Draft/Ready */
+/* Enhanced Status Pill Button - Draft/Ready Toggle */
+.status-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 16px 10px 32px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Draft state styling with modern gradient */
+.status-pill-btn.is-draft {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.status-pill-btn.is-draft:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Ready state styling with vibrant green gradient */
+.status-pill-btn.is-ready {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border-color: #059669;
+}
+
+.status-pill-btn.is-ready:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+}
+
+.status-pill-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Status indicator dot */
+.status-pill-btn::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.status-pill-btn.is-draft::before {
+  background: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.25);
+}
+
+.status-pill-btn.is-ready::before {
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 2px 8px rgba(16, 185, 129, 0.5);
+}
+
+/* Label styling with enhanced typography */
+.status-pill-btn .pill-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  transform: translateY(0) scale(0.97);
+  transition: all 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Separator styling */
+.status-pill-btn .pill-sep {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 300;
+  opacity: 0.35;
+  padding: 0 2px;
+  transition: opacity 240ms ease;
+}
+
+/* Active label states with enhanced emphasis */
+.status-pill-btn.is-draft .pill-draft.active { 
+  font-weight: 900; 
+  color: #111827; 
+  opacity: 1;
+  transform: translateY(-1px) scale(1.08);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.status-pill-btn.is-draft .pill-ready.active { 
+  font-weight: 600; 
+  color: rgba(55, 65, 81, 0.6); 
+  opacity: 0.6;
+}
+
+.status-pill-btn.is-ready .pill-ready.active { 
+  font-weight: 900; 
+  color: #ffffff; 
+  opacity: 1;
+  transform: translateY(-1px) scale(1.08);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-pill-btn.is-ready .pill-draft.active { 
+  font-weight: 600; 
+  color: rgba(255, 255, 255, 0.7); 
+  opacity: 0.7;
+}
+
+/* Animated highlighter that slides between Draft and Ready */
+.status-pill-btn .pill-highlighter {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  width: 0;
+  border-radius: 12px;
+  z-index: 1;
+  transition: left 340ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              width 340ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background 280ms ease, 
+              box-shadow 280ms ease;
+  pointer-events: none;
+}
+
+/* Highlighter backgrounds with depth */
+.status-pill-btn.is-draft .pill-highlighter { 
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.75) 100%);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1), 
+              inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(209, 213, 219, 0.6);
+}
+
+.status-pill-btn.is-ready .pill-highlighter { 
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.12) 100%);
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.35), 
+              inset 0 1px 3px rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Hover effects on separator */
+.status-pill-btn:hover:not(:disabled) .pill-sep {
+  opacity: 0.55;
+}
+
+/* Subtle pulse animation on ready state */
+@keyframes pulse-ready-glow {
+  0%, 100% {
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5);
+  }
+}
+
+.status-pill-btn.is-ready:not(:disabled) {
+  animation: pulse-ready-glow 3.5s ease-in-out infinite;
+}
+
+/* Pulsing dot animation for ready state */
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 2px 8px rgba(16, 185, 129, 0.5);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.25), 0 2px 12px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.status-pill-btn.is-ready::before {
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+
+/* Grid container for configuration section */
+.config-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Manage registered teams full card */
+.manage-registered-full-card {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Maroon border and title alignment for Manage Registered Teams */
+.manage-registered-full-card {
+  border: 1px solid #7a1733;
+  background: linear-gradient(180deg, #fffaf6 0%, #ffffff 100%);
+}
+.manage-registered-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
 .quiz-workspace-title {
   margin: 0;
   font-size: clamp(30px, 4vw, 46px);
@@ -663,6 +899,9 @@
 }
 
 @media (max-width: 1100px) {
+  .config-grid-container {
+    grid-template-columns: 1fr;
+  }
   .quiz-workspace-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

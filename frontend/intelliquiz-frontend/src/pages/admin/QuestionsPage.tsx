@@ -1,11 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   BiFile,
   BiPlus,
   BiEdit,
   BiTrash,
-  BiArrowBack,
   BiX,
   BiErrorCircle,
   BiCheck,
@@ -53,7 +52,6 @@ const initialForm: CreateQuestionRequest = {
 
 export default function AdminQuestionsPage() {
   const { quizId } = useParams<{ quizId: string }>();
-  const navigate = useNavigate();
   const quizIdNum = quizId ? parseInt(quizId) : 0;
   const { canEditQuiz, isSuperAdmin } = useAuth();
   const questionsPerPage = 5;
@@ -426,15 +424,9 @@ export default function AdminQuestionsPage() {
         </div>
         <div className="admin-page-header-content questions-page-header-content">
           <div className="admin-page-header-left questions-page-header-left">
-            <button className="admin-btn-icon" onClick={() => navigate(`/admin/quizzes/${quizIdNum}`)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}>
-              <BiArrowBack size={18} />
-            </button>
-            <div>
-              <h1 className="admin-page-title">Questions</h1>
-              <p className="admin-page-subtitle">
-                {quiz?.title || 'Quiz'} • {questions.length} questions
-              </p>
-            </div>
+            <p className="admin-page-subtitle questions-page-question-count">
+              {questions.length} questions
+            </p>
           </div>
           {!canEditContent && (
             <div className="questions-header-readonly">

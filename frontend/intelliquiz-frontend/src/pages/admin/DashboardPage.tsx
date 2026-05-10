@@ -145,13 +145,13 @@ export default function AdminDashboardPage() {
 
           <div className="admin-clean-recent-list">
             {recentQuizzes.length > 0 ? (
-              recentQuizzes.map((quiz) => (
+                recentQuizzes.map((quiz) => (
                 <button
                   key={quiz.id}
                   className="admin-clean-quiz-row"
                   onClick={() =>
                     canEditQuiz(quiz.id, quiz.createdByUserId)
-                      ? navigate(`/admin/quizzes/${quiz.id}/questions`)
+                      ? navigate(`/admin/quizzes/${quiz.id}`)
                       : navigate('/admin/quizzes')
                   }
                 >
