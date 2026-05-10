@@ -104,44 +104,6 @@ export default function AdminQuizzesPage() {
     setCurrentPage((prev) => Math.min(prev, totalPages));
   }, [totalPages]);
 
-  const quizStats = useMemo(() => {
-    const draft = quizzes.filter((quiz) => quiz.status === 'DRAFT').length;
-    const ready = quizzes.filter((quiz) => quiz.status === 'READY').length;
-    const active = quizzes.filter((quiz) => quiz.status === 'ACTIVE').length;
-    return {
-      total: quizzes.length,
-      filtered: filteredQuizzes.length,
-      draft,
-      ready,
-      active,
-    };
-  }, [quizzes, filteredQuizzes]);
-
-  const editableQuizzes = useMemo(
-    () => quizzes.filter((quiz) => canEditQuiz(quiz.id, quiz.createdByUserId)),
-    [quizzes, canEditQuiz]
-  );
-
-  const firstQuizNeedingQuestions = useMemo(
-    () => editableQuizzes.find((quiz) => (quiz.questionCount || 0) === 0) || null,
-    [editableQuizzes]
-  );
-
-  const firstDraftQuiz = useMemo(
-    () => editableQuizzes.find((quiz) => quiz.status === 'DRAFT') || null,
-    [editableQuizzes]
-  );
-
-  const firstReadyQuiz = useMemo(
-    () => editableQuizzes.find((quiz) => quiz.status === 'READY') || null,
-    [editableQuizzes]
-  );
-
-  const editableNonArchivedQuizzes = useMemo(
-    () => editableQuizzes.filter((quiz) => quiz.status !== 'ARCHIVED'),
-    [editableQuizzes]
-  );
-
   const handleCreate = async () => {
     if (!formData.title.trim()) return;
     try {
