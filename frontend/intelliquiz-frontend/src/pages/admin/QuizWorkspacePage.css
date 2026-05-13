@@ -996,3 +996,110 @@
     min-width: 0;
   }
 }
+
+/* ── Custom Select ─────────────────────────────────────────── */
+.cselect-root {
+  width: 100%;
+}
+
+.cselect-trigger {
+  width: 100%;
+  justify-content: space-between !important;
+  padding: 0 14px !important;
+  min-height: 46px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  border: 2px solid var(--admin-border, #d7c4cb) !important;
+  background: #ffffff !important;
+  color: var(--admin-text, #241015) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.cselect-trigger:hover:not(:disabled) {
+  border-color: var(--admin-primary, #9f2346) !important;
+  color: var(--admin-primary, #9f2346) !important;
+  background: #fff8ea !important;
+  box-shadow: none !important;
+}
+
+.cselect-trigger.is-open {
+  border-color: var(--admin-primary, #9f2346) !important;
+  box-shadow: 0 0 0 3px rgba(159, 35, 70, 0.14) !important;
+  color: var(--admin-primary, #9f2346) !important;
+}
+
+.cselect-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cselect-value {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cselect-chevron {
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+  color: #9ca3af;
+}
+
+.cselect-chevron.rotated {
+  transform: rotate(180deg);
+  color: var(--admin-primary, #9f2346);
+}
+
+.cselect-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: #ffffff;
+  border: 1.5px solid #e2d5d9;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(17, 17, 17, 0.10);
+  animation: cselect-in 0.12s ease;
+}
+
+@keyframes cselect-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cselect-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-text, #241015);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.cselect-option:hover {
+  background: #fdf4f6;
+  color: var(--admin-primary, #9f2346);
+}
+
+.cselect-option.is-selected {
+  background: #fdf4f6;
+  color: var(--admin-primary, #9f2346);
+  font-weight: 700;
+}
+
+.cselect-check {
+  flex-shrink: 0;
+  color: var(--admin-primary, #9f2346);
+}

@@ -1,122 +1,84 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BiChevronDown, BiCheck } from 'react-icons/bi';
-import './CustomSelect.css';
 
-interface Option {
-  value: string | number;
+interface SelectOption {
+  value: string;
   label: string;
-  disabled?: boolean;
 }
 
 interface CustomSelectProps {
-  options: Option[];
-  value: string | number;
-  onChange: (value: string | number) => void;
-  placeholder?: string;
+  value: string;
+  options: SelectOption[];
+  onChange: (value: string) => void;
   disabled?: boolean;
-  className?: string;
+  id?: string;
 }
 
-export default function CustomSelect({
-  options,
-  value,
-  onChange,
-  placeholder = 'Select an option',
-  disabled = false,
-  className = '',
-}: CustomSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
+export default function CustomSelect({ value, options, onChange, disabled, id }: CustomSelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selected = options.find((o) => o.value === value);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
 
-  useEffect(() => {
-    if (isOpen && listRef.current && highlightedIndex >= 0) {
-      const item = listRef.current.children[highlightedIndex] as HTMLElement;
-      item?.scrollIntoView({ block: 'nearest' });
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') setOpen(false);
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((p) => !p); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const idx = options.findIndex((o) => o.value === value);
+      const next = options[Math.min(idx + 1, options.length - 1)];
+      if (next) onChange(next.value);
     }
-  }, [highlightedIndex, isOpen]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (disabled) return;
-    
-    switch (e.key) {
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        if (isOpen && highlightedIndex >= 0) {
-          const opt = options[highlightedIndex];
-          if (!opt.disabled) {
-            onChange(opt.value);
-            setIsOpen(false);
-          }
-        } else {
-          setIsOpen(true);
-        }
-        break;
-      case 'ArrowDown':
-        e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-        } else {
-          setHighlightedIndex((prev) => 
-            prev < options.length - 1 ? prev + 1 : prev
-          );
-        }
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-        break;
-      case 'Escape':
-        setIsOpen(false);
-        break;
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const idx = options.findIndex((o) => o.value === value);
+      const prev = options[Math.max(idx - 1, 0)];
+      if (prev) onChange(prev.value);
     }
-  };
-
-  const handleSelect = (opt: Option) => {
-    if (opt.disabled) return;
-    onChange(opt.value);
-    setIsOpen(false);
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`custom-select ${isOpen ? 'open' : ''} ${disabled ? 'disabled' : ''} ${className}`}
-      tabIndex={disabled ? -1 : 0}
-      onKeyDown={handleKeyDown}
-    >
-      <div className="custom-select-trigger" onClick={() => !disabled && setIsOpen(!isOpen)}>
-        <span className={`custom-select-value ${!selectedOption ? 'placeholder' : ''}`}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <BiChevronDown className={`custom-select-arrow ${isOpen ? 'rotated' : ''}`} size={20} />
-      </div>
-      
-      {isOpen && (
-        <ul ref={listRef} className="custom-select-dropdown">
-          {options.map((opt, index) => (
+    <div ref={ref} className="cselect-root" style={{ position: 'relative' }}>
+      <button
+        id={id}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        className={`cselect-trigger admin-btn admin-btn-secondary${open ? ' is-open' : ''}`}
+        onClick={() => !disabled && setOpen((p) => !p)}
+        onKeyDown={handleKey}
+      >
+        <span className="cselect-value">{selected?.label ?? value}</span>
+        <BiChevronDown size={16} className={`cselect-chevron${open ? ' rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <ul role="listbox" className="cselect-menu">
+          {options.map((opt) => (
             <li
               key={opt.value}
-              className={`custom-select-option ${opt.value === value ? 'selected' : ''} ${opt.disabled ? 'disabled' : ''} ${index === highlightedIndex ? 'highlighted' : ''}`}
-              onClick={() => handleSelect(opt)}
-              onMouseEnter={() => setHighlightedIndex(index)}
+              role="option"
+              aria-selected={opt.value === value}
+              className={`cselect-option${opt.value === value ? ' is-selected' : ''}`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(opt.value);
+                setOpen(false);
+              }}
             >
               <span>{opt.label}</span>
-              {opt.value === value && <BiCheck size={18} className="check-icon" />}
+              {opt.value === value && <BiCheck size={15} className="cselect-check" />}
             </li>
           ))}
         </ul>

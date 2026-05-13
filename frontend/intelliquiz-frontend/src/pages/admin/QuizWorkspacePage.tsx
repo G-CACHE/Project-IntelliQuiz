@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import CustomSelect from '../../components/common/CustomSelect';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   BiArrowBack,
@@ -490,15 +491,15 @@ export default function QuizWorkspacePage() {
                 <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
                   <div>
                     <label className="admin-form-label">Access Mode</label>
-                    <select
-                      className="admin-form-input admin-form-select"
+                    <CustomSelect
                       value={settingsDraft.accessMode}
+                      options={[
+                        { value: 'RESTRICTED', label: 'Restricted' },
+                        { value: 'PUBLIC', label: 'Public' },
+                      ]}
+                      onChange={(v) => setSettingsDraft((prev) => ({ ...prev, accessMode: v as 'PUBLIC' | 'RESTRICTED' }))}
                       disabled={!canEditDraftOnly || settingsSaving}
-                      onChange={(e) => setSettingsDraft((prev) => ({ ...prev, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' }))}
-                    >
-                      <option value="RESTRICTED">Restricted</option>
-                      <option value="PUBLIC">Public</option>
-                    </select>
+                    />
                     <p className="admin-form-hint" style={{ marginTop: 4 }}>
                       {settingsDraft.accessMode === 'RESTRICTED'
                         ? 'Entry requires a pre-registered team access code.'
@@ -507,15 +508,15 @@ export default function QuizWorkspacePage() {
                   </div>
                   <div>
                     <label className="admin-form-label">Quiz Mode</label>
-                    <select
-                      className="admin-form-input admin-form-select"
+                    <CustomSelect
                       value={settingsDraft.navigationMode}
+                      options={[
+                        { value: 'TOURNAMENT', label: 'Tournament' },
+                        { value: 'CLASS', label: 'Class' },
+                      ]}
+                      onChange={(v) => setSettingsDraft((prev) => ({ ...prev, navigationMode: v as 'TOURNAMENT' | 'CLASS' }))}
                       disabled={!canEditDraftOnly || settingsSaving}
-                      onChange={(e) => setSettingsDraft((prev) => ({ ...prev, navigationMode: e.target.value as 'TOURNAMENT' | 'CLASS' }))}
-                    >
-                      <option value="TOURNAMENT">Tournament</option>
-                      <option value="CLASS">Class</option>
-                    </select>
+                    />
                     <p className="admin-form-hint" style={{ marginTop: 4 }}>
                       {settingsDraft.navigationMode === 'TOURNAMENT'
                         ? 'Host controls question pacing for all participants.'
