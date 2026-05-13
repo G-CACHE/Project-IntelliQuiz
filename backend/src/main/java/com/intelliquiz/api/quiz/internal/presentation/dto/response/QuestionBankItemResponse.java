@@ -43,15 +43,15 @@ public record QuestionBankItemResponse(
     @Schema(description = "Quiz ID where this question was originally created", example = "5")
     Long sourceQuizId,
 
+    @Schema(description = "Title of the quiz where this question was originally created", example = "My Quiz")
+    String sourceQuizTitle,
+
     @Schema(description = "Original question ID from the source quiz", example = "42")
     Long sourceQuestionId,
 
     @Schema(description = "When this bank item was created")
     Instant createdAt
 ) {
-    /**
-     * Creates a QuestionBankItemResponse from a QuestionBankItem entity.
-     */
     public static QuestionBankItemResponse from(QuestionBankItem item) {
         return new QuestionBankItemResponse(
             item.getId(),
@@ -64,6 +64,7 @@ public record QuestionBankItemResponse(
             item.getTimeLimit(),
             item.getOptions(),
             item.getSourceQuizId(),
+            item.getSourceQuizTitle(),
             item.getSourceQuestionId(),
             item.getCreatedAt()
         );

@@ -880,6 +880,7 @@ export interface QuestionBankItem {
   category?: string;
   isHarvested?: boolean;
   sourceQuizId?: number;
+  sourceQuizTitle?: string;
   caseSensitive?: boolean;
 }
 

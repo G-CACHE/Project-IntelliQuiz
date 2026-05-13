@@ -14,9 +14,10 @@ interface CustomSelectProps {
   id?: string;
   placeholder?: string;
   compact?: boolean;
+  dropUp?: boolean;
 }
 
-export default function CustomSelect({ value, options, onChange, disabled, id, placeholder, compact }: CustomSelectProps) {
+export default function CustomSelect({ value, options, onChange, disabled, id, placeholder, compact, dropUp }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -72,7 +73,7 @@ export default function CustomSelect({ value, options, onChange, disabled, id, p
       </button>
 
       {open && (
-        <ul role="listbox" className="cselect-menu">
+        <ul role="listbox" className={`cselect-menu${dropUp ? ' cselect-menu-up' : ''}`}>
           {allOptions.map((opt) => {
             const isPlaceholderOpt = placeholder && opt.value === '';
             return (

@@ -15,6 +15,8 @@ import {
   BiImport,
   BiChevronLeft,
   BiChevronRight,
+  BiSearch,
+  BiChevronDown,
 } from 'react-icons/bi';
 import { questionBankApi, questionsApi, quizzesApi, type Question, type Quiz, type CreateQuestionRequest, type QuestionBankItem } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -64,6 +66,7 @@ export default function AdminQuestionsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [modalStep, setModalStep] = useState<1 | 2>(1);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CreateQuestionRequest>(initialForm);
@@ -72,6 +75,10 @@ export default function AdminQuestionsPage() {
   const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [bankSearch, setBankSearch] = useState('');
+  const [bankQuizFilter, setBankQuizFilter] = useState<string>('');
+  const [bankVisibleCount, setBankVisibleCount] = useState(10);
+  const [bankTotalCount, setBankTotalCount] = useState(0);
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   
   const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum, quiz?.createdByUserId);
@@ -229,6 +236,7 @@ export default function AdminQuestionsPage() {
       caseSensitive: question.caseSensitive ?? false,
     });
     setShowModal(true);
+    setModalStep(1);
   };
 
   const resetForm = () => {
@@ -236,6 +244,7 @@ export default function AdminQuestionsPage() {
     setIsEditing(false);
     setSelectedQuestion(null);
     setError(null);
+    setModalStep(1);
   };
 
   const updateOption = (idx: number, value: string) => {
@@ -282,8 +291,11 @@ export default function AdminQuestionsPage() {
       const allBankItems = await questionBankApi.getAll();
       const eligible = allBankItems.filter((item) => !quizQuestionFingerprints.has(buildQuestionFingerprint(item)));
       setBankQuestions(eligible);
+      setBankTotalCount(allBankItems.length);
       setSelectedBankIds([]);
       setBankSearch('');
+      setBankQuizFilter('');
+      setBankVisibleCount(10);
       setShowBankModal(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load question bank');
@@ -298,13 +310,27 @@ export default function AdminQuestionsPage() {
     ));
   };
 
+  // Derive a display label for each bank item's source quiz
+  const getBankItemQuizLabel = (item: QuestionBankItem): string => {
+    if (item.sourceQuizTitle) return item.sourceQuizTitle;
+    if (item.category) return item.category;
+    if (item.sourceQuizId != null) return `Quiz #${item.sourceQuizId}`;
+    return 'Unknown';
+  };
+
   const filteredBankQuestions = bankQuestions.filter((item) => {
     const query = bankSearch.trim().toLowerCase();
+    if (bankQuizFilter && getBankItemQuizLabel(item) !== bankQuizFilter) return false;
     if (!query) return true;
     return item.text.toLowerCase().includes(query);
   });
 
-  const visibleBankIds = filteredBankQuestions.map((item) => item.id);
+  // Unique source quiz labels present in the bank for the filter dropdown
+  const bankSourceQuizzes = Array.from(
+    new Set(bankQuestions.map(getBankItemQuizLabel))
+  ).filter((label) => label !== 'Unknown');
+
+  const visibleBankIds = filteredBankQuestions.slice(0, bankVisibleCount).map((item) => item.id);
   const selectedVisibleCount = visibleBankIds.filter((id) => selectedBankIds.includes(id)).length;
   const allVisibleSelected = visibleBankIds.length > 0 && selectedVisibleCount === visibleBankIds.length;
 
@@ -430,12 +456,46 @@ export default function AdminQuestionsPage() {
             </p>
           </div>
           {!canEditContent && (
-            <div className="questions-header-readonly">
-              <BiLock size={13} /> Read only
+            <div className="questions-header-actions">
+              {questions.length > 0 && (
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-secondary questions-show-all-btn"
+                  onClick={() => {
+                    const allIds = paginatedQuestions.map((q) => q.id);
+                    const allExpanded = allIds.every((id) => expandedIds.has(id));
+                    setExpandedIds(allExpanded
+                      ? new Set([...expandedIds].filter((id) => !allIds.includes(id)))
+                      : new Set([...expandedIds, ...allIds])
+                    );
+                  }}
+                >
+                  {paginatedQuestions.every((q) => expandedIds.has(q.id)) ? 'Hide All Answers' : 'Show All Answers'}
+                </button>
+              )}
+              <div className="questions-header-readonly">
+                <BiLock size={13} /> Read only
+              </div>
             </div>
           )}
           {canEditContent && (
             <div className="questions-header-actions">
+              {questions.length > 0 && (
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-secondary questions-show-all-btn"
+                  onClick={() => {
+                    const allIds = paginatedQuestions.map((q) => q.id);
+                    const allExpanded = allIds.every((id) => expandedIds.has(id));
+                    setExpandedIds(allExpanded
+                      ? new Set([...expandedIds].filter((id) => !allIds.includes(id)))
+                      : new Set([...expandedIds, ...allIds])
+                    );
+                  }}
+                >
+                  {paginatedQuestions.every((q) => expandedIds.has(q.id)) ? 'Hide All Answers' : 'Show All Answers'}
+                </button>
+              )}
               <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
                 {sortingQuestions ? 'Sorting...' : 'Sort by Difficulty'}
               </button>
@@ -483,53 +543,65 @@ export default function AdminQuestionsPage() {
                       <span className={`admin-badge ${getDifficultyBadge(q.difficulty)}`}>{q.difficulty}</span>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    className="question-toggle-btn"
+                    onClick={() => setExpandedIds((prev) => {
+                      const next = new Set(prev);
+                      next.has(q.id) ? next.delete(q.id) : next.add(q.id);
+                      return next;
+                    })}
+                  >
+                    {expandedIds.has(q.id) ? 'Hide Answer' : 'Show Answer'}
+                    <BiChevronDown size={14} className={expandedIds.has(q.id) ? 'rotated' : ''} />
+                  </button>
                 </div>
 
-                      {q.type === 'IDENTIFICATION' ? (
-                        <div className="question-options-wrapper">
-                          <div className="identification-answer">
-                            {identificationAnswers.length > 0
-                              ? identificationAnswers.map((answer, answerIdx) => (
-                                  <div key={answerIdx}>{answer}</div>
-                                ))
-                              : 'No accepted answer set'}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="question-options-wrapper">
-                          <div className="question-options-grid">
-                            {q.options.map((option, optIdx) => {
-                              const key = OPTION_KEYS[optIdx] || String.fromCharCode(65 + optIdx);
-                              const isCorrect = q.correctKey === key;
-                              return (
-                                <div key={optIdx} className={`question-option ${isCorrect ? 'is-correct' : ''}`}>
-                                  <span className="question-option-key">{key}</span>
-                                  <span>{option}</span>
-                                  {isCorrect && <BiCheck size={16} />}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+                {expandedIds.has(q.id) && (
+                  <div className="question-answers-reveal">
+                    {q.type === 'IDENTIFICATION' ? (
+                      <div className="identification-answer">
+                        {identificationAnswers.length > 0
+                          ? identificationAnswers.map((answer, answerIdx) => (
+                              <div key={answerIdx}>{answer}</div>
+                            ))
+                          : 'No accepted answer set'}
+                      </div>
+                    ) : (
+                      <div className="question-options-grid">
+                        {q.options.map((option, optIdx) => {
+                          const key = OPTION_KEYS[optIdx] || String.fromCharCode(65 + optIdx);
+                          const isCorrect = q.correctKey === key;
+                          return (
+                            <div key={optIdx} className={`question-option ${isCorrect ? 'is-correct' : ''}`}>
+                              <span className="question-option-key">{key}</span>
+                              <span>{option}</span>
+                              {isCorrect && <BiCheck size={16} />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                      {canEditContent && (
-                        <div className="question-actions">
-                          <button className="admin-btn admin-btn-secondary" onClick={() => openEditModal(q)} style={{ gap: 6 }}>
-                            <BiEdit size={16} /> Edit
-                          </button>
-                          <button
-                            className="admin-btn admin-btn-secondary"
-                            onClick={() => {
-                              setSelectedQuestion(q);
-                              setShowDeleteModal(true);
-                            }}
-                            style={{ gap: 6, color: '#dc2626' }}
-                          >
-                            <BiTrash size={16} /> Delete
-                          </button>
-                        </div>
-                      )}
+                {canEditContent && (
+                  <div className="question-actions">
+                    <button className="admin-btn admin-btn-secondary" onClick={() => openEditModal(q)} style={{ gap: 6 }}>
+                      <BiEdit size={16} /> Edit
+                    </button>
+                    <button
+                      className="admin-btn admin-btn-secondary"
+                      onClick={() => {
+                        setSelectedQuestion(q);
+                        setShowDeleteModal(true);
+                      }}
+                      style={{ gap: 6, color: '#dc2626' }}
+                    >
+                      <BiTrash size={16} /> Delete
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })
@@ -597,10 +669,24 @@ export default function AdminQuestionsPage() {
       {showModal && (
         <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="admin-modal questions-editor-modal" onClick={(e) => e.stopPropagation()}>
+
+            {/* Header */}
             <div className="admin-modal-header questions-editor-modal-header">
-              <h2 className="admin-modal-title">{isEditing ? 'Edit' : 'Add'} Question</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <h2 className="admin-modal-title">{isEditing ? 'Edit' : 'Add'} Question</h2>
+                <div className="qe-steps">
+                  <span
+                    className={`qe-step${modalStep === 1 ? ' active' : ' done'}`}
+                    onClick={() => modalStep === 2 && setModalStep(1)}
+                    title="Step 1: Details"
+                  />
+                  <span className={`qe-step${modalStep === 2 ? ' active' : ''}`} title="Step 2: Answer" />
+                </div>
+              </div>
               <button onClick={() => setShowModal(false)} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
             </div>
+
+            {/* Body */}
             <div className="admin-modal-body questions-editor-modal-body">
               {error && (
                 <div className="admin-alert admin-alert-error" style={{ marginBottom: 16 }}>
@@ -608,139 +694,163 @@ export default function AdminQuestionsPage() {
                   <button onClick={() => setError(null)} className="admin-btn-icon" style={{ width: 28, height: 28 }}><BiX size={16} /></button>
                 </div>
               )}
-              <div className="admin-form-group">
-                <label className="admin-form-label">Question Text *</label>
-                <textarea value={formData.text} onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                  className="admin-form-input admin-form-textarea" placeholder="Enter the question" rows={3} />
-              </div>
-              
-              <div className="questions-editor-fields-grid">
-                <div className="admin-form-group questions-editor-type-group">
-                  <label className="admin-form-label">Type *</label>
-                  <CustomSelect
-                    value={formData.type}
-                    onChange={(v) => handleTypeChange(v as CreateQuestionRequest['type'])}
-                    options={QUESTION_TYPES.map((t) => ({ value: t.value, label: t.label }))}
-                  />
-                </div>
-                <div className="admin-form-group questions-editor-difficulty-group">
-                  <label className="admin-form-label">Difficulty *</label>
-                  <CustomSelect
-                    value={formData.difficulty}
-                    onChange={(v) => setFormData({ ...formData, difficulty: v as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
-                    options={[
-                      { value: 'EASY', label: 'Easy' },
-                      { value: 'MEDIUM', label: 'Medium' },
-                      { value: 'HARD', label: 'Hard' },
-                      { value: 'TIE_BREAKER', label: 'Tie Breaker' },
-                    ]}
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Points *</label>
-                  <input type="number" value={formData.points} onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })}
-                    className="admin-form-input" min={0} />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Time (sec) *</label>
-                  <input type="number" value={formData.timeLimit} onChange={(e) => setFormData({ ...formData, timeLimit: parseInt(e.target.value) || 0 })}
-                    className="admin-form-input" min={0} />
-                </div>
-              </div>
 
-              {formData.type === 'MULTIPLE_CHOICE' && (
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Answer Options * (click letter to mark correct)</label>
-                  <div className="questions-editor-options-list">
-                    {formData.options.map((option, idx) => {
-                      const key = OPTION_KEYS[idx];
-                      const isCorrect = formData.correctKey === key;
-                      return (
-                        <div key={idx} className="questions-editor-option-row">
-                          <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, correctKey: key })}
-                            className={`questions-editor-option-toggle${isCorrect ? ' selected' : ''}`}
-                          >
-                            {isCorrect ? <BiCheck size={20} /> : key}
-                          </button>
-                          <input
-                            type="text"
-                            value={option}
-                            onChange={(e) => updateOption(idx, e.target.value)}
-                            className="admin-form-input questions-editor-option-input"
-                            placeholder={`Option ${key}`}
-                          />
-                        </div>
-                      );
-                    })}
+              {/* ── Step 1: Question details ── */}
+              {modalStep === 1 && (
+                <>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Question Text *</label>
+                    <textarea value={formData.text} onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                      className="admin-form-input admin-form-textarea" placeholder="Enter the question" rows={4} />
                   </div>
-                  <p className="questions-editor-helper-text">
-                    Click the letter button to mark the correct answer
-                  </p>
-                </div>
+
+                  <div className="questions-editor-fields-grid">
+                    <div className="admin-form-group questions-editor-type-group">
+                      <label className="admin-form-label">Type *</label>
+                      <CustomSelect
+                        value={formData.type}
+                        onChange={(v) => handleTypeChange(v as CreateQuestionRequest['type'])}
+                        options={QUESTION_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                        dropUp
+                      />
+                    </div>
+                    <div className="admin-form-group questions-editor-difficulty-group">
+                      <label className="admin-form-label">Difficulty *</label>
+                      <CustomSelect
+                        value={formData.difficulty}
+                        onChange={(v) => setFormData({ ...formData, difficulty: v as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
+                        options={[
+                          { value: 'EASY', label: 'Easy' },
+                          { value: 'MEDIUM', label: 'Medium' },
+                          { value: 'HARD', label: 'Hard' },
+                          { value: 'TIE_BREAKER', label: 'Tie Breaker' },
+                        ]}
+                        dropUp
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Points *</label>
+                      <input type="number" value={formData.points} onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })}
+                        className="admin-form-input" min={0} />
+                    </div>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Time (sec) *</label>
+                      <input type="number" value={formData.timeLimit} onChange={(e) => setFormData({ ...formData, timeLimit: parseInt(e.target.value) || 0 })}
+                        className="admin-form-input" min={0} />
+                    </div>
+                  </div>
+                </>
               )}
 
-              {formData.type === 'TRUE_FALSE' && (
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Correct Answer *</label>
-                  <div className="questions-editor-truefalse-grid">
-                    {DEFAULT_TRUE_FALSE_OPTIONS.map((option, idx) => {
-                      const key = idx === 0 ? 'A' : 'B';
-                      const isCorrect = formData.correctKey === key;
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, correctKey: key })}
-                          className={`questions-editor-truefalse-btn${isCorrect ? ' selected' : ''}`}
-                        >
-                          {isCorrect ? <><BiCheck size={16} /> {option}</> : option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* ── Step 2: Answer configuration ── */}
+              {modalStep === 2 && (
+                <>
+                  {formData.type === 'MULTIPLE_CHOICE' && (
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Answer Options * (click letter to mark correct)</label>
+                      <div className="questions-editor-options-list">
+                        {formData.options.map((option, idx) => {
+                          const key = OPTION_KEYS[idx];
+                          const isCorrect = formData.correctKey === key;
+                          return (
+                            <div key={idx} className="questions-editor-option-row">
+                              <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, correctKey: key })}
+                                className={`questions-editor-option-toggle${isCorrect ? ' selected' : ''}`}
+                              >
+                                {isCorrect ? <BiCheck size={20} /> : key}
+                              </button>
+                              <input
+                                type="text"
+                                value={option}
+                                onChange={(e) => updateOption(idx, e.target.value)}
+                                className="admin-form-input questions-editor-option-input"
+                                placeholder={`Option ${key}`}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="questions-editor-helper-text">Click the letter button to mark the correct answer</p>
+                    </div>
+                  )}
 
-              {formData.type === 'IDENTIFICATION' && (
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Accepted Answers * (one per line)</label>
-                  <textarea
-                    value={formData.correctKey}
-                    onChange={(e) => setFormData({ ...formData, correctKey: e.target.value })}
-                    className="admin-form-input admin-form-textarea"
-                    rows={4}
-                    placeholder={'Example:\nParis\nCity of Paris'}
-                  />
-                  <p className="questions-editor-helper-text">
-                    {formData.caseSensitive
-                      ? 'Matching is case-sensitive and exact.'
-                      : 'Matching is case-insensitive and ignores extra spaces.'}
-                  </p>
-                  
-                  {/* Case Sensitivity Toggle */}
-                  <div className="questions-editor-case-toggle">
-                    <input
-                      type="checkbox"
-                      id="caseSensitiveToggle"
-                      checked={formData.caseSensitive ?? false}
-                      onChange={(e) => setFormData({ ...formData, caseSensitive: e.target.checked })}
-                      className="questions-editor-case-checkbox"
-                    />
-                    <label
-                      htmlFor="caseSensitiveToggle"
-                      className="questions-editor-case-label"
-                    >
-                      Case-Sensitive Matching
-                    </label>
-                  </div>
-                </div>
+                  {formData.type === 'TRUE_FALSE' && (
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Correct Answer *</label>
+                      <div className="questions-editor-truefalse-grid">
+                        {DEFAULT_TRUE_FALSE_OPTIONS.map((option, idx) => {
+                          const key = idx === 0 ? 'A' : 'B';
+                          const isCorrect = formData.correctKey === key;
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, correctKey: key })}
+                              className={`questions-editor-truefalse-btn${isCorrect ? ' selected' : ''}`}
+                            >
+                              {isCorrect ? <><BiCheck size={16} /> {option}</> : option}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.type === 'IDENTIFICATION' && (
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Accepted Answers * (one per line)</label>
+                      <textarea
+                        value={formData.correctKey}
+                        onChange={(e) => setFormData({ ...formData, correctKey: e.target.value })}
+                        className="admin-form-input admin-form-textarea"
+                        rows={5}
+                        placeholder={'Example:\nParis\nCity of Paris'}
+                      />
+                      <p className="questions-editor-helper-text">
+                        {formData.caseSensitive ? 'Matching is case-sensitive and exact.' : 'Matching is case-insensitive and ignores extra spaces.'}
+                      </p>
+                      <div className="questions-editor-case-toggle">
+                        <input
+                          type="checkbox"
+                          id="caseSensitiveToggle"
+                          checked={formData.caseSensitive ?? false}
+                          onChange={(e) => setFormData({ ...formData, caseSensitive: e.target.checked })}
+                          className="questions-editor-case-checkbox"
+                        />
+                        <label htmlFor="caseSensitiveToggle" className="questions-editor-case-label">
+                          Case-Sensitive Matching
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
+
+            {/* Footer */}
             <div className="admin-modal-footer questions-editor-modal-footer">
-              <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              <button onClick={handleSave} className="admin-btn admin-btn-primary">{isEditing ? 'Update' : 'Add'} Question</button>
+              {modalStep === 1 ? (
+                <>
+                  <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+                  <button
+                    className="admin-btn admin-btn-primary"
+                    disabled={!formData.text.trim()}
+                    onClick={() => {
+                      setError(null);
+                      setModalStep(2);
+                    }}
+                  >
+                    Next: Answer →
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { setError(null); setModalStep(1); }} className="admin-btn admin-btn-secondary">← Back</button>
+                  <button onClick={handleSave} className="admin-btn admin-btn-primary">{isEditing ? 'Update' : 'Add'} Question</button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -749,105 +859,116 @@ export default function AdminQuestionsPage() {
       {/* Import From Bank Modal */}
       {showBankModal && (
         <div className="admin-modal-overlay" onClick={() => setShowBankModal(false)}>
-          <div className="admin-modal" style={{ maxWidth: 760 }} onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #5f1027, #9f2346)' }}>
-              <h2 className="admin-modal-title">Import Questions from Bank</h2>
+          <div className="admin-modal qbank-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header qbank-modal-header">
+              <div>
+                <h2 className="admin-modal-title">Import from Bank</h2>
+                <p className="qbank-modal-subtitle">
+                  {filteredBankQuestions.length} available
+                  {selectedBankIds.length > 0 && <span className="qbank-selected-badge">{selectedBankIds.length} selected</span>}
+                </p>
+              </div>
               <button onClick={() => setShowBankModal(false)} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
             </div>
-            <div className="admin-modal-body">
-              {bankQuestions.length === 0 ? (
-                <p className="admin-empty-text">No new question-bank items are available. All matching items are already in this quiz.</p>
-              ) : (
-                <>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '10px 12px',
-                    borderRadius: 10,
-                    background: '#fff7ed',
-                    border: '1px solid #fed7aa',
-                    marginBottom: 12,
-                  }}>
-                    <p className="admin-empty-text" style={{ margin: 0, color: '#7c2d12', fontWeight: 600 }}>
-                      {filteredBankQuestions.length} available • {selectedBankIds.length} selected
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedBankIds([])}
-                      className="admin-btn admin-btn-secondary"
-                      style={{ padding: '6px 10px', fontSize: 12 }}
-                      disabled={selectedBankIds.length === 0}
-                    >
-                      Clear Selection
-                    </button>
-                  </div>
 
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+            {bankQuestions.length === 0 ? (
+              <div className="qbank-empty-state">
+                <div className="qbank-empty-icon">
+                  {bankTotalCount === 0 ? '📭' : '✅'}
+                </div>
+                <p className="qbank-empty-title">
+                  {bankTotalCount === 0 ? 'Your question bank is empty' : 'All bank questions are already in this quiz'}
+                </p>
+                <p className="qbank-empty-hint">
+                  {bankTotalCount === 0
+                    ? 'Questions you create in any quiz are automatically saved to your bank. Start adding questions to see them here.'
+                    : `All ${bankTotalCount} question${bankTotalCount !== 1 ? 's' : ''} from your bank have already been added to this quiz.`}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Toolbar */}
+                <div className="qbank-toolbar">
+                  <div className="qbank-search-wrap">
+                    <BiSearch size={16} className="qbank-search-icon" />
                     <input
                       type="text"
                       value={bankSearch}
-                      onChange={(e) => setBankSearch(e.target.value)}
-                      className="admin-form-input"
-                      style={{ flex: 1, minWidth: 220 }}
-                      placeholder="Search bank questions..."
+                      onChange={(e) => { setBankSearch(e.target.value); setBankVisibleCount(10); }}
+                      className="admin-form-input qbank-search-input"
+                      placeholder="Search questions..."
                     />
-                    <label style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      border: '1px solid #e2e8f0',
-                      background: '#f8fafc',
-                      cursor: visibleBankIds.length > 0 ? 'pointer' : 'not-allowed',
-                      color: '#1e293b',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      opacity: visibleBankIds.length > 0 ? 1 : 0.6,
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={allVisibleSelected}
-                        onChange={toggleSelectAllVisible}
-                        disabled={visibleBankIds.length === 0}
-                      />
-                      Select All Visible
-                    </label>
                   </div>
-
-                  {filteredBankQuestions.length === 0 && (
-                    <p className="admin-empty-text" style={{ marginTop: 6 }}>No questions match your search.</p>
+                  {bankSourceQuizzes.length > 0 && (
+                    <select
+                      value={bankQuizFilter}
+                      onChange={(e) => { setBankQuizFilter(e.target.value); setBankVisibleCount(10); }}
+                      className="admin-form-input qbank-quiz-filter"
+                    >
+                      <option value="">All quizzes</option>
+                      {bankSourceQuizzes.map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
                   )}
+                  <label className="qbank-select-all">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAllVisible}
+                      disabled={visibleBankIds.length === 0}
+                    />
+                    All
+                  </label>
+                  {selectedBankIds.length > 0 && (
+                    <button type="button" onClick={() => setSelectedBankIds([])} className="qbank-clear-btn">
+                      Clear
+                    </button>
+                  )}
+                </div>
 
-                  <div className="questions-bank-list">
-                    {filteredBankQuestions.map((item) => {
-                      const selected = selectedBankIds.includes(item.id);
-                      return (
-                        <label
-                          key={item.id}
-                          className={`questions-bank-item${selected ? ' selected' : ''}`}
+                {/* List */}
+                <div className="qbank-list">
+                  {filteredBankQuestions.length === 0 ? (
+                    <p className="admin-empty-text" style={{ padding: '24px 0', textAlign: 'center' }}>No questions match your search.</p>
+                  ) : (
+                    <>
+                      {filteredBankQuestions.slice(0, bankVisibleCount).map((item) => {
+                        const selected = selectedBankIds.includes(item.id);
+                        return (
+                          <label key={item.id} className={`qbank-item${selected ? ' selected' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleBankSelection(item.id)}
+                              className="qbank-item-check"
+                            />
+                            <div className="qbank-item-body">
+                              <p className="qbank-item-text">{item.text}</p>
+                              <div className="qbank-item-meta">
+                                <span className={`qbank-diff qbank-diff-${item.difficulty.toLowerCase()}`}>{item.difficulty}</span>
+                                <span>{item.points} pts</span>
+                                <span>{item.timeLimit}s</span>
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                      {bankVisibleCount < filteredBankQuestions.length && (
+                        <button
+                          type="button"
+                          className="qbank-load-more"
+                          onClick={() => setBankVisibleCount((n) => n + 10)}
                         >
-                          <input
-                            type="checkbox"
-                            checked={selected}
-                            onChange={() => toggleBankSelection(item.id)}
-                            className="questions-bank-item-toggle"
-                          />
-                          <div className="questions-bank-item-content">
-                            <p className="questions-bank-item-title">{item.text}</p>
-                            <p className="questions-bank-item-meta">
-                              {item.difficulty} • {item.points} pts • {item.timeLimit}s
-                            </p>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
+                          Load more ({filteredBankQuestions.length - bankVisibleCount} remaining)
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+
             <div className="admin-modal-footer questions-bank-modal-footer">
               <button onClick={() => setShowBankModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
               <button
@@ -855,7 +976,7 @@ export default function AdminQuestionsPage() {
                 className="admin-btn admin-btn-primary"
                 disabled={selectedBankIds.length === 0 || !canEditContent}
               >
-                Import Selected ({selectedBankIds.length})
+                Import {selectedBankIds.length > 0 ? `(${selectedBankIds.length})` : ''}
               </button>
             </div>
           </div>
