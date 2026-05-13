@@ -1016,6 +1016,21 @@
   transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
 }
 
+/* Compact inline variant — auto width, smaller height */
+.cselect-root.cselect-compact {
+  width: auto;
+}
+
+.cselect-root.cselect-compact .cselect-trigger {
+  min-height: 42px !important;
+  height: 42px !important;
+  min-width: 130px;
+  width: auto !important;
+  padding: 12px 20px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
 .cselect-trigger:hover:not(:disabled) {
   border-color: var(--admin-primary, #9f2346) !important;
   color: var(--admin-primary, #9f2346) !important;
@@ -1097,6 +1112,15 @@
   background: #fdf4f6;
   color: var(--admin-primary, #9f2346);
   font-weight: 700;
+}
+
+.cselect-option.is-placeholder-opt {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.cselect-trigger.is-placeholder .cselect-value {
+  color: #9ca3af;
 }
 
 .cselect-check {

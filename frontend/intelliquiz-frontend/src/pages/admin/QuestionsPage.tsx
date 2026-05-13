@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from '../../components/common/CustomSelect';
 import { useParams } from 'react-router-dom';
 import {
   BiFile,
@@ -616,25 +617,24 @@ export default function AdminQuestionsPage() {
               <div className="questions-editor-fields-grid">
                 <div className="admin-form-group questions-editor-type-group">
                   <label className="admin-form-label">Type *</label>
-                  <select
+                  <CustomSelect
                     value={formData.type}
-                    onChange={(e) => handleTypeChange(e.target.value as CreateQuestionRequest['type'])}
-                    className="admin-form-input admin-form-select questions-editor-type-select"
-                  >
-                    {QUESTION_TYPES.map((typeOption) => (
-                      <option key={typeOption.value} value={typeOption.value}>{typeOption.label}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => handleTypeChange(v as CreateQuestionRequest['type'])}
+                    options={QUESTION_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                  />
                 </div>
                 <div className="admin-form-group questions-editor-difficulty-group">
                   <label className="admin-form-label">Difficulty *</label>
-                  <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
-                    className="admin-form-input admin-form-select questions-editor-difficulty-select">
-                    <option value="EASY">Easy</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HARD">Hard</option>
-                    <option value="TIE_BREAKER">Tie Breaker</option>
-                  </select>
+                  <CustomSelect
+                    value={formData.difficulty}
+                    onChange={(v) => setFormData({ ...formData, difficulty: v as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
+                    options={[
+                      { value: 'EASY', label: 'Easy' },
+                      { value: 'MEDIUM', label: 'Medium' },
+                      { value: 'HARD', label: 'Hard' },
+                      { value: 'TIE_BREAKER', label: 'Tie Breaker' },
+                    ]}
+                  />
                 </div>
                 <div className="admin-form-group">
                   <label className="admin-form-label">Points *</label>

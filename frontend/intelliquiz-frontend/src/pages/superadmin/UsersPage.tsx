@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomSelect from '../../components/common/CustomSelect';
 import {
   BiUser,
   BiPlus,
@@ -290,15 +291,15 @@ export default function UsersPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Role</label>
-                <select
+                <CustomSelect
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'ADMIN' | 'EXAMINER' | 'SUPER_ADMIN' })}
-                  className="form-input form-select"
-                >
-                  <option value="EXAMINER">Admin</option>
-                  <option value="ADMIN">Admin (Legacy)</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                </select>
+                  onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' | 'EXAMINER' | 'SUPER_ADMIN' })}
+                  options={[
+                    { value: 'EXAMINER', label: 'Admin' },
+                    { value: 'ADMIN', label: 'Admin (Legacy)' },
+                    { value: 'SUPER_ADMIN', label: 'Super Admin' },
+                  ]}
+                />
               </div>
             </div>
             <div className="modal-footer">

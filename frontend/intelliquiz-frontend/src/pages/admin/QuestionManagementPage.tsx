@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Eye, Edit2, Check, X, ChevronLeft, ChevronRight, BookOpen, Layers3, Lock } from 'lucide-react';
 import { Button } from '../../components/common/Button';
+import CustomSelect from '../../components/common/CustomSelect';
 import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
@@ -501,16 +502,16 @@ export default function QuestionManagementPage({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Difficulty *
               </label>
-              <select
+              <CustomSelect
                 value={formData.difficulty}
-                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="EASY">Easy</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HARD">Hard</option>
-                <option value="TIE_BREAKER">Tie Breaker</option>
-              </select>
+                onChange={(v) => setFormData({ ...formData, difficulty: v as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
+                options={[
+                  { value: 'EASY', label: 'Easy' },
+                  { value: 'MEDIUM', label: 'Medium' },
+                  { value: 'HARD', label: 'Hard' },
+                  { value: 'TIE_BREAKER', label: 'Tie Breaker' },
+                ]}
+              />
             </div>
 
             <div>

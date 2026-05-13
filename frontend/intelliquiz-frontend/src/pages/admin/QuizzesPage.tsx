@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../lib/queryClient';
+import CustomSelect from '../../components/common/CustomSelect';
 import { useActiveQuiz } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -228,17 +229,18 @@ export default function AdminQuizzesPage() {
               style={{ paddingLeft: 42 }}
             />
           </div>
-          <select
+          <CustomSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="admin-form-input admin-form-select quiz-list-status-select"
-          >
-            <option value="ALL">All Status</option>
-            <option value="DRAFT">Draft</option>
-            <option value="READY">Ready</option>
-            <option value="ACTIVE">Live</option>
-            <option value="ARCHIVED">Archived</option>
-          </select>
+            onChange={setStatusFilter}
+            compact
+            options={[
+              { value: 'ALL', label: 'All Status' },
+              { value: 'DRAFT', label: 'Draft' },
+              { value: 'READY', label: 'Ready' },
+              { value: 'ACTIVE', label: 'Live' },
+              { value: 'ARCHIVED', label: 'Archived' },
+            ]}
+          />
         </div>
       </div>
 
@@ -451,31 +453,28 @@ export default function AdminQuizzesPage() {
               </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">Quiz Access Mode</label>
-                <select
+                <CustomSelect
                   value={formData.accessMode || 'RESTRICTED'}
-                  onChange={(e) => setFormData({ ...formData, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' })}
-                  className="admin-form-input admin-form-select"
-                >
-                  <option value="RESTRICTED">Restricted Mode (registered teams only)</option>
-                  <option value="PUBLIC">Public Mode (open entry)</option>
-                </select>
+                  onChange={(v) => setFormData({ ...formData, accessMode: v as 'PUBLIC' | 'RESTRICTED' })}
+                  options={[
+                    { value: 'RESTRICTED', label: 'Restricted Mode (registered teams only)' },
+                    { value: 'PUBLIC', label: 'Public Mode (open entry)' },
+                  ]}
+                />
               </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">Navigation Mode</label>
-                <select
+                <CustomSelect
                   value={formData.navigationMode || 'TOURNAMENT'}
-                  onChange={(e) => {
-                    const mode = e.target.value as 'TOURNAMENT' | 'CLASS';
-                    setFormData({
-                      ...formData,
-                      navigationMode: mode,
-                    });
+                  onChange={(v) => {
+                    const mode = v as 'TOURNAMENT' | 'CLASS';
+                    setFormData({ ...formData, navigationMode: mode });
                   }}
-                  className="admin-form-input admin-form-select"
-                >
-                  <option value="TOURNAMENT">Tournament (host controls each question)</option>
-                  <option value="CLASS">Class (participants can navigate)</option>
-                </select>
+                  options={[
+                    { value: 'TOURNAMENT', label: 'Tournament (host controls each question)' },
+                    { value: 'CLASS', label: 'Class (participants can navigate)' },
+                  ]}
+                />
               </div>
               <div className="admin-form-group">
                 <label className="admin-form-label">
