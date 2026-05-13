@@ -8,10 +8,7 @@ import {
   BiTrash,
   BiCopy,
   BiCheck,
-  BiLockAlt,
-  BiGlobe,
   BiRefresh,
-  BiCog,
   BiX,
   BiErrorCircle,
   BiUserPlus,
@@ -475,130 +472,107 @@ export default function QuizWorkspacePage() {
         {/* CONFIGURATION TAB */}
         {activeTab === 'config' && (
           <div className="quiz-workspace-tab-content">
-            <div className="quiz-workspace-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="quiz-workspace-section-header">
               <div>
                 <h2 className="quiz-workspace-section-title">Configuration</h2>
                 <p className="quiz-workspace-section-text">
-                  {normalizedAccessMode === 'PUBLIC'
-                    ? 'Set up public access and quiz mode settings to control participation and participant experience.'
-                    : 'Review the access mode details and quiz settings in one place.'}
+                  Manage access mode, quiz mode, and team registration in one place.
                 </p>
               </div>
-
-
             </div>
 
-            <div className="config-grid-container">
-              {normalizedAccessMode === 'RESTRICTED' ? (
-                <>
-                  <div className="admin-card workspace-info-strip">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <BiLockAlt size={20} />
-                      <div>
-                        <h4 style={{ margin: 0 }}>{modeLabel}</h4>
-                        <p className="admin-empty-text" style={{ margin: 0 }}>
-                          Entry is controlled by pre-registered team access codes for this quiz.
-                        </p>
-                      </div>
-                    </div>
+            {!hasEdit ? (
+              <p className="admin-empty-text">You do not have permission to edit this quiz configuration.</p>
+            ) : !isDraftQuiz ? (
+              <p className="admin-empty-text">Configuration is locked because this quiz is not in Draft status.</p>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                  <div>
+                    <label className="admin-form-label">Access Mode</label>
+                    <select
+                      className="admin-form-input admin-form-select"
+                      value={settingsDraft.accessMode}
+                      disabled={!canEditDraftOnly || settingsSaving}
+                      onChange={(e) => setSettingsDraft((prev) => ({ ...prev, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' }))}
+                    >
+                      <option value="RESTRICTED">Restricted</option>
+                      <option value="PUBLIC">Public</option>
+                    </select>
+                    <p className="admin-form-hint" style={{ marginTop: 4 }}>
+                      {settingsDraft.accessMode === 'RESTRICTED'
+                        ? 'Entry requires a pre-registered team access code.'
+                        : 'Anyone can join using the quiz code.'}
+                    </p>
                   </div>
-                  <div className="admin-card manage-registered-full-card">
-                    <h4 className="manage-registered-title"><BiGroup size={16} /> Manage Registered Teams</h4>
-                    <p className="admin-empty-text" style={{ margin: '0 0 12px' }}>Register teams and view access codes.</p>
-                    <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenRegisterModal()} disabled={!canManageRestrictedTeams}>
-                      Open
-                    </button>
+                  <div>
+                    <label className="admin-form-label">Quiz Mode</label>
+                    <select
+                      className="admin-form-input admin-form-select"
+                      value={settingsDraft.navigationMode}
+                      disabled={!canEditDraftOnly || settingsSaving}
+                      onChange={(e) => setSettingsDraft((prev) => ({ ...prev, navigationMode: e.target.value as 'TOURNAMENT' | 'CLASS' }))}
+                    >
+                      <option value="TOURNAMENT">Tournament</option>
+                      <option value="CLASS">Class</option>
+                    </select>
+                    <p className="admin-form-hint" style={{ marginTop: 4 }}>
+                      {settingsDraft.navigationMode === 'TOURNAMENT'
+                        ? 'Host controls question pacing for all participants.'
+                        : 'Participants navigate at their own pace within a time limit.'}
+                    </p>
                   </div>
-                </>
-              ) : (
-                <div className="admin-card workspace-info-strip" style={{ gridColumn: '1 / -1' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <BiGlobe size={20} />
-                    <div>
-                      <h4 style={{ margin: 0 }}>{modeLabel}</h4>
-                      <p className="admin-empty-text" style={{ margin: 0 }}>
-                        Participants can join from the unified entry using quiz/team credentials.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="admin-card workspace-config-card">
-              <h3 className="admin-card-title" style={{ marginBottom: 12 }}><BiCog size={18} /> Quiz Configuration</h3>
-              {!hasEdit ? (
-                <p className="admin-empty-text">You do not have permission to edit this quiz configuration.</p>
-              ) : !isDraftQuiz ? (
-                <p className="admin-empty-text">Configuration is locked because this quiz is not in Draft status.</p>
-              ) : (
-                <>
-                  <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                    <div>
-                      <label className="admin-form-label">Access Mode</label>
-                      <select
-                        className="admin-form-input admin-form-select"
-                        value={settingsDraft.accessMode}
-                        disabled={!canEditDraftOnly || settingsSaving}
-                        onChange={(e) => setSettingsDraft((prev) => ({ ...prev, accessMode: e.target.value as 'PUBLIC' | 'RESTRICTED' }))}
-                      >
-                        <option value="RESTRICTED">Restricted</option>
-                        <option value="PUBLIC">Public</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="admin-form-label">Quiz Mode</label>
-                      <select
-                        className="admin-form-input admin-form-select"
-                        value={settingsDraft.navigationMode}
-                        disabled={!canEditDraftOnly || settingsSaving}
-                        onChange={(e) => setSettingsDraft((prev) => ({ ...prev, navigationMode: e.target.value as 'TOURNAMENT' | 'CLASS' }))}
-                      >
-                        <option value="TOURNAMENT">Tournament</option>
-                        <option value="CLASS">Class</option>
-                      </select>
-                    </div>
-                    {settingsDraft.navigationMode === 'CLASS' && (
-                      <div>
-                        <label className="admin-form-label">Quiz Duration (minutes)</label>
-                        <input
-                          type="number"
-                          min={1}
-                          className="admin-form-input"
-                          value={settingsDraft.globalTimeLimitMinutes}
-                          disabled={!canEditDraftOnly || settingsSaving}
-                          onChange={(e) => setSettingsDraft((prev) => ({ ...prev, globalTimeLimitMinutes: Number(e.target.value || 0) }))}
-                        />
-                        {invalidClassTimer && (
-                          <p className="admin-form-hint admin-form-hint-error" style={{ marginTop: 6 }}>
-                            Please enter at least 1 minute.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
                   {settingsDraft.navigationMode === 'CLASS' && (
-                    <label className="admin-form-label" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div>
+                      <label className="admin-form-label">Quiz Duration (minutes)</label>
                       <input
-                        type="checkbox"
-                        checked={settingsDraft.randomizeQuestions}
-                        onChange={(e) => setSettingsDraft((prev) => ({ ...prev, randomizeQuestions: e.target.checked }))}
+                        type="number"
+                        min={1}
+                        className="admin-form-input"
+                        value={settingsDraft.globalTimeLimitMinutes}
                         disabled={!canEditDraftOnly || settingsSaving}
+                        onChange={(e) => setSettingsDraft((prev) => ({ ...prev, globalTimeLimitMinutes: Number(e.target.value || 0) }))}
                       />
-                      Randomize question order per participant
-                    </label>
+                      {invalidClassTimer && (
+                        <p className="admin-form-hint admin-form-hint-error" style={{ marginTop: 6 }}>
+                          Please enter at least 1 minute.
+                        </p>
+                      )}
+                    </div>
                   )}
+                </div>
 
-                  {settingsError && <p className="admin-empty-text workspace-error-text">{settingsError}</p>}
-                  <div style={{ marginTop: 12 }}>
-                    <button className="admin-btn admin-btn-primary" onClick={handleSaveSettings} disabled={settingsSaving || !canEditDraftOnly}>
-                      {settingsSaving ? 'Saving...' : 'Save Configuration'}
+                {settingsDraft.navigationMode === 'CLASS' && (
+                  <label className="admin-form-label" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={settingsDraft.randomizeQuestions}
+                      onChange={(e) => setSettingsDraft((prev) => ({ ...prev, randomizeQuestions: e.target.checked }))}
+                      disabled={!canEditDraftOnly || settingsSaving}
+                    />
+                    Randomize question order per participant
+                  </label>
+                )}
+
+                {settingsError && <p className="admin-empty-text workspace-error-text" style={{ marginTop: 8 }}>{settingsError}</p>}
+
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #ede5e8', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <button className="admin-btn admin-btn-primary" onClick={handleSaveSettings} disabled={settingsSaving || !canEditDraftOnly}>
+                    {settingsSaving ? 'Saving...' : 'Save Configuration'}
+                  </button>
+                  {settingsDraft.accessMode === 'RESTRICTED' && (
+                    <button
+                      className="admin-btn admin-btn-secondary"
+                      onClick={() => handleOpenRegisterModal()}
+                      disabled={!canManageRestrictedTeams}
+                      type="button"
+                    >
+                      <BiGroup size={16} /> Manage Teams
                     </button>
-                  </div>
-                </>
-              )}
-            </div>
+                  )}
+                </div>
+              </>
+            )}
 
             {settingsSnackbar && (
               <div className="admin-snackbar" role="status" aria-live="polite">
