@@ -13,8 +13,8 @@
   --admin-primary: #880015;
   --admin-primary-light: #a8002c;
   --admin-primary-dark: #6b0f23;
-  --admin-accent: #ffd166;
-  --admin-accent-soft: #fff8e1;
+  --admin-accent: #fbbf24;
+  --admin-accent-soft: #fef3c7;
   --admin-teal: #0d9488;
   --admin-teal-soft: #f0fdfa;
   --admin-amber: #d97706;
@@ -31,8 +31,8 @@
   --pup-maroon-900: #6b0f23;
   --pup-maroon-800: #880015;
   --pup-maroon-700: #a8002c;
-  --pup-gold-500: #ffd166;
-  --pup-gold-400: #ffe08a;
+  --pup-gold-500: #fbbf24;
+  --pup-gold-400: #fbbf24;
   --pup-gold-200: #fff8e1;
   --pup-paper: #ffffff;
   --pup-ink: #111827;
@@ -105,29 +105,30 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 6px 14px;
+  padding: 10px 20px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   background: transparent;
-  color: var(--color-charcoal);
+  color: #6b7280;
   font-family: var(--font-heading);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all 0.2s ease;
   text-decoration: none;
+  position: relative;
 }
 
 .pb-nav-link:hover {
-  background: var(--color-gold-subtle);
-  color: var(--color-maroon);
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .pb-nav-link.active {
-  background: var(--color-gold-subtle);
-  color: var(--color-maroon);
-  font-weight: 600;
+  background: #fbbf24;
+  color: #78350f;
+  font-weight: 700;
 }
 
 .pb-nav-right {
@@ -412,12 +413,12 @@
 
 .admin-btn-primary {
   background: linear-gradient(135deg, var(--pup-gold-500) 0%, var(--pup-gold-400) 100%);
-  color: #2b1a00;
-  box-shadow: 0 4px 14px rgba(212, 160, 23, 0.4);
+  color: #78350f;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
 }
 
 .admin-btn-primary:hover {
-  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.5);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
 }
 
 .admin-btn-secondary {
@@ -471,7 +472,7 @@
 .admin-btn-icon:focus-visible,
 .admin-quiz-card:focus-visible,
 .admin-form-input:focus-visible {
-  outline: 3px solid rgba(212, 160, 23, 0.45);
+  outline: 3px solid rgba(251, 191, 36, 0.45);
   outline-offset: 2px;
 }
 
@@ -552,7 +553,7 @@
 }
 
 .admin-stat-icon.red { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #ec4899; }
-.admin-stat-icon.yellow { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #f59e0b; }
+.admin-stat-icon.yellow { background: linear-gradient(135deg, #fef3c7, #fbbf24); color: #f59e0b; }
 .admin-stat-icon.green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #22c55e; }
 .admin-stat-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #3b82f6; }
 .admin-stat-icon.purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #8b5cf6; }
@@ -728,7 +729,7 @@
 }
 
 .admin-badge-success { background: #dcfce7; color: #16a34a; }
-.admin-badge-warning { background: #fef3c7; color: #d97706; }
+.admin-badge-warning { background: #fef3c7; color: #92400e; }
 .admin-badge-primary { background: #ede9fe; color: #7c3aed; }
 .admin-badge-info { background: #dbeafe; color: #2563eb; }
 .admin-badge-gray { background: #f1f5f9; color: #64748b; }
@@ -1754,7 +1755,7 @@
 }
 
 .admin-quick-action-icon.red { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #ec4899; }
-.admin-quick-action-icon.yellow { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #f59e0b; }
+.admin-quick-action-icon.yellow { background: linear-gradient(135deg, #fef3c7, #fbbf24); color: #f59e0b; }
 .admin-quick-action-icon.green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #22c55e; }
 .admin-quick-action-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #3b82f6; }
 .admin-quick-action-icon.purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #8b5cf6; }

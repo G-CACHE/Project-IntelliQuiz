@@ -113,13 +113,13 @@
 
 .questions-header-actions .admin-btn-primary {
   background: linear-gradient(135deg, var(--pup-gold-500) 0%, var(--pup-gold-400) 100%) !important;
-  color: #2b1a00 !important;
+  color: #78350f !important;
   border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(212, 160, 23, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4) !important;
 }
 
 .questions-header-actions .admin-btn-primary:hover {
-  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.5) !important;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5) !important;
 }
 
 .questions-header-actions .admin-btn svg {
@@ -1384,25 +1384,25 @@
 /* ── Enhanced Primary Button (Gold/Amber) ─────── */
 .questions-header-actions .admin-btn-primary,
 .questions-empty-actions .admin-btn-primary {
-  background: linear-gradient(135deg, #ffd166 0%, #ffe08a 100%) !important;
-  color: #5a1a00 !important;
-  border: 1.5px solid #f0c040 !important;
-  box-shadow: 0 4px 14px rgba(255, 209, 102, 0.4) !important;
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
+  color: #78350f !important;
+  border: 1.5px solid #d97706 !important;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4) !important;
   font-weight: 700 !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .questions-header-actions .admin-btn-primary:hover,
 .questions-empty-actions .admin-btn-primary:hover {
-  background: linear-gradient(135deg, #ffe08a 0%, #ffeb9e 100%) !important;
-  box-shadow: 0 6px 20px rgba(255, 209, 102, 0.55) !important;
+  background: linear-gradient(135deg, #fcd34d 0%, #fde68a 100%) !important;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.55) !important;
   transform: translateY(-2px) !important;
 }
 
 .questions-header-actions .admin-btn-primary:active,
 .questions-empty-actions .admin-btn-primary:active {
   transform: translateY(0) !important;
-  box-shadow: 0 2px 8px rgba(255, 209, 102, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3) !important;
 }
 
 /* Ghost Button (Sort) */

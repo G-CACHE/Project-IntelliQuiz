@@ -98,16 +98,16 @@
 .admin-clean-btn-primary {
   padding: 11px 22px;
   min-height: 46px;
-  background: #ffd166;
-  border: 1.5px solid #f0c040;
-  color: #5a1a00;
+  background: #fbbf24;
+  border: 1.5px solid #d97706;
+  color: #78350f;
   font-weight: 800;
-  box-shadow: 0 4px 14px rgba(255, 209, 102, 0.4);
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
 }
 
 .admin-clean-btn-primary:hover {
-  background: #ffe08a;
-  box-shadow: 0 6px 20px rgba(255, 209, 102, 0.5);
+  background: #fcd34d;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
   transform: translateY(-1px);
 }
 
@@ -135,7 +135,7 @@
 .admin-clean-btn-secondary:focus-visible,
 .admin-clean-action:focus-visible,
 .admin-clean-quiz-row:focus-visible {
-  outline: 2px solid #ffd166;
+  outline: 2px solid #fbbf24;
   outline-offset: 2px;
 }
 
@@ -314,9 +314,9 @@
 }
 
 .admin-clean-action {
-  border: 1.5px solid #f0c040;
+  border: 1.5px solid #d97706;
   border-radius: 12px;
-  background: linear-gradient(135deg, #ffd166 0%, #ffe08a 100%);
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
   padding: 14px 18px;
   display: flex;
   align-items: center;
@@ -324,7 +324,7 @@
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(255, 209, 102, 0.4);
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -343,15 +343,15 @@
 }
 
 .admin-clean-action:hover {
-  border-color: #e6b038;
-  background: linear-gradient(135deg, #ffe08a 0%, #ffebb3 100%);
+  border-color: #ca8a04;
+  background: linear-gradient(135deg, #fcd34d 0%, #fde68a 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 209, 102, 0.55);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.55);
 }
 
 .admin-clean-action:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(255, 209, 102, 0.3);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
 }
 
 .admin-clean-action-icon {
@@ -360,25 +360,25 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.5);
   border: 1.5px solid rgba(255, 255, 255, 0.8);
-  color: #5a1a00;
+  color: #78350f;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(90, 26, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(120, 53, 15, 0.1);
 }
 
 .admin-clean-action:hover .admin-clean-action-icon {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(255, 255, 255, 0.95);
-  color: #3d1100;
+  color: #78350f;
   transform: scale(1.05);
 }
 
 .admin-clean-action strong {
   display: block;
-  color: #3d1100;
+  color: #78350f;
   font-size: 15px;
   font-weight: 800;
   line-height: 1.2;
@@ -388,7 +388,7 @@
 .admin-clean-action small {
   display: block;
   margin-top: 3px;
-  color: #6b4a00;
+  color: #92400e;
   font-size: 12px;
   font-weight: 500;
 }

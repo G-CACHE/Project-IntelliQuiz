@@ -75,23 +75,23 @@
   gap: 8px;
   padding: 11px 22px;
   min-height: 46px;
-  border: 1.5px solid #f0c040;
+  border: 1.5px solid #d97706;
   border-radius: 10px;
-  background: #ffd166;
-  color: #5a1a00;
+  background: #fbbf24;
+  color: #78350f;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(255, 209, 102, 0.4);
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
   transition: all 0.2s ease;
   position: relative;
   z-index: 1;
 }
 
 .quiz-list-create-btn:hover {
-  background: #ffe08a;
-  box-shadow: 0 6px 20px rgba(255, 209, 102, 0.55);
+  background: #fcd34d;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.55);
   transform: translateY(-1px);
 }
 

@@ -103,12 +103,11 @@ export default function AdminDashboardPage() {
       <section className="admin-clean-main-grid">
         <div className="admin-clean-panel admin-clean-panel-actions">
           <div className="admin-clean-panel-head">
-            <h2><BiPlusCircle size={18} /> Quick Actions</h2>
+            <h2>Quick Actions</h2>
           </div>
 
           <div className="admin-clean-actions-grid">
             <button className="admin-clean-action" onClick={() => setShowCreateModal(true)}>
-              <span className="admin-clean-action-icon"><BiBookOpen size={16} /></span>
               <span>
                 <strong>Create Quiz</strong>
                 <small>Build a new question set</small>
@@ -116,7 +115,6 @@ export default function AdminDashboardPage() {
             </button>
 
             <button className="admin-clean-action secondary" onClick={() => navigate('/admin/quizzes')}>
-              <span className="admin-clean-action-icon"><BiBarChartAlt2 size={16} /></span>
               <span>
                 <strong>Manage Quizzes</strong>
                 <small>Update and publish content</small>
@@ -139,7 +137,7 @@ export default function AdminDashboardPage() {
 
         <div className="admin-clean-panel">
           <div className="admin-clean-panel-head admin-clean-panel-head-row">
-            <h2><BiBookOpen size={18} /> Recent Quizzes</h2>
+            <h2>Recent Quizzes</h2>
             <button className="admin-clean-btn-secondary" onClick={() => navigate('/admin/quizzes')}>
               View All <BiRightArrowAlt size={18} />
             </button>
@@ -157,11 +155,10 @@ export default function AdminDashboardPage() {
                       : navigate('/admin/quizzes')
                   }
                 >
-                  <span className="admin-clean-quiz-icon"><BiBookOpen size={16} /></span>
                   <span className="admin-clean-quiz-meta-wrap">
                     <span className="admin-clean-quiz-title">{quiz.title}</span>
                     <span className="admin-clean-quiz-meta">
-                      <BiTime size={12} /> {quiz.questionCount || 0} questions
+                      {quiz.questionCount || 0} questions
                     </span>
                   </span>
                   <span className={`admin-clean-status status-${getStatusClass(quiz.status)}`}>

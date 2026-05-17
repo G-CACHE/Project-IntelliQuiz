@@ -29,8 +29,8 @@ export default function AdminLayout() {
 
   // Build nav items based on user's permissions
   const navItems: NavItem[] = [
-    { path: '/admin', label: 'Dashboard', icon: <Home size={18} /> },
-    { path: '/admin/quizzes', label: 'My Quizzes', icon: <Library size={18} /> },
+    { path: '/admin', label: 'Dashboard', icon: null },
+    { path: '/admin/quizzes', label: 'My Quizzes', icon: null },
   ];
 
   useEffect(() => {
@@ -132,7 +132,6 @@ export default function AdminLayout() {
                 onClick={() => navigate(item.path)}
                 className={`pb-nav-link ${isActive(item.path) ? 'active' : ''}`}
               >
-                {item.icon}
                 <span className="nav-label">{item.label}</span>
               </button>
             ))}
