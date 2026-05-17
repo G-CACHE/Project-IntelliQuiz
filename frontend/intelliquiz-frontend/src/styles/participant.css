@@ -4182,3 +4182,74 @@
   border: none !important;
   box-shadow: none !important;
 }
+
+
+/* ==================== LOBBY NO-SCROLL FIT-TO-BROWSER ==================== */
+/* Locks the player lobby to exactly the viewport — no scrollbar on any display */
+
+/* Base: all desktops & laptops (1920x1080 down to 1024px) */
+@media (min-width: 1024px) {
+  .participant-page {
+    height: 100vh;
+    max-height: 100vh;
+    min-height: unset;
+    overflow: hidden;
+  }
+
+  .participant-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 32px;
+  }
+
+  .participant-waiting-container {
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+
+  .participant-footer {
+    flex-shrink: 0;
+  }
+}
+
+/* Full HD (1920x1080) */
+@media (min-width: 1920px) {
+  .participant-content {
+    padding: 32px 40px;
+  }
+}
+
+/* Standard laptops (1366px – 1919px) */
+@media (min-width: 1366px) and (max-width: 1919px) {
+  .participant-content {
+    padding: 28px 36px;
+  }
+}
+
+/* Small laptops (1280px – 1365px) */
+@media (min-width: 1280px) and (max-width: 1365px) {
+  .participant-content {
+    padding: 24px 32px;
+  }
+}
+
+/* Tablets & small laptops (1024px – 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .participant-content {
+    padding: 20px 24px;
+  }
+}
+
+/* Tablets & phones (≤ 1023px) — allow natural scroll */
+@media (max-width: 1023px) {
+  .participant-page {
+    min-height: 100vh;
+    height: auto;
+    overflow: auto;
+  }
+}

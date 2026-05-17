@@ -28,6 +28,7 @@ const HostLobby: React.FC = () => {
   const [noticeModal, setNoticeModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
   const [accessChecking, setAccessChecking] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [teamPage, setTeamPage] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -353,7 +354,11 @@ const HostLobby: React.FC = () => {
           } : {}}
         >
           {connectedTeams.length > 0 ? (
-            <TeamGrid teams={connectedTeams} />
+            <TeamGrid
+              teams={connectedTeams}
+              page={teamPage}
+              onPageChange={setTeamPage}
+            />
           ) : (
             <div className="empty-lobby-state" style={{ 
               flex: 1, 
@@ -374,9 +379,40 @@ const HostLobby: React.FC = () => {
           )}
         </section>
 
-        <p style={{ textAlign: 'center', fontSize: '13px', color: '#94a3b8' }}>
-          Session ID: {session.quizId} • Protected by IntelliQuiz Aurum
-        </p>
+        {/* Pagination — only shown when teams exceed 20, replaces the old Session ID label */}
+        {connectedTeams.length > 20 && (
+          <div className="lobby-pagination">
+            <button
+              className="lobby-pagination-btn"
+              onClick={() => setTeamPage(p => Math.max(0, p - 1))}
+              disabled={teamPage === 0}
+              aria-label="Previous page"
+            >
+              ‹
+            </button>
+            {Array.from({ length: Math.ceil(connectedTeams.length / 20) }, (_, i) => (
+              <button
+                key={i}
+                className={`lobby-pagination-btn ${i === teamPage ? 'active' : ''}`}
+                onClick={() => setTeamPage(i)}
+                aria-label={`Page ${i + 1}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              className="lobby-pagination-btn"
+              onClick={() => setTeamPage(p => Math.min(Math.ceil(connectedTeams.length / 20) - 1, p + 1))}
+              disabled={teamPage === Math.ceil(connectedTeams.length / 20) - 1}
+              aria-label="Next page"
+            >
+              ›
+            </button>
+            <span className="lobby-pagination-info">
+              {teamPage * 20 + 1}–{Math.min((teamPage + 1) * 20, connectedTeams.length)} of {connectedTeams.length}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Confirmation Modal */}
