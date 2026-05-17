@@ -109,7 +109,7 @@ CREATE TABLE public.question (
     case_sensitive boolean DEFAULT false NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     CONSTRAINT question_difficulty_check CHECK (((difficulty)::text = ANY (ARRAY[('EASY'::character varying)::text, ('MEDIUM'::character varying)::text, ('HARD'::character varying)::text, ('TIE_BREAKER'::character varying)::text]))),
-    CONSTRAINT question_type_check CHECK (((type)::text = ANY (ARRAY[('MULTIPLE_CHOICE'::character varying)::text, ('IDENTIFICATION'::character varying)::text])))
+    CONSTRAINT question_type_check CHECK (((type)::text = ANY (ARRAY[('MULTIPLE_CHOICE'::character varying)::text, ('TRUE_FALSE'::character varying)::text, ('IDENTIFICATION'::character varying)::text])))
 );
 
 
@@ -132,7 +132,7 @@ CREATE TABLE public.question_bank_item (
     time_limit integer,
     question_type character varying(255) NOT NULL,
     CONSTRAINT question_bank_item_difficulty_check CHECK (((difficulty)::text = ANY ((ARRAY['EASY'::character varying, 'MEDIUM'::character varying, 'HARD'::character varying, 'TIE_BREAKER'::character varying])::text[]))),
-    CONSTRAINT question_bank_item_question_type_check CHECK (((question_type)::text = ANY ((ARRAY['MULTIPLE_CHOICE'::character varying, 'IDENTIFICATION'::character varying])::text[])))
+    CONSTRAINT question_bank_item_question_type_check CHECK (((question_type)::text = ANY ((ARRAY['MULTIPLE_CHOICE'::character varying, 'TRUE_FALSE'::character varying, 'IDENTIFICATION'::character varying])::text[])))
 );
 
 

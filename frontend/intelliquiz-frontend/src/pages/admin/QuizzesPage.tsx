@@ -19,6 +19,7 @@ import {
 import { useQuizzes, useCreateQuiz, useUpdateQuiz, useQuizStatusChange, useDeleteQuiz } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Quiz, CreateQuizRequest } from '../../services/api';
+import CreateQuizModal from '../../components/admin/CreateQuizModal';
 import '../../styles/admin.css';
 import './QuizzesPage.css';
 
@@ -38,17 +39,15 @@ export default function AdminQuizzesPage() {
     globalTimeLimitSeconds: 0,
     randomizeQuestions: false,
   });
-  const [creatingQuiz, setCreatingQuiz] = useState(false);
   const [quizPendingDelete, setQuizPendingDelete] = useState<Quiz | null>(null);
   const navigate = useNavigate();
-  
+
   const { canEditQuiz, canViewQuiz } = useAuth();
-  
+
   // React Query hooks
   const queryClient = useQueryClient();
   const { data: quizzes = [], isLoading, error } = useQuizzes();
   const activeQuizQuery = useActiveQuiz();
-  const createQuiz = useCreateQuiz();
   const updateQuiz = useUpdateQuiz();
   const deleteQuiz = useDeleteQuiz();
   const statusChange = useQuizStatusChange();
@@ -61,11 +60,9 @@ export default function AdminQuizzesPage() {
     queryClient.setQueryData(queryKeys.quizzes, (old: any) => {
       if (!old || !Array.isArray(old)) return old;
       return old.map((q: any) => {
-        // Only upgrade to ACTIVE if this quiz matches the active one
         if (active && q.id === active.id) {
           return { ...q, status: 'ACTIVE', isLiveSession: true };
         }
-        // Don't downgrade - trust server state for other quizzes
         return q;
       });
     });
@@ -104,27 +101,6 @@ export default function AdminQuizzesPage() {
   useEffect(() => {
     setCurrentPage((prev) => Math.min(prev, totalPages));
   }, [totalPages]);
-
-  const handleCreate = async () => {
-    if (!formData.title.trim()) return;
-    try {
-      setCreatingQuiz(true);
-      const created = await createQuiz.mutateAsync({
-        title: formData.title,
-        description: formData.description,
-      });
-      setShowCreateModal(false);
-      resetForm();
-      // navigate to created quiz workspace if API returned the new quiz
-      if (created && typeof created.id === 'number') {
-        navigate(`/admin/quizzes/${created.id}`);
-      }
-    } catch (err) {
-      console.error('Failed to create quiz:', err);
-    } finally {
-      setCreatingQuiz(false);
-    }
-  };
 
   const handleUpdate = async () => {
     if (!selectedQuiz || !formData.title.trim()) return;
@@ -172,15 +148,14 @@ export default function AdminQuizzesPage() {
     });
   };
 
-  const getStatusClass = (status: string) => {
-    const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'active', ARCHIVED: 'archived' };
-    return map[status] || 'draft';
+  const getStatusClass = (quiz: Quiz) => {
+    const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'archived' };
+    return map[quiz.status] || 'draft';
   };
 
-  const getStatusLabel = (status: string) => {
-    if (status === 'ARCHIVED') return 'DONE';
-    if (status === 'ACTIVE') return 'LIVE NOW';
-    return status;
+  const getStatusLabel = (quiz: Quiz) => {
+    if (quiz.status === 'ARCHIVED') return 'DONE';
+    return quiz.status;
   };
 
   if (isLoading) {
@@ -250,7 +225,7 @@ export default function AdminQuizzesPage() {
           paginatedQuizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className={`admin-quiz-card quiz-list-card status-${getStatusClass(quiz.status)}`}
+              className={`admin-quiz-card quiz-list-card status-${getStatusClass(quiz)}`}
               onClick={() => navigate(`/admin/quizzes/${quiz.id}`)}
               role="button"
               tabIndex={0}
@@ -261,14 +236,14 @@ export default function AdminQuizzesPage() {
               }}
               title="Open quiz workspace"
             >
-              <div className={`admin-quiz-card-top ${getStatusClass(quiz.status)}`} />
+              <div className={`admin-quiz-card-top ${getStatusClass(quiz)}`} />
               <div className="admin-quiz-card-body">
                 <div className="admin-quiz-header">
                   <div style={{ flex: 1 }}>
                     <h3 className="admin-quiz-title">{quiz.title}</h3>
                     <p className="admin-quiz-desc">{quiz.description || 'No description'}</p>
                   </div>
-                  <span className={`admin-badge-status ${getStatusClass(quiz.status)}`}>{getStatusLabel(quiz.status)}</span>
+                  <span className={`admin-badge-status ${getStatusClass(quiz)}`}>{getStatusLabel(quiz)}</span>
                 </div>
                 
                 <div className="admin-quiz-meta">
@@ -330,7 +305,7 @@ export default function AdminQuizzesPage() {
                 {!searchQuery && statusFilter === 'ALL' && (
                   <button
                     className="empty-cta"
-                    onClick={() => { resetForm(); setShowCreateModal(true); }}
+                    onClick={() => setShowCreateModal(true)}
                     style={{ marginTop: 16 }}
                   >
                     + Create Your First Quiz
@@ -366,55 +341,7 @@ export default function AdminQuizzesPage() {
 
 
       {/* Create Quiz Modal */}
-      {showCreateModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header quiz-list-modal-create-header">
-              <h2 className="admin-modal-title">Create New Quiz</h2>
-              <button onClick={() => setShowCreateModal(false)} className="admin-btn-icon quiz-list-modal-close"><BiX size={18} /></button>
-            </div>
-            <div className="admin-modal-body">
-              <div className="quiz-list-modal-copy">
-                <p className="quiz-list-modal-eyebrow">Quick setup</p>
-                <p className="quiz-list-modal-description">
-                  Start with the title and description. You can refine access, timing, and navigation in the quiz workspace after creation.
-                </p>
-              </div>
-              <div className="admin-form-group">
-                <label className="admin-form-label">Quiz Title *</label>
-                <input 
-                  type="text" 
-                  value={formData.title} 
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="admin-form-input" 
-                  placeholder="Enter quiz title..."
-                  maxLength={200}
-                  autoFocus 
-                />
-              </div>
-              <div className="admin-form-group">
-                <label className="admin-form-label">Description (Optional)</label>
-                <textarea 
-                  value={formData.description} 
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="admin-form-input admin-form-textarea" 
-                  placeholder="Enter quiz description..."
-                  rows={4} 
-                />
-              </div>
-              <p className="admin-form-hint" style={{ marginTop: 16 }}>
-                Quiz settings (mode, access, timers) can be configured after creation in the quiz workspace.
-              </p>
-            </div>
-            <div className="admin-modal-footer">
-              <button onClick={() => setShowCreateModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              <button onClick={handleCreate} className="admin-btn admin-btn-primary" disabled={creatingQuiz}>
-                {creatingQuiz ? 'Creating...' : 'Create Quiz'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showCreateModal && <CreateQuizModal onClose={() => setShowCreateModal(false)} />}
 
       {/* Edit Modal */}
       {showEditModal && selectedQuiz && (

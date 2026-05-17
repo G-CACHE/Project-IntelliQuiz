@@ -77,6 +77,9 @@ public class SSEEvent {
         
         // Kick notifications
         KICK_NOTIFICATION,
+
+        // Re-entry approval notification (sent to the specific kicked team)
+        REENTRY_APPROVED,
         
         // Error responses
         ERROR

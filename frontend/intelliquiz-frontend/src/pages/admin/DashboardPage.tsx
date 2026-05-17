@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBarChartAlt2,
@@ -13,12 +13,14 @@ import {
 } from 'react-icons/bi';
 import { useQuizzes } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
+import CreateQuizModal from '../../components/admin/CreateQuizModal';
 import '../../styles/admin.css';
 import './DashboardPage.css';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { canEditQuiz } = useAuth();
+  const [showCreateModal, setShowCreateModal] = useState(false);
   
   // React Query hook
   const { data: allQuizzes = [], isLoading } = useQuizzes();
@@ -37,14 +39,14 @@ export default function AdminDashboardPage() {
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = {
-      DRAFT: 'draft', READY: 'ready', ACTIVE: 'active', ARCHIVED: 'archived'
+      DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'archived'
     };
     return map[status] || 'draft';
   };
 
   const getStatusLabel = (status: string) => {
     if (status === 'ARCHIVED') return 'DONE';
-    if (status === 'ACTIVE') return 'LIVE NOW';
+    if (status === 'ACTIVE') return 'LIVE';
     return status;
   };
 
@@ -105,7 +107,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="admin-clean-actions-grid">
-            <button className="admin-clean-action" onClick={() => navigate('/admin/quizzes')}>
+            <button className="admin-clean-action" onClick={() => setShowCreateModal(true)}>
               <span className="admin-clean-action-icon"><BiBookOpen size={16} /></span>
               <span>
                 <strong>Create Quiz</strong>
@@ -172,7 +174,7 @@ export default function AdminDashboardPage() {
                 <div className="admin-clean-empty-icon"><BiBookOpen size={24} /></div>
                 <h3>No quizzes yet</h3>
                 <p>Create your first quiz to get started.</p>
-                <button className="admin-clean-btn-primary" onClick={() => navigate('/admin/quizzes')}>
+                <button className="admin-clean-btn-primary" onClick={() => setShowCreateModal(true)}>
                   <BiBookOpen size={16} /> Create First Quiz
                 </button>
               </div>
@@ -180,6 +182,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </section>
+      {showCreateModal && <CreateQuizModal onClose={() => setShowCreateModal(false)} />}
     </div>
   );
 }

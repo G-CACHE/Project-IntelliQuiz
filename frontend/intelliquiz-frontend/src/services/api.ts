@@ -587,6 +587,7 @@ export interface UpdateQuestionRequest {
 export interface Team {
   id: number;
   name: string;
+  members?: string; // comma-separated, null/undefined = individual
   accessCode: string;
   quizId: number;
   totalScore: number;
@@ -594,6 +595,7 @@ export interface Team {
 
 export interface RegisterTeamRequest {
   name: string;
+  members?: string;
 }
 
 export interface ScoreboardEntry {

@@ -136,7 +136,7 @@ export default function AdminScoreboardPage() {
                   Live
                 </span>
               )}
-              <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'active' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
+              <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'live' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
             </div>
           </div>
         </div>

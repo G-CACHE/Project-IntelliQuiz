@@ -195,7 +195,7 @@ export default function AdminTeamsPage() {
               <h3 style={{ fontWeight: 700, color: '#fff', margin: 0 }}>{selectedQuiz.title}</h3>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: '4px 0 0' }}>{teams.length} teams registered</p>
             </div>
-            <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'active' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
+            <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'live' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
           </div>
         </div>
       )}

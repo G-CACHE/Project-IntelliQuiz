@@ -84,22 +84,24 @@ public class Quiz extends SoftDeletableEntity {
     // ==================== Rich Domain Behavior ====================
 
     /**
-     * Activates this quiz session, making it live for participants.
+     * Activates this quiz session, making it LIVE for participants.
      * Only quizzes in READY status can be activated.
-     * 
+     *
      * @throws QuizNotReadyException if the quiz is not in READY status
      */
     public void activate() {
         if (this.status != QuizStatus.READY) {
             throw new QuizNotReadyException("Quiz must be in READY status to activate. Current status: " + this.status);
         }
+        this.status = QuizStatus.ACTIVE;
         this.isLiveSession = true;
     }
 
     /**
-     * Deactivates this quiz session, ending the live session.
+     * Deactivates this quiz session, returning it to READY status.
      */
     public void deactivate() {
+        this.status = QuizStatus.READY;
         this.isLiveSession = false;
     }
 

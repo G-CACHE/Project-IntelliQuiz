@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class QuizStateTransitionPropertyTest {
 
     /**
-     * Property 3: activate() succeeds only when status is READY
+     * Property 3: activate() succeeds only when status is READY; sets status to LIVE
      */
     @Property(tries = 20)
     void activateSucceedsOnlyWhenReady(@ForAll("quizStatuses") QuizStatus status) {
@@ -33,6 +33,7 @@ public class QuizStateTransitionPropertyTest {
         if (status == QuizStatus.READY) {
             quiz.activate();
             assertThat(quiz.isLiveSession()).isTrue();
+            assertThat(quiz.getStatus()).isEqualTo(QuizStatus.ACTIVE);
         } else {
             assertThatThrownBy(quiz::activate)
                     .isInstanceOf(QuizNotReadyException.class);
@@ -40,7 +41,7 @@ public class QuizStateTransitionPropertyTest {
     }
 
     /**
-     * Property 3: deactivate() sets isLiveSession to false
+     * Property 3: deactivate() sets isLiveSession to false and status back to READY
      */
     @Property(tries = 20)
     void deactivateSetsLiveSessionFalse(@ForAll boolean initialLiveState) {
@@ -50,6 +51,7 @@ public class QuizStateTransitionPropertyTest {
         quiz.deactivate();
         
         assertThat(quiz.isLiveSession()).isFalse();
+        assertThat(quiz.getStatus()).isEqualTo(QuizStatus.READY);
     }
 
     /**

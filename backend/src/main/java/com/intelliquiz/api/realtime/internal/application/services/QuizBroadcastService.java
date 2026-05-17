@@ -246,11 +246,14 @@ public class QuizBroadcastService {
      * Sends message to a specific team via SSE.
      */
     public void sendToTeam(Long quizId, Long teamId, Object message) {
+        sendToTeam(quizId, teamId, SSEEvent.EventType.GAME_STATE, message);
+    }
+
+    public void sendToTeam(Long quizId, Long teamId, SSEEvent.EventType eventType, Object message) {
         String quizIdStr = String.valueOf(quizId);
         String teamIdStr = String.valueOf(teamId);
-        SSEEvent event = SSEEvent.create(SSEEvent.EventType.GAME_STATE, message);
+        SSEEvent event = SSEEvent.create(eventType, message);
         sseRegistry.broadcastToTeam(quizIdStr, teamIdStr, event);
-        
     }
 
     /**

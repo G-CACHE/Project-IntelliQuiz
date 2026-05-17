@@ -222,6 +222,14 @@ public class QuizViolationController {
                 ));
             }
 
+            // Notify the approved team via SSE so their client can reset kicked state and reconnect.
+            broadcastService.sendToTeam(
+                    quizId,
+                    parsedTeamId,
+                    com.intelliquiz.api.realtime.internal.presentation.dto.SSEEvent.EventType.REENTRY_APPROVED,
+                    Map.of("teamId", String.valueOf(parsedTeamId), "message", "You have been approved to re-enter the quiz")
+            );
+
             return ResponseEntity.ok(new ApproveReentryResponse(
                     "approved",
                     "Team can re-enter the quiz"

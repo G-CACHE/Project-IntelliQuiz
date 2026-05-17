@@ -519,6 +519,8 @@
 .quiz-list-shell .admin-quiz-card.status-ready:hover   { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 2px #059669; }
 .quiz-list-shell .quiz-list-card.status-active:hover,
 .quiz-list-shell .admin-quiz-card.status-active:hover  { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 2px #880015; }
+.quiz-list-shell .quiz-list-card.status-live:hover,
+.quiz-list-shell .admin-quiz-card.status-live:hover    { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 2px #16a34a; }
 .quiz-list-shell .quiz-list-card.status-archived:hover,
 .quiz-list-shell .quiz-list-card.status-done:hover     { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 1.5px #d1d5db; }
 
@@ -667,6 +669,17 @@
 .quiz-list-shell .admin-badge-status.active  { background: #fff0f3; color: #880015; }
 .quiz-list-shell .admin-badge-status.active::before   { background: #880015; }
 
+.quiz-list-shell .admin-badge-status.live    { background: #f0fdf4; color: #15803d; font-weight: 800; }
+.quiz-list-shell .admin-badge-status.live::before     {
+  background: #16a34a;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(1.5); }
+}
+
 .quiz-list-shell .admin-badge-status.done,
 .quiz-list-shell .admin-badge-status.archived { background: #f3f4f6; color: #6b7280; }
 .quiz-list-shell .admin-badge-status.done::before,
@@ -743,15 +756,31 @@
 
 /* ── MODAL OVERRIDES ────────────────────────────────────────── */
 .quiz-list-shell .admin-modal {
-  max-width: 540px;
+  max-width: 560px;
   border-radius: 16px;
   border: 1.5px solid #e5e7eb;
   box-shadow: 0 24px 60px rgba(17, 17, 17, 0.14);
+  /* allow dropdowns to overflow without clipping */
+  overflow: visible;
+}
+
+/* re-clip the rounded corners while allowing dropdown overflow */
+.quiz-list-shell .admin-modal-header {
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+}
+
+.quiz-list-shell .admin-modal-footer {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
 }
 
 .quiz-list-shell .admin-modal-body {
-  padding: 22px 24px 24px;
+  padding: 24px 24px 20px;
   background: #ffffff;
+  /* no max-height / overflow clipping — let the modal grow naturally */
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .quiz-list-shell .admin-modal-footer {
@@ -971,4 +1000,56 @@
   .quiz-list-pagination {
     justify-content: space-between;
   }
+}
+
+/* ── CREATE QUIZ STEP INDICATOR ─────────────────────────────── */
+.quiz-create-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+.quiz-create-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+.quiz-create-step.active {
+  opacity: 1;
+}
+
+.quiz-create-step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #880015;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quiz-create-step:not(.active) .quiz-create-step-num {
+  background: #ccc;
+}
+
+.quiz-create-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a0a14;
+}
+
+.quiz-create-step-divider {
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+  margin: 0 12px;
+  min-width: 32px;
 }

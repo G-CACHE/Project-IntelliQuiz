@@ -80,6 +80,8 @@ export default function AdminQuestionsPage() {
   const [bankTotalCount, setBankTotalCount] = useState(0);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeQuestionId, setActiveQuestionId] = useState<number | null>(null);
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
   
   const hasEditPermission = isSuperAdmin() || canEditQuiz(quizIdNum, quiz?.createdByUserId);
   const isDraftQuiz = quiz?.status === 'DRAFT';
@@ -101,6 +103,7 @@ export default function AdminQuestionsPage() {
       setQuiz(quizData);
       setQuestions(questionsData);
       setCurrentPage(1);
+      setActiveQuestionId((prev) => prev ?? (questionsData[0]?.id ?? null));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
@@ -431,6 +434,30 @@ export default function AdminQuestionsPage() {
     return map[d] || 'admin-badge-gray';
   };
 
+  const DIFF_DOT: Record<string, string> = {
+    EASY: '#16a34a',
+    MEDIUM: '#d97706',
+    HARD: '#dc2626',
+    TIE_BREAKER: '#7c3aed',
+  };
+
+  const filteredSidebarQuestions = difficultyFilter === 'ALL'
+    ? questions
+    : questions.filter((q) => q.difficulty === difficultyFilter);
+
+  const difficultyCounts: Record<string, number> = { ALL: questions.length };
+  questions.forEach((q) => {
+    difficultyCounts[q.difficulty] = (difficultyCounts[q.difficulty] ?? 0) + 1;
+  });
+
+  const DIFF_CHIPS = [
+    { key: 'ALL', label: 'All' },
+    { key: 'EASY', label: 'Easy' },
+    { key: 'MEDIUM', label: 'Medium' },
+    { key: 'HARD', label: 'Hard' },
+    { key: 'TIE_BREAKER', label: 'TB' },
+  ].filter((c) => c.key === 'ALL' || difficultyCounts[c.key]);
+
   if (loading) {
     return (
       <div className="admin-loading">
@@ -442,72 +469,43 @@ export default function AdminQuestionsPage() {
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="admin-page-header questions-page-header">
-        <div className="admin-page-header-bg">
-            <div className="admin-page-header-shape shape-1" />
-            <div className="admin-page-header-shape shape-2" />
-            <div className="admin-page-header-dots" />
-        </div>
-        <div className="admin-page-header-content questions-page-header-content">
-          <div className="admin-page-header-left questions-page-header-left">
-            <p className="admin-page-subtitle questions-page-question-count">
-              {questions.length} questions
-            </p>
+      {/* Action bar */}
+      <div className="qp-action-bar">
+        {/* Segmented difficulty filter — always visible */}
+        {questions.length > 0 && (
+          <div className="qp-diff-chips">
+            {DIFF_CHIPS.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                className={`qp-diff-chip${difficultyFilter === chip.key ? ' active' : ''}`}
+                onClick={() => setDifficultyFilter(chip.key)}
+              >
+                {chip.key !== 'ALL' && (
+                  <span className="qp-diff-chip-dot" style={{ background: DIFF_DOT[chip.key] }} />
+                )}
+                {chip.label}
+                <span className="qp-diff-chip-count">{difficultyCounts[chip.key] ?? 0}</span>
+              </button>
+            ))}
           </div>
-          {!canEditContent && (
-            <div className="questions-header-actions">
-              {questions.length > 0 && (
-                <button
-                  type="button"
-                  className="admin-btn admin-btn-secondary questions-show-all-btn"
-                  onClick={() => {
-                    const allIds = paginatedQuestions.map((q) => q.id);
-                    const allExpanded = allIds.every((id) => expandedIds.has(id));
-                    setExpandedIds(allExpanded
-                      ? new Set([...expandedIds].filter((id) => !allIds.includes(id)))
-                      : new Set([...expandedIds, ...allIds])
-                    );
-                  }}
-                >
-                  {paginatedQuestions.every((q) => expandedIds.has(q.id)) ? 'Hide All Answers' : 'Show All Answers'}
-                </button>
-              )}
-              <div className="questions-header-readonly">
-                <BiLock size={13} /> Read only
-              </div>
-            </div>
-          )}
-          {canEditContent && (
-            <div className="questions-header-actions">
-              {questions.length > 0 && (
-                <button
-                  type="button"
-                  className="admin-btn admin-btn-secondary questions-show-all-btn"
-                  onClick={() => {
-                    const allIds = paginatedQuestions.map((q) => q.id);
-                    const allExpanded = allIds.every((id) => expandedIds.has(id));
-                    setExpandedIds(allExpanded
-                      ? new Set([...expandedIds].filter((id) => !allIds.includes(id)))
-                      : new Set([...expandedIds, ...allIds])
-                    );
-                  }}
-                >
-                  {paginatedQuestions.every((q) => expandedIds.has(q.id)) ? 'Hide All Answers' : 'Show All Answers'}
-                </button>
-              )}
-              <button className="admin-btn admin-btn-secondary" onClick={handleSortByDifficulty} disabled={sortingQuestions || questions.length <= 1}>
-                {sortingQuestions ? 'Sorting...' : 'Sort by Difficulty'}
-              </button>
-              <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
-                <BiImport size={18} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
-              </button>
-              <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                <BiPlus size={18} /> Add Question
-              </button>
-            </div>
-          )}
-        </div>
+        )}
+
+        {!canEditContent && (
+          <div className="questions-header-readonly">
+            <BiLock size={13} /> Read only
+          </div>
+        )}
+        {canEditContent && (
+          <div className="questions-header-actions">
+            <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
+              <BiImport size={18} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
+            </button>
+            <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+              <BiPlus size={18} /> Add Question
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Error Alert */}
@@ -518,60 +516,146 @@ export default function AdminQuestionsPage() {
         </div>
       )}
 
-      {/* Questions List */}
-      <div className="questions-list-container">
-        {questions.length > 0 ? (
-          paginatedQuestions.map((q, idx) => {
-            const identificationAnswers = (q.correctKey || '')
+      {/* Split-panel workspace */}
+      <div className="qp-workspace">
+
+        {/* ── LEFT SIDEBAR: Question list ── */}
+        <aside className="qp-sidebar">
+          <div className="qp-sidebar-header">
+            <span className="qp-sidebar-count">{questions.length} question{questions.length !== 1 ? 's' : ''}</span>
+          </div>
+
+          <div className="qp-sidebar-list">
+            {questions.length === 0 ? (
+              <div className="qp-sidebar-empty">
+                <BiFile size={24} />
+                <p>No questions yet</p>
+              </div>
+            ) : filteredSidebarQuestions.length === 0 ? (
+              <div className="qp-sidebar-empty">
+                <p>No {difficultyFilter.toLowerCase()} questions</p>
+              </div>
+            ) : (
+              filteredSidebarQuestions.map((q, idx) => {
+                const isActive = q.id === activeQuestionId;
+                const globalIdx = questions.findIndex((gq) => gq.id === q.id);
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    className={`qp-sidebar-item${isActive ? ' is-active' : ''}`}
+                    onClick={() => setActiveQuestionId(q.id)}
+                    title={q.text}
+                  >
+                    <span
+                      className="qp-sidebar-diff-dot"
+                      style={{ background: DIFF_DOT[q.difficulty] ?? '#94a3b8' }}
+                      title={q.difficulty}
+                    />
+                    <span className="qp-sidebar-item-num">Q{globalIdx + 1}</span>
+                    <span className="qp-sidebar-item-text">{q.text}</span>
+                    <span className="qp-sidebar-item-pts">{q.points}pt</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </aside>
+
+        {/* ── RIGHT DETAIL: Active question view ── */}
+        <main className="qp-detail">
+          {(() => {
+            const activeQ = questions.find((q) => q.id === activeQuestionId);
+            if (!activeQ) {
+              return (
+                <div className="qp-detail-empty">
+                  <BiFile size={40} />
+                  <p>{questions.length === 0 ? 'Add your first question to get started.' : 'Select a question from the list.'}</p>
+                  {canEditContent && questions.length === 0 && (
+                    <div className="questions-empty-actions" style={{ marginTop: 16 }}>
+                      <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
+                        <BiImport size={16} /> Import from Bank
+                      </button>
+                      <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                        <BiPlus size={16} /> Add First Question
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            const identificationAnswers = (activeQ.correctKey || '')
               .split(/\r?\n/)
               .map((line) => line.trim())
               .filter((line) => line.length > 0);
 
+            const qIdx = questions.findIndex((q) => q.id === activeQ.id);
+
             return (
-              <div key={q.id} className="question-card">
-                <div className="question-card-header">
-                  <div className="question-number-badge">{startQuestionIndex + idx}</div>
-                  <div className="question-text-wrapper">
-                    <h4 className="question-text">{q.text}</h4>
-                    <div className="question-meta">
-                      <span className="question-meta-item">
-                        <BiStar size={14} /> {q.points} pts
-                      </span>
-                      <span className="question-meta-item">
-                        <BiTime size={14} /> {q.timeLimit}s
-                      </span>
-                      <span className={`admin-badge ${getDifficultyBadge(q.difficulty)}`}>{q.difficulty}</span>
-                    </div>
+              <div className="qp-detail-card">
+                {/* Detail header */}
+                <div className="qp-detail-header">
+                  <div className="qp-detail-header-left">
+                    <span className="qp-detail-qnum">Question {qIdx + 1}</span>
+                    <span className={`admin-badge ${getDifficultyBadge(activeQ.difficulty)}`}>{activeQ.difficulty}</span>
+                    <span className="qp-detail-type-badge">{activeQ.type.replace('_', ' ')}</span>
                   </div>
-                  <button
-                    type="button"
-                    className="question-toggle-btn"
-                    onClick={() => setExpandedIds((prev) => {
-                      const next = new Set(prev);
-                      next.has(q.id) ? next.delete(q.id) : next.add(q.id);
-                      return next;
-                    })}
-                  >
-                    {expandedIds.has(q.id) ? 'Hide Answer' : 'Show Answer'}
-                    <BiChevronDown size={14} className={expandedIds.has(q.id) ? 'rotated' : ''} />
-                  </button>
+                  <div className="qp-detail-header-right">
+                    <span className="qp-detail-meta"><BiStar size={13} /> {activeQ.points} pts</span>
+                    <span className="qp-detail-meta"><BiTime size={13} /> {activeQ.timeLimit}s</span>
+                    {canEditContent && (
+                      <>
+                        <button className="admin-btn admin-btn-secondary qp-detail-action-btn" onClick={() => openEditModal(activeQ)}>
+                          <BiEdit size={14} /> Edit
+                        </button>
+                        <button
+                          className="admin-btn admin-btn-secondary qp-detail-action-btn"
+                          style={{ color: '#dc2626' }}
+                          onClick={() => { setSelectedQuestion(activeQ); setShowDeleteModal(true); }}
+                        >
+                          <BiTrash size={14} /> Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {expandedIds.has(q.id) && (
-                  <div className="question-answers-reveal">
-                    {q.type === 'IDENTIFICATION' ? (
+                {/* Question text */}
+                <div className="qp-detail-question-text">
+                  {activeQ.text}
+                </div>
+
+                {/* Answers */}
+                <div className="qp-detail-answers">
+                  <div className="qp-detail-answers-label">
+                    Answer{activeQ.type === 'IDENTIFICATION' ? 's' : ' Options'}
+                    <button
+                      type="button"
+                      className="question-toggle-btn"
+                      onClick={() => setExpandedIds((prev) => {
+                        const next = new Set(prev);
+                        next.has(activeQ.id) ? next.delete(activeQ.id) : next.add(activeQ.id);
+                        return next;
+                      })}
+                    >
+                      {expandedIds.has(activeQ.id) ? 'Hide' : 'Reveal'}
+                      <BiChevronDown size={13} className={expandedIds.has(activeQ.id) ? 'rotated' : ''} />
+                    </button>
+                  </div>
+
+                  {expandedIds.has(activeQ.id) && (
+                    activeQ.type === 'IDENTIFICATION' ? (
                       <div className="identification-answer">
                         {identificationAnswers.length > 0
-                          ? identificationAnswers.map((answer, answerIdx) => (
-                              <div key={answerIdx}>{answer}</div>
-                            ))
+                          ? identificationAnswers.map((a, i) => <div key={i}>{a}</div>)
                           : 'No accepted answer set'}
                       </div>
                     ) : (
                       <div className="question-options-grid">
-                        {q.options.map((option, optIdx) => {
+                        {activeQ.options.map((option, optIdx) => {
                           const key = OPTION_KEYS[optIdx] || String.fromCharCode(65 + optIdx);
-                          const isCorrect = q.correctKey === key;
+                          const isCorrect = activeQ.correctKey === key;
                           return (
                             <div key={optIdx} className={`question-option ${isCorrect ? 'is-correct' : ''}`}>
                               <span className="question-option-key">{key}</span>
@@ -581,89 +665,16 @@ export default function AdminQuestionsPage() {
                           );
                         })}
                       </div>
-                    )}
-                  </div>
-                )}
+                    )
+                  )}
+                </div>
 
-                {canEditContent && (
-                  <div className="question-actions">
-                    <button className="admin-btn admin-btn-secondary" onClick={() => openEditModal(q)} style={{ gap: 6 }}>
-                      <BiEdit size={16} /> Edit
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-secondary"
-                      onClick={() => {
-                        setSelectedQuestion(q);
-                        setShowDeleteModal(true);
-                      }}
-                      style={{ gap: 6, color: '#dc2626' }}
-                    >
-                      <BiTrash size={16} /> Delete
-                    </button>
-                  </div>
-                )}
+
               </div>
             );
-          })
-        ) : (
-          <div className="admin-empty-state">
-            <div className="admin-empty-icon"><BiFile size={32} /></div>
-            <h3 className="admin-empty-title">No questions yet</h3>
-            <p className="admin-empty-text">{canEditContent ? 'Add questions to make your quiz complete' : 'Questions are view-only until the quiz is set back to Draft status.'}</p>
-            {canEditContent && (
-              <div className="questions-empty-actions">
-                <button className="admin-btn admin-btn-secondary" onClick={loadQuestionBank} disabled={bankLoading}>
-                  <BiImport size={16} /> {bankLoading ? 'Loading...' : 'Import from Bank'}
-                </button>
-                <button className="admin-btn admin-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                  <BiPlus size={16} /> Add First Question
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          })()}
+        </main>
       </div>
-
-      {questions.length > questionsPerPage && (
-        <div className="questions-pagination-shell">
-          <p className="questions-pagination-summary">
-            Showing <strong>{startQuestionIndex}</strong> to <strong>{endQuestionIndex}</strong> of <strong>{questions.length}</strong> questions
-          </p>
-
-          <div className="questions-pagination-controls">
-            <button
-              type="button"
-              className="questions-pagination-nav"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <BiChevronLeft size={18} /> Previous
-            </button>
-
-            <div className="questions-pagination-pages">
-              {paginationPages.map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  className={`questions-pagination-page ${page === currentPage ? 'is-active' : ''}`}
-                  onClick={() => goToPage(page)}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              className="questions-pagination-nav"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next <BiChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Create/Edit Modal */}
       {showModal && (

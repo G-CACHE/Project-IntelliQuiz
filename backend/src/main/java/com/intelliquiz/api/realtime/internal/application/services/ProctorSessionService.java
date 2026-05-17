@@ -167,14 +167,29 @@ public class ProctorSessionService {
             }
 
             // Re-entry approval must also clear device blacklist; otherwise access checks still reject join.
+            // First try the global teamToDeviceMapping, then fall back to the per-quiz deviceToTeamsMapping.
             String teamDeviceId = teamToDeviceMapping.get(teamId);
-            if (teamDeviceId != null && !teamDeviceId.isBlank()) {
-                Set<String> blacklisted = blacklistedDevices.get(quizId);
-                if (blacklisted != null) {
-                    blacklisted.remove(teamDeviceId);
-                    if (blacklisted.isEmpty()) {
-                        blacklistedDevices.remove(quizId);
+
+            // Also collect any device IDs tracked per-quiz for this team (covers the case where
+            // the global mapping was populated but the participant has since disconnected).
+            Set<String> devicesFromQuizMap = new java.util.HashSet<>();
+            Map<String, Set<Long>> quizDeviceMap = deviceToTeamsMapping.get(quizId);
+            if (quizDeviceMap != null) {
+                for (Map.Entry<String, Set<Long>> entry : quizDeviceMap.entrySet()) {
+                    if (entry.getValue().contains(teamId)) {
+                        devicesFromQuizMap.add(entry.getKey());
                     }
+                }
+            }
+
+            Set<String> blacklisted = blacklistedDevices.get(quizId);
+            if (blacklisted != null) {
+                if (teamDeviceId != null && !teamDeviceId.isBlank()) {
+                    blacklisted.remove(teamDeviceId);
+                }
+                devicesFromQuizMap.forEach(blacklisted::remove);
+                if (blacklisted.isEmpty()) {
+                    blacklistedDevices.remove(quizId);
                 }
             }
 
@@ -297,12 +312,7 @@ public class ProctorSessionService {
      */
     public void lockQuizEntry(Long quizId) {
         quizLocked.put(quizId, true);
-        
-        // Capture current device IDs as allowed list
-        Map<String, Set<Long>> currentDevices = deviceToTeamsMapping.getOrDefault(quizId, Map.of());
-        allowedDeviceIds.put(quizId, Set.copyOf(currentDevices.keySet()));
-        
-        logger.info("Quiz {} entry locked. Allowed devices: {}", quizId, currentDevices.keySet());
+        logger.info("Quiz {} entry locked", quizId);
     }
 
     /**
@@ -312,7 +322,6 @@ public class ProctorSessionService {
      */
     public void unlockQuizEntry(Long quizId) {
         quizLocked.put(quizId, false);
-        allowedDeviceIds.remove(quizId);
         logger.info("Quiz {} entry unlocked", quizId);
     }
 
@@ -335,14 +344,8 @@ public class ProctorSessionService {
      * @return true if allowed, false otherwise
      */
     public boolean isDeviceAllowedToJoin(Long quizId, String deviceId) {
-        // If quiz is not locked, all devices are allowed
-        if (!isQuizLocked(quizId)) {
-            return true;
-        }
-
-        // If quiz is locked, only allowed device IDs can join
-        Set<String> allowed = allowedDeviceIds.get(quizId);
-        return allowed != null && allowed.contains(deviceId);
+        // When the quiz is locked, no device is allowed to join — not even previously connected ones.
+        return !isQuizLocked(quizId);
     }
 
     /**

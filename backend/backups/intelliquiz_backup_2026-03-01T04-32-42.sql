@@ -142,7 +142,7 @@ CREATE TABLE public.question (
     quiz_id bigint NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     CONSTRAINT question_difficulty_check CHECK (((difficulty)::text = ANY (ARRAY[('EASY'::character varying)::text, ('MEDIUM'::character varying)::text, ('HARD'::character varying)::text, ('TIE_BREAKER'::character varying)::text]))),
-    CONSTRAINT question_type_check CHECK (((type)::text = ANY (ARRAY[('MULTIPLE_CHOICE'::character varying)::text, ('IDENTIFICATION'::character varying)::text])))
+    CONSTRAINT question_type_check CHECK (((type)::text = ANY (ARRAY[('MULTIPLE_CHOICE'::character varying)::text, ('TRUE_FALSE'::character varying)::text, ('IDENTIFICATION'::character varying)::text])))
 );
 
 

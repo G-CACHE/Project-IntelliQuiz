@@ -290,6 +290,121 @@
   animation: pulse-dot 2.5s ease-in-out infinite;
 }
 
+/* ── Slim unified header ─────────────────────────────────── */
+.quiz-workspace-slim-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  height: 64px;
+  background: linear-gradient(135deg, #6b0f23 0%, #880015 58%, #a8002c 100%);
+  border: 1px solid #5a0c1c;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  color: #ffffff;
+  box-shadow: 0 10px 28px rgba(95, 16, 39, 0.22);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative radial glow — mirrors dashboard hero */
+.quiz-workspace-slim-header::after {
+  content: '';
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  right: -60px;
+  top: -100px;
+  pointer-events: none;
+}
+
+.quiz-workspace-slim-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.quiz-workspace-slim-title {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  font-family: var(--font-heading, 'Boogaloo', cursive);
+}
+
+.quiz-workspace-slim-sub {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Inline sub-tabs inside the slim header */
+.quiz-workspace-slim-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+
+.quiz-workspace-slim-tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.quiz-workspace-slim-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.quiz-workspace-slim-tab.is-active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 #ffd166;
+}
+
+@media (max-width: 768px) {
+  .quiz-workspace-slim-header {
+    height: auto;
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .quiz-workspace-slim-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .quiz-workspace-slim-title {
+    max-width: 160px;
+  }
+}
+
 /* Grid container for configuration section */
 .config-grid-container {
   display: grid;
@@ -1004,6 +1119,8 @@
 
 .cselect-trigger {
   width: 100%;
+  display: flex !important;
+  align-items: center !important;
   justify-content: space-between !important;
   padding: 0 14px !important;
   min-height: 46px !important;
@@ -1073,7 +1190,7 @@
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  z-index: 200;
+  z-index: 1100;
   list-style: none;
   margin: 0;
   padding: 6px;
@@ -1137,4 +1254,471 @@
 .cselect-check {
   flex-shrink: 0;
   color: var(--admin-primary, #9f2346);
+}
+
+/* ── Setup Checklist ─────────────────────────────────────────── */
+.ws-checklist {
+  background: #fff;
+  border: 1.5px solid #e8dde1;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.ws-checklist-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #880015;
+  margin: 0 0 12px;
+}
+
+.ws-checklist-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ws-checklist-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3eef0;
+  transition: opacity 0.2s;
+}
+
+.ws-checklist-step:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ws-checklist-step:first-child {
+  padding-top: 0;
+}
+
+.ws-checklist-step-icon {
+  flex-shrink: 0;
+  color: #c9b0b8;
+  display: flex;
+  align-items: center;
+}
+
+.ws-checklist-step.done .ws-checklist-step-icon {
+  color: #16a34a;
+}
+
+.ws-checklist-step-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ws-checklist-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ws-checklist-step.done .ws-checklist-step-label {
+  color: #64748b;
+  text-decoration: line-through;
+  text-decoration-color: #94a3b8;
+}
+
+.ws-checklist-step-detail {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.ws-checklist-step.done .ws-checklist-step-detail {
+  color: #16a34a;
+}
+
+.ws-checklist-step-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid #880015;
+  background: #fff;
+  color: #880015;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.ws-checklist-step-btn:hover:not(:disabled) {
+  background: #880015;
+  color: #fff;
+}
+
+.ws-checklist-step-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Team Side Drawer ────────────────────────────────────────── */
+.team-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 1200;
+  display: flex;
+  justify-content: flex-end;
+  animation: adminFadeIn 0.2s ease;
+}
+
+.team-drawer {
+  width: 420px;
+  max-width: 95vw;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 40px rgba(17, 17, 17, 0.18);
+  animation: drawerSlideIn 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.team-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  background: linear-gradient(135deg, #6b0f23 0%, #880015 100%);
+  flex-shrink: 0;
+}
+
+.team-drawer-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.team-drawer-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  margin: 3px 0 0;
+}
+
+.team-drawer-close {
+  background: rgba(255,255,255,0.15) !important;
+  border: 1.5px solid rgba(255,255,255,0.25) !important;
+  color: #fff !important;
+  flex-shrink: 0;
+}
+
+.team-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.team-drawer-footer {
+  flex-shrink: 0;
+  padding: 14px 24px 18px;
+  border-top: 1px solid #f0eaec;
+  background: #fafafa;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Team Manager (shared between drawer + tab) ──────────────── */
+.team-manager-form {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0eaec;
+}
+
+.team-manager-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.team-manager-input-row .admin-form-input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.team-manager-list-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.team-manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-manager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8f5f6;
+  border: 1px solid #ede5e8;
+  border-radius: 10px;
+}
+
+.team-manager-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.team-manager-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-manager-row-code {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.team-manager-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Status pill locked state ────────────────────────────────── */
+.status-pill-btn.is-locked {
+  opacity: 0.65;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.pill-lock-icon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  color: #880015;
+  background: #fff;
+  border-radius: 50%;
+  padding: 1px;
+}
+
+/* ── Team member display ─────────────────────────────────────── */
+.team-manager-row-members {
+  font-size: 12px;
+  color: #475569;
+  font-style: italic;
+}
+
+.team-manager-row-individual {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* ── Member tag input ────────────────────────────────────────── */
+.member-tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  padding: 6px 12px;
+  border: 2px solid var(--admin-border, #d7c4cb);
+  border-radius: 10px;
+  background: #fff;
+  cursor: text;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.member-tag-input:focus-within {
+  border-color: #880015;
+}
+
+.member-tag-input *:focus,
+.member-tag-input *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.member-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  background: #f3e8eb;
+  border: 1px solid #d9b8bf;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b0f23;
+  white-space: nowrap;
+}
+
+.member-tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(107, 15, 35, 0.15);
+  color: #6b0f23;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.member-tag-remove:hover {
+  background: rgba(107, 15, 35, 0.3);
+}
+
+.member-tag-field {
+  flex: 1;
+  min-width: 140px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  font-size: 14px;
+  color: #1e293b;
+  background: transparent;
+  padding: 2px 0;
+}
+
+.member-tag-field::placeholder {
+  color: #b0a0a6;
+}
+
+/* ── Member chips in team list ───────────────────────────────── */
+.team-manager-row-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.team-manager-member-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f3e8eb;
+  border: 1px solid #d9b8bf;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b0f23;
+}
+
+/* ── Team split layout ───────────────────────────────────────── */
+.team-split-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.team-split-form {
+  flex: 0 0 38%;
+  position: sticky;
+  top: 16px;
+  background: #faf7f8;
+  border: 1.5px solid #ede5e8;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.team-split-list {
+  flex: 1 1 0;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* tighten form inside the sticky panel */
+.team-split-form .team-manager-form {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* ── Team list search bar ────────────────────────────────────── */
+.team-list-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.team-list-search-icon {
+  position: absolute;
+  left: 10px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.team-list-search-input {
+  width: 100%;
+  padding: 8px 32px 8px 32px;
+  border: 1.5px solid #e2d5d9;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1e293b;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.team-list-search-input:focus {
+  border-color: #880015;
+}
+
+.team-list-search-clear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.team-list-search-clear:hover {
+  color: #880015;
+  background: #f3e8eb;
 }

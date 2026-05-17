@@ -42,7 +42,7 @@ public class QuizSessionService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz", quizId));
 
-        // Deactivate any other active quizzes (single-session rule)
+        // Deactivate any other live quizzes (single-session rule)
         List<Quiz> activeQuizzes = quizRepository.findByIsLiveSessionTrue();
         for (Quiz activeQuiz : activeQuizzes) {
             if (!activeQuiz.getId().equals(quizId)) {

@@ -20,11 +20,9 @@ export function useQuizzes() {
     queryClient.setQueryData(queryKeys.quizzes, (old: any) => {
       if (!old || !Array.isArray(old)) return old;
       return old.map((q: any) => {
-        // Only upgrade to ACTIVE if this quiz matches the active one
         if (active && q.id === active.id) {
           return { ...q, status: 'ACTIVE', isLiveSession: true };
         }
-        // Don't downgrade - trust server state for other quizzes
         return q;
       });
     });

@@ -12,6 +12,7 @@ import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class QuestionBankService {
      * Auto-archives a question into the owner's bank after quiz question creation.
      * Fire-and-forget: failure here should not block quiz question creation.
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public QuestionBankItem archiveFromQuiz(Question question, Long ownerUserId) {
         QuestionBankItem item = QuestionBankItem.fromQuestion(question, ownerUserId);
         return questionBankRepository.save(item);
@@ -48,6 +50,7 @@ public class QuestionBankService {
      * Auto-archives a question into the owner's bank with category (quiz title).
      * Fire-and-forget: failure here should not block quiz question creation.
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public QuestionBankItem archiveFromQuiz(Question question, Long ownerUserId, String category) {
         QuestionBankItem item = QuestionBankItem.fromQuestion(question, ownerUserId);
         item.setCategory(category);

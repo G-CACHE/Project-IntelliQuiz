@@ -25,6 +25,9 @@ public class Team extends SoftDeletableEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "members", columnDefinition = "TEXT")
+    private String members; // comma-separated member names, nullable
+
     @Column(name = "access_code", nullable = false)
     private String accessCode;
 
@@ -40,6 +43,14 @@ public class Team extends SoftDeletableEntity {
     public Team(Long quizId, String name, String accessCode) {
         this.quizId = quizId;
         this.name = name;
+        this.accessCode = accessCode;
+        this.totalScore = 0;
+    }
+
+    public Team(Long quizId, String name, String members, String accessCode) {
+        this.quizId = quizId;
+        this.name = name;
+        this.members = members;
         this.accessCode = accessCode;
         this.totalScore = 0;
     }
@@ -82,6 +93,14 @@ public class Team extends SoftDeletableEntity {
 
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
+    }
+
+    public String getMembers() {
+        return members;
+    }
+
+    public void setMembers(String members) {
+        this.members = members;
     }
 
     public String getDeviceId() {
