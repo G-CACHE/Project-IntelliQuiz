@@ -16,7 +16,7 @@ import {
   BiLock,
   BiTrash,
 } from 'react-icons/bi';
-import { useQuizzes, useCreateQuiz, useUpdateQuiz, useQuizStatusChange, useDeleteQuiz } from '../../hooks';
+import { useQuizzes, useUpdateQuiz, useQuizStatusChange, useDeleteQuiz } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Quiz, CreateQuizRequest } from '../../services/api';
 import CreateQuizModal from '../../components/admin/CreateQuizModal';

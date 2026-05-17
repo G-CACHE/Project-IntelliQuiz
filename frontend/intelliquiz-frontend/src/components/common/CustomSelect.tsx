@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { BiChevronDown, BiCheck } from 'react-icons/bi';
 
-export interface SelectOption {
-  value: string;
+type SelectValue = string | number;
+
+export interface SelectOption<Value extends SelectValue = string> {
+  value: Value;
   label: string;
+  disabled?: boolean;
 }
 
-interface CustomSelectProps {
-  value: string;
-  options: SelectOption[];
-  onChange: (value: string) => void;
+interface CustomSelectProps<Value extends SelectValue = string> {
+  value: Value;
+  options: SelectOption<Value>[];
+  onChange: (value: Value) => void;
   disabled?: boolean;
   id?: string;
   placeholder?: string;
@@ -17,15 +20,17 @@ interface CustomSelectProps {
   dropUp?: boolean;
 }
 
-export default function CustomSelect({ value, options, onChange, disabled, id, placeholder, compact, dropUp }: CustomSelectProps) {
+const toKey = (value: SelectValue) => String(value);
+
+export default function CustomSelect<Value extends SelectValue = string>({ value, options, onChange, disabled, id, placeholder, compact, dropUp }: CustomSelectProps<Value>) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const allOptions: SelectOption[] = placeholder
-    ? [{ value: '', label: placeholder }, ...options]
+  const allOptions: SelectOption<Value>[] = placeholder
+    ? [{ value: '' as Value, label: placeholder, disabled: true }, ...options]
     : options;
 
-  const selected = allOptions.find((o) => o.value === value);
+  const selected = allOptions.find((o) => toKey(o.value) === toKey(value));
 
   useEffect(() => {
     if (!open) return;
@@ -41,19 +46,21 @@ export default function CustomSelect({ value, options, onChange, disabled, id, p
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((p) => !p); return; }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const idx = allOptions.findIndex((o) => o.value === value);
-      const next = allOptions[Math.min(idx + 1, allOptions.length - 1)];
+      const enabledOptions = allOptions.filter((option) => !option.disabled);
+      const idx = enabledOptions.findIndex((o) => toKey(o.value) === toKey(value));
+      const next = enabledOptions[Math.min(idx + 1, enabledOptions.length - 1)];
       if (next) onChange(next.value);
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      const idx = allOptions.findIndex((o) => o.value === value);
-      const prev = allOptions[Math.max(idx - 1, 0)];
+      const enabledOptions = allOptions.filter((option) => !option.disabled);
+      const idx = enabledOptions.findIndex((o) => toKey(o.value) === toKey(value));
+      const prev = enabledOptions[Math.max(idx - 1, 0)];
       if (prev) onChange(prev.value);
     }
   };
 
-  const isPlaceholderSelected = placeholder && value === '';
+  const isPlaceholderSelected = placeholder && toKey(value) === '';
 
   return (
     <div ref={ref} className={`cselect-root${compact ? ' cselect-compact' : ''}`} style={{ position: 'relative' }}>
@@ -75,21 +82,23 @@ export default function CustomSelect({ value, options, onChange, disabled, id, p
       {open && (
         <ul role="listbox" className={`cselect-menu${dropUp ? ' cselect-menu-up' : ''}`}>
           {allOptions.map((opt) => {
-            const isPlaceholderOpt = placeholder && opt.value === '';
+            const isPlaceholderOpt = placeholder && toKey(opt.value) === '';
+            const isSelected = toKey(opt.value) === toKey(value);
             return (
               <li
                 key={opt.value}
                 role="option"
-                aria-selected={opt.value === value}
-                className={`cselect-option${opt.value === value ? ' is-selected' : ''}${isPlaceholderOpt ? ' is-placeholder-opt' : ''}`}
+                aria-selected={isSelected}
+                className={`cselect-option${isSelected ? ' is-selected' : ''}${isPlaceholderOpt ? ' is-placeholder-opt' : ''}${opt.disabled ? ' is-disabled' : ''}`}
                 onMouseDown={(e) => {
                   e.preventDefault();
+                  if (opt.disabled) return;
                   onChange(opt.value);
                   setOpen(false);
                 }}
               >
                 <span>{opt.label}</span>
-                {opt.value === value && !isPlaceholderOpt && <BiCheck size={15} className="cselect-check" />}
+                {isSelected && !isPlaceholderOpt && <BiCheck size={15} className="cselect-check" />}
               </li>
             );
           })}

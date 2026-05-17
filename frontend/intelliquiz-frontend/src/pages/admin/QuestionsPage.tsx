@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import CustomSelect from '../../components/common/CustomSelect';
 import { useParams } from 'react-router-dom';
 import {
@@ -13,8 +13,6 @@ import {
   BiTime,
   BiStar,
   BiImport,
-  BiChevronLeft,
-  BiChevronRight,
   BiSearch,
   BiChevronDown,
 } from 'react-icons/bi';
@@ -57,7 +55,6 @@ export default function AdminQuestionsPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const quizIdNum = quizId ? parseInt(quizId) : 0;
   const { canEditQuiz, isSuperAdmin } = useAuth();
-  const questionsPerPage = 5;
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -71,7 +68,6 @@ export default function AdminQuestionsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<CreateQuestionRequest>(initialForm);
   const [bankLoading, setBankLoading] = useState(false);
-  const [sortingQuestions, setSortingQuestions] = useState(false);
   const [bankQuestions, setBankQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [bankSearch, setBankSearch] = useState('');
@@ -79,7 +75,6 @@ export default function AdminQuestionsPage() {
   const [bankVisibleCount, setBankVisibleCount] = useState(10);
   const [bankTotalCount, setBankTotalCount] = useState(0);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
   const [activeQuestionId, setActiveQuestionId] = useState<number | null>(null);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
   
@@ -89,7 +84,6 @@ export default function AdminQuestionsPage() {
 
   useEffect(() => {
     if (quizIdNum) loadData();
-    setCurrentPage(1);
   }, [quizIdNum]);
 
   const loadData = async () => {
@@ -102,40 +96,12 @@ export default function AdminQuestionsPage() {
       ]);
       setQuiz(quizData);
       setQuestions(questionsData);
-      setCurrentPage(1);
       setActiveQuestionId((prev) => prev ?? (questionsData[0]?.id ?? null));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
-  };
-
-  const totalPages = Math.max(1, Math.ceil(questions.length / questionsPerPage));
-
-  const paginatedQuestions = useMemo(() => {
-    const startIndex = (currentPage - 1) * questionsPerPage;
-    return questions.slice(startIndex, startIndex + questionsPerPage);
-  }, [currentPage, questions]);
-
-  const startQuestionIndex = questions.length === 0 ? 0 : (currentPage - 1) * questionsPerPage + 1;
-  const endQuestionIndex = Math.min(currentPage * questionsPerPage, questions.length);
-
-  const paginationPages = useMemo(() => {
-    if (totalPages <= 5) {
-      return Array.from({ length: totalPages }, (_, index) => index + 1);
-    }
-
-    const pages = new Set<number>([1, totalPages, currentPage]);
-    if (currentPage - 1 > 1) pages.add(currentPage - 1);
-    if (currentPage + 1 < totalPages) pages.add(currentPage + 1);
-
-    return Array.from(pages).sort((left, right) => left - right);
-  }, [currentPage, totalPages]);
-
-  const goToPage = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 1), totalPages);
-    setCurrentPage(nextPage);
   };
 
   const handleSave = async () => {
@@ -374,56 +340,6 @@ export default function AdminQuestionsPage() {
     }
   };
 
-  const handleSortByDifficulty = async () => {
-    if (!hasEditPermission) {
-      setError('You do not have permission to edit this quiz');
-      return;
-    }
-    if (!isDraftQuiz) {
-      setError('Sorting is only available while the quiz is in Draft status.');
-      return;
-    }
-    if (questions.length <= 1) {
-      return;
-    }
-
-    const difficultyRank: Record<Question['difficulty'], number> = {
-      EASY: 0,
-      MEDIUM: 1,
-      HARD: 2,
-      TIE_BREAKER: 3,
-    };
-
-    const sortedIds = [...questions]
-      .sort((a, b) => {
-        const rankDiff = difficultyRank[a.difficulty] - difficultyRank[b.difficulty];
-        if (rankDiff !== 0) return rankDiff;
-        if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
-        return a.id - b.id;
-      })
-      .map((q) => q.id);
-
-    const currentIds = questions.map((q) => q.id);
-    const unchanged = currentIds.length === sortedIds.length
-      && currentIds.every((id, idx) => id === sortedIds[idx]);
-
-    if (unchanged) {
-      setError('Questions are already ordered by difficulty.');
-      return;
-    }
-
-    try {
-      setSortingQuestions(true);
-      setError(null);
-      await questionsApi.reorder(quizIdNum, sortedIds);
-      await loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sort questions by difficulty');
-    } finally {
-      setSortingQuestions(false);
-    }
-  };
-
   const getDifficultyBadge = (d: string) => {
     const map: Record<string, string> = {
       EASY: 'admin-badge-success',
@@ -536,7 +452,7 @@ export default function AdminQuestionsPage() {
                 <p>No {difficultyFilter.toLowerCase()} questions</p>
               </div>
             ) : (
-              filteredSidebarQuestions.map((q, idx) => {
+              filteredSidebarQuestions.map((q) => {
                 const isActive = q.id === activeQuestionId;
                 const globalIdx = questions.findIndex((gq) => gq.id === q.id);
                 return (
