@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
   Home,
-  BookOpen,
+  Library,
   LogOut,
   ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 import '../../styles/admin.css';
 import { authApi, currentUserApi } from '../../services/api';
@@ -29,7 +30,7 @@ export default function AdminLayout() {
   // Build nav items based on user's permissions
   const navItems: NavItem[] = [
     { path: '/admin', label: 'Dashboard', icon: <Home size={18} /> },
-    { path: '/admin/quizzes', label: 'My Quizzes', icon: <BookOpen size={18} /> },
+    { path: '/admin/quizzes', label: 'My Quizzes', icon: <Library size={18} /> },
   ];
 
   useEffect(() => {
@@ -120,9 +121,6 @@ export default function AdminLayout() {
             onClick={() => navigate('/admin')}
             className="pb-nav-logo-wrap"
           >
-            <div className="pb-nav-logo-icon">
-              <BookOpen size={20} />
-            </div>
             <span className="pb-nav-logo-text">IntelliQuiz</span>
           </div>
 

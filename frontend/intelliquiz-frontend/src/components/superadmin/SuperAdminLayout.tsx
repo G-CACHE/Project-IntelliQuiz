@@ -7,7 +7,7 @@ import {
   LogOut,
   ChevronDown,
   Database,
-  BookOpen,
+  Sparkles,
 } from 'lucide-react';
 import '../../styles/superadmin.css';
 import { authApi, currentUserApi } from '../../services/api';
@@ -123,9 +123,6 @@ export default function SuperAdminLayout() {
             onClick={() => navigate('/superadmin')}
             className="pb-nav-logo-wrap"
           >
-            <div className="pb-nav-logo-icon">
-              <BookOpen size={20} />
-            </div>
             <span className="pb-nav-logo-text">IntelliQuiz</span>
           </div>
 
