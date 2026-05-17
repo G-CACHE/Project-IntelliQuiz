@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
               </span>
             </button>
 
-            <button className="admin-clean-action" onClick={() => navigate('/admin/quizzes')}>
+            <button className="admin-clean-action secondary" onClick={() => navigate('/admin/quizzes')}>
               <span className="admin-clean-action-icon"><BiBarChartAlt2 size={16} /></span>
               <span>
                 <strong>Manage Quizzes</strong>

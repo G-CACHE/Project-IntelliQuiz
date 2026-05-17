@@ -823,17 +823,18 @@
 
 .admin-modal {
   background: var(--admin-white);
-  border-radius: 20px;
+  border-radius: 16px;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   max-height: 90vh;
   overflow: hidden;
-  box-shadow: var(--admin-shadow-xl);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   animation: adminSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid #e5e7eb;
 }
 
 @keyframes adminSlideUp {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -841,8 +842,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, var(--pup-maroon-900) 0%, var(--pup-maroon-700) 100%);
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #7a1733 0%, #8d1f3f 100%);
+  border-bottom: none;
 }
 
 .admin-modal-title {
@@ -850,6 +852,7 @@
   font-weight: 700;
   color: #fff;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .admin-modal-body {
@@ -861,10 +864,51 @@
 .admin-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   padding: 16px 24px;
-  background: var(--admin-bg);
-  border-top: 1px solid var(--admin-border);
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Modal-specific button styles - cleaner design */
+.admin-modal-footer .admin-btn {
+  min-height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.admin-modal-footer .admin-btn-primary {
+  background: #7a1733;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 6px rgba(122, 23, 51, 0.3);
+}
+
+.admin-modal-footer .admin-btn-primary:hover {
+  background: #8d1f3f;
+  box-shadow: 0 4px 10px rgba(122, 23, 51, 0.4);
+  transform: translateY(-1px);
+}
+
+.admin-modal-footer .admin-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(122, 23, 51, 0.3);
+}
+
+.admin-modal-footer .admin-btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: none;
+}
+
+.admin-modal-footer .admin-btn-secondary:hover {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #d1d5db;
+  box-shadow: none;
 }
 
 /* ==================== ALERTS ==================== */
