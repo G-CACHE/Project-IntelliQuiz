@@ -83,8 +83,29 @@ const HostGame: React.FC = () => {
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   const [startingRound, setStartingRound] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [currentQuestionSubmissions, setCurrentQuestionSubmissions] = useState(0);
+  const lastQuestionNumberRef = useRef(0);
   const hasFiredFinalConfettiRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Reset submission count when question changes
+  useEffect(() => {
+    if (questionNumber !== lastQuestionNumberRef.current) {
+      lastQuestionNumberRef.current = questionNumber;
+      setCurrentQuestionSubmissions(0);
+    }
+  }, [questionNumber]);
+
+  // Track new submissions for the current question only
+  useEffect(() => {
+    if (submissions.length === 0) return;
+    const uniqueIds = new Set(
+      submissions
+        .map((s) => Number((s as any)?.teamId ?? (s as any)?.id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    );
+    setCurrentQuestionSubmissions(uniqueIds.size);
+  }, [submissions]);
 
   // Audio Synchronization Logic
   useEffect(() => {
@@ -160,11 +181,6 @@ const HostGame: React.FC = () => {
   
   const isLastQuestion = totalQuestions > 0 && questionNumber >= totalQuestions;
   const gamePhaseLabel = gameState.replace(/_/g, ' ');
-  const submittedTeamsCount = new Set(
-    submissions
-      .map((s) => Number((s as any)?.teamId ?? (s as any)?.id))
-      .filter((id) => Number.isFinite(id) && id > 0)
-  ).size;
 
   // Render control buttons based on game state
   const renderControls = () => {
@@ -194,7 +210,7 @@ const HostGame: React.FC = () => {
               Pause Quiz
             </button>
             <p className="proctor-host-submitted-count">
-              {(submittedTeamsCount || submissions.length)} team(s) submitted
+              {currentQuestionSubmissions} team(s) submitted
             </p>
           </div>
         );
@@ -500,8 +516,10 @@ const HostGame: React.FC = () => {
           {/* PAUSED State */}
           {gameState === 'PAUSED' && (
             <div className="proctor-host-state-panel proctor-host-state-panel-neutral">
-              <PauseCircle size={48} className="proctor-host-state-icon" style={{ color: 'var(--color-gold)' }} />
               <h2 className="proctor-buffer-title">Quiz Paused</h2>
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                <PauseCircle size={64} style={{ color: 'var(--color-gold)' }} />
+              </div>
               <p className="proctor-host-panel-subtitle">
                 The timer has been paused. Click Resume to continue.
               </p>
@@ -577,7 +595,7 @@ const HostGame: React.FC = () => {
                     <TimerIcon size={16} aria-hidden="true" />
                     <div>
                       <span className="proctor-controls-stat-label">Submissions</span>
-                      <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>
+                      <strong className="proctor-controls-stat-value">{currentQuestionSubmissions}</strong>
                     </div>
                   </div>
                 </div>

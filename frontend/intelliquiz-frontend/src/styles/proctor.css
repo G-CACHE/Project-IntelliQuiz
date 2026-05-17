@@ -1369,20 +1369,22 @@
 
 .proctor-host-monitor-btn {
   background: rgba(255, 255, 255, 0.12);
-  border: var(--border-brutal);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   padding: 10px 16px;
-  border-radius: var(--border-radius-btn);
+  border-radius: 5px;
   font-size: 13px;
   font-weight: 700;
-  box-shadow: var(--shadow-brutal);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .proctor-host-monitor-btn:hover {
-  background: var(--color-primary);
-  color: var(--color-black);
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-brutal-lg);
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-color: var(--color-gold);
+  transform: none;
+  box-shadow: none;
 }
 
 .proctor-host-submitted-count {

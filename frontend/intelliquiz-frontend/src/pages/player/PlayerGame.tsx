@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, BarChart3, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
@@ -106,6 +106,8 @@ const PlayerGame: React.FC = () => {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [questionReview, setQuestionReview] = useState<ParticipantQuestionResult[]>([]);
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
+  // Guard against concurrent submissions in tournament mode
+  const submittingRef = useRef(false);
 
   // Get session data
   const [session] = useState(() => {
@@ -182,6 +184,7 @@ const PlayerGame: React.FC = () => {
   useEffect(() => {
     if (questionNumber !== lastQuestionNumber) {
       const questionId = Number(currentQuestion?.id ?? 0);
+      submittingRef.current = false;
       // Only restore cached answers in participant-navigated mode.
       setSelectedOption(canNavigate && questionId > 0 ? (selectedAnswers[questionId] ?? null) : null);
       if (!canNavigate) {
@@ -203,12 +206,9 @@ const PlayerGame: React.FC = () => {
     }
   }, [gameState, canNavigate]);
 
-  // Safety reset: if a new active question is running and timer has started, clear stale submitted lock.
-  useEffect(() => {
-    if (!canNavigate && gameState === 'QUESTION' && timeRemaining > 0) {
-      setSubmitted(false);
-    }
-  }, [canNavigate, gameState, timeRemaining, currentQuestion?.id]);
+  // Safety reset removed — it was firing on every timer tick and clearing the
+  // submitted lock, causing duplicate submissions without any user action.
+  // The question-change effect above already handles resetting submitted correctly.
 
   // Redirect if kicked
   useEffect(() => {
@@ -320,11 +320,14 @@ const PlayerGame: React.FC = () => {
     if (!submitted) {
       // Tournament mode: persist updates immediately (including identification typing).
       setSelectedOption(option);
-      if (currentQuestion && session && timeRemaining > 0) {
+      if (currentQuestion && session && timeRemaining > 0 && !submittingRef.current) {
+        submittingRef.current = true;
         void submitAnswer({
           teamId: session.teamId,
           questionId: Number(currentQuestion.id),
           selectedOption: option,
+        }).finally(() => {
+          submittingRef.current = false;
         });
       }
     }
@@ -441,7 +444,6 @@ const PlayerGame: React.FC = () => {
                   timeRemaining={timeRemaining} 
                   totalTime={canNavigate ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
                   displayMode={canNavigate ? 'clock' : 'seconds'}
-                  large
                 />
               </div>
             )}
@@ -643,7 +645,7 @@ const PlayerGame: React.FC = () => {
               />
 
               <div className="participant-waiting-message">
-                <p>Waiting for scoreboard...</p>
+                <p>Waiting for the next question...</p>
               </div>
             </div>
           )}
@@ -675,11 +677,7 @@ const PlayerGame: React.FC = () => {
                     Go Home
                   </button>
                 </div>
-              ) : (
-                <div className="participant-waiting-message">
-                  <p>Waiting for next question...</p>
-                </div>
-              )}
+              ) : null}
             </div>
           )}
 
@@ -693,7 +691,7 @@ const PlayerGame: React.FC = () => {
           )}
 
           {/* REVEAL State (brief transition before ANSWER_REVEAL) */}
-          {gameState === 'REVEAL' && currentQuestion && (
+          {gameState === 'REVEAL' && !currentQuestion && (
             <div className="participant-buffer-state">
               <div className="participant-loading-spinner participant-spinner-large"></div>
               <h2 className="participant-buffer-title">Results Coming...</h2>
@@ -706,6 +704,11 @@ const PlayerGame: React.FC = () => {
               <div className="participant-paused-icon"><PauseCircle size={48} /></div>
               <h2 className="participant-buffer-title">Quiz Paused</h2>
               <p className="participant-buffer-text">Waiting for the host to resume...</p>
+              {timeRemaining > 0 && (
+                <p className="participant-buffer-text" style={{ marginTop: '8px', fontSize: '14px', color: '#94a3b8', fontWeight: 600 }}>
+                  {timeRemaining}s remaining
+                </p>
+              )}
             </div>
           )}
 
