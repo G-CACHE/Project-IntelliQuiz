@@ -206,7 +206,10 @@ public class GameFlowService {
             QuestionInfoDto question = quizFacade.getQuestionForGrading(questionId);
             List<TeamInfoDto> teams = teamFacade.getTeamsByQuiz(quizId);
             
-            // Resolve letter-key (A/B/C/D) to actual option text for correct comparison
+            // Use the raw correctKey (letter) for grading MCQ/TRUE_FALSE so that two options
+            // with identical text are distinguished by position. resolvedCorrectAnswer() is still
+            // used for the answer-reveal broadcast so participants see the option text.
+            String gradingKey = question.correctKey();
             String resolvedCorrectAnswer = question.resolvedCorrectAnswer();
             
             // Grade all submissions and calculate results
@@ -219,10 +222,11 @@ public class GameFlowService {
                     
                     if (submissionOpt.isPresent()) {
                         SubmissionInfoDto sub = submissionOpt.get();
-                        // Grade if not already graded — use resolved option text, not the letter key
+                        // Grade using the letter key — Submission.grade() now compares letters
+                        // directly for MCQ/TRUE_FALSE, falling back to text for legacy submissions.
                         if (!sub.isGraded()) {
                             sub = submissionFacade.gradeSubmission(team.id(), question.id(),
-                                    resolvedCorrectAnswer, question.points(),
+                                    gradingKey, question.points(),
                                     question.type(), question.caseSensitive());
                             // Update team score if correct
                             if (sub.isCorrect()) {
