@@ -9,6 +9,7 @@ interface TeamGridProps {
   highlightTeamId?: number;
   variant?: 'proctor' | 'participant';
   page?: number;
+  onPageChange?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const TeamGrid: React.FC<TeamGridProps> = ({
