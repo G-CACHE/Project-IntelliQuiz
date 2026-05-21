@@ -500,7 +500,7 @@ const HostGame: React.FC = () => {
               
               {currentQuestion.correctAnswer && (
                 <div className="proctor-correct-answer">
-                  <p>Correct Answer: {currentQuestion.correctAnswer}</p>
+                  <p>{currentQuestion.correctAnswer}</p>
                 </div>
               )}
             </div>

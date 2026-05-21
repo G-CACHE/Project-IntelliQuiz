@@ -132,7 +132,7 @@ const PlayerLobby: React.FC = () => {
               </div>
               <div className="participant-header-content">
                 <p className="participant-page-subtitle">Your Team</p>
-                <h1 className="participant-page-title">{name}</h1>
+                <p className="participant-page-title">{name}</p>
               </div>
             </>
           );

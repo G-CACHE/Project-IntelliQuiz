@@ -270,7 +270,7 @@ const ProctorDashboard: React.FC = () => {
   };
 
   return (
-    <div className="proctor-root">
+    <div className="proctor-root proctor-dashboard-page">
       <div className="proctor-sticky-header">
         <div>
           <h1 className="proctor-sticky-header-title">{session.quizTitle}</h1>
@@ -295,7 +295,7 @@ const ProctorDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ padding: '24px 32px' }}>
+      <div className="proctor-dashboard-content">
         {error && (
           <div className="proctor-alert proctor-alert-error">
             <div className="proctor-alert-content">
@@ -305,7 +305,7 @@ const ProctorDashboard: React.FC = () => {
           </div>
         )}
 
-        <div className="proctor-bento-container">
+        <div className="proctor-bento-container proctor-dashboard-grid">
           {/* LEFT COLUMN: Controls & Stats */}
           <div className="proctor-bento-left">
             {/* Quick Stats Row */}
@@ -366,10 +366,10 @@ const ProctorDashboard: React.FC = () => {
               </div>
 
               {/* Connected Teams List */}
-              <div className="proctor-card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="proctor-card proctor-dashboard-panel" style={{ display: 'flex', flexDirection: 'column' }}>
                 <h3 className="proctor-data-card-title">Active Teams ({connectedTeams.length})</h3>
                 
-                <div style={{ flex: 1, overflowY: 'auto', maxHeight: '350px', marginTop: 12 }}>
+                <div className="proctor-dashboard-scroll-panel">
                   {connectedTeams.length === 0 ? (
                     <div className="proctor-empty-state" style={{ padding: '40px 20px' }}>
                       <div style={{ opacity: 0.3, marginBottom: 10 }}>
@@ -428,7 +428,7 @@ const ProctorDashboard: React.FC = () => {
           </div>
 
           {/* RIGHT COLUMN: Violation History Grid */}
-          <div className="proctor-card" style={{ display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 120px)' }}>
+          <div className="proctor-card proctor-dashboard-panel" style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 className="proctor-data-card-title" style={{ margin: 0 }}>Violation Log</h3>
               <button onClick={refreshViolationHistory} className="proctor-btn proctor-btn-info" style={{ padding: '6px 12px', fontSize: 12 }}>
@@ -440,7 +440,7 @@ const ProctorDashboard: React.FC = () => {
               <p style={{ margin: '0 0 16px', color: '#dc2626', fontSize: 13 }}>{historyError}</p>
             )}
 
-            <div style={{ overflowY: 'auto', flex: 1, paddingRight: 8 }}>
+            <div className="proctor-dashboard-scroll-panel proctor-dashboard-scroll-panel-right">
               {historyLoading ? (
                 <div className="proctor-loading-container" style={{ minHeight: '200px' }}>
                   <div className="proctor-loading-spinner-small"></div>

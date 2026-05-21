@@ -30,6 +30,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const optionList = questionType === 'TRUE_FALSE'
     ? (question.options.length >= 2 ? question.options.slice(0, 2) : ['True', 'False'])
     : question.options;
+  const isHostReveal = variant === 'proctor' && showCorrectAnswer;
 
   const normalize = (val: string | null | undefined) => (val || '').trim().toLowerCase();
 
@@ -98,20 +99,27 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       {/* Answer UI */}
       {questionType === 'IDENTIFICATION' ? (
         <div className={`${prefix}-identification-container`}>
-          <div className={`${prefix}-input-wrapper`}>
-            <input
-              type="text"
-              value={selectedOption ?? ''}
-              onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
-              placeholder="Type your answer here..."
-              disabled={disabled}
-              className={`${prefix}-answer-input`}
-            />
-            <div className={`${prefix}-input-focus-border`}></div>
-          </div>
+          {variant === 'participant' && (
+            <div className={`${prefix}-answer-section-label`}>Your Answer</div>
+          )}
+          {!isHostReveal && (
+            <div className={`${prefix}-input-wrapper`}>
+              <input
+                type="text"
+                value={selectedOption ?? ''}
+                onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
+                placeholder={variant === 'participant' ? ' ' : 'Type your answer here...'}
+                disabled={disabled}
+                className={`${prefix}-answer-input`}
+              />
+              <div className={`${prefix}-input-focus-border`}></div>
+            </div>
+          )}
           {showCorrectAnswer && correctAnswer && (
-            <div className={`${prefix}-accepted-answer-card`}>
-              <div className={`${prefix}-accepted-label`}>Accepted Answer</div>
+            <div className={`${prefix}-accepted-answer-card ${prefix}-accepted-answer-card-success`}>
+              {variant === 'participant' && (
+                <div className={`${prefix}-accepted-label`}>Correct Answer</div>
+              )}
               <div className={`${prefix}-accepted-value`}>{correctAnswer}</div>
             </div>
           )}

@@ -37,7 +37,7 @@ const TeamGrid: React.FC<TeamGridProps> = ({
 
   return (
     <div
-      className={`${prefix}-team-grid`}
+      className={`${prefix}-team-grid ${teams.length > 16 ? 'scrollable' : ''}`}
       data-count={String(pageTeams.length)}
     >
       {pageTeams.map((team, index) => {

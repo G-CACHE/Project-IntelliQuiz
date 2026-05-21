@@ -105,6 +105,7 @@ const PlayerGame: React.FC = () => {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [questionReview, setQuestionReview] = useState<ParticipantQuestionResult[]>([]);
+  const [reviewPage, setReviewPage] = useState(1);
   const [showRoundAnnouncement, setShowRoundAnnouncement] = useState(false);
   // Guard against concurrent submissions in tournament mode
   const submittingRef = useRef(false);
@@ -224,6 +225,7 @@ const PlayerGame: React.FC = () => {
       setReviewError(null);
       const results = await quizResultsApi.getParticipantResults(session.quizId, session.teamId);
       setQuestionReview(results);
+      setReviewPage(1);
       setShowAnswersModal(true);
     } catch (err) {
       setReviewError(err instanceof Error ? err.message : 'Failed to load quiz answers');
@@ -231,6 +233,17 @@ const PlayerGame: React.FC = () => {
       setReviewLoading(false);
     }
   }, [session]);
+
+  const reviewPageSize = 3;
+  const reviewTotalPages = Math.max(1, Math.ceil(questionReview.length / reviewPageSize));
+  const reviewPageSafe = Math.min(reviewPage, reviewTotalPages);
+  const reviewStart = (reviewPageSafe - 1) * reviewPageSize;
+  const reviewEntries = questionReview.slice(reviewStart, reviewStart + reviewPageSize);
+
+  useEffect(() => {
+    if (!showAnswersModal) return;
+    setReviewPage(1);
+  }, [showAnswersModal, questionReview.length]);
 
   // Navigate to final scoreboard — show inline instead of navigating away
   // (Removed: we now render FINAL_RESULTS inline in this component)
@@ -436,16 +449,12 @@ const PlayerGame: React.FC = () => {
             
             {/* Timer — only show during active question, not buffer */}
             {gameState === 'QUESTION' && (
-              <div className={`participant-timer-container ${
-                timeRemaining <= 3 ? 'participant-timer-critical' : 
-                timeRemaining <= 5 ? 'participant-timer-low' : ''
-              }`}>
-                <Timer 
-                  timeRemaining={timeRemaining} 
-                  totalTime={canNavigate ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
-                  displayMode={canNavigate ? 'clock' : 'seconds'}
-                />
-              </div>
+              <Timer
+                timeRemaining={timeRemaining}
+                totalTime={canNavigate ? (timerTotalTime || 1) : (currentQuestion?.timeLimit || 30)}
+                displayMode={canNavigate ? 'clock' : 'seconds'}
+                showProgress={false}
+              />
             )}
           </div>
         </div>
@@ -715,17 +724,6 @@ const PlayerGame: React.FC = () => {
           {/* FINAL_RESULTS / ENDED State */}
           {gameState === 'FINAL_RESULTS' && (
             <div className="participant-final-results">
-              {/* Celebration Header */}
-              <div className="participant-final-banner">
-                <div className="participant-final-banner-icon-wrapper">
-                  <Trophy className="participant-final-banner-icon" />
-                </div>
-                <h2 className="participant-final-banner-title">Quiz Complete!</h2>
-                <p className="participant-final-banner-subtitle">
-                  Great job, everyone!
-                </p>
-              </div>
-
               {/* Player's Own Result Card */}
               {myFinalResult ? (
                   <div className="participant-final-result-card">
@@ -844,8 +842,9 @@ const PlayerGame: React.FC = () => {
             {questionReview.length === 0 ? (
               <p className="participant-answer-review-empty">No answer details available yet.</p>
             ) : (
-              <div className="participant-answer-review-list">
-                {questionReview.map((entry) => (
+              <>
+                <div className="participant-answer-review-list">
+                  {reviewEntries.map((entry) => (
                   <div key={entry.questionId} className="participant-answer-review-item">
                     <p className="participant-answer-review-question">
                       Q{entry.questionNumber}. {entry.questionText}
@@ -860,8 +859,31 @@ const PlayerGame: React.FC = () => {
                       {entry.isCorrect ? 'Correct' : 'Incorrect'} - {entry.pointsEarned}/{entry.maxPoints} pts
                     </p>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+
+                {questionReview.length > reviewPageSize && (
+                  <div className="quiz-list-pagination participant-answer-review-pagination" aria-label="Answer review pagination">
+                    <button
+                      type="button"
+                      className="quiz-list-page-btn"
+                      onClick={() => setReviewPage((prev) => Math.max(1, prev - 1))}
+                      disabled={reviewPageSafe === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="quiz-list-page-indicator">Page {reviewPageSafe} of {reviewTotalPages}</span>
+                    <button
+                      type="button"
+                      className="quiz-list-page-btn"
+                      onClick={() => setReviewPage((prev) => Math.min(reviewTotalPages, prev + 1))}
+                      disabled={reviewPageSafe === reviewTotalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
