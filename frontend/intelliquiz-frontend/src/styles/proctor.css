@@ -1617,8 +1617,8 @@
   padding: 30px 24px 24px;
   border: 1px solid rgba(13, 13, 13, 0.08);
   border-radius: 20px;
-  color: #1c2a3d;
-  background: #ffe7a0;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5f1027 0%, #7a1733 55%, #9f2346 100%);
   box-shadow: none;
   overflow: hidden;
   animation: pixel-pop 0.45s ease-out;
@@ -1680,7 +1680,8 @@
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(24px, 5vw, 48px);
-  text-shadow: 3px 3px 0 rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.18);
 }
 
 .proctor-host-final-banner h2 {
@@ -1691,7 +1692,7 @@
   margin: 10px 0 0;
   font-family: var(--font-heading);
   font-size: 22px;
-  color: rgba(28, 42, 61, 0.9);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .proctor-host-final-metrics {
@@ -1726,10 +1727,10 @@
 .proctor-host-final-metric strong {
   display: block;
   margin-top: 4px;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 400;
-  color: #3055c7;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  color: #111111;
 }
 
 .proctor-host-final-winner-card {

@@ -100,7 +100,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       {questionType === 'IDENTIFICATION' ? (
         <div className={`${prefix}-identification-container`}>
           {variant === 'participant' && (
-            <div className={`${prefix}-answer-section-label`}>Your Answer</div>
+            <div className={`${prefix}-answer-section-label`}>Type your answer here</div>
           )}
           {!isHostReveal && (
             <div className={`${prefix}-input-wrapper`}>
@@ -108,7 +108,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                 type="text"
                 value={selectedOption ?? ''}
                 onChange={(e) => !disabled && onSelectOption?.(e.target.value)}
-                placeholder={variant === 'participant' ? ' ' : 'Type your answer here...'}
+                placeholder={variant === 'participant' ? 'Type your answer here...' : 'Type your answer here...'}
                 disabled={disabled}
                 className={`${prefix}-answer-input`}
               />

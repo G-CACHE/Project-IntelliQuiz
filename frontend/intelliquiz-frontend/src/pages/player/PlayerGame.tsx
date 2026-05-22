@@ -559,9 +559,7 @@ const PlayerGame: React.FC = () => {
                         </span>
                       </p>
                     ) : (
-                      <p className="participant-submit-hint" style={{ textAlign: 'center', color: '#6b7280', marginTop: '16px' }}>
-                        Tap an answer to select it
-                      </p>
+                      <div />
                     )
                   )}
                 </div>

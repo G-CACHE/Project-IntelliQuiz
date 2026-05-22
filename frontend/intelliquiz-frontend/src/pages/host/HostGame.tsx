@@ -497,12 +497,6 @@ const HostGame: React.FC = () => {
                 showCorrectAnswer={gameState === 'ANSWER_REVEAL'}
                 disabled={true}
               />
-              
-              {currentQuestion.correctAnswer && (
-                <div className="proctor-correct-answer">
-                  <p>{currentQuestion.correctAnswer}</p>
-                </div>
-              )}
             </div>
           )}
 
