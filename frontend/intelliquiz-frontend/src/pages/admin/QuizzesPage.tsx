@@ -25,7 +25,7 @@ import '../../styles/admin.css';
 import './QuizzesPage.css';
 
 export default function AdminQuizzesPage() {
-  const quizzesPerPage = 6;
+  const quizzesPerPage = 6; // 2 rows × 3 columns
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
@@ -150,13 +150,13 @@ export default function AdminQuizzesPage() {
   };
 
   const getStatusClass = (quiz: Quiz) => {
-    const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'archived' };
+    const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'done' };
     return map[quiz.status] || 'draft';
   };
 
   const getStatusLabel = (quiz: Quiz) => {
-    if (quiz.status === 'ARCHIVED') return 'DONE';
-    return quiz.status;
+    const map: Record<string, string> = { DRAFT: 'Draft', READY: 'Ready', ACTIVE: 'Live', ARCHIVED: 'Done' };
+    return map[quiz.status] || quiz.status;
   };
 
   if (isLoading) {
@@ -342,22 +342,57 @@ export default function AdminQuizzesPage() {
 
       {filteredQuizzes.length > quizzesPerPage && (
         <section className="quiz-list-pagination" aria-label="Quiz pagination">
+          {/* Prev */}
           <button
             type="button"
-            className="admin-btn quiz-list-page-btn"
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            className="quiz-list-page-btn"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
+            aria-label="Previous page"
           >
-            Previous
+            ‹ Prev
           </button>
-          <span className="quiz-list-page-indicator">Page {currentPage} of {totalPages}</span>
+
+          {/* Page numbers with ellipsis */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).reduce<(number | 'ellipsis-start' | 'ellipsis-end')[]>((acc, page) => {
+            if (
+              page === 1 ||
+              page === totalPages ||
+              (page >= currentPage - 1 && page <= currentPage + 1)
+            ) {
+              acc.push(page);
+            } else if (page === 2 && currentPage > 3) {
+              acc.push('ellipsis-start');
+            } else if (page === totalPages - 1 && currentPage < totalPages - 2) {
+              acc.push('ellipsis-end');
+            }
+            return acc;
+          }, []).map((item, idx) =>
+            typeof item === 'number' ? (
+              <button
+                key={item}
+                type="button"
+                className={`quiz-list-page-number${item === currentPage ? ' active' : ''}`}
+                onClick={() => item !== currentPage && setCurrentPage(item)}
+                aria-label={`Page ${item}`}
+                aria-current={item === currentPage ? 'page' : undefined}
+              >
+                {item}
+              </button>
+            ) : (
+              <span key={item + String(idx)} className="quiz-list-page-ellipsis">…</span>
+            )
+          )}
+
+          {/* Next */}
           <button
             type="button"
-            className="admin-btn quiz-list-page-btn"
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            className="quiz-list-page-btn"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
+            aria-label="Next page"
           >
-            Next
+            Next ›
           </button>
         </section>
       )}

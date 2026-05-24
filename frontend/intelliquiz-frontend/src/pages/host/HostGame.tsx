@@ -6,7 +6,7 @@ import {
   Hourglass, PauseCircle, MonitorPlay
 } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
-import { clearSession, getProctorSession } from '../../services/sessionStorage';
+import { clearSession, getProctorSession, saveProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
@@ -24,7 +24,12 @@ const HostGame: React.FC = () => {
     if (stored) return stored;
     
     const quizId = searchParams.get('quizId');
+    const pin = searchParams.get('pin');
     if (quizId) {
+      if (pin) {
+        // Opened in a new tab — bootstrap session from URL params
+        return saveProctorSession(parseInt(quizId), 'Quiz', pin);
+      }
       return {
         quizId: parseInt(quizId),
         quizTitle: 'Quiz',
@@ -74,7 +79,21 @@ const HostGame: React.FC = () => {
   const handleViewLeaderboard = () => sendCommand({ type: 'VIEW_LEADERBOARD' });
   const handleNextQuestion = () => sendCommand({ type: 'NEXT_QUESTION' });
   const handleEndQuiz = () => sendCommand({ type: 'END_QUIZ' });
-  const handleOpenProctorMonitor = () => window.open('/proctor/dashboard', '_blank', 'noopener,noreferrer');
+  const handleOpenProctorMonitor = () => {
+    // When the quiz is finished, the proctor dashboard redirects to /host/game anyway.
+    // Open /host/game directly so the new tab lands on the final results view.
+    if (gameState === 'FINAL_RESULTS') {
+      const params = new URLSearchParams();
+      if (session?.quizId) params.set('quizId', String(session.quizId));
+      if (session?.proctorPin) params.set('pin', session.proctorPin);
+      window.open(`/host/game?${params.toString()}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const params = new URLSearchParams();
+    if (session?.quizId) params.set('quizId', String(session.quizId));
+    if (session?.proctorPin) params.set('pin', session.proctorPin);
+    window.open(`/proctor/dashboard?${params.toString()}`, '_blank', 'noopener,noreferrer');
+  };
   const handleExitHome = () => {
     clearSession();
     navigate('/');
@@ -547,7 +566,6 @@ const HostGame: React.FC = () => {
                   onClick={handleExitHome}
                   className="proctor-btn-primary proctor-btn-large proctor-home-action"
                 >
-                  <Home size={20} aria-hidden="true" />
                   Go Home
                 </button>
               </div>

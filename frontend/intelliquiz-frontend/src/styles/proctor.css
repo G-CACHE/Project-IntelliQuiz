@@ -1547,35 +1547,28 @@
 
 .proctor-host-final-stage {
   margin-top: 28px;
-  padding: 22px;
-  border: 4px solid var(--color-black);
-  border-radius: var(--border-radius-card);
-  background: #fff8e9;
-  box-shadow: 8px 8px 0 #8fb0f4;
+  padding: 0;
   display: grid;
-  gap: 18px;
+  gap: 20px;
   overflow: hidden;
 }
 
 .proctor-host-final-banner {
   position: relative;
   text-align: center;
-  padding: 30px 24px 24px;
-  border: 4px solid var(--color-black);
-  border-radius: var(--border-radius-card);
-  color: #1c2a3d;
-  background: #ffe7a0;
-  box-shadow: var(--shadow-brutal-lg);
+  padding: 36px 32px 28px;
+  border-radius: 20px;
+  color: #fff;
+  background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
+  box-shadow: 0 6px 24px rgba(122, 23, 51, 0.25);
   overflow: hidden;
-  animation: pixel-pop 0.45s ease-out;
 }
 
 .proctor-host-final-banner::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.18);
-  opacity: 0.2;
+  background: rgba(255, 255, 255, 0.04);
   pointer-events: none;
 }
 
@@ -1585,48 +1578,42 @@
 }
 
 .proctor-host-final-icon {
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 12px;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
   border-radius: 50%;
-  border: 4px solid var(--color-black);
-  box-shadow: var(--shadow-brutal);
+  border: 3px solid rgba(242, 200, 75, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f2c84b;
+  background: rgba(242, 200, 75, 0.2);
   position: relative;
 }
 
 .proctor-host-final-icon-main {
-  width: 46px;
-  height: 46px;
-  color: var(--color-black);
+  width: 38px;
+  height: 38px;
+  color: #f2c84b;
 }
 
 .proctor-host-final-icon-spark {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  color: #ffffff;
-  animation: float 1.2s ease-in-out infinite;
+  display: none;
 }
 
 .proctor-host-final-icon-spark-left {
-  left: -8px;
-  top: 10px;
+  display: none;
 }
 
 .proctor-host-final-icon-spark-right {
-  right: -8px;
-  bottom: 14px;
+  display: none;
 }
 
 .proctor-host-final-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(24px, 5vw, 48px);
-  text-shadow: 3px 3px 0 rgba(255, 255, 255, 0.55);
+  margin: 0 0 6px;
+  font-family: 'Boogaloo', cursive;
+  font-size: clamp(28px, 4vw, 44px);
+  color: #fff;
+  text-shadow: none;
 }
 
 .proctor-host-final-banner h2 {
@@ -1634,43 +1621,47 @@
 }
 
 .proctor-host-final-banner p {
-  margin: 10px 0 0;
-  font-family: var(--font-heading);
-  font-size: 22px;
-  color: rgba(28, 42, 61, 0.9);
+  margin: 6px 0 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
 }
 
 .proctor-host-final-metrics {
-  margin-top: 18px;
+  margin-top: 20px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .proctor-host-final-metric {
-  background: #fffef8;
-  border: var(--border-brutal);
-  border-radius: var(--border-radius-card);
-  box-shadow: var(--shadow-brutal);
-  padding: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
 }
 
 .proctor-host-final-metric span {
   display: block;
-  font-family: var(--font-body);
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(13, 13, 13, 0.68);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
 }
 
 .proctor-host-final-metric strong {
   display: block;
-  margin-top: 4px;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 400;
-  color: #3055c7;
+  margin-top: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #f2c84b;
 }
 
 .proctor-host-final-winner-card {
@@ -1679,35 +1670,35 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  border-radius: var(--border-radius-card);
-  border: 4px solid var(--color-black);
-  background: linear-gradient(130deg, #fff5bb 0%, #ffe4f0 100%);
-  box-shadow: var(--shadow-brutal-lg);
+  border-radius: 16px;
+  border: 1px solid #e7d8dc;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(122, 23, 51, 0.08);
   padding: 16px 20px;
 }
 
 .proctor-host-final-winner-label {
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 400;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: rgba(13, 13, 13, 0.72);
+  letter-spacing: 0.12em;
+  color: #6b7280;
 }
 
 .proctor-host-final-winner-main h3 {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(20px, 4vw, 34px);
-  font-weight: 400;
-  color: #2a49b4;
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(20px, 4vw, 30px);
+  font-weight: 800;
+  color: #7a1733;
 }
 
 .proctor-host-final-winner-main p {
   margin: 4px 0 0;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  color: var(--color-black);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  color: #f2c84b;
   font-weight: 700;
 }
 
@@ -1716,38 +1707,37 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
-  background: #fffef8;
-  border: var(--border-brutal);
-  border-radius: var(--border-radius-card);
-  box-shadow: var(--shadow-brutal);
+  background: #fff;
+  border: 1px solid #e7d8dc;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(122, 23, 51, 0.06);
   padding: 20px;
 }
 
 .proctor-host-podium-title {
   grid-column: 1 / -1;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-black);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .proctor-host-podium-item {
   text-align: center;
-  border-radius: var(--border-radius-card);
-  border: var(--border-brutal);
-  box-shadow: var(--shadow-brutal);
+  border-radius: 14px;
+  border: 1px solid #e7d8dc;
+  box-shadow: 0 2px 8px rgba(122, 23, 51, 0.06);
   padding: 18px 12px;
-  background: var(--color-white);
+  background: #fff;
 }
 
 .proctor-host-podium-item.is-first {
-  border-width: 4px;
-  border-color: var(--color-black);
-  background: linear-gradient(150deg, #ffe171 0%, #ffd3e7 100%);
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-brutal-lg);
+  border-color: rgba(242, 200, 75, 0.5);
+  background: linear-gradient(150deg, #fffbea 0%, #fff5f8 100%);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(122, 23, 51, 0.12);
 }
 
 .proctor-host-podium-medal {
@@ -1757,18 +1747,19 @@
 
 .proctor-host-podium-item p {
   margin: 0;
-  font-family: var(--font-heading);
-  font-size: 22px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--color-black);
+  color: #1f2937;
 }
 
 .proctor-host-podium-item strong {
   display: block;
   margin-top: 6px;
-  font-family: var(--font-display);
+  font-family: 'Montserrat', sans-serif;
   font-size: 14px;
-  color: #2a49b4;
+  font-weight: 700;
+  color: #f2c84b;
 }
 
 .proctor-host-final-scoreboard {
@@ -1785,26 +1776,39 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-heading);
-  background: #67f0c4;
-  color: #102a43;
-  border: var(--border-brutal);
-  box-shadow: var(--shadow-brutal-lg);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  background: #7a1733;
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(122, 23, 51, 0.3);
+  border-radius: 12px;
+  padding: 14px 36px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.proctor-host-final-actions .proctor-btn-primary:hover {
+  background: #65122a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(122, 23, 51, 0.4);
 }
 
 .proctor-home-action {
   background: #7a1733 !important;
   color: #fff !important;
-  border-color: #7a1733 !important;
-  border-radius: 12px;
+  border: none !important;
+  border-radius: 12px !important;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(122, 23, 51, 0.3) !important;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 .proctor-home-action:hover {
   background: #65122a !important;
-  border-color: #65122a !important;
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow-brutal-lg);
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(122, 23, 51, 0.4) !important;
 }
 
 /* ==================== BUFFER STATE ==================== */
@@ -3139,6 +3143,7 @@
   .proctor-host-final-banner h2 {
     font-size: 30px;
   }
+}
 
 
 /* ==================== PHASE 3 LOBBY REDESIGN ==================== */
@@ -3585,6 +3590,8 @@
     transform: scale(1);
   }
 }
+
+@media (max-width: 600px) {
   .proctor-host-final-metrics {
     grid-template-columns: 1fr;
     gap: 8px;

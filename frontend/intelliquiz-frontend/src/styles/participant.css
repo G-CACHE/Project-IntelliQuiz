@@ -3638,44 +3638,53 @@
 .participant-final-banner {
   background: linear-gradient(135deg, #7a1733 0%, #9f2346 100%);
   border-radius: 16px;
-  padding: 32px 24px;
-  margin-bottom: 24px;
+  padding: 16px 24px;
+  margin-top: 20px;
+  margin-bottom: 20px;
   text-align: center;
   color: #fff;
   box-shadow: 0 4px 12px rgba(122, 23, 51, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
 .participant-final-banner-icon-wrapper {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 16px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: rgba(242, 200, 75, 0.2);
-  border: 3px solid rgba(242, 200, 75, 0.4);
+  border: 2px solid rgba(242, 200, 75, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .participant-final-banner-icon {
-  width: 40px;
-  height: 40px;
+  width: 22px;
+  height: 22px;
   color: #f2c84b;
 }
 
 .participant-final-banner-title {
   font-family: 'Boogaloo', cursive;
-  font-size: clamp(32px, 5vw, 48px);
-  margin: 0 0 8px;
+  font-size: clamp(20px, 3vw, 28px);
+  margin: 0 0 2px;
   color: #fff;
 }
 
 .participant-final-banner-subtitle {
   font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   margin: 0;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
+}
+
+.participant-final-banner-text {
+  text-align: left;
 }
 
 /* Player Result Card */
@@ -3745,16 +3754,18 @@
 }
 
 .participant-final-result-rank {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 36px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
   line-height: 1;
   color: #7a1733;
   margin: 0;
 }
 
 .participant-final-result-score {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 36px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
   line-height: 1;
   color: #f2c84b;
   margin: 0;
@@ -3810,7 +3821,8 @@
 
 @media (max-width: 768px) {
   .participant-final-banner {
-    padding: 24px 16px;
+    padding: 12px 16px;
+    gap: 10px;
   }
 
   .participant-final-result-card {

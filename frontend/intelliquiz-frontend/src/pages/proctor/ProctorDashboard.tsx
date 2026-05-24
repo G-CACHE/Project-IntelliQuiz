@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { accessApi, violationApi, type ViolationLogRecord, type ViolationNotification } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
-import { clearSession, getProctorSession } from '../../services/sessionStorage';
+import { clearSession, getProctorSession, saveProctorSession } from '../../services/sessionStorage';
 import { useSSE } from '../../hooks/useSSE';
 import Timer from '../../components/game/Timer';
 import { parseSmartName } from '../../utils/nameUtils';
@@ -39,6 +39,11 @@ const ProctorDashboard: React.FC = () => {
     const stored = getProctorSession();
     if (stored) return stored;
     const quizId = searchParams.get('quizId');
+    const pin = searchParams.get('pin');
+    if (quizId && pin) {
+      // Opened in a new tab from HostGame — bootstrap the session from URL params
+      return saveProctorSession(parseInt(quizId, 10), 'Quiz', pin);
+    }
     if (quizId) {
       return { quizId: parseInt(quizId, 10), quizTitle: 'Quiz', proctorPin: '' };
     }

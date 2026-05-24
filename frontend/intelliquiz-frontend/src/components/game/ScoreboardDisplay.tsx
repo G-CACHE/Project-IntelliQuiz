@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, Crown, Sparkles, Trophy, Medal, Award, Star } from 'lucide-react';
+import { Target, Crown, Trophy, Medal, Award, Star } from 'lucide-react';
 import type { RankingEntry } from '../../services/api';
 import { parseSmartName } from '../../utils/nameUtils';
 
@@ -453,9 +453,7 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
       {/* Footer */}
       {isFinal && (
         <div style={S.footer}>
-          <Sparkles size={14} color="#fde68a" />
           <span style={S.footerTxt}>Congratulations to all participants!</span>
-          <Sparkles size={14} color="#fde68a" />
         </div>
       )}
     </div>
