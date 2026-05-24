@@ -146,10 +146,28 @@ public class Submission extends SoftDeletableEntity {
             this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
                     .map(accepted -> normalizeIdentificationAnswer(accepted, caseSensitive))
                     .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizeIdentificationAnswer(normalizedSubmitted, caseSensitive)));
+        } else if (questionType == QuestionType.TRUE_FALSE) {
+            // TRUE_FALSE correctKey is stored as "True" or "False" (the text value).
+            // Submitted answer is also the text value from the frontend.
+            this.isCorrect = !normalizedSubmitted.isBlank()
+                    && normalizedSubmitted.equals(normalizeAnswer(correctAnswer));
         } else {
-            this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
-                    .map(Submission::normalizeAnswer)
-                    .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedSubmitted.toUpperCase(Locale.ROOT)));
+            // MULTIPLE_CHOICE: correctKey is a letter (A/B/C/D).
+            // Submitted answer is the letter of the selected option.
+            // Primary: letter-to-letter comparison (always case-insensitive for letters).
+            String submittedLetter = normalizedSubmitted.toUpperCase(Locale.ROOT).trim();
+            String correctLetter = (correctAnswer == null ? "" : correctAnswer.trim().toUpperCase(Locale.ROOT));
+            boolean matchByLetter = !submittedLetter.isBlank() && submittedLetter.equals(correctLetter);
+            if (matchByLetter) {
+                this.isCorrect = true;
+            } else {
+                // Legacy fallback: text comparison for old submissions stored as option text.
+                // Respects caseSensitive flag when comparing option text.
+                this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
+                        .map(accepted -> normalizeIdentificationAnswer(accepted, caseSensitive))
+                        .anyMatch(accepted -> !accepted.isBlank()
+                                && accepted.equals(normalizeIdentificationAnswer(normalizedSubmitted, caseSensitive)));
+            }
         }
         if (this.isCorrect) {
             this.awardedPoints = questionPoints;

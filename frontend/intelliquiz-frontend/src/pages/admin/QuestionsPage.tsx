@@ -22,7 +22,7 @@ import '../../styles/admin.css';
 import './AdminRedesign.css';
 import './QuestionsPage.css';
 
-const OPTION_KEYS = ['A', 'B', 'C', 'D'];
+const OPTION_KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const QUESTION_TYPES: Array<{ value: CreateQuestionRequest['type']; label: string }> = [
   { value: 'MULTIPLE_CHOICE', label: 'Multiple Choice' },
   { value: 'TRUE_FALSE', label: 'True / False' },
@@ -38,7 +38,7 @@ const normalizeIdentificationAnswers = (raw: string) =>
     .filter((line, index, arr) => line.length > 0 && arr.indexOf(line) === index)
     .join('\n');
 
-const createBlankOptions = () => ['', '', '', ''];
+const createBlankOptions = () => ['', ''];
 
 const initialForm: CreateQuestionRequest = {
   text: '',
@@ -47,7 +47,7 @@ const initialForm: CreateQuestionRequest = {
   correctKey: '',
   points: 10,
   timeLimit: 30,
-  options: ['', '', '', ''],
+  options: ['', ''],
   caseSensitive: false,
 };
 
@@ -126,7 +126,7 @@ export default function AdminQuestionsPage() {
         options: validOptions,
       };
     } else if (formData.type === 'TRUE_FALSE') {
-      if (formData.correctKey !== 'A' && formData.correctKey !== 'B') {
+      if (formData.correctKey !== 'True' && formData.correctKey !== 'False') {
         return setError('Select whether True or False is the correct answer');
       }
       payload = {
@@ -183,15 +183,14 @@ export default function AdminQuestionsPage() {
     setSelectedQuestion(question);
     setIsEditing(true);
     const options = question.type === 'MULTIPLE_CHOICE'
-      ? (question.options.length >= 4
-        ? question.options
-        : [...question.options, ...Array(4 - question.options.length).fill('')])
+      ? (question.options.length >= 2 ? question.options : [...question.options, ...Array(2 - question.options.length).fill('')])
       : (question.type === 'TRUE_FALSE' ? DEFAULT_TRUE_FALSE_OPTIONS : createBlankOptions());
 
     const correctKey = question.type === 'IDENTIFICATION'
       ? (question.correctKey || '')
       : (question.type === 'TRUE_FALSE'
-        ? (question.correctKey === 'B' ? 'B' : 'A')
+        // Support legacy 'A'/'B' keys from old data, map to text
+        ? (question.correctKey === 'B' ? 'False' : question.correctKey === 'A' ? 'True' : (question.correctKey || 'True'))
         : question.correctKey);
 
     setFormData({
@@ -222,13 +221,27 @@ export default function AdminQuestionsPage() {
     setFormData({ ...formData, options: newOptions });
   };
 
+  const addOption = () => {
+    if (formData.options.length >= 8) return;
+    setFormData({ ...formData, options: [...formData.options, ''] });
+  };
+
+  const removeOption = (idx: number) => {
+    if (formData.options.length <= 2) return;
+    const newOptions = formData.options.filter((_, i) => i !== idx);
+    const removedKey = OPTION_KEYS[idx];
+    // If the removed option was the correct answer, clear the selection
+    const newCorrectKey = formData.correctKey === removedKey ? '' : formData.correctKey;
+    setFormData({ ...formData, options: newOptions, correctKey: newCorrectKey });
+  };
+
   const handleTypeChange = (type: CreateQuestionRequest['type']) => {
     if (type === 'MULTIPLE_CHOICE') {
       setFormData((prev) => ({ ...prev, type, correctKey: '', options: createBlankOptions() }));
       return;
     }
     if (type === 'TRUE_FALSE') {
-      setFormData((prev) => ({ ...prev, type, correctKey: 'A', options: DEFAULT_TRUE_FALSE_OPTIONS }));
+      setFormData((prev) => ({ ...prev, type, correctKey: 'True', options: DEFAULT_TRUE_FALSE_OPTIONS }));
       return;
     }
     setFormData((prev) => ({ ...prev, type, correctKey: '', options: [] }));
@@ -571,7 +584,13 @@ export default function AdminQuestionsPage() {
                       <div className="question-options-grid">
                         {activeQ.options.map((option, optIdx) => {
                           const key = OPTION_KEYS[optIdx] || String.fromCharCode(65 + optIdx);
-                          const isCorrect = activeQ.correctKey === key;
+                          const isCorrect = activeQ.type === 'TRUE_FALSE'
+                            // TRUE_FALSE: correctKey is the text value
+                            ? (activeQ.correctKey === option ||
+                               // legacy A/B support
+                               (activeQ.correctKey === 'A' && optIdx === 0) ||
+                               (activeQ.correctKey === 'B' && optIdx === 1))
+                            : activeQ.correctKey === key;
                           return (
                             <div key={optIdx} className={`question-option ${isCorrect ? 'is-correct' : ''}`}>
                               <span className="question-option-key">{key}</span>
@@ -674,7 +693,7 @@ export default function AdminQuestionsPage() {
                 <>
                   {formData.type === 'MULTIPLE_CHOICE' && (
                     <div className="admin-form-group">
-                      <label className="admin-form-label">Answer Options * (click letter to mark correct)</label>
+                      <label className="admin-form-label">Answer Options * (click ✓ to mark correct)</label>
                       <div className="questions-editor-options-list">
                         {formData.options.map((option, idx) => {
                           const key = OPTION_KEYS[idx];
@@ -685,21 +704,55 @@ export default function AdminQuestionsPage() {
                                 type="button"
                                 onClick={() => setFormData({ ...formData, correctKey: key })}
                                 className={`questions-editor-option-toggle${isCorrect ? ' selected' : ''}`}
+                                title="Mark as correct answer"
                               >
-                                {isCorrect ? <BiCheck size={20} /> : key}
+                                {isCorrect ? <BiCheck size={20} /> : <span style={{ fontSize: 12, opacity: 0.5 }}>✓</span>}
                               </button>
                               <input
                                 type="text"
                                 value={option}
                                 onChange={(e) => updateOption(idx, e.target.value)}
                                 className="admin-form-input questions-editor-option-input"
-                                placeholder={`Option ${key}`}
+                                placeholder={`Option ${idx + 1}`}
                               />
+                              {formData.options.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeOption(idx)}
+                                  className="admin-btn-icon"
+                                  title="Remove option"
+                                  style={{ color: '#ef4444', flexShrink: 0 }}
+                                >
+                                  <BiX size={16} />
+                                </button>
+                              )}
                             </div>
                           );
                         })}
                       </div>
-                      <p className="questions-editor-helper-text">Click the letter button to mark the correct answer</p>
+                      {formData.options.length < 8 && (
+                        <button
+                          type="button"
+                          onClick={addOption}
+                          className="admin-btn admin-btn-secondary"
+                          style={{ marginTop: 8, width: '100%' }}
+                        >
+                          <BiPlus size={16} /> Add Option
+                        </button>
+                      )}
+                      <p className="questions-editor-helper-text">Click ✓ to mark the correct answer</p>
+                      <div className="questions-editor-case-toggle" style={{ marginTop: 8 }}>
+                        <input
+                          type="checkbox"
+                          id="mcqCaseSensitiveToggle"
+                          checked={formData.caseSensitive ?? false}
+                          onChange={(e) => setFormData({ ...formData, caseSensitive: e.target.checked })}
+                          className="questions-editor-case-checkbox"
+                        />
+                        <label htmlFor="mcqCaseSensitiveToggle" className="questions-editor-case-label">
+                          Case-Sensitive Option Matching
+                        </label>
+                      </div>
                     </div>
                   )}
 
@@ -707,14 +760,13 @@ export default function AdminQuestionsPage() {
                     <div className="admin-form-group">
                       <label className="admin-form-label">Correct Answer *</label>
                       <div className="questions-editor-truefalse-grid">
-                        {DEFAULT_TRUE_FALSE_OPTIONS.map((option, idx) => {
-                          const key = idx === 0 ? 'A' : 'B';
-                          const isCorrect = formData.correctKey === key;
+                        {DEFAULT_TRUE_FALSE_OPTIONS.map((option) => {
+                          const isCorrect = formData.correctKey === option;
                           return (
                             <button
                               key={option}
                               type="button"
-                              onClick={() => setFormData({ ...formData, correctKey: key })}
+                              onClick={() => setFormData({ ...formData, correctKey: option })}
                               className={`questions-editor-truefalse-btn${isCorrect ? ' selected' : ''}`}
                             >
                               {isCorrect ? <><BiCheck size={16} /> {option}</> : option}
