@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { accessApi } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
 import { clearSession, getParticipantSession } from '../../services/sessionStorage';
+import { parseSmartName } from '../../utils/nameUtils';
 import '../../styles/participant.css';
 
 interface SessionTerminatedProps {
@@ -17,9 +18,32 @@ const SessionTerminated: React.FC<SessionTerminatedProps> = () => {
   const reason = searchParams.get('reason') || 'You have been removed from the session.';
 
   const session = getParticipantSession();
+  const { name: teamDisplayName, avatarId } = parseSmartName(session?.teamName);
   const [waitingForApproval, setWaitingForApproval] = useState(!!session);
   const [approved, setApproved] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Parse reason — handle both "Reason: X, Y" and old "Name is kicked... Reason: X. Contact..." formats
+  const parseReason = (raw: string): string[] => {
+    // Strip smart name avatar part from anywhere in the string (e.g. "Name|avatar.png is kicked...")
+    const cleaned = raw.replace(/\|[^\s|]+/g, '').trim();
+
+    // New format: "Reason: Tab Switch, Misconduct"
+    if (cleaned.startsWith('Reason:')) {
+      const text = cleaned.replace('Reason:', '').trim();
+      if (text === 'No specific reason provided') return [];
+      return text.split(',').map(r => r.trim()).filter(Boolean);
+    }
+    // Old backend format: "Name is kicked from the test. Reason: X. Contact your administrator..."
+    const match = cleaned.match(/Reason:\s*([^.]+)/i);
+    if (match) {
+      return match[1].split(',').map(r => r.trim()).filter(Boolean);
+    }
+    // Fallback: return empty so the generic "no specific reason" message shows
+    return [];
+  };
+
+  const violations = parseReason(reason);
 
   // Poll the access check endpoint so the participant knows the moment they're approved.
   useEffect(() => {
@@ -70,26 +94,28 @@ const SessionTerminated: React.FC<SessionTerminatedProps> = () => {
         textAlign: 'center',
         boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
       }}>
-        {/* Icon */}
+        {/* Avatar / Icon */}
         <div style={{
-          width: '80px',
-          height: '80px',
+          width: '88px',
+          height: '88px',
           borderRadius: '50%',
-          background: approved
-            ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          overflow: 'hidden',
+          margin: '0 auto 24px',
+          border: approved ? '3px solid #22c55e' : '3px solid #ef4444',
+          boxShadow: approved ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(239,68,68,0.3)',
+          background: '#f3f4f6',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 24px',
-          fontSize: '36px',
-          color: '#fff',
-          boxShadow: approved
-            ? '0 4px 20px rgba(34, 197, 94, 0.3)'
-            : '0 4px 20px rgba(239, 68, 68, 0.3)',
-          transition: 'background 0.4s, box-shadow 0.4s',
+          transition: 'border-color 0.4s, box-shadow 0.4s',
         }}>
-          {approved ? '✓' : '✕'}
+          {avatarId ? (
+            <img src={`/avatars/${avatarId}`} alt={teamDisplayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '36px', fontWeight: 800, color: approved ? '#15803d' : '#880015', fontFamily: 'Montserrat, sans-serif' }}>
+              {teamDisplayName ? teamDisplayName.charAt(0).toUpperCase() : '?'}
+            </span>
+          )}
         </div>
 
         {/* Title */}
@@ -139,13 +165,24 @@ const SessionTerminated: React.FC<SessionTerminatedProps> = () => {
               background: '#fee2e2',
               border: '1px solid #fecaca',
               borderRadius: '12px',
-              padding: '16px 20px',
+              padding: '18px 20px',
               marginBottom: '24px',
+              textAlign: 'left',
             }}>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: '#991b1b', marginBottom: '4px' }}>
-                Reason
+              <p style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Reason for removal
               </p>
-              <p style={{ fontSize: '15px', color: '#b91c1c' }}>{reason}</p>
+              {violations.length > 0 ? (
+                <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {violations.map((v, i) => (
+                    <li key={i} style={{ fontSize: '14px', color: '#b91c1c', fontWeight: 600 }}>{v}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ fontSize: '14px', color: '#b91c1c', margin: 0 }}>
+                  No specific reason provided. Contact your proctor or examiner.
+                </p>
+              )}
             </div>
 
             {waitingForApproval && (
@@ -159,7 +196,6 @@ const SessionTerminated: React.FC<SessionTerminatedProps> = () => {
                 alignItems: 'center',
                 gap: '10px',
               }}>
-                <span style={{ fontSize: '20px' }}>⏳</span>
                 <p style={{ fontSize: '14px', color: '#854d0e', margin: 0 }}>
                   Waiting for the host to approve your re-entry...
                 </p>

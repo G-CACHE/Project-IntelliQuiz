@@ -216,7 +216,6 @@ const PlayerGame: React.FC = () => {
       navigate(`/player/terminated?reason=${encodeURIComponent(kickReason || 'Removed by proctor')}`);
     }
   }, [kicked, kickReason, navigate]);
-
   const handleShowAnswers = useCallback(async () => {
     if (!session) return;
     try {
@@ -449,8 +448,8 @@ const PlayerGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Error Banner */}
-      {error && (
+      {/* Error Banner — only show real connection errors, not game-state informational messages */}
+      {error && !['ANSWER_REVEAL', 'REVEAL', 'SCOREBOARD', 'ROUND_SUMMARY', 'FINAL_RESULTS', 'GRADING'].includes(gameState) && !error.toLowerCase().includes('submissions are closed') && (
         <div className="participant-error-banner">
           <div className="participant-error-content">
             <p>{error}</p>

@@ -173,7 +173,7 @@ public class QuizViolationController {
                 log.info("Blacklisted device {} for kicked team {} in quiz {}", teamDeviceId, parsedTeamId, quizId);
             }
 
-            String reason = formatKickReason(parsedTeamId, quizId);
+            String reason = kickReason;
 
             // Broadcast kick notification
             broadcastService.broadcastKick(
@@ -426,9 +426,11 @@ public class QuizViolationController {
         ) {}
 
     private String formatKickReason(Long teamId, Long quizId) {
-        String teamName = teamFacade.getTeamInfo(teamId)
+        String rawName = teamFacade.getTeamInfo(teamId)
                 .map(t -> t.name() != null && !t.name().isBlank() ? t.name() : "User")
                 .orElse("User");
+        // Strip avatar ID from smart name format "DisplayName|avatarId"
+        String teamName = rawName.contains("|") ? rawName.substring(0, rawName.indexOf('|')) : rawName;
         String quizTitle = quizFacade.findQuizInfo(quizId)
                 .map(q -> q.title() != null && !q.title().isBlank() ? q.title() : "quiz")
                 .orElse("quiz");

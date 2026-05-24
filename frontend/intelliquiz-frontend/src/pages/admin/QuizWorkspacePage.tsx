@@ -9,6 +9,7 @@ import { useQuiz, useQuizStatusChange, useRegisterTeam, useDeleteTeam, useScoreb
 import QuestionsPage from './QuestionsPage';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { parseSmartName } from '../../utils/nameUtils';
 import '../../styles/admin.css';
 import './AdminRedesign.css';
 import './QuizWorkspacePage.css';
@@ -144,13 +145,14 @@ export default function QuizWorkspacePage() {
   const normalizedScoreboard = useMemo<ScoreboardRow[]>(() => {
     const teamBased: ScoreboardRow[] = [...teams]
       .sort((a, b) => b.totalScore - a.totalScore)
-      .map((team, i) => ({ teamId: team.id, teamName: team.name, score: team.totalScore, rank: i + 1 }));
+      .map((team, i) => ({ teamId: team.id, teamName: parseSmartName(team.name).name, score: team.totalScore, rank: i + 1 }));
     if (Array.isArray(scoreboard)) {
       const rows = scoreboard as ScoreboardRow[];
       const allZero = rows.length > 0 && rows.every((e) => e.score === 0);
       const teamHasScores = teams.some((t) => t.totalScore > 0);
       if (isArchived && allZero && teamHasScores) return teamBased;
-      return rows;
+      // Strip avatar from scoreboard team names too
+      return rows.map((r) => ({ ...r, teamName: parseSmartName(r.teamName).name }));
     }
     return teamBased;
   }, [scoreboard, teams, isArchived]);
@@ -445,16 +447,18 @@ export default function QuizWorkspacePage() {
               </div>
             </div>
             {/* Codes */}
-            <div className="quiz-workspace-code-grid" style={{ marginBottom: 28 }}>
-              <div className="admin-card workspace-code-card quiz-code-card">
-                <div className="workspace-code-copy">
-                  <h4 style={{ margin: 0 }}>Quiz Code</h4>
-                  <p className="admin-empty-text" style={{ margin: 0 }}>Share with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code></p>
+            <div className="quiz-workspace-code-grid" style={{ marginBottom: 16 }}>
+              {!isRestricted && (
+                <div className="admin-card workspace-code-card quiz-code-card">
+                  <div className="workspace-code-copy">
+                    <h4 style={{ margin: 0 }}>Quiz Code</h4>
+                    <p className="admin-empty-text" style={{ margin: 0 }}>Share with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code></p>
+                  </div>
+                  <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyQuizCode} disabled={!quiz.quizCode}>
+                    {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
+                  </button>
                 </div>
-                <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyQuizCode} disabled={!quiz.quizCode}>
-                  {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
-                </button>
-              </div>
+              )}
               <div className="admin-card workspace-code-card proctor-pin-card">
                 <div className="workspace-code-copy">
                   <h4 style={{ margin: 0 }}>Proctor PIN</h4>
@@ -566,6 +570,7 @@ export default function QuizWorkspacePage() {
                     ) : (() => {
                       const q = teamSearch.toLowerCase();
                       const filtered = teams.filter((t) =>
+                        parseSmartName(t.name).name.toLowerCase().includes(q) ||
                         t.name.toLowerCase().includes(q) ||
                         (t.members || '').toLowerCase().includes(q)
                       );
@@ -581,10 +586,11 @@ export default function QuizWorkspacePage() {
                             {paginated.map((team, index) => {
                               const memberList = team.members ? team.members.split(',').map(m => m.trim()).filter(Boolean) : [];
                               const accentClass = `team-manager-row-accent-${((safePage - 1) * TEAMS_PER_PAGE + index) % 4}`;
+                              const { name: cleanTeamName } = parseSmartName(team.name);
                               return (
                                 <div key={team.id} className={`team-manager-row ${accentClass}`}>
                                   <div className="team-manager-row-info">
-                                    <span className="team-manager-row-name">{team.name}</span>
+                                    <span className="team-manager-row-name">{cleanTeamName}</span>
                                     {memberList.length > 0 ? (
                                       <div className="team-manager-row-tags">
                                         {memberList.map((m) => <span key={m} className="team-manager-member-chip">{m}</span>)}
@@ -600,7 +606,7 @@ export default function QuizWorkspacePage() {
                                       {copiedTeamId === team.id ? 'Copied' : 'Copy'}
                                     </button>
                                     {canManageRestrictedTeams && (
-                                      <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenDeleteTeamModal(team.id, team.name)} type="button" style={{ color: '#dc2626' }}>
+                                      <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenDeleteTeamModal(team.id, cleanTeamName)} type="button" style={{ color: '#dc2626' }}>
                                         <BiTrash size={14} />
                                       </button>
                                     )}
@@ -779,7 +785,7 @@ export default function QuizWorkspacePage() {
                     {violationLogs.map((entry) => (
                       <div key={entry.id} className="workspace-modal-item workspace-log-row">
                         <div>
-                          <p className="workspace-log-team">{entry.teamName}</p>
+                          <p className="workspace-log-team">{parseSmartName(entry.teamName).name}</p>
                           <p className="workspace-log-type">{formatViolationType(entry.violationType)}</p>
                         </div>
                         <p className="workspace-log-time">{formatViolationTime(entry.detectedAt)}</p>
