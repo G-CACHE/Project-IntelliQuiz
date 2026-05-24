@@ -50,6 +50,8 @@ export default function QuizWorkspacePage() {
   const [memberTags, setMemberTags] = useState<string[]>([]);
   const [memberInput, setMemberInput] = useState('');
   const [teamSearch, setTeamSearch] = useState('');
+  const [teamPage, setTeamPage] = useState(1);
+  const TEAMS_PER_PAGE = 2;
   const [registerTeamError, setRegisterTeamError] = useState<string | null>(null);
   const [registerTeamSuccess, setRegisterTeamSuccess] = useState<string | null>(null);
   const [teamNameTouched, setTeamNameTouched] = useState(false);
@@ -546,11 +548,11 @@ export default function QuizWorkspacePage() {
                       <input
                         className="team-list-search-input"
                         value={teamSearch}
-                        onChange={(e) => setTeamSearch(e.target.value)}
+                        onChange={(e) => { setTeamSearch(e.target.value); setTeamPage(1); }}
                         placeholder="Search teams or members..."
                       />
                       {teamSearch && (
-                        <button type="button" className="team-list-search-clear" onClick={() => setTeamSearch('')}>
+                        <button type="button" className="team-list-search-clear" onClick={() => { setTeamSearch(''); setTeamPage(1); }}>
                           <BiX size={14} />
                         </button>
                       )}
@@ -567,41 +569,77 @@ export default function QuizWorkspacePage() {
                         t.name.toLowerCase().includes(q) ||
                         (t.members || '').toLowerCase().includes(q)
                       );
-                      return filtered.length === 0 ? (
-                        <p className="admin-empty-text" style={{ padding: '12px 0' }}>No teams match "{teamSearch}".</p>
-                      ) : (
-                        <div className="team-manager-list">
-                          {filtered.map((team, index) => {
-                            const memberList = team.members ? team.members.split(',').map(m => m.trim()).filter(Boolean) : [];
-                            const accentClass = `team-manager-row-accent-${index % 4}`;
-                            return (
-                              <div key={team.id} className={`team-manager-row ${accentClass}`}>
-                                <div className="team-manager-row-info">
-                                  <span className="team-manager-row-name">{team.name}</span>
-                                  {memberList.length > 0 ? (
-                                    <div className="team-manager-row-tags">
-                                      {memberList.map((m) => <span key={m} className="team-manager-member-chip">{m}</span>)}
-                                    </div>
-                                  ) : (
-                                    <span className="team-manager-row-individual">Individual</span>
-                                  )}
-                                  <span className="team-manager-row-code">Code: <strong>{team.accessCode}</strong></span>
-                                </div>
-                                <div className="team-manager-row-actions">
-                                  <button className="admin-btn admin-btn-secondary" onClick={() => void copyTeamAccessCode(team.id, team.accessCode)} type="button">
-                                    {copiedTeamId === team.id ? <BiCheck size={14} /> : <BiCopy size={14} />}
-                                    {copiedTeamId === team.id ? 'Copied' : 'Copy'}
-                                  </button>
-                                  {canManageRestrictedTeams && (
-                                    <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenDeleteTeamModal(team.id, team.name)} type="button" style={{ color: '#dc2626' }}>
-                                      <BiTrash size={14} />
+                      if (filtered.length === 0) {
+                        return <p className="admin-empty-text" style={{ padding: '12px 0' }}>No teams match "{teamSearch}".</p>;
+                      }
+                      const totalPages = Math.ceil(filtered.length / TEAMS_PER_PAGE);
+                      const safePage = Math.min(teamPage, totalPages);
+                      const paginated = filtered.slice((safePage - 1) * TEAMS_PER_PAGE, safePage * TEAMS_PER_PAGE);
+                      return (
+                        <>
+                          <div className="team-manager-list">
+                            {paginated.map((team, index) => {
+                              const memberList = team.members ? team.members.split(',').map(m => m.trim()).filter(Boolean) : [];
+                              const accentClass = `team-manager-row-accent-${((safePage - 1) * TEAMS_PER_PAGE + index) % 4}`;
+                              return (
+                                <div key={team.id} className={`team-manager-row ${accentClass}`}>
+                                  <div className="team-manager-row-info">
+                                    <span className="team-manager-row-name">{team.name}</span>
+                                    {memberList.length > 0 ? (
+                                      <div className="team-manager-row-tags">
+                                        {memberList.map((m) => <span key={m} className="team-manager-member-chip">{m}</span>)}
+                                      </div>
+                                    ) : (
+                                      <span className="team-manager-row-individual">Individual</span>
+                                    )}
+                                    <span className="team-manager-row-code">Code: <strong>{team.accessCode}</strong></span>
+                                  </div>
+                                  <div className="team-manager-row-actions">
+                                    <button className="admin-btn admin-btn-secondary" onClick={() => void copyTeamAccessCode(team.id, team.accessCode)} type="button">
+                                      {copiedTeamId === team.id ? <BiCheck size={14} /> : <BiCopy size={14} />}
+                                      {copiedTeamId === team.id ? 'Copied' : 'Copy'}
                                     </button>
-                                  )}
+                                    {canManageRestrictedTeams && (
+                                      <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenDeleteTeamModal(team.id, team.name)} type="button" style={{ color: '#dc2626' }}>
+                                        <BiTrash size={14} />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+                          </div>
+                          {totalPages > 1 && (
+                            <div className="team-list-pagination">
+                              <button
+                                className="team-pagination-btn"
+                                onClick={() => setTeamPage(p => Math.max(1, p - 1))}
+                                disabled={safePage === 1}
+                              >
+                                ‹
+                              </button>
+                              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                                <button
+                                  key={pg}
+                                  className={`team-pagination-btn${pg === safePage ? ' team-pagination-btn--active' : ''}`}
+                                  onClick={() => setTeamPage(pg)}
+                                >
+                                  {pg}
+                                </button>
+                              ))}
+                              <button
+                                className="team-pagination-btn"
+                                onClick={() => setTeamPage(p => Math.min(totalPages, p + 1))}
+                                disabled={safePage === totalPages}
+                              >
+                                ›
+                              </button>
+                              <span className="team-pagination-info">
+                                {(safePage - 1) * TEAMS_PER_PAGE + 1}–{Math.min(safePage * TEAMS_PER_PAGE, filtered.length)} of {filtered.length}
+                              </span>
+                            </div>
+                          )}
+                        </>
                       );
                     })()}
                   </div>

@@ -370,8 +370,10 @@ const HostGame: React.FC = () => {
             </button>
 
             <button
-              onClick={handleOpenProctorMonitor}
-              className="proctor-btn proctor-host-monitor-btn"
+              onClick={gameState !== 'FINAL_RESULTS' ? handleOpenProctorMonitor : undefined}
+              className={`proctor-btn proctor-host-monitor-btn${gameState === 'FINAL_RESULTS' ? ' proctor-host-monitor-btn--disabled' : ''}`}
+              disabled={gameState === 'FINAL_RESULTS'}
+              title={gameState === 'FINAL_RESULTS' ? 'Only available while the quiz is running' : 'Open proctor monitor'}
             >
               Monitor
             </button>
