@@ -44,7 +44,6 @@
 
 .admin-btn,
 .admin-btn-icon,
-.quiz-list-create-btn,
 .empty-cta,
 .quiz-workspace-back-btn {
   border: 1px solid #ddd2d6;
@@ -55,7 +54,6 @@
 
 .admin-btn:hover,
 .admin-btn-icon:hover,
-.quiz-list-create-btn:hover,
 .empty-cta:hover,
 .quiz-workspace-back-btn:hover {
   transform: none;
@@ -64,7 +62,6 @@
 
 .admin-btn:active,
 .admin-btn-icon:active,
-.quiz-list-create-btn:active,
 .empty-cta:active,
 .questions-list-container .admin-empty-state .admin-btn {
   min-height: 44px;
@@ -135,7 +132,6 @@
 @media (max-width: 768px) {
   .admin-btn,
   .admin-btn-icon,
-  .quiz-list-create-btn,
   .empty-cta,
   .quiz-workspace-back-btn {
     font-size: 16px;
@@ -549,7 +545,6 @@
 @media (max-width: 768px) {
   .admin-btn,
   .admin-btn-icon,
-  .quiz-list-create-btn,
   .empty-cta,
   .quiz-workspace-back-btn {
     font-size: 16px;
@@ -654,4 +649,10 @@
     grid-column: 2 / -1;
     justify-self: end;
   }
+}
+
+/* ── Code card shadow overrides — must not be flattened by media queries ── */
+.workspace-code-card.quiz-code-card,
+.workspace-code-card.proctor-pin-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18) !important;
 }

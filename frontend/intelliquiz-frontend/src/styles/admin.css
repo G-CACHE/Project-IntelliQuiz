@@ -1338,22 +1338,21 @@
 }
 
 .workspace-code-card {
-  border-color: #d9c8cd;
-  background: linear-gradient(135deg, #ffffff 0%, #fffaf5 100%);
+  /* base — overridden by .quiz-code-card and .proctor-pin-card */
 }
 
 .workspace-code-card h4 {
-  color: var(--pup-ink);
+  color: #ffffff;
   font-size: 16px;
   font-weight: 800;
 }
 
 .workspace-code-card code {
-  background: var(--pup-gold-200);
-  color: #5b3a00;
-  border: 1px solid #f1d888;
-  border-radius: 6px;
-  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 3px 10px;
 }
 
 .workspace-error-text {
@@ -1598,16 +1597,7 @@
   font-weight: 600;
 }
 
-.quiz-list-create-btn {
-  background: var(--pup-gold-400);
-  color: #2b1a00;
-  border: 1px solid rgba(212, 160, 23, 0.55);
-  box-shadow: 0 8px 20px rgba(212, 160, 23, 0.35);
-}
-
-.quiz-list-create-btn:hover {
-  background: #ffe27f;
-}
+/* quiz-list-create-btn styles moved to QuizzesPage.css for better specificity */
 
 .quiz-list-stats-row {
   display: grid;
@@ -1885,7 +1875,7 @@
 .quiz-list-hero,
 .quiz-workspace-hero {
   border: 1px solid #caa2af;
-  box-shadow: 0 16px 36px rgba(95, 16, 39, 0.2);
+  box-shadow: none;
 }
 
 .admin-dashboard-stats {
@@ -2024,7 +2014,6 @@
 
 .admin-btn,
 .empty-cta,
-.quiz-list-create-btn,
 .admin-btn-icon,
 .quiz-workspace-back-btn {
   border-radius: 12px;
@@ -2035,7 +2024,6 @@
 
 .admin-btn:hover,
 .empty-cta:hover,
-.quiz-list-create-btn:hover,
 .admin-btn-icon:hover,
 .quiz-workspace-back-btn:hover {
   transform: translateY(-2px);
@@ -2044,7 +2032,6 @@
 
 .admin-btn:active,
 .empty-cta:active,
-.quiz-list-create-btn:active,
 .admin-btn-icon:active,
 .quiz-workspace-back-btn:active {
   transform: translateY(0);

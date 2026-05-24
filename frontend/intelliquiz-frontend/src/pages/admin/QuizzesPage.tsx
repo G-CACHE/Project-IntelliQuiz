@@ -15,6 +15,7 @@ import {
   BiTime,
   BiLock,
   BiTrash,
+  BiPlusCircle,
 } from 'react-icons/bi';
 import { useQuizzes, useUpdateQuiz, useQuizStatusChange, useDeleteQuiz } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
@@ -168,30 +169,35 @@ export default function AdminQuizzesPage() {
   }
 
   return (
-    <div className="quiz-list-shell">
-      <div className="quiz-list-hero">
-        <div>
-          <p className="quiz-list-eyebrow">Quiz Operations</p>
-          <h1 className="quiz-list-title">My Quizzes</h1>
-          <p className="quiz-list-subtitle">Manage quiz lifecycle, content, and launch state from one place.</p>
+    <div className="admin-clean-dashboard">
+      <section className="admin-clean-hero">
+        <div className="admin-clean-hero-content">
+          <div className="admin-clean-hero-left">
+            <span className="admin-clean-chip">Quiz Operations</span>
+            <h1 className="admin-clean-title">My Quizzes</h1>
+            <p className="admin-clean-subtitle">Manage quiz lifecycle, content, and launch state from one place.</p>
+          </div>
+
+          <div className="admin-clean-hero-right">
+            <button
+              className="admin-clean-btn-primary"
+              onClick={() => { resetForm(); setShowCreateModal(true); }}
+            >
+              <BiPlusCircle size={18} /> Create Quiz
+            </button>
+          </div>
         </div>
-        <button
-          className="admin-btn quiz-list-create-btn"
-          onClick={() => { resetForm(); setShowCreateModal(true); }}
-        >
-          Create Quiz
-        </button>
-      </div>
+      </section>
 
       {/* Error Alert */}
       {error && (
-        <div className="admin-alert admin-alert-error">
+        <section className="admin-alert admin-alert-error">
           <div className="admin-alert-content"><BiErrorCircle size={18} /><span>{error instanceof Error ? error.message : 'An error occurred'}</span></div>
-        </div>
+        </section>
       )}
 
       {/* Filters */}
-      <div className="admin-card quiz-list-filter-card quiz-list-filter-bar">
+      <section className="admin-card quiz-list-filter-card quiz-list-filter-bar">
         <div className="quiz-list-filter-controls">
           <div className="quiz-list-search-wrap">
             <BiSearch size={18} className="quiz-list-search-icon" />
@@ -217,10 +223,10 @@ export default function AdminQuizzesPage() {
             ]}
           />
         </div>
-      </div>
+      </section>
 
       {/* Quizzes Grid */}
-      <div className="admin-quiz-grid">
+      <section className="admin-quiz-grid">
         {filteredQuizzes.length > 0 ? (
           paginatedQuizzes.map((quiz) => (
             <div
@@ -236,38 +242,55 @@ export default function AdminQuizzesPage() {
               }}
               title="Open quiz workspace"
             >
-              <div className={`admin-quiz-card-top ${getStatusClass(quiz)}`} />
               <div className="admin-quiz-card-body">
                 <div className="admin-quiz-header">
-                  <div style={{ flex: 1 }}>
-                    <h3 className="admin-quiz-title">{quiz.title}</h3>
-                    <p className="admin-quiz-desc">{quiz.description || 'No description'}</p>
+                  <div className="admin-quiz-header-top">
+                    <div className="admin-quiz-title-wrapper">
+                      <h3 className="admin-quiz-title">{quiz.title}</h3>
+                      <p className="admin-quiz-desc">{quiz.description || 'No description provided'}</p>
+                    </div>
+                    <span className={`admin-badge-status ${getStatusClass(quiz)}`}>{getStatusLabel(quiz)}</span>
                   </div>
-                  <span className={`admin-badge-status ${getStatusClass(quiz)}`}>{getStatusLabel(quiz)}</span>
                 </div>
                 
-                <div className="admin-quiz-meta">
-                  <div className="admin-quiz-meta-item"><BiTime size={14} /> {quiz.questionCount || 0} questions</div>
-                  <div className="admin-quiz-meta-item">Code: <code className="quiz-list-code-tag">{quiz.quizCode || 'UNAVAILABLE'}</code></div>
-                  <div className="admin-quiz-meta-item">Proctor: <code className="quiz-list-code-tag">{quiz.proctorPin || 'UNAVAILABLE'}</code></div>
+                <div className="admin-quiz-meta-grid">
+                  <div className="admin-quiz-meta-item">
+                    <BiTime size={16} className="meta-icon" />
+                    <div className="meta-content">
+                      <span className="meta-label">Questions</span>
+                      <span className="meta-value">{quiz.questionCount || 0}</span>
+                    </div>
+                  </div>
+                  <div className="admin-quiz-meta-item">
+                    <BiBookOpen size={16} className="meta-icon" />
+                    <div className="meta-content">
+                      <span className="meta-label">Quiz Code</span>
+                      <code className="meta-value quiz-code">{quiz.quizCode || 'N/A'}</code>
+                    </div>
+                  </div>
+                  <div className="admin-quiz-meta-item">
+                    <BiLock size={16} className="meta-icon" />
+                    <div className="meta-content">
+                      <span className="meta-label">Proctor PIN</span>
+                      <code className="meta-value quiz-code">{quiz.proctorPin || 'N/A'}</code>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="admin-quiz-footer">
                 <div className="admin-quiz-actions">
                   {canEditQuiz(quiz.id, quiz.createdByUserId) && (
-                    <button className="admin-btn-icon" onClick={(e) => { e.stopPropagation(); navigate(`/admin/quizzes/${quiz.id}/questions`); }} title="Questions">
+                    <button className="admin-btn-icon" onClick={(e) => { e.stopPropagation(); navigate(`/admin/quizzes/${quiz.id}/questions`); }} title="View Questions">
                       <BiFile size={16} />
                     </button>
                   )}
-                </div>
-                <div className="admin-quiz-actions">
                   {quiz.status === 'DRAFT' && canEditQuiz(quiz.id, quiz.createdByUserId) && (
-                    <button className="admin-btn-icon success" onClick={(e) => { e.stopPropagation(); handleStatusChange(quiz.id, 'ready'); }} title="Mark Ready">
+                    <button className="admin-btn-icon success" onClick={(e) => { e.stopPropagation(); handleStatusChange(quiz.id, 'ready'); }} title="Mark as Ready">
                       <BiCheckCircle size={16} />
                     </button>
                   )}
                   {(quiz.status === 'DRAFT' || quiz.status === 'READY') && canEditQuiz(quiz.id, quiz.createdByUserId) && (
-                    <button className="admin-btn-icon" onClick={(e) => { e.stopPropagation(); setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '', accessMode: quiz.accessMode || 'RESTRICTED', navigationMode: quiz.navigationMode || 'TOURNAMENT', globalTimeLimitSeconds: quiz.globalTimeLimitSeconds || 0, randomizeQuestions: !!quiz.randomizeQuestions }); setShowEditModal(true); }} title="Edit">
+                    <button className="admin-btn-icon" onClick={(e) => { e.stopPropagation(); setSelectedQuiz(quiz); setFormData({ title: quiz.title, description: quiz.description || '', accessMode: quiz.accessMode || 'RESTRICTED', navigationMode: quiz.navigationMode || 'TOURNAMENT', globalTimeLimitSeconds: quiz.globalTimeLimitSeconds || 0, randomizeQuestions: !!quiz.randomizeQuestions }); setShowEditModal(true); }} title="Edit Quiz">
                       <BiEdit size={16} />
                     </button>
                   )}
@@ -282,12 +305,12 @@ export default function AdminQuizzesPage() {
                       <BiTrash size={16} />
                     </button>
                   )}
-                  {!canViewQuiz(quiz.id, quiz.createdByUserId) && !canEditQuiz(quiz.id, quiz.createdByUserId) && (
-                    <span className="quiz-list-view-only">
-                      <BiLock size={14} /> View only
-                    </span>
-                  )}
                 </div>
+                {!canViewQuiz(quiz.id, quiz.createdByUserId) && !canEditQuiz(quiz.id, quiz.createdByUserId) && (
+                  <span className="quiz-list-view-only">
+                    <BiLock size={14} /> View only
+                  </span>
+                )}
               </div>
             </div>
           ))
@@ -315,10 +338,10 @@ export default function AdminQuizzesPage() {
             </div>
           </div>
         )}
-      </div>
+      </section>
 
       {filteredQuizzes.length > quizzesPerPage && (
-        <div className="quiz-list-pagination" aria-label="Quiz pagination">
+        <section className="quiz-list-pagination" aria-label="Quiz pagination">
           <button
             type="button"
             className="admin-btn quiz-list-page-btn"
@@ -336,10 +359,8 @@ export default function AdminQuizzesPage() {
           >
             Next
           </button>
-        </div>
+        </section>
       )}
-
-
       {/* Create Quiz Modal */}
       {showCreateModal && <CreateQuizModal onClose={() => setShowCreateModal(false)} />}
 
@@ -463,7 +484,6 @@ export default function AdminQuizzesPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

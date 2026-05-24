@@ -52,6 +52,7 @@ export default function QuizWorkspacePage() {
   const [teamSearch, setTeamSearch] = useState('');
   const [registerTeamError, setRegisterTeamError] = useState<string | null>(null);
   const [registerTeamSuccess, setRegisterTeamSuccess] = useState<string | null>(null);
+  const [teamNameTouched, setTeamNameTouched] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<{ id: number; name: string } | null>(null);
   const [copiedTeamId, setCopiedTeamId] = useState<number | null>(null);
   const [violationLogs, setViolationLogs] = useState<ViolationLogRecord[]>([]);
@@ -256,7 +257,10 @@ export default function QuizWorkspacePage() {
   const handleRegisterTeam = async () => {
     if (!parsedQuizId || !canManageRestrictedTeams) return;
     const trimmed = registerTeamName.trim();
-    if (!trimmed) { setRegisterTeamError('You need to enter a name first to register.'); return; }
+    setTeamNameTouched(true);
+    if (!trimmed) { setRegisterTeamError('Team name is required.'); return; }
+    if (trimmed.length < 2) { setRegisterTeamError('Name must be at least 2 characters.'); return; }
+    if (/^[^a-zA-Z0-9]+$/.test(trimmed)) { setRegisterTeamError('Name must contain at least one letter or number.'); return; }
     const membersValue = memberTags.length > 0 ? memberTags.join(',') : undefined;
     try {
       setRegisterTeamError(null);
@@ -265,6 +269,7 @@ export default function QuizWorkspacePage() {
       setRegisterTeamName('');
       setMemberTags([]);
       setMemberInput('');
+      setTeamNameTouched(false);
     } catch (err) { setRegisterTeamError(err instanceof Error ? err.message : 'Failed to register team.'); }
   };
 
@@ -328,11 +333,10 @@ export default function QuizWorkspacePage() {
           <button
             ref={statusPillRef}
             onClick={() => { if (quizStatus !== 'ACTIVE' && quizStatus !== 'ARCHIVED') void handleStatusToggle(); }}
-            disabled={statusChange.isPending || quizStatus === 'ACTIVE' || quizStatus === 'ARCHIVED'}
-            className={`status-pill-btn ${quizStatus === 'READY' ? 'is-ready' : 'is-draft'}${readyLocked ? ' is-locked' : ''}`}
+            disabled={statusChange.isPending || quizStatus === 'ACTIVE' || quizStatus === 'ARCHIVED' || readyLocked}
+            className={`status-pill-btn ${quizStatus === 'READY' ? 'is-ready' : 'is-draft'}`}
             title={readyLocked ? 'Register at least one team before marking as Ready' : undefined}
           >
-            {readyLocked && <BiLock size={12} className="pill-lock-icon" />}
             <span className="pill-highlighter" aria-hidden="true" style={{ left: `${activeStatusPillMetrics.left}px`, width: `${activeStatusPillMetrics.width}px` }} />
             <span ref={draftLabelRef} className={`pill-label pill-draft ${quizStatus === 'DRAFT' ? 'active' : ''}`}>Draft</span>
             <span className="pill-sep">|</span>
@@ -365,51 +369,55 @@ export default function QuizWorkspacePage() {
               <p className="admin-empty-text">Configuration is locked because this quiz is not in Draft status.</p>
             ) : (
               <>
-                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                  <div>
-                    <label className="admin-form-label">Access Mode</label>
-                    <CustomSelect
-                      value={settingsDraft.accessMode}
-                      options={[{ value: 'RESTRICTED', label: 'Restricted' }, { value: 'PUBLIC', label: 'Public' }]}
-                      onChange={(v) => setSettingsDraft((p) => ({ ...p, accessMode: v as 'PUBLIC' | 'RESTRICTED' }))}
-                      disabled={!canEditDraftOnly || settingsSaving}
-                    />
-                    <p className="admin-form-hint" style={{ marginTop: 4 }}>
-                      {settingsDraft.accessMode === 'RESTRICTED' ? 'Entry requires a pre-registered team access code.' : 'Anyone can join using the quiz code.'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="admin-form-label">Quiz Mode</label>
-                    <CustomSelect
-                      value={settingsDraft.navigationMode}
-                      options={[{ value: 'TOURNAMENT', label: 'Tournament' }, { value: 'CLASS', label: 'Class' }]}
-                      onChange={(v) => setSettingsDraft((p) => ({ ...p, navigationMode: v as 'TOURNAMENT' | 'CLASS' }))}
-                      disabled={!canEditDraftOnly || settingsSaving}
-                    />
-                    <p className="admin-form-hint" style={{ marginTop: 4 }}>
-                      {settingsDraft.navigationMode === 'TOURNAMENT' ? 'Host controls question pacing for all participants.' : 'Participants navigate at their own pace within a time limit.'}
-                    </p>
+                <div className="quiz-config-form-wrapper">
+                  <div className="quiz-config-fields-grid">
+                    <div className="quiz-config-field-group">
+                      <label className="quiz-config-label">Access Mode</label>
+                      <CustomSelect
+                        value={settingsDraft.accessMode}
+                        options={[{ value: 'RESTRICTED', label: 'Restricted' }, { value: 'PUBLIC', label: 'Public' }]}
+                        onChange={(v) => setSettingsDraft((p) => ({ ...p, accessMode: v as 'PUBLIC' | 'RESTRICTED' }))}
+                        disabled={!canEditDraftOnly || settingsSaving}
+                      />
+                      <p className="quiz-config-hint">
+                        {settingsDraft.accessMode === 'RESTRICTED' ? 'Entry requires a pre-registered team access code.' : 'Anyone can join using the quiz code.'}
+                      </p>
+                    </div>
+                    <div className="quiz-config-field-group">
+                      <label className="quiz-config-label">Quiz Mode</label>
+                      <CustomSelect
+                        value={settingsDraft.navigationMode}
+                        options={[{ value: 'TOURNAMENT', label: 'Tournament' }, { value: 'CLASS', label: 'Class' }]}
+                        onChange={(v) => setSettingsDraft((p) => ({ ...p, navigationMode: v as 'TOURNAMENT' | 'CLASS' }))}
+                        disabled={!canEditDraftOnly || settingsSaving}
+                      />
+                      <p className="quiz-config-hint">
+                        {settingsDraft.navigationMode === 'TOURNAMENT' ? 'Host controls question pacing for all participants.' : 'Participants navigate at their own pace within a time limit.'}
+                      </p>
+                    </div>
+                    {settingsDraft.navigationMode === 'CLASS' && (
+                      <div className="quiz-config-field-group">
+                        <label className="quiz-config-label">Quiz Duration (minutes)</label>
+                        <input type="number" min={1} className="admin-form-input" value={settingsDraft.globalTimeLimitMinutes}
+                          disabled={!canEditDraftOnly || settingsSaving}
+                          onChange={(e) => setSettingsDraft((p) => ({ ...p, globalTimeLimitMinutes: Number(e.target.value || 0) }))} />
+                        {invalidClassTimer && <p className="quiz-config-hint quiz-config-hint-error">Please enter at least 1 minute.</p>}
+                      </div>
+                    )}
                   </div>
                   {settingsDraft.navigationMode === 'CLASS' && (
-                    <div>
-                      <label className="admin-form-label">Quiz Duration (minutes)</label>
-                      <input type="number" min={1} className="admin-form-input" value={settingsDraft.globalTimeLimitMinutes}
-                        disabled={!canEditDraftOnly || settingsSaving}
-                        onChange={(e) => setSettingsDraft((p) => ({ ...p, globalTimeLimitMinutes: Number(e.target.value || 0) }))} />
-                      {invalidClassTimer && <p className="admin-form-hint admin-form-hint-error" style={{ marginTop: 6 }}>Please enter at least 1 minute.</p>}
+                    <div className="quiz-config-checkbox-group">
+                      <label className="quiz-config-checkbox-label">
+                        <input type="checkbox" checked={settingsDraft.randomizeQuestions}
+                          onChange={(e) => setSettingsDraft((p) => ({ ...p, randomizeQuestions: e.target.checked }))}
+                          disabled={!canEditDraftOnly || settingsSaving} />
+                        <span>Randomize question order per participant</span>
+                      </label>
                     </div>
                   )}
+                  {settingsError && <p className="quiz-config-error">{settingsError}</p>}
                 </div>
-                {settingsDraft.navigationMode === 'CLASS' && (
-                  <label className="admin-form-label" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input type="checkbox" checked={settingsDraft.randomizeQuestions}
-                      onChange={(e) => setSettingsDraft((p) => ({ ...p, randomizeQuestions: e.target.checked }))}
-                      disabled={!canEditDraftOnly || settingsSaving} />
-                    Randomize question order per participant
-                  </label>
-                )}
-                {settingsError && <p className="admin-empty-text workspace-error-text" style={{ marginTop: 8 }}>{settingsError}</p>}
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #ede5e8', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <div className="quiz-config-actions">
                   <button className="admin-btn admin-btn-primary" onClick={handleSaveSettings} disabled={settingsSaving || !canEditDraftOnly}>
                     {settingsSaving ? 'Saving...' : 'Save Configuration'}
                   </button>
@@ -436,7 +444,7 @@ export default function QuizWorkspacePage() {
             </div>
             {/* Codes */}
             <div className="quiz-workspace-code-grid" style={{ marginBottom: 28 }}>
-              <div className="admin-card workspace-code-card">
+              <div className="admin-card workspace-code-card quiz-code-card">
                 <div className="workspace-code-copy">
                   <h4 style={{ margin: 0 }}>Quiz Code</h4>
                   <p className="admin-empty-text" style={{ margin: 0 }}>Share with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code></p>
@@ -445,7 +453,7 @@ export default function QuizWorkspacePage() {
                   {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
                 </button>
               </div>
-              <div className="admin-card workspace-code-card">
+              <div className="admin-card workspace-code-card proctor-pin-card">
                 <div className="workspace-code-copy">
                   <h4 style={{ margin: 0 }}>Proctor PIN</h4>
                   <p className="admin-empty-text" style={{ margin: 0 }}>Host access code: <code>{quiz.proctorPin || 'UNAVAILABLE'}</code></p>
@@ -463,18 +471,26 @@ export default function QuizWorkspacePage() {
                   {/* ── Left: sticky form ── */}
                   {canManageRestrictedTeams && (
                     <div className="team-split-form">
+                      <div className="team-split-form-header">
+                        <h4>Register a Team</h4>
+                      </div>
+                      <div className="team-split-form-body">
                       <form onSubmit={(e) => { e.preventDefault(); void handleRegisterTeam(); }} className="team-manager-form">
                         <div className="admin-form-group">
                           <label className="admin-form-label" htmlFor="tm-team-name">Team / Participant Name *</label>
                           <input
                             id="tm-team-name"
-                            className="admin-form-input"
+                            className={`admin-form-input${teamNameTouched && !registerTeamName.trim() ? ' input-error' : ''}`}
                             value={registerTeamName}
-                            onChange={(e) => setRegisterTeamName(e.target.value)}
+                            onChange={(e) => { setRegisterTeamName(e.target.value); if (registerTeamError) setRegisterTeamError(null); }}
+                            onBlur={() => setTeamNameTouched(true)}
                             placeholder="e.g. Team Alpha or Juan dela Cruz"
                             maxLength={100}
                             disabled={registerTeam.isPending}
                           />
+                          {teamNameTouched && !registerTeamName.trim() && (
+                            <p className="team-form-field-error">Please enter a team or participant name.</p>
+                          )}
                         </div>
                         <div className="admin-form-group">
                           <label className="admin-form-label">
@@ -510,12 +526,17 @@ export default function QuizWorkspacePage() {
                           </div>
                           <p className="admin-form-hint" style={{ marginTop: 4 }}>Press Enter or Tab after each name. Leave blank for individual.</p>
                         </div>
-                        <button type="submit" className="admin-btn admin-btn-primary" disabled={registerTeam.isPending || !registerTeamName.trim()}>
+                        <button
+                          type="submit"
+                          className={`admin-btn admin-btn-primary register-team-btn${!registerTeamName.trim() ? ' is-empty' : ''}`}
+                          disabled={registerTeam.isPending}
+                        >
                           <BiUserPlus size={16} /> {registerTeam.isPending ? 'Registering...' : 'Register'}
                         </button>
                         {registerTeamError && <p className="admin-empty-text workspace-error-text" style={{ marginTop: 8 }}>{registerTeamError}</p>}
                         {registerTeamSuccess && <p style={{ marginTop: 8, fontSize: 13, color: '#065f46' }}>{registerTeamSuccess}</p>}
                       </form>
+                      </div>
                     </div>
                   )}
                   {/* ── Right: scrollable list ── */}
@@ -550,10 +571,11 @@ export default function QuizWorkspacePage() {
                         <p className="admin-empty-text" style={{ padding: '12px 0' }}>No teams match "{teamSearch}".</p>
                       ) : (
                         <div className="team-manager-list">
-                          {filtered.map((team) => {
+                          {filtered.map((team, index) => {
                             const memberList = team.members ? team.members.split(',').map(m => m.trim()).filter(Boolean) : [];
+                            const accentClass = `team-manager-row-accent-${index % 4}`;
                             return (
-                              <div key={team.id} className="team-manager-row">
+                              <div key={team.id} className={`team-manager-row ${accentClass}`}>
                                 <div className="team-manager-row-info">
                                   <span className="team-manager-row-name">{team.name}</span>
                                   {memberList.length > 0 ? (

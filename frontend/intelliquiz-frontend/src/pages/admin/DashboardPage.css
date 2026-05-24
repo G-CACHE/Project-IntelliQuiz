@@ -15,7 +15,7 @@
 .admin-clean-hero {
   border-radius: 22px;
   background: linear-gradient(135deg, #6b0f23 0%, #880015 55%, #a8002c 100%);
-  box-shadow: 0 16px 40px rgba(136, 0, 21, 0.28);
+  box-shadow: none;
   padding: 30px 32px;
   position: relative;
   overflow: hidden;

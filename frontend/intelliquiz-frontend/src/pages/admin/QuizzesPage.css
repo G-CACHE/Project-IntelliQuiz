@@ -3,102 +3,7 @@
    Palette: White shell, Maroon hero, Gold CTA, Teal/Emerald/Slate badges
    ================================================================ */
 
-/* ── SHELL ──────────────────────────────────────────────────── */
-.quiz-list-shell {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 24px 32px;
-  background: transparent;
-  border: none;
-}
-
-/* ── HERO ───────────────────────────────────────────────────── */
-.quiz-list-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #6b0f23 0%, #880015 58%, #a8002c 100%);
-  padding: 28px 30px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* decorative accent circle */
-.quiz-list-hero::after {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  right: -60px;
-  top: -100px;
-  pointer-events: none;
-}
-
-.quiz-list-eyebrow {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.quiz-list-title {
-  margin: 6px 0 0;
-  color: #ffffff;
-  font-family: var(--font-heading);
-  font-size: clamp(26px, 3.2vw, 38px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.quiz-list-subtitle {
-  margin: 5px 0 0;
-  color: rgba(255, 255, 255, 0.70);
-  font-size: 14px;
-  line-height: 1.55;
-  font-weight: 500;
-}
-
-/* ── CREATE BUTTON ──────────────────────────────────────────── */
-.quiz-list-create-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 22px;
-  min-height: 46px;
-  border: 1.5px solid #d97706;
-  border-radius: 10px;
-  background: #fbbf24;
-  color: #78350f;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
-  transition: all 0.2s ease;
-  position: relative;
-  z-index: 1;
-}
-
-.quiz-list-create-btn:hover {
-  background: #fcd34d;
-  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.55);
-  transform: translateY(-1px);
-}
-
-.quiz-list-create-btn:active {
-  transform: translateY(1px);
-  box-shadow: none;
-}
+/* Hero styles now use admin-clean-hero from DashboardPage.css */
 
 /* ── STATS CARDS ROW ───────────────────────────────────────── */
 .quiz-list-stats-row {
@@ -416,8 +321,8 @@
   min-width: 140px;
 }
 
-/* Override admin-form-input inside quiz shell */
-.quiz-list-shell .admin-form-input {
+/* Override admin-form-input inside quiz pages */
+.admin-clean-dashboard .admin-form-input {
   border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   background: #ffffff;
@@ -429,229 +334,296 @@
   transition: border-color 0.2s ease;
 }
 
-.quiz-list-shell .admin-form-input:focus {
+.admin-clean-dashboard .admin-form-input:focus {
   outline: none;
   border-color: #880015;
   box-shadow: 0 0 0 3px rgba(136, 0, 21, 0.08);
 }
 
 /* input inside search wrap — no double border */
-.quiz-list-shell .quiz-list-search-wrap .admin-form-input {
+.admin-clean-dashboard .quiz-list-search-wrap .admin-form-input {
   background: transparent;
   border: none;
   padding-left: 42px;
   box-shadow: none;
 }
 
-.quiz-list-shell .quiz-list-search-wrap .admin-form-input:focus {
+.admin-clean-dashboard .quiz-list-search-wrap .admin-form-input:focus {
   border: none;
   box-shadow: none;
 }
 
 /* ── QUIZ GRID ──────────────────────────────────────────────── */
-.quiz-list-shell .admin-quiz-grid {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+.admin-clean-dashboard .admin-quiz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
   align-items: stretch;
 }
 
-/* ── QUIZ CARD — Floating panel, no border ──────────────────── */
-.quiz-list-shell .admin-quiz-card,
-.quiz-list-shell .quiz-list-card {
+/* ── QUIZ CARD — COMPACT LANDSCAPE LAYOUT ──────────────────── */
+.admin-clean-dashboard .admin-quiz-card,
+.admin-clean-dashboard .quiz-list-card {
   background: #ffffff;
   border: none;
-  border-radius: 16px;
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.05),
-    0 4px 16px rgba(0,0,0,0.07);
-  transition: box-shadow 0.22s ease, transform 0.22s ease;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
+  transition: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: auto;
 }
 
-/* Status cards keep their ring in the resting state too */
-.quiz-list-shell .admin-quiz-card.status-draft,
-.quiz-list-shell .quiz-list-card.status-draft {
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.05),
-    0 4px 16px rgba(0,0,0,0.07),
-    0 0 0 2px #94a3b8;
+/* Status left-border accent instead of ring shadow */
+.admin-clean-dashboard .admin-quiz-card.status-draft,
+.admin-clean-dashboard .quiz-list-card.status-draft {
+  border-left: 4px solid #94a3b8;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.quiz-list-shell .admin-quiz-card.status-ready,
-.quiz-list-shell .quiz-list-card.status-ready {
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.05),
-    0 4px 16px rgba(0,0,0,0.07),
-    0 0 0 2px #059669;
+.admin-clean-dashboard .admin-quiz-card.status-ready,
+.admin-clean-dashboard .quiz-list-card.status-ready {
+  border-left: 4px solid #059669;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.quiz-list-shell .admin-quiz-card.status-active,
-.quiz-list-shell .quiz-list-card.status-active {
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.05),
-    0 4px 16px rgba(0,0,0,0.07),
-    0 0 0 2px #880015;
+.admin-clean-dashboard .admin-quiz-card.status-active,
+.admin-clean-dashboard .quiz-list-card.status-active {
+  border-left: 4px solid #880015;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.quiz-list-shell .admin-quiz-card.status-archived,
-.quiz-list-shell .quiz-list-card.status-archived,
-.quiz-list-shell .admin-quiz-card.status-done,
-.quiz-list-shell .quiz-list-card.status-done {
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.05),
-    0 4px 16px rgba(0,0,0,0.07),
-    0 0 0 2px #d1d5db;
+.admin-clean-dashboard .admin-quiz-card.status-live,
+.admin-clean-dashboard .quiz-list-card.status-live {
+  border-left: 4px solid #16a34a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.quiz-list-shell .admin-quiz-card:hover,
-.quiz-list-shell .quiz-list-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 2px 6px rgba(0,0,0,0.06),
-    0 14px 36px rgba(0,0,0,0.12);
+.admin-clean-dashboard .admin-quiz-card.status-archived,
+.admin-clean-dashboard .quiz-list-card.status-archived,
+.admin-clean-dashboard .admin-quiz-card.status-done,
+.admin-clean-dashboard .quiz-list-card.status-done {
+  border-left: 4px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-/* Status-specific glow ring on hover */
-.quiz-list-shell .quiz-list-card.status-draft:hover    { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 1.5px #94a3b8; }
-.quiz-list-shell .quiz-list-card.status-ready:hover,
-.quiz-list-shell .admin-quiz-card.status-ready:hover   { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 2px #059669; }
-.quiz-list-shell .quiz-list-card.status-active:hover,
-.quiz-list-shell .admin-quiz-card.status-active:hover  { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 2px #880015; }
-.quiz-list-shell .quiz-list-card.status-live:hover,
-.quiz-list-shell .admin-quiz-card.status-live:hover    { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 2px #16a34a; }
-.quiz-list-shell .quiz-list-card.status-archived:hover,
-.quiz-list-shell .quiz-list-card.status-done:hover     { box-shadow: 0 14px 36px rgba(0,0,0,0.08), 0 0 0 1.5px #d1d5db; }
+/* No hover lift or glow */
+.admin-clean-dashboard .admin-quiz-card:hover,
+.admin-clean-dashboard .quiz-list-card:hover,
+.admin-clean-dashboard .quiz-list-card.status-draft:hover,
+.admin-clean-dashboard .quiz-list-card.status-ready:hover,
+.admin-clean-dashboard .admin-quiz-card.status-ready:hover,
+.admin-clean-dashboard .quiz-list-card.status-active:hover,
+.admin-clean-dashboard .admin-quiz-card.status-active:hover,
+.admin-clean-dashboard .quiz-list-card.status-live:hover,
+.admin-clean-dashboard .admin-quiz-card.status-live:hover,
+.admin-clean-dashboard .quiz-list-card.status-archived:hover,
+.admin-clean-dashboard .quiz-list-card.status-done:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.06);
+}
 
-.quiz-list-shell .admin-quiz-card-top { display: none; }
+.admin-clean-dashboard .admin-quiz-card-top { display: none; }
 
-.quiz-list-shell .admin-quiz-card-body {
+.admin-clean-dashboard .admin-quiz-card-body {
   padding: 20px 20px 14px;
-  flex: 1;
-}
-
-.quiz-list-shell .admin-quiz-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  position: relative;
 }
 
-.quiz-list-shell .admin-quiz-title {
-  font-size: 16px;
+.admin-clean-dashboard .admin-quiz-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 110px;
+}
+
+.admin-clean-dashboard .admin-quiz-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.admin-clean-dashboard .admin-quiz-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-clean-dashboard .admin-quiz-title {
+  font-size: 18px;
   font-weight: 800;
-  color: #111827;
+  color: #0f172a;
   line-height: 1.3;
   margin: 0;
   letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
 }
 
-.quiz-list-shell .admin-quiz-desc {
-  font-size: 12.5px;
-  color: #9ca3af;
+.admin-clean-dashboard .admin-quiz-desc {
+  font-size: 13px;
+  color: #64748b;
   line-height: 1.5;
-  margin: 4px 0 0;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* ── META INFO ──────────────────────────────────────────────── */
-.quiz-list-shell .admin-quiz-meta {
+/* ── COMPACT META GRID — HORIZONTAL INLINE LAYOUT ──────────────────────────────────────── */
+.admin-clean-dashboard .admin-quiz-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1.5px solid #f0f1f3;
+}
+
+.admin-clean-dashboard .admin-quiz-meta-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #f3f4f6;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  background: #fafbfc;
+  border-radius: 8px;
+  border: 1px solid #f0f1f3;
+  transition: all 0.2s ease;
+  text-align: center;
 }
 
-.quiz-list-shell .admin-quiz-meta-item {
-  display: inline-flex;
-  align-items: center;
+.admin-clean-dashboard .admin-quiz-meta-item:hover {
+  background: #f3f4f7;
+  border-color: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.admin-clean-dashboard .admin-quiz-meta-item .meta-icon {
+  color: #5b7c99;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.admin-clean-dashboard .admin-quiz-meta-item .meta-content {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 600;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-clean-dashboard .admin-quiz-meta-item .meta-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8b94a5;
+  line-height: 1;
+}
+
+.admin-clean-dashboard .admin-quiz-meta-item .meta-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.admin-clean-dashboard .admin-quiz-meta-item .meta-value.quiz-code {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #880015;
   background: transparent;
   border: none;
   padding: 0;
 }
 
-/* ── CODE / PROCTOR TAGS ────────────────────────────────────── */
-.quiz-list-code-tag {
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 4px;
-  padding: 2px 6px;
-  border: none;
-}
+/* Old meta styles removed - using new admin-quiz-meta-grid instead */
 
-/* ── CARD FOOTER ────────────────────────────────────────────── */
-.quiz-list-shell .admin-quiz-footer {
-  background: #fafafa;
-  border-top: 1px solid #f3f4f6;
-  padding: 10px 16px;
+/* ── CARD FOOTER — COMPACT LAYOUT ────────────────────────────────────────────── */
+.admin-clean-dashboard .admin-quiz-footer {
+  background: #fafbfc;
+  border-top: 1.5px solid #f0f1f3;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
-.quiz-list-shell .admin-quiz-actions {
+.admin-clean-dashboard .admin-quiz-actions {
   display: flex;
-  gap: 2px;
+  gap: 4px;
+  align-items: center;
 }
 
-/* Ghost icon buttons — borderless, color on hover */
-.quiz-list-shell .admin-btn-icon {
-  width: 32px;
-  height: 32px;
+/* Ghost icon buttons — compact size */
+.admin-clean-dashboard .admin-btn-icon {
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   background: transparent;
-  color: #9ca3af;
+  color: #a0aab8;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.quiz-list-shell .admin-btn-icon:hover {
-  background: #f3f4f6;
-  color: #111827;
+.admin-clean-dashboard .admin-btn-icon:hover {
+  background: #eef0f5;
+  color: #1f2937;
 }
 
-.quiz-list-shell .admin-btn-icon.success:hover {
+.admin-clean-dashboard .admin-btn-icon.success:hover {
   background: #ecfdf5;
   color: #059669;
 }
 
-.quiz-list-shell .admin-btn-icon.danger:hover {
+.admin-clean-dashboard .admin-btn-icon.danger:hover {
   background: #fef2f2;
   color: #ef4444;
 }
 
-/* ── STATUS BADGES — Flat chip + colored dot ────────────────── */
-.quiz-list-shell .admin-badge-status {
+/* ── STATUS BADGES — Compact design with dot indicator ────────────────── */
+.admin-clean-dashboard .admin-badge-status {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px 4px 8px;
-  border-radius: 6px;
-  font-size: 10.5px;
-  font-weight: 700;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border: none;
+  border: 1.5px solid transparent;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  min-width: fit-content;
 }
 
 /* Colored dot via ::before */
-.quiz-list-shell .admin-badge-status::before {
+.admin-clean-dashboard .admin-badge-status::before {
   content: '';
   display: inline-block;
   width: 6px;
@@ -660,17 +632,18 @@
   flex-shrink: 0;
 }
 
-.quiz-list-shell .admin-badge-status.draft   { background: #f1f5f9; color: #475569; }
-.quiz-list-shell .admin-badge-status.draft::before    { background: #94a3b8; }
+.admin-clean-dashboard .admin-badge-status.draft   { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.admin-clean-dashboard .admin-badge-status.draft::before    { background: #94a3b8; }
 
-.quiz-list-shell .admin-badge-status.ready   { background: #ecfdf5; color: #065f46; }
-.quiz-list-shell .admin-badge-status.ready::before    { background: #059669; }
+.admin-clean-dashboard .admin-badge-status.ready   { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+.admin-clean-dashboard .admin-badge-status.ready::before    { background: #059669; }
 
-.quiz-list-shell .admin-badge-status.active  { background: #fff0f3; color: #880015; }
-.quiz-list-shell .admin-badge-status.active::before   { background: #880015; }
+/* ACTIVE — amber, clearly different from READY and LIVE */
+.admin-clean-dashboard .admin-badge-status.active  { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+.admin-clean-dashboard .admin-badge-status.active::before   { background: #f59e0b; }
 
-.quiz-list-shell .admin-badge-status.live    { background: #f0fdf4; color: #15803d; font-weight: 800; }
-.quiz-list-shell .admin-badge-status.live::before     {
+.admin-clean-dashboard .admin-badge-status.live    { background: #f0fdf4; color: #15803d; font-weight: 800; border-color: #86efac; }
+.admin-clean-dashboard .admin-badge-status.live::before     {
   background: #16a34a;
   animation: live-pulse 1.4s ease-in-out infinite;
 }
@@ -680,10 +653,10 @@
   50%       { opacity: 0.4; transform: scale(1.5); }
 }
 
-.quiz-list-shell .admin-badge-status.done,
-.quiz-list-shell .admin-badge-status.archived { background: #f3f4f6; color: #6b7280; }
-.quiz-list-shell .admin-badge-status.done::before,
-.quiz-list-shell .admin-badge-status.archived::before { background: #d1d5db; }
+.admin-clean-dashboard .admin-badge-status.done,
+.admin-clean-dashboard .admin-badge-status.archived { background: #f3f4f6; color: #6b7280; }
+.admin-clean-dashboard .admin-badge-status.done::before,
+.admin-clean-dashboard .admin-badge-status.archived::before { background: #d1d5db; }
 
 /* ── VIEW ONLY BADGE ────────────────────────────────────────── */
 .quiz-list-view-only {
@@ -691,7 +664,7 @@
   align-items: center;
   gap: 4px;
   color: #9ca3af;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -755,7 +728,7 @@
 }
 
 /* ── MODAL OVERRIDES ────────────────────────────────────────── */
-.quiz-list-shell .admin-modal {
+.admin-clean-dashboard .admin-modal {
   max-width: 560px;
   border-radius: 16px;
   border: 1.5px solid #e5e7eb;
@@ -765,7 +738,7 @@
 }
 
 /* re-clip the rounded corners while allowing dropdown overflow */
-.quiz-list-shell .admin-modal-header {
+.admin-clean-dashboard .admin-modal-header {
   border-radius: 14px 14px 0 0;
   overflow: hidden;
 }
@@ -775,7 +748,7 @@
   overflow: hidden;
 }
 
-.quiz-list-shell .admin-modal-body {
+.admin-clean-dashboard .admin-modal-body {
   padding: 24px 24px 20px;
   background: #ffffff;
   /* no max-height / overflow clipping — let the modal grow naturally */
@@ -849,11 +822,11 @@
   line-height: 1.6;
 }
 
-.quiz-list-shell .admin-modal .admin-form-group {
+.admin-clean-dashboard .admin-modal .admin-form-group {
   margin-bottom: 14px;
 }
 
-.quiz-list-shell .admin-modal .admin-form-label {
+.admin-clean-dashboard .admin-modal .admin-form-label {
   color: #374151;
   font-size: 12px;
   font-weight: 700;
@@ -861,7 +834,7 @@
   margin-bottom: 6px;
 }
 
-.quiz-list-shell .admin-modal-footer .admin-btn {
+.admin-clean-dashboard .admin-modal-footer .admin-btn {
   border-radius: 8px;
   min-height: 40px;
   padding: 9px 18px;
@@ -873,31 +846,31 @@
   transition: all 0.15s ease;
 }
 
-.quiz-list-shell .admin-modal-footer .admin-btn-secondary {
+.admin-clean-dashboard .admin-modal-footer .admin-btn-secondary {
   background: #ffffff;
   color: #374151;
   border-color: #e5e7eb;
 }
 
-.quiz-list-shell .admin-modal-footer .admin-btn-secondary:hover {
+.admin-clean-dashboard .admin-modal-footer .admin-btn-secondary:hover {
   border-color: #880015;
   color: #880015;
   background: #fff5f7;
 }
 
-.quiz-list-shell .admin-modal-footer .admin-btn-primary {
+.admin-clean-dashboard .admin-modal-footer .admin-btn-primary {
   background: #880015;
   color: #ffffff;
   border-color: #6b0f23;
   box-shadow: 0 4px 12px rgba(136, 0, 21, 0.3);
 }
 
-.quiz-list-shell .admin-modal-footer .admin-btn-primary:hover {
+.admin-clean-dashboard .admin-modal-footer .admin-btn-primary:hover {
   background: #6b0f23;
   border-color: #5a0010;
 }
 
-.quiz-list-shell .admin-modal-footer .admin-btn-danger {
+.admin-clean-dashboard .admin-modal-footer .admin-btn-danger {
   background: #ef4444;
   color: #ffffff;
   border-color: #dc2626;
@@ -972,16 +945,30 @@
   .quiz-list-status-select {
     width: 100%;
   }
+
+  /* 2-3 cards per row on medium screens */
+  .admin-clean-dashboard .admin-quiz-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 1050px) {
+  .admin-clean-hero-content {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .admin-clean-hero-right {
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 768px) {
-  .quiz-list-hero {
-    flex-direction: column;
-    align-items: flex-start;
+  .admin-clean-hero {
     padding: 22px 20px;
+    border-radius: 16px;
   }
 
-  .quiz-list-create-btn {
+  .admin-clean-btn-primary {
     width: 100%;
     justify-content: center;
   }
@@ -1006,6 +993,24 @@
 
   .quiz-list-pagination {
     justify-content: space-between;
+  }
+
+  /* 1 card per row on mobile */
+  .admin-clean-dashboard .admin-quiz-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-clean-dashboard .admin-quiz-card-body {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+
+  .admin-clean-dashboard .admin-quiz-meta-grid {
+    gap: 8px;
+  }
+
+  .admin-clean-dashboard .admin-quiz-footer {
+    padding: 10px 16px;
   }
 }
 

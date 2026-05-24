@@ -172,10 +172,8 @@ export default function AdminLayout() {
       </header>
 
       {/* Main Content */}
-      <main style={{ minHeight: 'calc(100vh - 64px)', background: '#ffffff' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
-          <Outlet />
-        </div>
+      <main style={{ minHeight: 'calc(100vh - 64px)', background: '#ffffff', padding: '24px' }}>
+        <Outlet />
       </main>
     </div>
   );
