@@ -12,5 +12,8 @@ public record CreateTeamRequest(
     @Schema(description = "Name of the team", example = "Team Alpha", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Team name is required")
     @Size(max = 100, message = "Team name must not exceed 100 characters")
-    String name
+    String name,
+
+    @Schema(description = "Comma-separated list of member names (optional). If omitted, the team is treated as an individual.", example = "Alice,Bob,Carol")
+    String members
 ) {}

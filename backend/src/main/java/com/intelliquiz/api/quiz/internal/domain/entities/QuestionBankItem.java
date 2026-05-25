@@ -59,6 +59,9 @@ public class QuestionBankItem {
     @Column(name = "category")
     private String category;
 
+    @Column(name = "source_quiz_title")
+    private String sourceQuizTitle;
+
     @Column(name = "is_harvested", nullable = false)
     private boolean isHarvested = false;
 
@@ -107,6 +110,7 @@ public class QuestionBankItem {
         item.setOptions(new ArrayList<>(question.getOptions()));
         item.setSourceQuizId(question.getQuiz().getId());
         item.setSourceQuestionId(question.getId());
+        item.setSourceQuizTitle(question.getQuiz().getTitle());
         return item;
     }
 
@@ -214,6 +218,14 @@ public class QuestionBankItem {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getSourceQuizTitle() {
+        return sourceQuizTitle;
+    }
+
+    public void setSourceQuizTitle(String sourceQuizTitle) {
+        this.sourceQuizTitle = sourceQuizTitle;
     }
 
     public boolean isHarvested() {

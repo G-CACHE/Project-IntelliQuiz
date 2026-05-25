@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Lock, Plus, Trash2 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
+import CustomSelect from '../../components/common/CustomSelect';
 import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
@@ -281,36 +282,24 @@ export default function PermissionManagementPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Admin User *
             </label>
-            <select
-              value={formData.adminId}
-              onChange={(e) => setFormData({ ...formData, adminId: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value={0}>Select an admin user</option>
-              {admins.map(admin => (
-                <option key={admin.id} value={admin.id}>
-                  {admin.username} ({admin.role})
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={String(formData.adminId)}
+              onChange={(v) => setFormData({ ...formData, adminId: parseInt(v) })}
+              placeholder="Select an admin user"
+              options={admins.map(admin => ({ value: String(admin.id), label: `${admin.username} (${admin.role})` }))}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Quiz *
             </label>
-            <select
-              value={formData.quizId}
-              onChange={(e) => setFormData({ ...formData, quizId: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value={0}>Select a quiz</option>
-              {quizzes.map(quiz => (
-                <option key={quiz.id} value={quiz.id}>
-                  {quiz.title}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={String(formData.quizId)}
+              onChange={(v) => setFormData({ ...formData, quizId: parseInt(v) })}
+              placeholder="Select a quiz"
+              options={quizzes.map(quiz => ({ value: String(quiz.id), label: quiz.title }))}
+            />
           </div>
 
           <div>

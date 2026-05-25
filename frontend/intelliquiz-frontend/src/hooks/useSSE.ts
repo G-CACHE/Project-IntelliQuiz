@@ -63,6 +63,8 @@ export function useSSE(
   const [currentRound, setCurrentRound] = useState<string | null>(null)
   const [isNavigating, setIsNavigating] = useState(false)
 
+  const connectRef = useRef<() => void>(() => {})
+  const disconnectRef = useRef<() => void>(() => {})
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectAttemptsRef = useRef(0)
   const maxReconnectAttemptsRef = useRef(10)
@@ -383,6 +385,32 @@ export function useSSE(
       }
     })
 
+    source.addEventListener('REENTRY_APPROVED', (evt) => {
+      try {
+        const data = JSON.parse((evt as MessageEvent).data)
+        const approvedTeamId = Number(data.teamId ?? data.id)
+
+        // Remove from kicked list on the proctor side
+        if (Number.isFinite(approvedTeamId)) {
+          setKickedTeams((prev) => prev.filter((t) => t.id !== approvedTeamId))
+        }
+
+        // If this event is for the current participant, clear kicked state and reconnect
+        if (teamId !== undefined && Number(data.teamId) === Number(teamId)) {
+          setKicked(false)
+          setKickReason(null)
+          setError(null)
+          // Close the current (likely dead) connection and open a fresh one
+          source.close()
+          eventSourceRef.current = null
+          reconnectAttemptsRef.current = 0
+          setTimeout(() => connectRef.current(), 300)
+        }
+      } catch {
+        setError('Failed to parse reentry approval event')
+      }
+    })
+
     source.addEventListener('ERROR', (evt) => {
       try {
         const data = JSON.parse((evt as MessageEvent).data)
@@ -596,11 +624,17 @@ export function useSSE(
   }, [quizIdStr, teamId])
 
   useEffect(() => {
+    connectRef.current = connect
+    disconnectRef.current = disconnect
+  })
+
+  useEffect(() => {
     if (!kicked) {
-      connect()
+      connectRef.current()
     }
-    return () => disconnect()
-  }, [connect, disconnect, kicked])
+    return () => disconnectRef.current()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kicked])
 
   return {
     connected,

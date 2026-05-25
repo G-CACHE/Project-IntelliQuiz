@@ -5,20 +5,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Quiz lifecycle states.
  */
-@Schema(description = "Quiz lifecycle states: DRAFT (under construction), READY (can be activated), ARCHIVED (completed, read-only)")
+@Schema(description = "Quiz lifecycle states: DRAFT (under construction), READY (prepared for launch), ACTIVE (session in progress), ARCHIVED (completed, read-only)")
 public enum QuizStatus {
-    /**
-     * Quiz under construction, not visible to participants.
-     */
+    /** Quiz under construction, not visible to participants. */
     DRAFT,
 
-    /**
-     * Quiz prepared, can be activated for live session.
-     */
+    /** Quiz prepared and ready to be launched by a proctor. */
     READY,
 
-    /**
-     * Quiz completed, read-only historical record.
-     */
+    /** Quiz session is currently active and being proctored. */
+    ACTIVE,
+
+    /** Quiz completed, read-only historical record. */
     ARCHIVED
 }

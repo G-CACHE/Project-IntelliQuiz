@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, Crown, Sparkles, Trophy, Medal, Award, Star } from 'lucide-react';
+import { Target, Crown, Trophy, Medal, Award, Star } from 'lucide-react';
 import type { RankingEntry } from '../../services/api';
 import { parseSmartName } from '../../utils/nameUtils';
 
@@ -8,6 +8,9 @@ interface ScoreboardDisplayProps {
   highlightTeamId?: number;
   isFinal?: boolean;
   title?: string;
+  maxRanksToShow?: number;
+  alwaysShowHighlighted?: boolean;
+  maxVisibleRows?: number;
 }
 
 // ======== CANVAS PARTICLE BACKGROUND ========
@@ -149,7 +152,13 @@ const AVATAR_COLORS = [
 
 // ======== MAIN COMPONENT ========
 const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
-  rankings, highlightTeamId, isFinal = false, title,
+  rankings,
+  highlightTeamId,
+  isFinal = false,
+  title,
+  maxRanksToShow,
+  alwaysShowHighlighted,
+  maxVisibleRows,
 }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [wrapSize, setWrapSize] = useState({ w: 900, h: 600 });
@@ -188,6 +197,20 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
     }
     return { ...t, displayRank: t.rank || r };
   });
+
+  // Filter rankings for display
+  let displayRankings = ranked;
+  let playerRanking: typeof ranked[0] | null = null;
+  if (maxRanksToShow && alwaysShowHighlighted && highlightTeamId) {
+    const playerEntry = ranked.find(r => r.teamId === highlightTeamId);
+    const topRankings = ranked.slice(0, maxRanksToShow);
+    const playerInTop = topRankings.find(r => r.teamId === highlightTeamId);
+    
+    displayRankings = topRankings;
+    if (playerEntry && !playerInTop) {
+      playerRanking = playerEntry;
+    }
+  }
 
   const maxScore = Math.max(...rankings.map(r => r.score), 1);
 
@@ -254,8 +277,17 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
       )}
 
       {/* ===== ROWS ===== */}
-      <div style={S.list}>
-        {ranked.map((entry, idx) => {
+      <div
+        style={{
+          ...S.list,
+          ...(maxVisibleRows ? {
+            maxHeight: `${maxVisibleRows * 90}px`,
+            overflowY: 'auto',
+            paddingRight: '6px',
+          } : {}),
+        }}
+      >
+        {displayRankings.map((entry, idx) => {
           const { name, avatarId } = parseSmartName(entry.teamName);
           const isTop = entry.displayRank <= 3;
           const isHi = entry.teamId === highlightTeamId;
@@ -332,14 +364,96 @@ const ScoreboardDisplay: React.FC<ScoreboardDisplayProps> = ({
             </div>
           );
         })}
+        
+        {/* Player's Ranking Card (if not in top 10) */}
+        {playerRanking && (
+          <>
+            {/* Visual Separator */}
+            <div style={{
+              margin: '16px 0',
+              padding: '12px 0',
+              borderTop: '2px dashed rgba(122, 23, 51, 0.3)',
+              borderBottom: '2px dashed rgba(122, 23, 51, 0.3)',
+              textAlign: 'center',
+              fontSize: '12px',
+              color: '#7a1733',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}>Your Rank</div>
+            
+            {/* Player Card */}
+            <div
+              key={playerRanking.teamId}
+              style={{
+                ...S.row,
+                background: 'linear-gradient(135deg, rgba(122, 23, 51, 0.08) 0%, rgba(225, 29, 72, 0.08) 100%)',
+                border: `3px solid #d4af37`,
+                boxShadow: '0 12px 40px rgba(212, 175, 55, 0.2)',
+                zIndex: 10,
+              }}
+            >
+              {/* === RANK BADGE === */}
+              <div style={{
+                ...S.rankOuter,
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                boxShadow: '0 4px 18px rgba(251, 191, 36, 0.5)',
+              }}>
+                <div style={S.rankIcon}><Trophy size={20} color="#fff" /></div>
+                <span style={S.rankNum}>{playerRanking.displayRank}</span>
+              </div>
+
+              {/* === AVATAR === */}
+              <div style={{
+                ...S.avatar,
+                background: parseSmartName(playerRanking.teamName).avatarId ? 'transparent' : AVATAR_COLORS[0],
+                boxShadow: parseSmartName(playerRanking.teamName).avatarId ? 'none' : '0 4px 14px rgba(212, 175, 55, 0.3)',
+                border: parseSmartName(playerRanking.teamName).avatarId ? 'none' : S.avatar.border,
+                borderRadius: '12px',
+                overflow: 'hidden',
+              }}>
+                {parseSmartName(playerRanking.teamName).avatarId ? (
+                  <img src={`/avatars/${parseSmartName(playerRanking.teamName).avatarId}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  ((n: string) => { const w = n.trim().split(/\s+/).filter(Boolean); return !w.length ? '?' : w.length === 1 ? w[0].slice(0, 2).toUpperCase() : (w[0][0] + w[1][0]).toUpperCase(); })(parseSmartName(playerRanking.teamName).name)
+                )}
+              </div>
+
+              {/* === TEAM INFO === */}
+              <div style={S.info}>
+                <div style={S.nameRow}>
+                  <span style={{ ...S.name, color: '#7a1733' }}>{parseSmartName(playerRanking.teamName).name}</span>
+                  <div style={S.youBadge}>
+                    <Target size={11} color="#fff" />
+                    <span>YOU</span>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div style={S.track}>
+                  <div style={{
+                    ...S.fill,
+                    width: `${Math.max((playerRanking.score / maxScore) * 100, 6)}%`,
+                    background: 'linear-gradient(90deg, #d4af3788, #d4af37)',
+                  }} />
+                  <div style={S.shimmer} />
+                </div>
+              </div>
+
+              {/* === SCORE === */}
+              <div style={{ ...S.chip, borderColor: '#d4af3744', background: 'rgba(212, 175, 55, 0.1)' }}>
+                <SvgStar size={16} color="#d4af37" />
+                <span style={{ ...S.chipVal, color: '#7a1733' }}>{playerRanking.score}</span>
+                <span style={S.chipUnit}>pts</span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}
       {isFinal && (
         <div style={S.footer}>
-          <Sparkles size={14} color="#fde68a" />
           <span style={S.footerTxt}>Congratulations to all participants!</span>
-          <Sparkles size={14} color="#fde68a" />
         </div>
       )}
     </div>

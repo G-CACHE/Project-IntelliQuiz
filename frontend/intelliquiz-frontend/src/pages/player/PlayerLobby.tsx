@@ -153,13 +153,6 @@ const PlayerLobby: React.FC = () => {
       {/* Main Content */}
       <div className="participant-content participant-content-centered">
         <div className="participant-waiting-container">
-          {session.teamCode && (
-            <div className="participant-room-code-card">
-              <span className="participant-room-code-label">Team Code</span>
-              <span className="participant-room-code-value">{session.teamCode}</span>
-            </div>
-          )}
-
           {/* Error State */}
           {error && (
             <div className="participant-alert-error">

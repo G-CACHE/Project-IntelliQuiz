@@ -97,12 +97,12 @@ public class AccessController {
                         && proctorSessionService != null
                         && proctorSessionService.isQuizLocked(result.quizId())) {
                     boolean hasDeviceId = normalizedDeviceId != null && !normalizedDeviceId.isBlank();
-                    boolean knownDeviceTeam = hasDeviceId
-                            && teamFacade.getTeamByQuizAndDeviceId(result.quizId(), normalizedDeviceId).isPresent();
+                    // A device is allowed through the lock only if it was already connected
+                    // when the host pressed Lock — i.e. it appears in the allowed-devices snapshot.
                     boolean allowedLockedDevice = hasDeviceId
                             && proctorSessionService.isDeviceAllowedToJoin(result.quizId(), normalizedDeviceId);
 
-                    if (!knownDeviceTeam && !allowedLockedDevice) {
+                    if (!allowedLockedDevice) {
                         yield AccessResolutionResponse.invalid(
                                 "This quiz is locked and not accepting new entries. Contact the administrator for help."
                         );
@@ -188,6 +188,15 @@ public class AccessController {
         }
 
         String normalizedDeviceId = request.deviceId() != null ? request.deviceId().trim() : null;
+
+        if (proctorSessionService != null && proctorSessionService.isQuizLocked(quizId)) {
+            boolean allowed = normalizedDeviceId != null
+                    && !normalizedDeviceId.isBlank()
+                    && proctorSessionService.isDeviceAllowedToJoin(quizId, normalizedDeviceId);
+            if (!allowed) {
+                throw new IllegalArgumentException("This quiz is locked and not accepting new entries. Contact the administrator for help.");
+            }
+        }
 
         TeamInfoDto existingByDevice = (normalizedDeviceId != null && !normalizedDeviceId.isBlank())
                 ? teamFacade.getTeamByQuizAndDeviceId(quizId, normalizedDeviceId).orElse(null)

@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Home, Volume2, VolumeX } from 'lucide-react';
+import { Trophy, Volume2, VolumeX } from 'lucide-react';
 import {
-  Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon, 
   Hourglass, PauseCircle, MonitorPlay
 } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
-import { clearSession, getProctorSession } from '../../services/sessionStorage';
+import { clearSession, getProctorSession, saveProctorSession } from '../../services/sessionStorage';
 import Timer from '../../components/game/Timer';
 import QuestionDisplay from '../../components/game/QuestionDisplay';
 import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
@@ -24,7 +23,12 @@ const HostGame: React.FC = () => {
     if (stored) return stored;
     
     const quizId = searchParams.get('quizId');
+    const pin = searchParams.get('pin');
     if (quizId) {
+      if (pin) {
+        // Opened in a new tab — bootstrap session from URL params
+        return saveProctorSession(parseInt(quizId), 'Quiz', pin);
+      }
       return {
         quizId: parseInt(quizId),
         quizTitle: 'Quiz',
@@ -74,7 +78,21 @@ const HostGame: React.FC = () => {
   const handleViewLeaderboard = () => sendCommand({ type: 'VIEW_LEADERBOARD' });
   const handleNextQuestion = () => sendCommand({ type: 'NEXT_QUESTION' });
   const handleEndQuiz = () => sendCommand({ type: 'END_QUIZ' });
-  const handleOpenProctorMonitor = () => window.open('/proctor/dashboard', '_blank', 'noopener,noreferrer');
+  const handleOpenProctorMonitor = () => {
+    // When the quiz is finished, the proctor dashboard redirects to /host/game anyway.
+    // Open /host/game directly so the new tab lands on the final results view.
+    if (gameState === 'FINAL_RESULTS') {
+      const params = new URLSearchParams();
+      if (session?.quizId) params.set('quizId', String(session.quizId));
+      if (session?.proctorPin) params.set('pin', session.proctorPin);
+      window.open(`/host/game?${params.toString()}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const params = new URLSearchParams();
+    if (session?.quizId) params.set('quizId', String(session.quizId));
+    if (session?.proctorPin) params.set('pin', session.proctorPin);
+    window.open(`/proctor/dashboard?${params.toString()}`, '_blank', 'noopener,noreferrer');
+  };
   const handleExitHome = () => {
     clearSession();
     navigate('/');
@@ -174,7 +192,6 @@ const HostGame: React.FC = () => {
           onClick={handleExitHome}
           className="proctor-btn-primary proctor-btn-large"
         >
-          <Home size={20} aria-hidden="true" className="proctor-control-icon" />
           Go Home
         </button>
       );
@@ -190,7 +207,6 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-warning proctor-btn-large"
             >
-              <Pause size={20} aria-hidden="true" className="proctor-control-icon" />
               Pause Quiz
             </button>
             <p className="proctor-host-submitted-count">
@@ -207,7 +223,6 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-success proctor-btn-large"
             >
-              <Play size={20} aria-hidden="true" className="proctor-control-icon" />
               Resume Quiz
             </button>
           </div>
@@ -238,7 +253,6 @@ const HostGame: React.FC = () => {
                 disabled={!connected}
                 className="proctor-btn-primary proctor-btn-large"
               >
-                <BarChart3 size={20} aria-hidden="true" className="proctor-control-icon" />
                 View Result
               </button>
             </div>
@@ -251,7 +265,6 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-primary proctor-btn-large"
             >
-              <BarChart3 size={20} aria-hidden="true" className="proctor-control-icon" />
               View Leaderboard
             </button>
             <button
@@ -259,7 +272,6 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-success proctor-btn-large"
             >
-              <ArrowRight size={20} aria-hidden="true" className="proctor-control-icon" />
               Next Question
             </button>
           </div>
@@ -288,7 +300,6 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-success proctor-btn-large"
             >
-              <ArrowRight size={20} aria-hidden="true" className="proctor-control-icon" />
               Next Question
             </button>
             <button
@@ -296,7 +307,6 @@ const HostGame: React.FC = () => {
               disabled={!connected}
               className="proctor-btn-danger proctor-btn-large"
             >
-              <Trophy size={20} aria-hidden="true" className="proctor-control-icon" />
               End Quiz
             </button>
           </div>
@@ -351,8 +361,10 @@ const HostGame: React.FC = () => {
             </button>
 
             <button
-              onClick={handleOpenProctorMonitor}
-              className="proctor-btn proctor-host-monitor-btn"
+              onClick={gameState !== 'FINAL_RESULTS' ? handleOpenProctorMonitor : undefined}
+              className={`proctor-btn proctor-host-monitor-btn${gameState === 'FINAL_RESULTS' ? ' proctor-host-monitor-btn--disabled' : ''}`}
+              disabled={gameState === 'FINAL_RESULTS'}
+              title={gameState === 'FINAL_RESULTS' ? 'Only available while the quiz is running' : 'Open proctor monitor'}
             >
               Monitor
             </button>
@@ -539,14 +551,14 @@ const HostGame: React.FC = () => {
               <ScoreboardDisplay
                 rankings={rankings}
                 isFinal={true}
+                maxVisibleRows={10}
               />
 
               <div className="proctor-host-final-actions">
                 <button
                   onClick={handleExitHome}
-                  className="proctor-btn-primary proctor-btn-large"
+                  className="proctor-btn-primary proctor-btn-large proctor-home-action"
                 >
-                  <Home size={20} aria-hidden="true" />
                   Go Home
                 </button>
               </div>
@@ -559,21 +571,18 @@ const HostGame: React.FC = () => {
               <div className="proctor-controls-shell">
                 <div className="proctor-controls-stats">
                   <div className="proctor-controls-stat">
-                    <Users size={16} aria-hidden="true" />
                     <div>
                       <span className="proctor-controls-stat-label">Players Online</span>
                       <strong className="proctor-controls-stat-value">{connectedTeams.length}</strong>
                     </div>
                   </div>
                   <div className="proctor-controls-stat">
-                    <Gauge size={16} aria-hidden="true" />
                     <div>
                       <span className="proctor-controls-stat-label">Phase</span>
                       <strong className="proctor-controls-stat-value">{gamePhaseLabel}</strong>
                     </div>
                   </div>
                   <div className="proctor-controls-stat">
-                    <TimerIcon size={16} aria-hidden="true" />
                     <div>
                       <span className="proctor-controls-stat-label">Submissions</span>
                       <strong className="proctor-controls-stat-value">{submittedTeamsCount || submissions.length}</strong>

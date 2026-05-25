@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Archive, Download, CheckCircle2, Inbox, BookOpen } from 'lucide-react';
 import { questionBankApi, quizzesApi } from '../../services/api';
+import CustomSelect from '../../components/common/CustomSelect';
 import type { QuestionBankItem, Quiz } from '../../services/api';
 import '../../styles/admin.css';
 import './AdminRedesign.css';
@@ -380,19 +381,14 @@ const QuestionBankPage: React.FC = () => {
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>
               Select a quiz to harvest its questions into the bank.
             </p>
-            <select
-              value={selectedQuizForHarvest || ''}
-              onChange={(e) => setSelectedQuizForHarvest(parseInt(e.target.value) || null)}
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: '8px',
-                border: '1px solid #d1d5db', fontSize: '14px', marginBottom: '20px',
-              }}
-            >
-              <option value="">Select a quiz...</option>
-              {quizzes.map((q) => (
-                <option key={q.id} value={q.id}>{q.title}</option>
-              ))}
-            </select>
+            <div style={{ marginBottom: '20px' }}>
+              <CustomSelect
+                value={selectedQuizForHarvest ? String(selectedQuizForHarvest) : ''}
+                onChange={(v) => setSelectedQuizForHarvest(parseInt(v) || null)}
+                placeholder="Select a quiz..."
+                options={quizzes.map((q) => ({ value: String(q.id), label: q.title }))}
+              />
+            </div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { setShowHarvestModal(false); setSelectedQuizForHarvest(null); }}
@@ -449,20 +445,14 @@ const QuestionBankPage: React.FC = () => {
                 Select a target quiz and choose questions to import.
               </p>
 
-              <select
-                value={selectedQuizForImport || ''}
-                onChange={(e) => setSelectedQuizForImport(parseInt(e.target.value) || null)}
-                style={{
-                  width: '100%', padding: '12px 14px', borderRadius: '10px',
-                  border: '1px solid #d1d5db', fontSize: '14px', marginBottom: '24px',
-                  fontFamily: 'inherit', backgroundColor: '#fff', color: '#374151',
-                }}
-              >
-                <option value="">Select target quiz...</option>
-                {quizzes.map((q) => (
-                  <option key={q.id} value={q.id}>{q.title}</option>
-                ))}
-              </select>
+              <div style={{ marginBottom: '24px' }}>
+                <CustomSelect
+                  value={selectedQuizForImport ? String(selectedQuizForImport) : ''}
+                  onChange={(v) => setSelectedQuizForImport(parseInt(v) || null)}
+                  placeholder="Select target quiz..."
+                  options={quizzes.map((q) => ({ value: String(q.id), label: q.title }))}
+                />
+              </div>
 
               {/* Questions List */}
               <div style={{ flex: 1, overflowY: 'auto', marginBottom: '24px', borderRadius: '10px', backgroundColor: '#f9fafb', padding: '16px' }}>

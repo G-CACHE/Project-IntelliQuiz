@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BiTrophy, BiRefresh, BiX, BiErrorCircle, BiMedal, BiCrown } from 'react-icons/bi';
 import { scoreboardApi, quizzesApi, type ScoreboardEntry, type Quiz } from '../../services/api';
+import CustomSelect from '../../components/common/CustomSelect';
 
 export default function ScoreboardPage() {
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
@@ -138,10 +139,12 @@ export default function ScoreboardPage() {
       <div className="card" style={{ marginBottom: 'var(--spacing-lg)', padding: 'var(--spacing-md)' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Select Quiz</label>
-          <select value={selectedQuizId} onChange={(e) => setSelectedQuizId(parseInt(e.target.value))} className="form-input form-select">
-            <option value={0}>Select a quiz</option>
-            {quizzes.map((q) => <option key={q.id} value={q.id}>{q.title} ({q.status})</option>)}
-          </select>
+          <CustomSelect
+            value={String(selectedQuizId)}
+            onChange={(v) => setSelectedQuizId(parseInt(v) || 0)}
+            placeholder="Select a quiz"
+            options={quizzes.map((q) => ({ value: String(q.id), label: `${q.title} (${q.status})` }))}
+          />
         </div>
       </div>
 

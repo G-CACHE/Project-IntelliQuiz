@@ -333,7 +333,7 @@ const HostLobby: React.FC = () => {
 
       <div className="host-lobby-container">
         {error && (
-          <div className="host-lobby-section" style={{ borderColor: '#f87171', background: '#fef2f2' }}>
+          <div className="host-lobby-section" style={{ borderColor: '#f87171', background: '#1a0000' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#dc2626' }}>
               <AlertCircle size={24} />
               <p style={{ margin: 0, fontWeight: 600 }}>Connection Error: {error}</p>
@@ -374,9 +374,6 @@ const HostLobby: React.FC = () => {
           )}
         </section>
 
-        <p style={{ textAlign: 'center', fontSize: '13px', color: '#94a3b8' }}>
-          Session ID: {session.quizId} • Protected by IntelliQuiz Aurum
-        </p>
       </div>
 
       {/* Confirmation Modal */}

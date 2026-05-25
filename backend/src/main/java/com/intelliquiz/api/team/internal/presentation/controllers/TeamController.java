@@ -125,7 +125,7 @@ public class TeamController {
         Long userId = SecurityUtils.extractUserId(auth);
         SystemRole role = SecurityUtils.extractRole(auth);
         quizFacade.verifyQuizAccess(quizId, userId, role);
-        Team team = teamRegistrationService.registerTeam(quizId, request.name());
+        Team team = teamRegistrationService.registerTeam(quizId, request.name(), request.members());
         return ResponseEntity.status(HttpStatus.CREATED).body(TeamResponse.from(team));
     }
 

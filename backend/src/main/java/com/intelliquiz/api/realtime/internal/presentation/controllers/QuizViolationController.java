@@ -173,7 +173,7 @@ public class QuizViolationController {
                 log.info("Blacklisted device {} for kicked team {} in quiz {}", teamDeviceId, parsedTeamId, quizId);
             }
 
-            String reason = formatKickReason(parsedTeamId, quizId);
+            String reason = kickReason;
 
             // Broadcast kick notification
             broadcastService.broadcastKick(
@@ -221,6 +221,14 @@ public class QuizViolationController {
                         "Team is not currently kicked"
                 ));
             }
+
+            // Notify the approved team via SSE so their client can reset kicked state and reconnect.
+            broadcastService.sendToTeam(
+                    quizId,
+                    parsedTeamId,
+                    com.intelliquiz.api.realtime.internal.presentation.dto.SSEEvent.EventType.REENTRY_APPROVED,
+                    Map.of("teamId", String.valueOf(parsedTeamId), "message", "You have been approved to re-enter the quiz")
+            );
 
             return ResponseEntity.ok(new ApproveReentryResponse(
                     "approved",
@@ -418,9 +426,11 @@ public class QuizViolationController {
         ) {}
 
     private String formatKickReason(Long teamId, Long quizId) {
-        String teamName = teamFacade.getTeamInfo(teamId)
+        String rawName = teamFacade.getTeamInfo(teamId)
                 .map(t -> t.name() != null && !t.name().isBlank() ? t.name() : "User")
                 .orElse("User");
+        // Strip avatar ID from smart name format "DisplayName|avatarId"
+        String teamName = rawName.contains("|") ? rawName.substring(0, rawName.indexOf('|')) : rawName;
         String quizTitle = quizFacade.findQuizInfo(quizId)
                 .map(q -> q.title() != null && !q.title().isBlank() ? q.title() : "quiz")
                 .orElse("quiz");

@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiUser, BiLock } from 'react-icons/bi';
+import { 
+  GiTrophyCup, 
+  GiGamepad, 
+  GiBrain, 
+  GiRocket, 
+  GiCheckeredFlag, 
+  GiJeweledChalice,
+  GiStarShuriken,
+  GiCrownedHeart
+} from 'react-icons/gi';
 import { authApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,6 +22,22 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { refreshAuth } = useAuth();
+
+  const extractErrorMessage = (err: unknown, fallback: string): string => {
+    if (err instanceof Error && err.message) {
+      try {
+        const parsed = JSON.parse(err.message) as { message?: string; errorMessage?: string };
+        if (parsed?.message) return parsed.message;
+        if (parsed?.errorMessage) return parsed.errorMessage;
+      } catch {
+        // Not JSON; use the raw message.
+      }
+
+      return err.message;
+    }
+
+    return fallback;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +60,7 @@ export default function LoginPage() {
         setError('Invalid role');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(extractErrorMessage(err, 'Login failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -43,237 +69,98 @@ export default function LoginPage() {
   return (
     <div className="portal-login-shell">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,800;1,900&family=Montserrat:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
 
         .portal-login-shell {
           min-height: 100vh;
-          display: grid;
-          grid-template-columns: 0.95fr 1.05fr;
-          font-family: 'Nunito', sans-serif;
-          background-image: url('/icon/design.png');
-          background-color: #ffffff;
-          background-size: cover;
-          background-position: center;
+          height: 100vh;
+          width: 100vw;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          font-family: var(--font-body);
+          overflow: hidden;
+          position: fixed;
+          top: 0;
+          left: 0;
+          background-image: url('/login-background/background.png');
+          background-color:   #870016;
+          background-size: 100% 100%;
+          background-position: center center;
           background-repeat: no-repeat;
         }
 
-        .portal-login-hero {
-          background: transparent;
-          color: #23121a;
-          padding: 48px 54px;
-          position: relative;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-          align-items: flex-end;
-          gap: 18px;
-          padding-top: 80px;
-          padding-right: 80px;
-        }
-
-        .portal-login-hero::before {
-          content: none;
-        }
-
-        .portal-login-hero::after {
-          content: none;
-        }
-
-        .portal-login-brand {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          width: auto;
-          background: #fff8df;
-          border: 3px solid #131313;
-          border-radius: 8px;
-          padding: 8px 14px;
-          position: relative;
-          z-index: 1;
-          box-shadow: 4px 4px 0 #131313;
-          font-weight: 800;
-          align-self: center;
-        }
-
-        .portal-login-title {
-          margin: 0;
-          margin-top: -8px;
-          font-size: 48px;
-          line-height: 1.06;
-          font-weight: 900;
-          max-width: 520px;
-          position: relative;
-          z-index: 1;
-          color: #ffcd4d;
-          text-align: right;
-        }
-
-        .portal-login-subtitle {
-          margin: 0;
-          color: #fff8df;
-          font-size: 17px;
-          max-width: 500px;
-          position: relative;
-          z-index: 1;
-          text-align: right;
-        }
-
-        @keyframes portal-float-rocket {
-          0% {
-            transform: translateX(0) rotate(5deg);
-          }
-          50% {
-            transform: translateX(12px) rotate(5deg);
-          }
-          100% {
-            transform: translateX(0) rotate(5deg);
-          }
-        }
-
-        @keyframes portal-float-symbol {
-          0% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-6px);
-          }
-          100% {
-            transform: translateY(0);
-          }
-        }
-
-        .portal-hero-rocket {
-          position: absolute;
-          right: 390px;
-          top: 277px;
-          width: 146px;
-          height: auto;
-          z-index: 0;
-          pointer-events: none;
-          opacity: 1;
-          transform: rotate(5deg);
-          filter: drop-shadow(4px 6px 0 rgba(17, 17, 17, 0.35));
-          animation: portal-float-rocket 3.2s ease-in-out infinite;
-        }
-
-        .portal-hero-symbol-row {
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 0;
-          pointer-events: none;
-        }
-
-        .portal-hero-question {
-          position: absolute;
-          right: 40px;
-          bottom: 78px;
-          width: 102px;
-          height: auto;
-          opacity: 0.95;
-          transform: rotate(-8deg);
-          filter: drop-shadow(3px 4px 0 rgba(17, 17, 17, 0.3));
-          animation: portal-float-symbol 2.8s ease-in-out infinite;
-        }
-
-        .portal-hero-symbol {
-          position: absolute;
-          width: 42px;
-          height: auto;
-          opacity: 0.95;
-          filter: drop-shadow(2px 3px 0 rgba(17, 17, 17, 0.3));
-          animation: portal-float-symbol 2.6s ease-in-out infinite;
-        }
-
-        .portal-hero-symbol:nth-of-type(2) {
-          left: 88px;
-          top: 80px;
-          animation-delay: 0.15s;
-        }
-
-        .portal-hero-symbol:nth-of-type(3) {
-          right: 54px;
-          top: 54px;
-          animation-delay: 0.3s;
-        }
-
-        .portal-hero-symbol:nth-of-type(4) {
-          right: 176px;
-          bottom: 30px;
-          width: 54px;
-          animation-delay: 0.45s;
-        }
-
+        /* ── Left panel: form ── */
         .portal-login-panel {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-start;
-          width: 100%;
-          max-width: 500px;
-          padding: 28px;
-          margin-left: 60px;
-          margin-top: 46px;
-          gap: 16px;
+          justify-content: center;
+          width: 480px;
+          min-width: 380px;
+          height: 100vh;
+          padding: 40px 48px;
+          box-sizing: border-box;
+          position: relative;
+          z-index: 10;
+          flex-shrink: 0;
+          margin-left: 80px;
         }
 
-        .portal-login-panel h2 {
+        .portal-login-card {
+          width: 100%;
+          background: transparent;
+          border-radius: 32px;
+          padding: 0;
+          box-shadow: none;
+          border: none;
+          backdrop-filter: none;
+        }
+
+        .portal-login-card h2 {
           margin: 0;
-          color: #111111;
-          font-size: 45px;
-          font-weight: 900;
-          letter-spacing: 0.02em;
-          width: 82%;
-          align-self: center;
+          color: var(--color-maroon);
+          font-size: 38px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+          font-family: var(--font-heading);
           text-align: center;
         }
 
-        .portal-login-form {
-          width: 82%;
-          max-width: 460px;
-        }
-
-        .portal-login-intro {
-          margin: 8px 0 0;
-          color: #2f2f2f;
-          font-size: 18px;
-          font-weight: 700;
-          width: 82%;
-          align-self: center;
+        .portal-login-card p {
+          margin: 12px 0 0;
+          color: rgba(122,23,51,0.8);
+          font-size: 15px;
+          font-weight: 600;
           text-align: center;
         }
 
         .portal-login-error {
-          margin-top: 14px;
-          border: 3px solid #111111;
-          background: #ff7a7a;
-          color: #1a0505;
-          border-radius: 8px;
-          padding: 10px 12px;
-          align-self: center;
+          margin-top: 16px;
+          border: 2px solid #dc2626;
+          background: #fee2e2;
+          color: #991b1b;
+          border-radius: 12px;
+          padding: 14px 16px;
+          display: flex;
           align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          font-weight: 700;
-          box-shadow: 4px 4px 0 #111111;
+          gap: 10px;
+          font-size: 14px;
+          font-weight: 600;
         }
 
         .portal-field {
-          margin-top: 16px;
+          margin-top: 20px;
         }
 
         .portal-field label {
           display: block;
-          margin-bottom: 7px;
-          color: #161616;
-          font-size: 13px;
-          font-weight: 800;
+          margin-bottom: 8px;
+          color: var(--color-maroon);
+          font-size: 12px;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.5px;
         }
 
         .portal-input-wrap {
@@ -282,299 +169,299 @@ export default function LoginPage() {
 
         .portal-input-icon {
           position: absolute;
-          left: 12px;
+          left: 16px;
           top: 50%;
           transform: translateY(-50%);
-          color: #350C0C;
+          color: var(--color-maroon);
           z-index: 2;
           pointer-events: none;
-          font-size: 18px;
+          font-size: 20px;
         }
 
         .portal-input {
           width: 100%;
           box-sizing: border-box;
-          border: 3px solid #111111;
-          background: #ffffff;
-          border-radius: 8px;
-          padding: 12px 42px 12px 40px;
-          font-size: 14px;
-          color: #111111;
-          font-family: 'Nunito', sans-serif;
-          font-weight: 700;
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
-          box-shadow: 4px 4px 0 #111111;
+          border: 1px solid #c9c9c9;
+          background: rgba(255,255,255,0.85);
+          border-radius: 16px;
+          padding: 14px 16px 14px 50px;
+          font-size: 16px;
+          color: var(--color-maroon);
+          font-family: var(--font-body);
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+
+        .portal-input::placeholder {
+          color: rgba(122,23,51,0.45);
+          font-weight: 500;
         }
 
         .portal-input:focus {
           outline: none;
-          transform: translate(-1px, -1px);
-          box-shadow: 6px 6px 0 #111111;
+          border-color: #ffd700;
+          background: #ffffff;
+          box-shadow: 0 0 0 6px rgba(255, 215, 0, 0.2);
         }
 
         .portal-toggle {
           position: absolute;
-          right: 8px;
+          right: 10px;
           top: 50%;
           transform: translateY(-50%);
-          border: 2px solid #111111;
-          width: 30px;
-          height: 30px;
-          border-radius: 6px;
-          background: #ffcd4d;
-          color: #111111;
+          border: 2px solid #e5e7eb;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: #f3f4f6;
+          color: var(--color-maroon);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 2px 2px 0 #111111;
+          transition: all 0.3s ease;
+        }
+
+        .portal-toggle:hover {
+          background: #e5e7eb;
+          border-color: var(--color-maroon);
+          box-shadow: 0 0 0 3px rgba(122, 23, 51, 0.2);
         }
 
         .portal-submit {
-          margin-top: 20px;
+          margin-top: 28px;
           width: 100%;
-          border: 3px solid #111111;
-          border-radius: 8px;
-          background: #ffcd4d;
-          color: #350C0C;
-          font-weight: 900;
-          font-size: 15px;
-          padding: 13px;
+          border: none;
+          border-radius: 16px;
+          background: rgba(135, 0, 22, 0.9);
+          color: #ffffff;
+          font-weight: 800;
+          font-size: 16px;
+          padding: 16px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 10px;
           cursor: pointer;
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
-          box-shadow: 5px 5px 0 #111111;
+          transition: all 0.3s ease;
+          box-shadow: none;
+          font-family: var(--font-heading);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
 
         .portal-submit:hover:not(:disabled) {
-          transform: translate(-1px, -1px);
-          box-shadow: 7px 7px 0 #111111;
+          background: rgba(135, 0, 22, 0.8);
+          transform: translateY(-2px);
+        }
+
+        .portal-submit:focus {
+          outline: none;
+          box-shadow: 0 0 0 4px rgba(122, 23, 51, 0.3);
         }
 
         .portal-submit:disabled {
-          opacity: 0.55;
+          opacity: 0.6;
           cursor: not-allowed;
-          box-shadow: 2px 2px 0 #111111;
         }
 
         .portal-note {
-          margin-top: 14px;
-          color: #2f2f2f;
+          margin-top: 16px;
+          color: rgba(122,23,51,0.65);
           font-size: 12px;
           text-align: center;
-          font-weight: 800;
-          letter-spacing: 0.03em;
+          font-weight: 600;
         }
 
-        @media (min-width: 1920px) and (min-height: 1080px) {
+        /* ── Right side: floating icons ── */
+        .portal-floating-icons {
+          position: absolute;
+          top: 0;
+          left: 560px;
+          right: 0;
+          bottom: 0;
+          pointer-events: none;
+          z-index: 5;
+          overflow: hidden;
+        }
+
+        .portal-floating-icon {
+          position: absolute;
+          color: rgba(255, 255, 255, 0.08);
+          animation: portal-float infinite ease-in-out;
+          filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.06));
+        }
+
+        /* Icons use left/right relative to the .portal-floating-icons container (right half only).
+           Positions are spread into a loose 3-column grid so no two icons are close. */
+        .p-icon-1  { width: 100px; height: 100px; top:  4%;  left:  5%;  animation-duration: 20s; animation-delay:   0s; }
+        .p-icon-2  { width: 110px; height: 110px; top:  6%;  left: 45%;  animation-duration: 26s; animation-delay:  -4s; }
+        .p-icon-3  { width: 120px; height: 120px; top:  8%;  right: 4%;  animation-duration: 23s; animation-delay:  -9s; }
+        .p-icon-4  { width: 105px; height: 105px; top: 36%;  left: %;  animation-duration: 29s; animation-delay:  -6s; }
+        .p-icon-5  { width: 115px; height: 115px; top: 40%;  left: 42%;  animation-duration: 19s; animation-delay: -14s; }
+        .p-icon-6  { width: 100px; height: 100px; top: 38%;  right: 5%;  animation-duration: 25s; animation-delay:  -2s; }
+        .p-icon-7  { width: 110px; height: 110px; top: 72%;  left: 22%;  animation-duration: 22s; animation-delay: -11s; }
+        .p-icon-8  { width: 120px; height: 120px; top: 70%;  left: 44%;  animation-duration: 31s; animation-delay:  -7s; }
+        .p-icon-9  { width: 105px; height: 105px; top: 74%;  right: 4%;  animation-duration: 18s; animation-delay:  -3s; }
+        .p-icon-10 { width: 100px; height: 100px; top: 20%;  left: 22%;  animation-duration: 27s; animation-delay: -16s; }
+
+        @keyframes portal-float {
+          0%,  100% { transform: translateY(0)    rotate(0deg)   scale(1);    }
+          33%        { transform: translateY(-28px) rotate(14deg)  scale(1.05); }
+          66%        { transform: translateY(14px)  rotate(-10deg) scale(0.95); }
+        }
+
+        /* ── Responsive — form position stays consistent across all displays ── */
+
+        /* Large desktops & Full HD (1920x1080+) */
+        @media (min-width: 1920px) {
+          .portal-login-panel {
+            width: 480px;
+            margin-left: 80px;
+          }
+          .portal-floating-icons {
+            left: 560px;
+          }
+        }
+
+        /* Standard desktops & laptops (1280px – 1919px) */
+        @media (min-width: 1280px) and (max-width: 1919px) {
+          .portal-login-panel {
+            width: 480px;
+            margin-left: 80px;
+          }
+          .portal-floating-icons {
+            left: 560px;
+          }
+        }
+
+        /* Small laptops & large tablets (1024px – 1279px) */
+        @media (min-width: 1024px) and (max-width: 1279px) {
+          .portal-login-panel {
+            width: 440px;
+            margin-left: 60px;
+          }
+          .portal-floating-icons {
+            left: 500px;
+          }
+        }
+
+        /* Tablets (901px – 1023px) */
+        @media (min-width: 901px) and (max-width: 1023px) {
+          .portal-login-panel {
+            width: 420px;
+            margin-left: 40px;
+          }
+          .portal-floating-icons {
+            left: 460px;
+          }
+        }
+
+        /* Small tablets & large phones (≤ 900px) — center the form */
+        @media (max-width: 900px) {
           .portal-login-shell {
+            justify-content: center;
+          }
+          .portal-login-panel {
             width: 100%;
-            max-width: 1920px;
-            min-height: 1080px;
-            margin: 0 auto;
-            grid-template-columns: 0.95fr 1.05fr;
+            max-width: 480px;
+            min-width: unset;
+            margin-left: 0;
+            padding: 32px 24px;
           }
-
-          .portal-login-panel {
-            margin-top: 56px;
-            margin-left: 20px;
-            max-width: 560px;
-          }
-
-          .portal-login-panel h2,
-          .portal-login-intro {
-            width: 88%;
-          }
-
-          .portal-login-panel h2 {
-            font-size: 48px;
-          }
-
-          .portal-login-intro {
-            font-size: 19px;
-          }
-
-          .portal-login-form {
-            width: 88%;
-            max-width: 500px;
-          }
-
-          .portal-login-hero {
-            padding-top: 96px;
-            padding-right: 96px;
-          }
-
-          .portal-hero-rocket {
-            right: 410px;
-            top: 296px;
-          }
-
-          .portal-hero-question {
-            right: 52px;
-            bottom: 92px;
-          }
-
-          .portal-hero-symbol:nth-of-type(2) {
-            left: 106px;
-            top: 96px;
-          }
-
-          .portal-hero-symbol:nth-of-type(3) {
-            right: 72px;
-            top: 70px;
-          }
-
-          .portal-hero-symbol:nth-of-type(4) {
-            right: 214px;
-            bottom: 42px;
+          .portal-floating-icons {
+            left: 0;
           }
         }
 
-        @media (max-width: 960px) {
-          .portal-login-shell {
-            grid-template-columns: 1fr;
-          }
-
-          .portal-login-hero {
-            padding: 24px;
-            align-items: flex-start;
-            padding-right: 24px;
-          }
-
-          .portal-login-title {
-            font-size: 34px;
-            text-align: left;
-          }
-
-          .portal-login-subtitle {
-            text-align: left;
-          }
-
-          .portal-hero-rocket {
-            width: 110px;
-            right: 24px;
-            top: 34px;
-          }
-
-          .portal-hero-symbol-row {
-            right: 14px;
-            bottom: 14px;
-            gap: 8px;
-          }
-
-          .portal-hero-question {
-            width: 80px;
-            right: 28px;
-            bottom: 86px;
-          }
-
-          .portal-hero-symbol {
-            width: 34px;
-          }
-
-          .portal-hero-symbol:nth-of-type(2) {
-            left: 18px;
-            top: 98px;
-          }
-
-          .portal-hero-symbol:nth-of-type(3) {
-            right: 28px;
-            top: 24px;
-          }
-
-          .portal-hero-symbol:nth-of-type(4) {
-            right: 114px;
-            bottom: 26px;
-            width: 42px;
-          }
-
+        /* Phones (≤ 480px) */
+        @media (max-width: 480px) {
           .portal-login-panel {
-            padding: 20px;
-            margin-left: 0;
+            padding: 24px 16px;
+          }
+          .portal-submit {
+            padding: 14px;
+            font-size: 15px;
           }
         }
       `}</style>
 
+      {/* Floating icons on the right half */}
+      <div className="portal-floating-icons" aria-hidden="true">
+        <GiTrophyCup    className="portal-floating-icon p-icon-1"  />
+        <GiGamepad      className="portal-floating-icon p-icon-2"  />
+        <GiBrain        className="portal-floating-icon p-icon-3"  />
+        <GiRocket       className="portal-floating-icon p-icon-4"  />
+        <GiCheckeredFlag className="portal-floating-icon p-icon-5" />
+        <GiJeweledChalice className="portal-floating-icon p-icon-6"/>
+        <GiStarShuriken className="portal-floating-icon p-icon-7"  />
+        <GiCrownedHeart className="portal-floating-icon p-icon-8"  />
+        <GiBrain        className="portal-floating-icon p-icon-9"  />
+        <GiGamepad      className="portal-floating-icon p-icon-10" />
+      </div>
+
+      {/* Form on the left */}
       <section className="portal-login-panel">
-        <div className="portal-login-brand">
-          IntelliQuiz Portal
-        </div>
-        <h2>Sign In</h2>
-        <p className="portal-login-intro">Use your assigned account credentials.</p>
+        <div className="portal-login-card">
+          <h2>Sign In</h2>
+          <p className="portal-login-intro">Use your assigned account credentials.</p>
 
-        {error && (
-          <div className="portal-login-error">
-            <BiErrorCircle size={16} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form className="portal-login-form" onSubmit={handleSubmit}>
-          <div className="portal-field">
-            <label htmlFor="username">Username</label>
-            <div className="portal-input-wrap">
-              <BiUser size={16} className="portal-input-icon" />
-              <input
-                id="username"
-                className="portal-input"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                autoComplete="username"
-                disabled={loading}
-              />
+          {error && (
+            <div className="portal-login-error">
+              <BiErrorCircle size={16} />
+              <span>{error}</span>
             </div>
-          </div>
-
-          <div className="portal-field">
-            <label htmlFor="password">Password</label>
-            <div className="portal-input-wrap">
-              <BiLock size={16} className="portal-input-icon" />
-              <input
-                id="password"
-                className="portal-input"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                autoComplete="current-password"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="portal-toggle"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <BiHide size={16} /> : <BiShow size={16} />}
-              </button>
+          )}
+          <form className="portal-login-form" onSubmit={handleSubmit}>
+            <div className="portal-field">
+              <label htmlFor="username">Username</label>
+              <div className="portal-input-wrap">
+                <BiUser size={16} className="portal-input-icon" />
+                <input
+                  id="username"
+                  className="portal-input"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter username"
+                  autoComplete="username"
+                  disabled={loading}
+                />
+              </div>
             </div>
-          </div>
 
-          <button type="submit" className="portal-submit" disabled={loading}>
-            {loading ? 'Signing In...' : (<><BiLogIn size={18} /> Sign In</>)}
-          </button>
-        </form>
+            <div className="portal-field">
+              <label htmlFor="password">Password</label>
+              <div className="portal-input-wrap">
+                <BiLock size={16} className="portal-input-icon" />
+                <input
+                  id="password"
+                  className="portal-input"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="portal-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <BiHide size={16} /> : <BiShow size={16} />}
+                </button>
+              </div>
+            </div>
 
-        <p className="portal-note">IntelliQuiz v1.0.0</p>
-      </section>
+            <button type="submit" className="portal-submit" disabled={loading}>
+              {loading ? 'Signing In...' : (<><BiLogIn size={18} /> Sign In</>)}
+            </button>
+          </form>
 
-      <section className="portal-login-hero">
-        <img className="portal-hero-rocket" src="/icon/rocket.png" alt="" aria-hidden="true" />
-        <div className="portal-hero-symbol-row" aria-hidden="true">
-          <img className="portal-hero-question" src="/icon/question_mark.png" alt="" />
-          <img className="portal-hero-symbol" src="/icon/multiplication_icon.png" alt="" />
-          <img className="portal-hero-symbol" src="/icon/plus_icon.png" alt="" />
-          <img className="portal-hero-symbol" src="/icon/trophy_icon.png" alt="" />
+          <p className="portal-note">IntelliQuiz v1.0.0</p>
         </div>
-        <h1 className="portal-login-title">Admin And Examiner Access</h1>
-        <p className="portal-login-subtitle">
-          Sign in to manage quizzes, monitor progress, and publish game-ready sessions.
-        </p>
       </section>
     </div>
   );

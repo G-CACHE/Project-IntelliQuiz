@@ -103,6 +103,7 @@ const HostScoreboard: React.FC = () => {
           <ScoreboardDisplay
             rankings={rankings}
             isFinal={isFinal}
+            maxVisibleRows={isFinal ? 10 : undefined}
           />
 
           {/* Controls */}
@@ -115,7 +116,7 @@ const HostScoreboard: React.FC = () => {
                 <div className="proctor-actions">
                   <button
                     onClick={handleExitHome}
-                    className="proctor-btn-primary proctor-btn-large"
+                    className="proctor-btn-primary proctor-btn-large proctor-home-action"
                   >
                     Go Home
                   </button>

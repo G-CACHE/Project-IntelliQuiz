@@ -15,7 +15,7 @@
 .admin-clean-hero {
   border-radius: 22px;
   background: linear-gradient(135deg, #6b0f23 0%, #880015 55%, #a8002c 100%);
-  box-shadow: 0 16px 40px rgba(136, 0, 21, 0.28);
+  box-shadow: none;
   padding: 30px 32px;
   position: relative;
   overflow: hidden;
@@ -98,16 +98,16 @@
 .admin-clean-btn-primary {
   padding: 11px 22px;
   min-height: 46px;
-  background: #ffd166;
-  border: 1.5px solid #f0c040;
-  color: #5a1a00;
+  background: #fbbf24;
+  border: 1.5px solid #d97706;
+  color: #78350f;
   font-weight: 800;
-  box-shadow: 0 4px 14px rgba(255, 209, 102, 0.4);
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
 }
 
 .admin-clean-btn-primary:hover {
-  background: #ffe08a;
-  box-shadow: 0 6px 20px rgba(255, 209, 102, 0.5);
+  background: #fcd34d;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
   transform: translateY(-1px);
 }
 
@@ -135,7 +135,7 @@
 .admin-clean-btn-secondary:focus-visible,
 .admin-clean-action:focus-visible,
 .admin-clean-quiz-row:focus-visible {
-  outline: 2px solid #ffd166;
+  outline: 2px solid #fbbf24;
   outline-offset: 2px;
 }
 
@@ -153,55 +153,65 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 20px 18px;
   display: flex;
-  align-items: flex-start;   /* icon + text side by side at top */
+  align-items: flex-start;
   gap: 16px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
-/* Left colored indent strip */
+/* Remove the left colored strip */
 .admin-clean-stat-card::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
+  display: none;
 }
 
-/* Teal — Total */
-.admin-clean-stat-card:nth-child(1)::after { background: #0d9488; }
+/* Teal/Cyan — Total Quizzes */
+.admin-clean-stat-card:nth-child(1) {
+  background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+  border-color: #67e8f9;
+}
 .admin-clean-stat-card:nth-child(1) .admin-clean-stat-icon {
-  background: #f0fdfa;
-  color: #0d9488;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0891b2;
+  border: 2px solid #22d3ee;
 }
 
-/* Amber — Live */
-.admin-clean-stat-card:nth-child(2)::after { background: #d97706; }
+/* Red/Rose — Live Now */
+.admin-clean-stat-card:nth-child(2) {
+  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  border-color: #fda4af;
+}
 .admin-clean-stat-card:nth-child(2) .admin-clean-stat-icon {
-  background: #fffbeb;
-  color: #d97706;
+  background: rgba(255, 255, 255, 0.9);
+  color: #e11d48;
+  border: 2px solid #fb7185;
 }
 
-/* Emerald — Ready */
-.admin-clean-stat-card:nth-child(3)::after { background: #059669; }
+/* Green — Ready */
+.admin-clean-stat-card:nth-child(3) {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #6ee7b7;
+}
 .admin-clean-stat-card:nth-child(3) .admin-clean-stat-icon {
-  background: #ecfdf5;
+  background: rgba(255, 255, 255, 0.9);
   color: #059669;
+  border: 2px solid #34d399;
 }
 
-/* Slate — Draft */
-.admin-clean-stat-card:nth-child(4)::after { background: #64748b; }
+/* Purple/Indigo — Draft */
+.admin-clean-stat-card:nth-child(4) {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-color: #a5b4fc;
+}
 .admin-clean-stat-card:nth-child(4) .admin-clean-stat-icon {
-  background: #f8fafc;
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4f46e5;
+  border: 2px solid #818cf8;
 }
 
 .admin-clean-stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.09);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
 .admin-clean-stat-icon {
@@ -304,58 +314,122 @@
 }
 
 .admin-clean-action {
-  border: 1.5px solid #e5e7eb;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 14px;
+  border: 1.5px solid #d97706;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   gap: 12px;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-clean-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.admin-clean-action:hover::before {
+  opacity: 1;
 }
 
 .admin-clean-action:hover {
-  border-color: #880015;
-  background: #fff5f7;
+  border-color: #ca8a04;
+  background: linear-gradient(135deg, #fcd34d 0%, #fde68a 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(136, 0, 21, 0.1);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.55);
+}
+
+.admin-clean-action:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
 }
 
 .admin-clean-action-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #fff0f3;
-  border: 1.5px solid #ffcdd5;
-  color: #880015;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  color: #78350f;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(120, 53, 15, 0.1);
 }
 
 .admin-clean-action:hover .admin-clean-action-icon {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.95);
+  color: #78350f;
+  transform: scale(1.05);
+}
+
+.admin-clean-action strong {
+  display: block;
+  color: #78350f;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.admin-clean-action small {
+  display: block;
+  margin-top: 3px;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Secondary action button variant - white style */
+.admin-clean-action.secondary {
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.admin-clean-action.secondary::before {
+  display: none;
+}
+
+.admin-clean-action.secondary:hover {
+  border-color: #880015;
+  background: #fff5f7;
+  box-shadow: 0 6px 16px rgba(136, 0, 21, 0.1);
+}
+
+.admin-clean-action.secondary .admin-clean-action-icon {
+  background: #fff0f3;
+  border-color: #ffcdd5;
+  color: #880015;
+  box-shadow: none;
+}
+
+.admin-clean-action.secondary:hover .admin-clean-action-icon {
   background: #880015;
   border-color: #880015;
   color: #ffffff;
 }
 
-.admin-clean-action strong {
-  display: block;
+.admin-clean-action.secondary strong {
   color: #111827;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.2;
+  text-shadow: none;
 }
 
-.admin-clean-action small {
-  display: block;
-  margin-top: 2px;
+.admin-clean-action.secondary small {
   color: #6b7280;
-  font-size: 12px;
 }
 
 /* ── RECOMMENDED FLOW NOTE — Full width, maximized text ───── */
@@ -431,9 +505,7 @@
 .admin-clean-recent-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  justify-content: space-between;
+  gap: 10px;
 }
 
 .admin-clean-quiz-row {
@@ -593,4 +665,148 @@
   .admin-clean-panel { border-radius: 14px; }
   .admin-clean-actions-note { grid-template-columns: 1fr; }
   .admin-clean-actions-steps { flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ── MODAL OVERRIDES - MATCH MY QUIZZES DESIGN ────────────────────────────────────────── */
+.admin-clean-dashboard .admin-modal {
+  max-width: 560px;
+  border-radius: 16px;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.14);
+  overflow: visible;
+}
+
+.admin-clean-dashboard .admin-modal-header {
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #7a1733 0%, #8d1f3f 100%);
+  padding: 18px 24px;
+}
+
+.admin-clean-dashboard .admin-modal-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.admin-clean-dashboard .admin-modal-footer {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  background: #f9fafb;
+  border-top: 1.5px solid #f3f4f6;
+  padding: 14px 24px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.admin-clean-dashboard .admin-modal-body {
+  padding: 24px 24px 20px;
+  background: #ffffff;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.admin-clean-dashboard .admin-modal .admin-form-group {
+  margin-bottom: 14px;
+}
+
+.admin-clean-dashboard .admin-modal .admin-form-label {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn {
+  border-radius: 8px;
+  min-height: 40px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  border-width: 1.5px;
+  border-style: solid;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-secondary {
+  background: #ffffff;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-secondary:hover {
+  border-color: #880015;
+  color: #880015;
+  background: #fff5f7;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-primary {
+  background: #880015;
+  color: #ffffff;
+  border-color: #6b0f23;
+  box-shadow: 0 4px 12px rgba(136, 0, 21, 0.3);
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-primary:hover {
+  background: #6b0f23;
+  border-color: #5a0010;
+}
+
+.admin-clean-dashboard .admin-btn-icon {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  border-radius: 8px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.admin-clean-dashboard .admin-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: none;
+}
+
+.admin-clean-dashboard .admin-btn-icon:active {
+  transform: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* Force X button to stay fixed size in modal */
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  flex: 0 0 32px !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon:hover,
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon:active,
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon:focus {
+  transform: none !important;
+  width: 32px !important;
+  height: 32px !important;
 }

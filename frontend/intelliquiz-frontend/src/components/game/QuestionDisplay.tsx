@@ -34,9 +34,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const normalize = (val: string | null | undefined) => (val || '').trim().toLowerCase();
 
   const getOptionClass = (option: string, letter: string) => {
-    const normSelected = normalize(selectedOption);
-    const isSelected = normSelected === normalize(option) || normSelected === letter.toLowerCase();
-    const isCorrect = showCorrectAnswer && (normalize(correctAnswer) === normalize(option) || normalize(correctAnswer) === letter.toLowerCase());
+    // MCQ: compare by letter position to avoid false matches on duplicate option text.
+    // TRUE_FALSE: compare by text value since correctKey is stored as "True"/"False".
+    const isTrueFalse = questionType === 'TRUE_FALSE';
+    const isSelected = isTrueFalse
+      ? normalize(selectedOption) === normalize(option)
+      : selectedOption != null && selectedOption.toUpperCase() === letter;
+    const isCorrect = showCorrectAnswer && (
+      isTrueFalse
+        ? normalize(correctAnswer) === normalize(option)
+        : normalize(correctAnswer) === letter.toLowerCase() ||
+          (normalize(correctAnswer) === normalize(option) &&
+            !optionList.some((o, i) => String.fromCharCode(65 + i) !== letter && normalize(o) === normalize(option)))
+    );
     const isWrong = showCorrectAnswer && isSelected && !isCorrect;
 
     let classes = `${prefix}-answer-btn`;
@@ -109,17 +119,33 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       ) : (
         <div className={`${prefix}-answer-grid`}>
           {optionList.map((option, index) => {
-          const letter = String.fromCharCode(65 + index);
-          const normSelected = normalize(selectedOption);
-          const isSelected = normSelected === normalize(option) || normSelected === letter.toLowerCase();
-          
+          const letter = String.fromCharCode(65 + index); // A, B, C, D...
+          const isTrueFalse = questionType === 'TRUE_FALSE';
+
+          // TRUE_FALSE: compare by text value; MCQ: compare by letter position
+          const isSelected = isTrueFalse
+            ? normalize(selectedOption) === normalize(option)
+            : selectedOption != null && (
+                selectedOption.toUpperCase() === letter ||
+                // fallback for legacy text-based submissions with no duplicate
+                (selectedOption === option && !optionList.some((o, i) => i !== index && o === option))
+              );
+
           const normCorrect = normalize(correctAnswer);
-          const isCorrect = showCorrectAnswer && (normCorrect === normalize(option) || normCorrect === letter.toLowerCase());
+          const isCorrect = showCorrectAnswer && (
+            isTrueFalse
+              ? normCorrect === normalize(option)
+              : normCorrect === letter.toLowerCase() ||
+                (normCorrect === normalize(option) && !optionList.some((o, i) => i !== index && normalize(o) === normCorrect))
+          );
+
+          // What value to submit: text for TRUE_FALSE, letter for MCQ
+          const submitValue = isTrueFalse ? option : letter;
 
           return (
             <button
               key={index}
-              onClick={() => !disabled && onSelectOption?.(option)}
+              onClick={() => !disabled && onSelectOption?.(submitValue)}
               disabled={disabled}
               className={getOptionClass(option, letter)}
             >

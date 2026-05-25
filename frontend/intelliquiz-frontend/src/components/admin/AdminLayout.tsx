@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
-  Home,
-  BookOpen,
   LogOut,
   ChevronDown,
 } from 'lucide-react';
@@ -28,8 +26,8 @@ export default function AdminLayout() {
 
   // Build nav items based on user's permissions
   const navItems: NavItem[] = [
-    { path: '/admin', label: 'Dashboard', icon: <Home size={18} /> },
-    { path: '/admin/quizzes', label: 'My Quizzes', icon: <BookOpen size={18} /> },
+    { path: '/admin', label: 'Dashboard', icon: null },
+    { path: '/admin/quizzes', label: 'My Quizzes', icon: null },
   ];
 
   useEffect(() => {
@@ -120,9 +118,6 @@ export default function AdminLayout() {
             onClick={() => navigate('/admin')}
             className="pb-nav-logo-wrap"
           >
-            <div className="pb-nav-logo-icon">
-              <BookOpen size={20} />
-            </div>
             <span className="pb-nav-logo-text">IntelliQuiz</span>
           </div>
 
@@ -134,7 +129,6 @@ export default function AdminLayout() {
                 onClick={() => navigate(item.path)}
                 className={`pb-nav-link ${isActive(item.path) ? 'active' : ''}`}
               >
-                {item.icon}
                 <span className="nav-label">{item.label}</span>
               </button>
             ))}
@@ -175,10 +169,8 @@ export default function AdminLayout() {
       </header>
 
       {/* Main Content */}
-      <main style={{ minHeight: 'calc(100vh - 64px)', background: '#ffffff' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
-          <Outlet />
-        </div>
+      <main style={{ minHeight: 'calc(100vh - 64px)', background: '#ffffff', padding: '24px' }}>
+        <Outlet />
       </main>
     </div>
   );

@@ -29,7 +29,7 @@ public record QuizResponse(
     @Schema(description = "Whether the quiz has an active live session", example = "false")
     boolean isLiveSession,
     
-    @Schema(description = "Current status of the quiz (DRAFT, READY, ACTIVE, ARCHIVED)", example = "READY")
+    @Schema(description = "Current status of the quiz (DRAFT, READY, LIVE, ARCHIVED)", example = "READY")
     QuizStatus status,
     
     @Schema(description = "ID of the admin who created this quiz", example = "2")

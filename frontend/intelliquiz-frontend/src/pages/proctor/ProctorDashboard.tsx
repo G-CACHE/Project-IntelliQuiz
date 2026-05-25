@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { accessApi, violationApi, type ViolationLogRecord, type ViolationNotification } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
-import { clearSession, getProctorSession } from '../../services/sessionStorage';
+import { clearSession, getProctorSession, saveProctorSession } from '../../services/sessionStorage';
 import { useSSE } from '../../hooks/useSSE';
 import Timer from '../../components/game/Timer';
 import { parseSmartName } from '../../utils/nameUtils';
@@ -25,6 +25,7 @@ const ProctorDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [autoKickThreshold, setAutoKickThresholdLocal] = useState(5);
   const [showKickConfirm, setShowKickConfirm] = useState<{ teamId: number; teamName: string } | null>(null);
+  const [kickReasons, setKickReasons] = useState<string[]>([]);
   const [accessChecking, setAccessChecking] = useState(true);
   const [lockState, setLockState] = useState<LockStatusResponse>({ isLocked: false, connectedDeviceIds: [] });
   const [lockLoading, setLockLoading] = useState(false);
@@ -39,6 +40,11 @@ const ProctorDashboard: React.FC = () => {
     const stored = getProctorSession();
     if (stored) return stored;
     const quizId = searchParams.get('quizId');
+    const pin = searchParams.get('pin');
+    if (quizId && pin) {
+      // Opened in a new tab from HostGame — bootstrap the session from URL params
+      return saveProctorSession(parseInt(quizId, 10), 'Quiz', pin);
+    }
     if (quizId) {
       return { quizId: parseInt(quizId, 10), quizTitle: 'Quiz', proctorPin: '' };
     }
@@ -226,10 +232,14 @@ const ProctorDashboard: React.FC = () => {
   }, [autoKickThreshold, setAutoKickThreshold]);
 
   const handleKick = useCallback((teamId: number, teamName: string) => {
-    kickTeam(teamId, teamName);
+    const reasonText = kickReasons.length > 0
+      ? kickReasons.join(', ')
+      : 'No specific reason provided';
+    kickTeam(teamId, `${teamName}: ${reasonText}`);
     void refreshProctorSnapshot();
     setShowKickConfirm(null);
-  }, [kickTeam, refreshProctorSnapshot]);
+    setKickReasons([]);
+  }, [kickTeam, kickReasons, refreshProctorSnapshot]);
 
   const handleApproveReentry = useCallback((teamId: number) => {
     approveReentry(teamId);
@@ -411,17 +421,40 @@ const ProctorDashboard: React.FC = () => {
                 <p className="proctor-text-muted" style={{ fontSize: 13, margin: '12px 0 0' }}>No teams are currently locked out.</p>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12, marginTop: 16 }}>
-                  {kickedTeams.map((team) => (
-                    <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 12, background: '#fff1f2', border: '1px solid #ffe4e6' }}>
-                      <div>
-                        <strong style={{ fontSize: 14, color: '#9f1239' }}>{team.name}</strong>
-                        <p style={{ margin: '4px 0 0', fontSize: 12, color: '#be123c' }}>{team.reason}</p>
+                  {kickedTeams.map((team) => {
+                    const { name: cleanName, avatarId } = parseSmartName(team.name);
+                    // Parse reason — handle both "Reason: X, Y" and old "Name is kicked... Reason: X. Contact..." formats
+                    // Strip smart name avatar part first (e.g. "Name|avatar.png is kicked...")
+                    let reasonText = (team.reason || '').replace(/\|[^\s|]+/g, '').trim();
+                    if (reasonText.startsWith('Reason:')) {
+                      reasonText = reasonText.replace('Reason:', '').trim();
+                    } else {
+                      const match = reasonText.match(/Reason:\s*([^.]+)/i);
+                      if (match) reasonText = match[1].trim();
+                      else reasonText = 'Removed by proctor';
+                    }
+                    return (
+                      <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, background: '#fff1f2', border: '1px solid #ffe4e6' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          {/* Avatar */}
+                          <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, overflow: 'hidden', background: '#fecdd3', border: '2px solid #fda4af', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {avatarId ? (
+                              <img src={`/avatars/${avatarId}`} alt={cleanName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <span style={{ fontSize: 16, fontWeight: 800, color: '#9f1239' }}>{cleanName.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <strong style={{ fontSize: 14, color: '#9f1239', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cleanName}</strong>
+                            <p style={{ margin: '3px 0 0', fontSize: 12, color: '#be123c', lineHeight: 1.4 }}>{reasonText}</p>
+                          </div>
+                        </div>
+                        <button onClick={() => handleApproveReentry(team.id)} className="proctor-btn proctor-btn-secondary" style={{ padding: '8px 14px', fontSize: 12, flexShrink: 0 }}>
+                          Approve
+                        </button>
                       </div>
-                      <button onClick={() => handleApproveReentry(team.id)} className="proctor-btn proctor-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }}>
-                        Approve
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -483,12 +516,43 @@ const ProctorDashboard: React.FC = () => {
               <h3 className="proctor-modal-title">Kick Team?</h3>
             </div>
             <div className="proctor-modal-body">
-              <p style={{ fontSize: 15, color: '#475569', margin: 0 }}>
+              <p style={{ fontSize: 15, color: '#475569', margin: '0 0 20px' }}>
                 Remove <strong>{showKickConfirm.teamName}</strong> from this quiz session?
               </p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Select reason(s) for kicking:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { value: 'Tab Switch', label: 'Tab Switch — switched away from the quiz tab' },
+                  { value: 'Copy Attempt', label: 'Copy Attempt — tried to copy quiz content' },
+                  { value: 'Right Click', label: 'Right Click — attempted to right-click on the page' },
+                  { value: 'Print Screen', label: 'Print Screen — attempted to capture the screen' },
+                  { value: 'Misconduct', label: 'Misconduct — general disruptive behavior' },
+                ].map(({ value, label }) => (
+                  <label key={value} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${kickReasons.includes(value) ? '#7a1733' : '#e2e8f0'}`, background: kickReasons.includes(value) ? '#fff0f3' : '#f8fafc', transition: 'all 0.15s' }}>
+                    <input
+                      type="checkbox"
+                      checked={kickReasons.includes(value)}
+                      onChange={(e) => {
+                        setKickReasons(prev =>
+                          e.target.checked ? [...prev, value] : prev.filter(r => r !== value)
+                        );
+                      }}
+                      style={{ marginTop: 2, accentColor: '#7a1733', width: 16, height: 16, flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: 14, color: '#1e293b', lineHeight: 1.5 }}>{label}</span>
+                  </label>
+                ))}
+              </div>
+              {kickReasons.length === 0 && (
+                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 12, fontStyle: 'italic' }}>
+                  No reason selected — a default message will be shown.
+                </p>
+              )}
             </div>
             <div className="proctor-modal-footer">
-              <button onClick={() => setShowKickConfirm(null)} className="proctor-btn proctor-btn-secondary">Cancel</button>
+              <button onClick={() => { setShowKickConfirm(null); setKickReasons([]); }} className="proctor-btn proctor-btn-secondary">Cancel</button>
               <button onClick={() => handleKick(showKickConfirm.teamId, showKickConfirm.teamName)} className="proctor-btn proctor-btn-danger">Kick Team</button>
             </div>
           </div>

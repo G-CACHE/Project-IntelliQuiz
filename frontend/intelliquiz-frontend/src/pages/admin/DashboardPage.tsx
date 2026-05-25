@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BiBarChartAlt2,
@@ -6,19 +6,19 @@ import {
   BiFile,
   BiFolderOpen,
   BiLayer,
-  BiPlusCircle,
   BiRightArrowAlt,
   BiRocket,
-  BiTime,
 } from 'react-icons/bi';
 import { useQuizzes } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
+import CreateQuizModal from '../../components/admin/CreateQuizModal';
 import '../../styles/admin.css';
 import './DashboardPage.css';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { canEditQuiz } = useAuth();
+  const [showCreateModal, setShowCreateModal] = useState(false);
   
   // React Query hook
   const { data: allQuizzes = [], isLoading } = useQuizzes();
@@ -37,9 +37,15 @@ export default function AdminDashboardPage() {
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = {
-      DRAFT: 'draft', READY: 'ready', ACTIVE: 'active', ARCHIVED: 'archived'
+      DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'archived'
     };
     return map[status] || 'draft';
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (status === 'ARCHIVED') return 'DONE';
+    if (status === 'ACTIVE') return 'LIVE';
+    return status;
   };
 
   if (isLoading) {
@@ -95,20 +101,18 @@ export default function AdminDashboardPage() {
       <section className="admin-clean-main-grid">
         <div className="admin-clean-panel admin-clean-panel-actions">
           <div className="admin-clean-panel-head">
-            <h2><BiPlusCircle size={18} /> Quick Actions</h2>
+            <h2>Quick Actions</h2>
           </div>
 
           <div className="admin-clean-actions-grid">
-            <button className="admin-clean-action" onClick={() => navigate('/admin/quizzes')}>
-              <span className="admin-clean-action-icon"><BiBookOpen size={16} /></span>
+            <button className="admin-clean-action" onClick={() => setShowCreateModal(true)}>
               <span>
                 <strong>Create Quiz</strong>
                 <small>Build a new question set</small>
               </span>
             </button>
 
-            <button className="admin-clean-action" onClick={() => navigate('/admin/quizzes')}>
-              <span className="admin-clean-action-icon"><BiBarChartAlt2 size={16} /></span>
+            <button className="admin-clean-action secondary" onClick={() => navigate('/admin/quizzes')}>
               <span>
                 <strong>Manage Quizzes</strong>
                 <small>Update and publish content</small>
@@ -131,7 +135,7 @@ export default function AdminDashboardPage() {
 
         <div className="admin-clean-panel">
           <div className="admin-clean-panel-head admin-clean-panel-head-row">
-            <h2><BiBookOpen size={18} /> Recent Quizzes</h2>
+            <h2>Recent Quizzes</h2>
             <button className="admin-clean-btn-secondary" onClick={() => navigate('/admin/quizzes')}>
               View All <BiRightArrowAlt size={18} />
             </button>
@@ -139,25 +143,24 @@ export default function AdminDashboardPage() {
 
           <div className="admin-clean-recent-list">
             {recentQuizzes.length > 0 ? (
-              recentQuizzes.map((quiz) => (
+                recentQuizzes.map((quiz) => (
                 <button
                   key={quiz.id}
                   className="admin-clean-quiz-row"
                   onClick={() =>
                     canEditQuiz(quiz.id, quiz.createdByUserId)
-                      ? navigate(`/admin/quizzes/${quiz.id}/questions`)
+                      ? navigate(`/admin/quizzes/${quiz.id}`)
                       : navigate('/admin/quizzes')
                   }
                 >
-                  <span className="admin-clean-quiz-icon"><BiBookOpen size={16} /></span>
                   <span className="admin-clean-quiz-meta-wrap">
                     <span className="admin-clean-quiz-title">{quiz.title}</span>
                     <span className="admin-clean-quiz-meta">
-                      <BiTime size={12} /> {quiz.questionCount || 0} questions
+                      {quiz.questionCount || 0} questions
                     </span>
                   </span>
                   <span className={`admin-clean-status status-${getStatusClass(quiz.status)}`}>
-                    {quiz.status}
+                    {getStatusLabel(quiz.status)}
                   </span>
                 </button>
               ))
@@ -166,7 +169,7 @@ export default function AdminDashboardPage() {
                 <div className="admin-clean-empty-icon"><BiBookOpen size={24} /></div>
                 <h3>No quizzes yet</h3>
                 <p>Create your first quiz to get started.</p>
-                <button className="admin-clean-btn-primary" onClick={() => navigate('/admin/quizzes')}>
+                <button className="admin-clean-btn-primary" onClick={() => setShowCreateModal(true)}>
                   <BiBookOpen size={16} /> Create First Quiz
                 </button>
               </div>
@@ -174,6 +177,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </section>
+      {showCreateModal && <CreateQuizModal onClose={() => setShowCreateModal(false)} />}
     </div>
   );
 }

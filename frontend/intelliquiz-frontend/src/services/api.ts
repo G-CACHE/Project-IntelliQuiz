@@ -12,8 +12,23 @@ const apiFetch = (url: string, init?: RequestInit): Promise<Response> =>
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `HTTP ${response.status}`);
+    const errorText = await response.text();
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText) as { message?: string; errorMessage?: string; error?: string };
+        const msg = parsed.message || parsed.errorMessage || parsed.error;
+        if (msg) throw new Error(msg);
+      } catch (e) {
+        if (e instanceof Error && e.message !== errorText) throw e;
+      }
+      // Use raw text only if it looks human-readable (not a JSON blob)
+      if (!errorText.startsWith('{') && !errorText.startsWith('[')) throw new Error(errorText);
+    }
+    throw new Error(`Request failed (HTTP ${response.status}). Please try again.`);
+  }
+
+  if (response.status === 204 || response.status === 205) {
+    return null as T;
   }
   
   const text = await response.text();
@@ -572,6 +587,7 @@ export interface UpdateQuestionRequest {
 export interface Team {
   id: number;
   name: string;
+  members?: string; // comma-separated, null/undefined = individual
   accessCode: string;
   quizId: number;
   totalScore: number;
@@ -579,6 +595,7 @@ export interface Team {
 
 export interface RegisterTeamRequest {
   name: string;
+  members?: string;
 }
 
 export interface ScoreboardEntry {
@@ -865,6 +882,7 @@ export interface QuestionBankItem {
   category?: string;
   isHarvested?: boolean;
   sourceQuizId?: number;
+  sourceQuizTitle?: string;
   caseSensitive?: boolean;
 }
 

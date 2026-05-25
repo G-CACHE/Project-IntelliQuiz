@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, Trophy, Award, BarChart3, PauseCircle } from 'lucide-react';
+import { CheckCircle2, CircleX, AlarmClock, ListChecks, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -216,7 +216,6 @@ const PlayerGame: React.FC = () => {
       navigate(`/player/terminated?reason=${encodeURIComponent(kickReason || 'Removed by proctor')}`);
     }
   }, [kicked, kickReason, navigate]);
-
   const handleShowAnswers = useCallback(async () => {
     if (!session) return;
     try {
@@ -384,7 +383,6 @@ const PlayerGame: React.FC = () => {
   const myRanking = rankings.find(r => r.teamId === session?.teamId);
   const currentStreak = myRanking?.streak || 0;
   const myTeamScore = myRanking?.score;
-  const myFinalResult = myRanking;
 
   if (!session) return null;
 
@@ -449,8 +447,8 @@ const PlayerGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Error Banner */}
-      {error && (
+      {/* Error Banner — only show real connection errors, not game-state informational messages */}
+      {error && !['ANSWER_REVEAL', 'REVEAL', 'SCOREBOARD', 'ROUND_SUMMARY', 'FINAL_RESULTS', 'GRADING'].includes(gameState) && !error.toLowerCase().includes('submissions are closed') && (
         <div className="participant-error-banner">
           <div className="participant-error-content">
             <p>{error}</p>
@@ -712,76 +710,29 @@ const PlayerGame: React.FC = () => {
           {/* FINAL_RESULTS / ENDED State */}
           {gameState === 'FINAL_RESULTS' && (
             <div className="participant-final-results">
-              {/* Celebration Header */}
-              <div className="participant-final-banner">
-                <div className="participant-final-banner-icon-wrapper">
-                  <Trophy className="participant-final-banner-icon" />
-                </div>
-                <h2 className="participant-final-banner-title">Quiz Complete!</h2>
-                <p className="participant-final-banner-subtitle">
-                  Great job, everyone!
-                </p>
-              </div>
-
-              {/* Player's Own Result Card */}
-              {myFinalResult ? (
-                  <div className="participant-final-result-card">
-                    <div className="participant-final-result-header">
-                      <Award className="participant-final-result-icon" />
-                      <p className="participant-final-result-label">Your Result</p>
-                    </div>
-                    <div className="participant-final-result-main">
-                      <div className="participant-final-result-rank-section">
-                        <span className="participant-final-result-rank-label">Rank</span>
-                        <p className="participant-final-result-rank">#{myFinalResult.rank}</p>
-                      </div>
-                      <div className="participant-final-result-divider"></div>
-                      <div className="participant-final-result-score-section">
-                        <span className="participant-final-result-score-label">Score</span>
-                        <p className="participant-final-result-score">{myFinalResult.score}</p>
-                      </div>
-                    </div>
-                    <div className="participant-final-stats">
-                      <div className="participant-final-stat-cell">
-                        <BarChart3 size={16} className="participant-final-stat-icon" />
-                        <div>
-                          <span>Teams</span>
-                          <strong>{rankings.length}</strong>
-                        </div>
-                      </div>
-                      <div className="participant-final-stat-cell">
-                        <ListChecks size={16} className="participant-final-stat-icon" />
-                        <div>
-                          <span>Questions</span>
-                          <strong>{totalQuestions || 0}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
 
               <ScoreboardDisplay
                 rankings={rankings}
                 highlightTeamId={session.teamId}
                 isFinal={true}
                 title="Final Rankings"
+                maxRanksToShow={10}
+                alwaysShowHighlighted={true}
               />
 
-              {/* Exit Button */}
+              {/* Exit Buttons */}
               <div className="participant-final-actions">
                 <button
                   onClick={handleShowAnswers}
                   disabled={reviewLoading}
                   className="participant-btn-primary participant-btn-large participant-results-action"
                 >
-                  <ListChecks size={20} aria-hidden="true" />
                   {reviewLoading ? 'Loading...' : 'Review Answers'}
                 </button>
                 <button
                   onClick={() => navigate('/')}
                   className="participant-btn-secondary participant-btn-large participant-home-action"
                 >
-                  <Home size={20} aria-hidden="true" />
                   Go Home
                 </button>
               </div>

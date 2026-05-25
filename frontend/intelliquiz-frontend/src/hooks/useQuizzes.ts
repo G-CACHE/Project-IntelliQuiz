@@ -1,12 +1,34 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { quizzesApi, type CreateQuizRequest, type UpdateQuizRequest } from '../services/api';
+import { useEffect } from 'react';
+import { quizzesApi, type CreateQuizRequest, type Quiz, type UpdateQuizRequest } from '../services/api';
 import { queryKeys } from '../lib/queryClient';
 
 export function useQuizzes() {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const activeQuizQuery = useActiveQuiz();
+
+  const query = useQuery({
     queryKey: queryKeys.quizzes,
     queryFn: quizzesApi.getAll,
   });
+
+  // Keep quizzes cache in sync with runtime active quiz
+  useEffect(() => {
+    if (!activeQuizQuery.isSuccess) return;
+
+    const active = activeQuizQuery.data;
+    queryClient.setQueryData(queryKeys.quizzes, (old: any) => {
+      if (!old || !Array.isArray(old)) return old;
+      return old.map((q: any) => {
+        if (active && q.id === active.id) {
+          return { ...q, status: 'ACTIVE', isLiveSession: true };
+        }
+        return q;
+      });
+    });
+  }, [activeQuizQuery.data, activeQuizQuery.isSuccess, queryClient]);
+
+  return query;
 }
 
 export function useQuiz(id: number) {
@@ -21,6 +43,8 @@ export function useActiveQuiz() {
   return useQuery({
     queryKey: queryKeys.activeQuiz,
     queryFn: quizzesApi.getActive,
+    refetchInterval: 2000,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -72,9 +96,24 @@ export function useQuizStatusChange() {
         case 'archive': return quizzesApi.archive(id);
       }
     },
-    onSuccess: () => {
+    onSuccess: (updatedQuiz: Quiz, { id, action }) => {
+      queryClient.setQueryData(queryKeys.quiz(id), updatedQuiz);
+      queryClient.setQueryData(queryKeys.quizzes, (old: any) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.map((quiz: Quiz) => (quiz.id === updatedQuiz.id ? { ...quiz, ...updatedQuiz } : quiz));
+      });
+
+      if (action === 'activate') {
+        queryClient.setQueryData(queryKeys.activeQuiz, updatedQuiz);
+      }
+
+      if (action === 'deactivate' || action === 'archive') {
+        queryClient.setQueryData(queryKeys.activeQuiz, null);
+      }
+
       queryClient.invalidateQueries({ queryKey: queryKeys.quizzes });
       queryClient.invalidateQueries({ queryKey: queryKeys.activeQuiz });
+      queryClient.invalidateQueries({ queryKey: queryKeys.quiz(id) });
     },
   });
 }

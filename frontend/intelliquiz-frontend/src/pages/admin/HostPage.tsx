@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomSelect from '../../components/common/CustomSelect';
 import {
   BiPlay,
   BiPause,
@@ -143,12 +144,12 @@ export default function AdminHostPage() {
       <div className="admin-card" style={{ marginBottom: 20, padding: 16 }}>
         <div className="admin-form-group" style={{ marginBottom: 0 }}>
           <label className="admin-form-label">Select Quiz to Host</label>
-          <select value={selectedQuizId} onChange={(e) => setSelectedQuizId(parseInt(e.target.value))} className="admin-form-input admin-form-select">
-            <option value={0}>Select a quiz</option>
-            {quizzes.filter(q => q.status === 'READY' || q.status === 'ACTIVE').map((q) => (
-              <option key={q.id} value={q.id}>{q.title} ({q.status})</option>
-            ))}
-          </select>
+          <CustomSelect
+            value={String(selectedQuizId)}
+            onChange={(v) => setSelectedQuizId(parseInt(v) || 0)}
+            placeholder="Select a quiz"
+            options={quizzes.filter(q => q.status === 'READY' || q.status === 'ACTIVE').map((q) => ({ value: String(q.id), label: `${q.title} (${q.status})` }))}
+          />
         </div>
       </div>
 

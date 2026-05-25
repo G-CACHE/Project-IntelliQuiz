@@ -43,14 +43,18 @@ public class TeamRegistrationService {
      * Registers a new team for a quiz with auto-generated access code.
      */
     public Team registerTeam(Long quizId, String teamName) {
+        return registerTeam(quizId, teamName, null);
+    }
+
+    public Team registerTeam(Long quizId, String teamName, String members) {
         if (!quizFacade.quizExists(quizId)) {
             throw new EntityNotFoundException("Quiz", quizId);
         }
         assertQuizNotArchived(quizId);
 
         String accessCode = generateUniqueAccessCode();
-        Team team = new Team(quizId, teamName, accessCode);
-        
+        Team team = new Team(quizId, teamName, members, accessCode);
+
         Team saved = teamRepository.save(team);
         eventPublisher.publishEvent(new TeamRegisteredEvent(saved.getId(), saved.getName(), quizId));
         return saved;

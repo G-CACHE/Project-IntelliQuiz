@@ -31,22 +31,23 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
                     .orElse(correctKey);
         }
 
+        // TRUE_FALSE: correctKey is stored as the text value ("True" / "False") directly.
+        if (type == QuestionType.TRUE_FALSE) {
+            return correctKey;
+        }
+
+        // MULTIPLE_CHOICE: correctKey is a letter (A/B/C/D).
+        // Resolve to option text for display purposes only — grading uses the letter directly.
         if (options == null || options.isEmpty()) {
-            if (type == QuestionType.TRUE_FALSE) {
-                String key = correctKey.toUpperCase().trim();
-                if ("A".equals(key)) return "True";
-                if ("B".equals(key)) return "False";
-            }
             return correctKey;
         }
         String key = correctKey.toUpperCase().trim();
-        if (key.length() == 1 && key.charAt(0) >= 'A' && key.charAt(0) <= 'D') {
+        if (key.length() == 1 && key.charAt(0) >= 'A' && key.charAt(0) <= 'Z') {
             int index = key.charAt(0) - 'A';
             if (index < options.size()) {
                 return options.get(index);
             }
         }
-        // Fallback: correctKey may already be the answer text (identification type)
         return correctKey;
     }
 }
