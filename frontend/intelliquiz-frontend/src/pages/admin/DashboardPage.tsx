@@ -6,10 +6,8 @@ import {
   BiFile,
   BiFolderOpen,
   BiLayer,
-  BiPlusCircle,
   BiRightArrowAlt,
   BiRocket,
-  BiTime,
 } from 'react-icons/bi';
 import { useQuizzes } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';

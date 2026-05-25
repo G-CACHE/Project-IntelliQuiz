@@ -232,11 +232,10 @@ const ProctorDashboard: React.FC = () => {
   }, [autoKickThreshold, setAutoKickThreshold]);
 
   const handleKick = useCallback((teamId: number, teamName: string) => {
-    const { name: cleanName } = parseSmartName(teamName);
     const reasonText = kickReasons.length > 0
       ? kickReasons.join(', ')
       : 'No specific reason provided';
-    kickTeam(teamId, `Reason: ${reasonText}`);
+    kickTeam(teamId, `${teamName}: ${reasonText}`);
     void refreshProctorSnapshot();
     setShowKickConfirm(null);
     setKickReasons([]);

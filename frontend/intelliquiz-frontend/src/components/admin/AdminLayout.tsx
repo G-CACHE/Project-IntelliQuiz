@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
-  Home,
-  Library,
   LogOut,
   ChevronDown,
-  Sparkles,
 } from 'lucide-react';
 import '../../styles/admin.css';
 import { authApi, currentUserApi } from '../../services/api';

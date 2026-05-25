@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, PauseCircle } from 'lucide-react';
+import { CheckCircle2, CircleX, AlarmClock, ListChecks, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -383,7 +383,6 @@ const PlayerGame: React.FC = () => {
   const myRanking = rankings.find(r => r.teamId === session?.teamId);
   const currentStreak = myRanking?.streak || 0;
   const myTeamScore = myRanking?.score;
-  const myFinalResult = myRanking;
 
   if (!session) return null;
 

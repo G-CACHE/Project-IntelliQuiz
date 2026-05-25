@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Home, Volume2, VolumeX } from 'lucide-react';
+import { Trophy, Volume2, VolumeX } from 'lucide-react';
 import {
-  Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon, 
   Hourglass, PauseCircle, MonitorPlay
 } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
