@@ -687,34 +687,39 @@
   letter-spacing: 0.5px;
 }
 
+/* DRAFT — neutral slate */
 .admin-badge-status.draft {
-  background: #f8fafc;
+  background: #f1f5f9;
   color: #475569;
   border: 1.5px solid #cbd5e1;
 }
 
+/* READY — green */
 .admin-badge-status.ready {
   background: #ecfdf5;
   color: #065f46;
   border: 1.5px solid #6ee7b7;
 }
 
+/* ACTIVE / LIVE — maroon/red pulse feel */
 .admin-badge-status.active {
   background: #fff0f3;
-  color: #880015;
-  border: 1.5px solid #ffcdd5;
+  color: #7a1733;
+  border: 1.5px solid #f4a0b0;
 }
 
+/* DONE — blue (kept for any legacy usage) */
 .admin-badge-status.done {
   background: #eff6ff;
   color: #1d4ed8;
   border: 1.5px solid #bfdbfe;
 }
 
+/* ARCHIVED — warm amber/brown */
 .admin-badge-status.archived {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1.5px solid #d1d5db;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1.5px solid #fcd34d;
 }
 
 .admin-badge {

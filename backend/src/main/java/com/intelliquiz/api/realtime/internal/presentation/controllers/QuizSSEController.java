@@ -234,7 +234,7 @@ public class QuizSSEController {
                 try {
                     Long teamId = Long.parseLong(connectedTeamId);
                     String teamName = teamFacade.getTeamInfo(teamId)
-                            .map(team -> team.name())
+                            .map(team -> stripAvatarFromName(team.name()))
                             .orElse("Team " + connectedTeamId);
                     connected.add(new SnapshotConnectedTeam(teamId, teamName, Instant.now().toString()));
                 } catch (NumberFormatException ignored) {
@@ -246,7 +246,7 @@ public class QuizSSEController {
             List<SnapshotKickedTeam> kicked = proctorSessionService.getKickedTeams(quizId).stream()
                     .map(teamId -> {
                         String teamName = teamFacade.getTeamInfo(teamId)
-                                .map(team -> team.name())
+                                .map(team -> stripAvatarFromName(team.name()))
                                 .orElse("Team " + teamId);
                         String reason = reasons.getOrDefault(teamId, "Removed from this quiz");
                         return new SnapshotKickedTeam(teamId, teamName, reason, Instant.now().toString());
@@ -407,7 +407,7 @@ public class QuizSSEController {
             }
 
             String teamName = teamFacade.getTeamInfo(connectedTeamIdLong)
-                    .map(team -> team.name())
+                    .map(team -> stripAvatarFromName(team.name()))
                     .orElse("Team " + connectedTeamId);
 
             TeamConnectionMessage teamConnected = new TeamConnectionMessage(
@@ -450,6 +450,16 @@ public class QuizSSEController {
                 .name("GAME_STATE")
                 .data(event.getData())
                 .reconnectTime(3000));
+    }
+
+    /**
+     * Strips the avatar ID from a smart name formatted as "DisplayName|avatarId".
+     * Returns the display name only, or the original string if no separator is present.
+     */
+    private String stripAvatarFromName(String rawName) {
+        if (rawName == null || rawName.isBlank()) return rawName;
+        int sep = rawName.indexOf('|');
+        return sep >= 0 ? rawName.substring(0, sep) : rawName;
     }
 
     public record SnapshotConnectedTeam(Long id, String name, String connectedAt) {}

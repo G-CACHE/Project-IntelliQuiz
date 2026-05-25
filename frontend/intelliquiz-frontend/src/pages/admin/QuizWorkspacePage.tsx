@@ -9,6 +9,7 @@ import { useQuiz, useQuizStatusChange, useRegisterTeam, useDeleteTeam, useScoreb
 import QuestionsPage from './QuestionsPage';
 import { quizzesApi, violationApi, type ViolationLogRecord } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { parseSmartName } from '../../utils/nameUtils';
 import '../../styles/admin.css';
 import './AdminRedesign.css';
 import './QuizWorkspacePage.css';
@@ -50,6 +51,8 @@ export default function QuizWorkspacePage() {
   const [memberTags, setMemberTags] = useState<string[]>([]);
   const [memberInput, setMemberInput] = useState('');
   const [teamSearch, setTeamSearch] = useState('');
+  const [teamPage, setTeamPage] = useState(1);
+  const TEAMS_PER_PAGE = 2;
   const [registerTeamError, setRegisterTeamError] = useState<string | null>(null);
   const [registerTeamSuccess, setRegisterTeamSuccess] = useState<string | null>(null);
   const [teamNameTouched, setTeamNameTouched] = useState(false);
@@ -142,13 +145,14 @@ export default function QuizWorkspacePage() {
   const normalizedScoreboard = useMemo<ScoreboardRow[]>(() => {
     const teamBased: ScoreboardRow[] = [...teams]
       .sort((a, b) => b.totalScore - a.totalScore)
-      .map((team, i) => ({ teamId: team.id, teamName: team.name, score: team.totalScore, rank: i + 1 }));
+      .map((team, i) => ({ teamId: team.id, teamName: parseSmartName(team.name).name, score: team.totalScore, rank: i + 1 }));
     if (Array.isArray(scoreboard)) {
       const rows = scoreboard as ScoreboardRow[];
       const allZero = rows.length > 0 && rows.every((e) => e.score === 0);
       const teamHasScores = teams.some((t) => t.totalScore > 0);
       if (isArchived && allZero && teamHasScores) return teamBased;
-      return rows;
+      // Strip avatar from scoreboard team names too
+      return rows.map((r) => ({ ...r, teamName: parseSmartName(r.teamName).name }));
     }
     return teamBased;
   }, [scoreboard, teams, isArchived]);
@@ -443,16 +447,18 @@ export default function QuizWorkspacePage() {
               </div>
             </div>
             {/* Codes */}
-            <div className="quiz-workspace-code-grid" style={{ marginBottom: 28 }}>
-              <div className="admin-card workspace-code-card quiz-code-card">
-                <div className="workspace-code-copy">
-                  <h4 style={{ margin: 0 }}>Quiz Code</h4>
-                  <p className="admin-empty-text" style={{ margin: 0 }}>Share with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code></p>
+            <div className="quiz-workspace-code-grid" style={{ marginBottom: 16 }}>
+              {!isRestricted && (
+                <div className="admin-card workspace-code-card quiz-code-card">
+                  <div className="workspace-code-copy">
+                    <h4 style={{ margin: 0 }}>Quiz Code</h4>
+                    <p className="admin-empty-text" style={{ margin: 0 }}>Share with participants: <code>{quiz.quizCode || 'UNAVAILABLE'}</code></p>
+                  </div>
+                  <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyQuizCode} disabled={!quiz.quizCode}>
+                    {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
+                  </button>
                 </div>
-                <button className="admin-btn admin-btn-secondary workspace-code-button" onClick={copyQuizCode} disabled={!quiz.quizCode}>
-                  {copiedQuizCode ? <BiCheck size={16} /> : <BiCopy size={16} />} {copiedQuizCode ? 'Copied' : 'Copy Code'}
-                </button>
-              </div>
+              )}
               <div className="admin-card workspace-code-card proctor-pin-card">
                 <div className="workspace-code-copy">
                   <h4 style={{ margin: 0 }}>Proctor PIN</h4>
@@ -546,11 +552,11 @@ export default function QuizWorkspacePage() {
                       <input
                         className="team-list-search-input"
                         value={teamSearch}
-                        onChange={(e) => setTeamSearch(e.target.value)}
+                        onChange={(e) => { setTeamSearch(e.target.value); setTeamPage(1); }}
                         placeholder="Search teams or members..."
                       />
                       {teamSearch && (
-                        <button type="button" className="team-list-search-clear" onClick={() => setTeamSearch('')}>
+                        <button type="button" className="team-list-search-clear" onClick={() => { setTeamSearch(''); setTeamPage(1); }}>
                           <BiX size={14} />
                         </button>
                       )}
@@ -564,44 +570,82 @@ export default function QuizWorkspacePage() {
                     ) : (() => {
                       const q = teamSearch.toLowerCase();
                       const filtered = teams.filter((t) =>
+                        parseSmartName(t.name).name.toLowerCase().includes(q) ||
                         t.name.toLowerCase().includes(q) ||
                         (t.members || '').toLowerCase().includes(q)
                       );
-                      return filtered.length === 0 ? (
-                        <p className="admin-empty-text" style={{ padding: '12px 0' }}>No teams match "{teamSearch}".</p>
-                      ) : (
-                        <div className="team-manager-list">
-                          {filtered.map((team, index) => {
-                            const memberList = team.members ? team.members.split(',').map(m => m.trim()).filter(Boolean) : [];
-                            const accentClass = `team-manager-row-accent-${index % 4}`;
-                            return (
-                              <div key={team.id} className={`team-manager-row ${accentClass}`}>
-                                <div className="team-manager-row-info">
-                                  <span className="team-manager-row-name">{team.name}</span>
-                                  {memberList.length > 0 ? (
-                                    <div className="team-manager-row-tags">
-                                      {memberList.map((m) => <span key={m} className="team-manager-member-chip">{m}</span>)}
-                                    </div>
-                                  ) : (
-                                    <span className="team-manager-row-individual">Individual</span>
-                                  )}
-                                  <span className="team-manager-row-code">Code: <strong>{team.accessCode}</strong></span>
-                                </div>
-                                <div className="team-manager-row-actions">
-                                  <button className="admin-btn admin-btn-secondary" onClick={() => void copyTeamAccessCode(team.id, team.accessCode)} type="button">
-                                    {copiedTeamId === team.id ? <BiCheck size={14} /> : <BiCopy size={14} />}
-                                    {copiedTeamId === team.id ? 'Copied' : 'Copy'}
-                                  </button>
-                                  {canManageRestrictedTeams && (
-                                    <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenDeleteTeamModal(team.id, team.name)} type="button" style={{ color: '#dc2626' }}>
-                                      <BiTrash size={14} />
+                      if (filtered.length === 0) {
+                        return <p className="admin-empty-text" style={{ padding: '12px 0' }}>No teams match "{teamSearch}".</p>;
+                      }
+                      const totalPages = Math.ceil(filtered.length / TEAMS_PER_PAGE);
+                      const safePage = Math.min(teamPage, totalPages);
+                      const paginated = filtered.slice((safePage - 1) * TEAMS_PER_PAGE, safePage * TEAMS_PER_PAGE);
+                      return (
+                        <>
+                          <div className="team-manager-list">
+                            {paginated.map((team, index) => {
+                              const memberList = team.members ? team.members.split(',').map(m => m.trim()).filter(Boolean) : [];
+                              const accentClass = `team-manager-row-accent-${((safePage - 1) * TEAMS_PER_PAGE + index) % 4}`;
+                              const { name: cleanTeamName } = parseSmartName(team.name);
+                              return (
+                                <div key={team.id} className={`team-manager-row ${accentClass}`}>
+                                  <div className="team-manager-row-info">
+                                    <span className="team-manager-row-name">{cleanTeamName}</span>
+                                    {memberList.length > 0 ? (
+                                      <div className="team-manager-row-tags">
+                                        {memberList.map((m) => <span key={m} className="team-manager-member-chip">{m}</span>)}
+                                      </div>
+                                    ) : (
+                                      <span className="team-manager-row-individual">Individual</span>
+                                    )}
+                                    <span className="team-manager-row-code">Code: <strong>{team.accessCode}</strong></span>
+                                  </div>
+                                  <div className="team-manager-row-actions">
+                                    <button className="admin-btn admin-btn-secondary" onClick={() => void copyTeamAccessCode(team.id, team.accessCode)} type="button">
+                                      {copiedTeamId === team.id ? <BiCheck size={14} /> : <BiCopy size={14} />}
+                                      {copiedTeamId === team.id ? 'Copied' : 'Copy'}
                                     </button>
-                                  )}
+                                    {canManageRestrictedTeams && (
+                                      <button className="admin-btn admin-btn-secondary" onClick={() => handleOpenDeleteTeamModal(team.id, cleanTeamName)} type="button" style={{ color: '#dc2626' }}>
+                                        <BiTrash size={14} />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+                          </div>
+                          {totalPages > 1 && (
+                            <div className="team-list-pagination">
+                              <button
+                                className="team-pagination-btn"
+                                onClick={() => setTeamPage(p => Math.max(1, p - 1))}
+                                disabled={safePage === 1}
+                              >
+                                ‹
+                              </button>
+                              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                                <button
+                                  key={pg}
+                                  className={`team-pagination-btn${pg === safePage ? ' team-pagination-btn--active' : ''}`}
+                                  onClick={() => setTeamPage(pg)}
+                                >
+                                  {pg}
+                                </button>
+                              ))}
+                              <button
+                                className="team-pagination-btn"
+                                onClick={() => setTeamPage(p => Math.min(totalPages, p + 1))}
+                                disabled={safePage === totalPages}
+                              >
+                                ›
+                              </button>
+                              <span className="team-pagination-info">
+                                {(safePage - 1) * TEAMS_PER_PAGE + 1}–{Math.min(safePage * TEAMS_PER_PAGE, filtered.length)} of {filtered.length}
+                              </span>
+                            </div>
+                          )}
+                        </>
                       );
                     })()}
                   </div>
@@ -741,7 +785,7 @@ export default function QuizWorkspacePage() {
                     {violationLogs.map((entry) => (
                       <div key={entry.id} className="workspace-modal-item workspace-log-row">
                         <div>
-                          <p className="workspace-log-team">{entry.teamName}</p>
+                          <p className="workspace-log-team">{parseSmartName(entry.teamName).name}</p>
                           <p className="workspace-log-type">{formatViolationType(entry.violationType)}</p>
                         </div>
                         <p className="workspace-log-time">{formatViolationTime(entry.detectedAt)}</p>

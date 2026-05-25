@@ -762,7 +762,7 @@
 .quiz-workspace-code-grid {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
   align-items: stretch;
 }
@@ -781,7 +781,7 @@
 .workspace-code-card.quiz-code-card,
 .workspace-code-card.proctor-pin-card {
   /* reset admin-card base */
-  padding: 28px 32px;
+  padding: 20px 28px;
   border: none !important;
   text-align: left;
 }
@@ -1571,30 +1571,31 @@
   color: #7a1733;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1.5px solid #f0e6ea;
 }
 
 .team-manager-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .team-manager-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
   border: 1.5px solid transparent;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s, transform 0.15s;
 }
 
 .team-manager-row:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
 }
 
 .team-manager-row-accent-0 {
@@ -1636,12 +1637,12 @@
 .team-manager-row-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
   min-width: 0;
 }
 
 .team-manager-row-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: #1e293b;
   white-space: nowrap;
@@ -1652,12 +1653,13 @@
 .team-manager-row-code {
   font-size: 12px;
   color: #64748b;
+  margin-top: 8px;
 }
 
 .team-manager-row-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -1672,7 +1674,7 @@
 }
 
 .team-manager-row-individual {
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1758,17 +1760,17 @@
 .team-manager-row-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .team-manager-member-chip {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 4px 10px;
   background: #f3e8eb;
   border: 1px solid #d9b8bf;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #6b0f23;
 }
@@ -1847,7 +1849,7 @@
   background: #ffffff;
   border: 1.5px solid #e2d0d6;
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
   box-shadow: 0 2px 12px rgba(122, 23, 51, 0.07);
 }
 
@@ -1909,4 +1911,64 @@
 .team-list-search-clear:hover {
   color: #7a1733;
   background: #f3e8eb;
+}
+
+/* ── Team list pagination ────────────────────────────────────── */
+.team-list-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1.5px solid #f0e6ea;
+  flex-wrap: wrap;
+}
+
+.team-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1.5px solid #e2d0d6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #4b2333;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.team-pagination-btn:hover:not(:disabled) {
+  background: #f9f0f3;
+  border-color: #c9a0b0;
+  color: #7a1733;
+}
+
+.team-pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.team-pagination-btn--active {
+  background: #7a1733;
+  border-color: #7a1733;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(122, 23, 51, 0.25);
+}
+
+.team-pagination-btn--active:hover {
+  background: #7a1733;
+  color: #ffffff;
+}
+
+.team-pagination-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
 }

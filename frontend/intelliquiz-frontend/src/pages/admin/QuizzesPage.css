@@ -386,30 +386,37 @@
 /* DRAFT — cool slate */
 .admin-clean-dashboard .admin-quiz-card.status-draft,
 .admin-clean-dashboard .quiz-list-card.status-draft {
-  background: #e2e8f0;
+  background: #f1f5f9;
   border-top: none;
 }
 
 /* READY — soft emerald */
 .admin-clean-dashboard .admin-quiz-card.status-ready,
 .admin-clean-dashboard .quiz-list-card.status-ready {
-  background: #bbf7d0;
+  background: #f0fdf4;
   border-top: none;
 }
 
-/* LIVE — soft rose/maroon tint */
+/* ACTIVE / LIVE — soft rose/maroon tint */
+.admin-clean-dashboard .admin-quiz-card.status-active,
+.admin-clean-dashboard .quiz-list-card.status-active,
 .admin-clean-dashboard .admin-quiz-card.status-live,
 .admin-clean-dashboard .quiz-list-card.status-live {
-  background: #fecdd3;
+  background: #fff1f3;
   border-top: none;
 }
 
-/* DONE / ARCHIVED — light warm gray */
+/* ARCHIVED — warm amber tint */
 .admin-clean-dashboard .admin-quiz-card.status-archived,
-.admin-clean-dashboard .quiz-list-card.status-archived,
+.admin-clean-dashboard .quiz-list-card.status-archived {
+  background: #fffbeb;
+  border-top: none;
+}
+
+/* DONE — blue (legacy) */
 .admin-clean-dashboard .admin-quiz-card.status-done,
 .admin-clean-dashboard .quiz-list-card.status-done {
-  background: #f1f5f9;
+  background: #eff6ff;
   border-top: none;
 }
 

@@ -150,12 +150,12 @@ export default function AdminQuizzesPage() {
   };
 
   const getStatusClass = (quiz: Quiz) => {
-    const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'done' };
+    const map: Record<string, string> = { DRAFT: 'draft', READY: 'ready', ACTIVE: 'active', ARCHIVED: 'archived' };
     return map[quiz.status] || 'draft';
   };
 
   const getStatusLabel = (quiz: Quiz) => {
-    const map: Record<string, string> = { DRAFT: 'Draft', READY: 'Ready', ACTIVE: 'Live', ARCHIVED: 'Done' };
+    const map: Record<string, string> = { DRAFT: 'Draft', READY: 'Ready', ACTIVE: 'Live', ARCHIVED: 'Archived' };
     return map[quiz.status] || quiz.status;
   };
 
@@ -265,7 +265,11 @@ export default function AdminQuizzesPage() {
                     <BiBookOpen size={16} className="meta-icon" />
                     <div className="meta-content">
                       <span className="meta-label">Quiz Code</span>
-                      <code className="meta-value quiz-code">{quiz.quizCode || 'N/A'}</code>
+                      {quiz.accessMode === 'RESTRICTED' ? (
+                        <span className="meta-value" style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '11px' }}>Team codes only</span>
+                      ) : (
+                        <code className="meta-value quiz-code">{quiz.quizCode || 'N/A'}</code>
+                      )}
                     </div>
                   </div>
                   <div className="admin-quiz-meta-item">
