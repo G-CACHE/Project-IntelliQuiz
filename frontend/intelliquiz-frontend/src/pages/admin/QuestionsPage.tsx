@@ -384,7 +384,7 @@ export default function AdminQuestionsPage() {
     { key: 'EASY', label: 'Easy' },
     { key: 'MEDIUM', label: 'Medium' },
     { key: 'HARD', label: 'Hard' },
-    { key: 'TIE_BREAKER', label: 'TB' },
+    { key: 'TIE_BREAKER', label: 'Tie Breaker' },
   ].filter((c) => c.key === 'ALL' || difficultyCounts[c.key]);
 
   if (loading) {
