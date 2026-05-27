@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type QuizAssignment, PERMISSIONS, currentUserApi } from '../services/api';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
+import { type QuizAssignment, PERMISSIONS, currentUserApi, authApi } from '../services/api';
 
 interface AuthContextType {
   role: string | null;
@@ -34,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [username, setUsername] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<QuizAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  // Prevent concurrent refresh attempts
+  const refreshingRef = useRef(false);
 
   const shouldAttemptBackendAuth = () => {
     const path = window.location.pathname;
@@ -84,6 +86,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes('HTTP 401') || message.includes('HTTP 403')) {
+        // Access token expired — attempt silent refresh via refresh token cookie
+        if (!refreshingRef.current) {
+          refreshingRef.current = true;
+          try {
+            await authApi.refresh();
+            // Refresh succeeded — retry fetching user info
+            refreshingRef.current = false;
+            await refreshAuth();
+            return;
+          } catch {
+            // Refresh token also invalid/expired — user must log in again
+            console.log('[AuthContext] Refresh token invalid. Session ended.');
+          } finally {
+            refreshingRef.current = false;
+          }
+        }
         console.log('[AuthContext] No active authenticated session.');
       } else {
         console.error('[AuthContext] Failed to fetch user info:', err);

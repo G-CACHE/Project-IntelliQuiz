@@ -48,6 +48,13 @@ export const authApi = {
     return handleResponse<{ role: string; username: string }>(response);
   },
 
+  refresh: async () => {
+    const response = await apiFetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+    });
+    return handleResponse<{ role: string; username: string }>(response);
+  },
+
   logout: async () => {
     const response = await apiFetch(`${API_BASE_URL}/api/auth/logout`, {
       method: 'POST',
