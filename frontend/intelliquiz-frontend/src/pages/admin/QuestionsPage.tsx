@@ -117,13 +117,19 @@ export default function AdminQuestionsPage() {
       if (validOptions.length < 2) return setError('At least two answer options are required');
 
       const correctIndex = OPTION_KEYS.indexOf(formData.correctKey);
-      if (correctIndex >= validOptions.length) {
+      if (correctIndex >= formData.options.length || !formData.options[correctIndex]?.trim()) {
         return setError('The correct answer must be one of the filled options');
       }
+
+      // Recalculate the correct key based on position in the filtered (non-empty) options array
+      const correctOptionText = formData.options[correctIndex];
+      const newCorrectIndex = validOptions.indexOf(correctOptionText);
+      const newCorrectKey = OPTION_KEYS[newCorrectIndex];
 
       payload = {
         ...formData,
         options: validOptions,
+        correctKey: newCorrectKey,
       };
     } else if (formData.type === 'TRUE_FALSE') {
       if (formData.correctKey !== 'True' && formData.correctKey !== 'False') {
