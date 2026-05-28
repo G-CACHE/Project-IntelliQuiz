@@ -53,7 +53,7 @@ public class QuizController {
      * Lists all quizzes.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "List all quizzes",
             description = "Retrieves quizzes accessible to the current user. Admins see their own quizzes; Super Admins see all."
@@ -84,7 +84,7 @@ public class QuizController {
      * Gets a quiz by ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Operation(
             summary = "Get quiz by ID",
             description = "Retrieves a specific quiz by its unique identifier. Admins can only access their own quizzes."
@@ -125,7 +125,7 @@ public class QuizController {
      * Creates a new quiz.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Create a new quiz",
             description = "Creates a new quiz with the provided title and description. The quiz is created in DRAFT status and assigned to the current user."
@@ -168,7 +168,7 @@ public class QuizController {
      * Updates an existing quiz.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Update a quiz",
             description = "Updates an existing quiz with the provided title and description. Admins can only update their own quizzes."
@@ -219,7 +219,7 @@ public class QuizController {
          * Returns a quiz from READY back to DRAFT status.
          */
         @PostMapping("/{id}/draft")
-        @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+        @PreAuthorize("hasAnyRole('ADMIN')")
         @Operation(
                         summary = "Transition quiz to DRAFT status",
                         description = "Returns a quiz from READY back to DRAFT (unready)."
@@ -239,7 +239,7 @@ public class QuizController {
      * Deletes a quiz.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Delete a quiz",
             description = "Deletes a quiz and all associated questions, teams, and submissions."
@@ -275,7 +275,7 @@ public class QuizController {
      * Transitions a quiz to READY status.
      */
     @PostMapping("/{id}/ready")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Transition quiz to READY status",
             description = "Transitions a quiz from DRAFT to READY status, making it available for activation."
@@ -317,7 +317,7 @@ public class QuizController {
      * Archives a quiz.
      */
     @PostMapping("/{id}/archive")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Archive a quiz",
             description = "Archives a quiz, making it read-only and preserving historical data."
@@ -359,7 +359,7 @@ public class QuizController {
      * Activates a quiz session.
      */
     @PostMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Activate quiz session",
             description = "Activates a quiz session, allowing teams to submit answers. Only one quiz can be active at a time."
@@ -401,7 +401,7 @@ public class QuizController {
      * Deactivates a quiz session.
      */
     @PostMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "Deactivate quiz session",
             description = "Deactivates an active quiz session, stopping answer submissions."

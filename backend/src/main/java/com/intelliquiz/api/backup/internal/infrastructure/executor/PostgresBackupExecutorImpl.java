@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -26,10 +27,40 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
     private static final Logger logger = LoggerFactory.getLogger(PostgresBackupExecutorImpl.class);
     private static final int COMMAND_TIMEOUT_MINUTES = 30;
 
+    /** Common locations where docker is installed on Linux/macOS. */
+    private static final List<String> DOCKER_CANDIDATE_PATHS = List.of(
+            "/usr/bin/docker",
+            "/usr/local/bin/docker",
+            "/opt/homebrew/bin/docker",
+            "/snap/bin/docker"
+    );
+
     private final BackupProperties backupProperties;
+    private final String resolvedDockerPath;
 
     public PostgresBackupExecutorImpl(BackupProperties backupProperties) {
         this.backupProperties = backupProperties;
+        this.resolvedDockerPath = resolveDockerPath(backupProperties.getDockerPath());
+        if (backupProperties.isUseDockerExec()) {
+            logger.info("Docker backup executor initialised. Using docker binary: {}", resolvedDockerPath);
+        }
+    }
+
+    /**
+     * Resolves the docker binary path.
+     * Priority: explicit config → auto-detect from known locations → fall back to "docker" (PATH).
+     */
+    private static String resolveDockerPath(String configuredPath) {
+        if (configuredPath != null && !configuredPath.isBlank()) {
+            return configuredPath.trim();
+        }
+        for (String candidate : DOCKER_CANDIDATE_PATHS) {
+            if (Files.isExecutable(Paths.get(candidate))) {
+                return candidate;
+            }
+        }
+        // Last resort — rely on PATH (may fail in restricted environments)
+        return "docker";
     }
 
     @Override
@@ -60,7 +91,7 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
 
         // Step 1: Run pg_dump inside the container
         List<String> dumpCommand = new ArrayList<>();
-        dumpCommand.add("docker");
+        dumpCommand.add(resolvedDockerPath);
         dumpCommand.add("exec");
         dumpCommand.add("-e");
         dumpCommand.add("PGPASSWORD=" + backupProperties.getPostgresPassword());
@@ -84,7 +115,7 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
 
         // Step 2: Copy the dump file from the container to the host
         List<String> copyCommand = List.of(
-                "docker", "cp",
+                resolvedDockerPath, "cp",
                 containerName + ":" + containerDumpPath,
                 outputPath.toString()
         );
@@ -93,7 +124,7 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
 
         // Step 3: Clean up the dump file inside the container
         List<String> cleanupCommand = List.of(
-                "docker", "exec", containerName, "rm", "-f", containerDumpPath
+                resolvedDockerPath, "exec", containerName, "rm", "-f", containerDumpPath
         );
         executeProcess(cleanupCommand, null, "docker rm temp dump");
 
@@ -157,7 +188,7 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
 
         // Step 1: Copy the dump file into the container
         List<String> copyCommand = List.of(
-                "docker", "cp",
+                resolvedDockerPath, "cp",
                 backupPath.toString(),
                 containerName + ":" + containerDumpPath
         );
@@ -167,7 +198,7 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
         // --single-transaction: wrap entire restore in one transaction (atomic)
         // -v ON_ERROR_STOP=1: stop on first error instead of silently continuing
         List<String> restoreCommand = new ArrayList<>();
-        restoreCommand.add("docker");
+        restoreCommand.add(resolvedDockerPath);
         restoreCommand.add("exec");
         restoreCommand.add("-e");
         restoreCommand.add("PGPASSWORD=" + backupProperties.getPostgresPassword());
@@ -191,7 +222,7 @@ public class PostgresBackupExecutorImpl implements PostgresBackupExecutor {
 
         // Step 3: Clean up the dump file inside the container
         List<String> cleanupCommand = List.of(
-                "docker", "exec", containerName, "rm", "-f", containerDumpPath
+                resolvedDockerPath, "exec", containerName, "rm", "-f", containerDumpPath
         );
         executeProcess(cleanupCommand, null, "docker rm temp dump (restore)");
 

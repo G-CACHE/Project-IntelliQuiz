@@ -29,7 +29,7 @@ class BackupAuthorizationPropertyTest {
     void nonSuperAdminUsersAreRejected(
             @ForAll @AlphaChars @StringLength(min = 3, max = 20) String username
     ) {
-        UserInfoDto user = new UserInfoDto(1L, username, SystemRole.EXAMINER);
+        UserInfoDto user = new UserInfoDto(1L, username, SystemRole.ADMIN);
 
         AuthorizationException exception = assertThrows(
                 AuthorizationException.class,

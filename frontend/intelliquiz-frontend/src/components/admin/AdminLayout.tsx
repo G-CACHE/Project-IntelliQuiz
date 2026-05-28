@@ -28,6 +28,7 @@ export default function AdminLayout() {
   const navItems: NavItem[] = [
     { path: '/admin', label: 'Dashboard', icon: null },
     { path: '/admin/quizzes', label: 'My Quizzes', icon: null },
+    { path: '/admin/user-manual', label: 'User Manual', icon: null },
   ];
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function AdminLayout() {
           return;
         }
 
-        if (me.role !== 'ADMIN' && me.role !== 'EXAMINER') {
+        if (me.role !== 'ADMIN') {
           clearAuth();
           navigate('/portal', { replace: true });
           return;

@@ -158,7 +158,7 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createUserRequestRejectsShortPassword(@ForAll("shortPasswords") String password) {
-        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.EXAMINER);
+        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.ADMIN);
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("password"));
@@ -166,7 +166,7 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createUserRequestAcceptsValidPassword(@ForAll("validPasswords") String password) {
-        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.EXAMINER);
+        CreateUserRequest request = new CreateUserRequest("username", password, SystemRole.ADMIN);
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
         assertThat(violations).isEmpty();
     }

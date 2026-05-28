@@ -51,7 +51,7 @@ const UniversalLogin: React.FC = () => {
     if (authLoading) return;
     if (role === 'SUPER_ADMIN') {
       navigate('/superadmin', { replace: true });
-    } else if (role === 'ADMIN' || role === 'EXAMINER') {
+    } else if (role === 'ADMIN' || role === 'ADMIN') {
       const assignments = JSON.parse(localStorage.getItem('assignments') || '[]') as unknown[];
       navigate(assignments.length === 0 ? '/admin/no-permissions' : '/admin', { replace: true });
     }

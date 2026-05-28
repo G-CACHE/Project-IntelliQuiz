@@ -9,6 +9,7 @@ import com.intelliquiz.api.user.events.UserDeletedEvent;
 import com.intelliquiz.api.user.events.PermissionsAssignedEvent;
 import com.intelliquiz.api.user.events.PermissionsRevokedEvent;
 import com.intelliquiz.api.shared.enums.AdminPermission;
+import com.intelliquiz.api.shared.enums.SystemRole;
 import com.intelliquiz.api.shared.exceptions.EntityNotFoundException;
 import com.intelliquiz.api.shared.domain.ports.PasswordHashingService;
 import com.intelliquiz.api.user.internal.domain.ports.QuizAssignmentRepository;
@@ -49,8 +50,15 @@ public class UserManagementService {
 
     /**
      * Creates a new admin user with hashed password.
+     * Only EXAMINER role can be created via this method.
+     * SUPER_ADMIN users can only be created during system initialization.
      */
     public User createAdmin(CreateUserCommand command) {
+        // Validate that only EXAMINER role can be created
+        if (command.role() == SystemRole.SUPER_ADMIN) {
+            throw new IllegalArgumentException("SUPER_ADMIN users can only be created during system initialization. Use ADMIN role instead.");
+        }
+
         if (userRepository.existsByUsername(command.username())) {
             throw new IllegalArgumentException("Username already exists: " + command.username());
         }

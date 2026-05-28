@@ -49,7 +49,7 @@ public class UserPermissionPropertyTest {
     void regularAdminOnlyHasGrantedPermissions(
             @ForAll("adminPermissions") AdminPermission grantedPermission,
             @ForAll("adminPermissions") AdminPermission checkedPermission) {
-        User admin = new User("admin", "password123", SystemRole.EXAMINER);
+        User admin = new User("admin", "password123", SystemRole.ADMIN);
         
         QuizAssignment assignment = new QuizAssignment(admin, TEST_QUIZ_ID);
         assignment.grantPermission(grantedPermission);
@@ -65,7 +65,7 @@ public class UserPermissionPropertyTest {
     @Property(tries = 20)
     void adminWithoutAssignmentHasNoPermissions(
             @ForAll("adminPermissions") AdminPermission permission) {
-        User admin = new User("admin", "password123", SystemRole.EXAMINER);
+        User admin = new User("admin", "password123", SystemRole.ADMIN);
         
         assertThat(admin.hasPermissionFor(TEST_QUIZ_ID, permission)).isFalse();
     }
@@ -76,7 +76,7 @@ public class UserPermissionPropertyTest {
     @Property(tries = 20)
     void getAccessibleQuizIdsReturnsAssignedQuizIds(
             @ForAll @NotBlank String quizTitle) {
-        User admin = new User("admin", "password123", SystemRole.EXAMINER);
+        User admin = new User("admin", "password123", SystemRole.ADMIN);
         
         QuizAssignment assignment = new QuizAssignment(admin, TEST_QUIZ_ID);
         admin.addAssignment(assignment);
@@ -89,7 +89,7 @@ public class UserPermissionPropertyTest {
      */
     @Property(tries = 5)
     void validateCredentialsThrowsForBlankUsername() {
-        User user = new User("", "password123", SystemRole.EXAMINER);
+        User user = new User("", "password123", SystemRole.ADMIN);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -101,7 +101,7 @@ public class UserPermissionPropertyTest {
      */
     @Property(tries = 5)
     void validateCredentialsThrowsForShortPassword() {
-        User user = new User("testuser", "short", SystemRole.EXAMINER);
+        User user = new User("testuser", "short", SystemRole.ADMIN);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -115,7 +115,7 @@ public class UserPermissionPropertyTest {
     void validateCredentialsPassesForValidCredentials(
             @ForAll @NotBlank String username,
             @ForAll("validPasswords") String password) {
-        User user = new User(username, password, SystemRole.EXAMINER);
+        User user = new User(username, password, SystemRole.ADMIN);
         
         // Should not throw
         user.validateCredentials();

@@ -37,6 +37,7 @@ import SessionTerminated from '../pages/player/SessionTerminated';
 
 // Admin Extra Pages
 import QuestionBankPage from '../pages/admin/QuestionBankPage';
+import UserManualPage from '../pages/admin/UserManualPage';
 
 export const router = createBrowserRouter([
   // Universal Landing Page
@@ -154,6 +155,10 @@ export const router = createBrowserRouter([
       {
         path: 'question-bank',
         element: <QuestionBankPage />,
+      },
+      {
+        path: 'user-manual',
+        element: <UserManualPage />,
       },
     ],
   },

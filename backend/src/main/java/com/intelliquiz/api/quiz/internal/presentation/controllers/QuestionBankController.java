@@ -35,7 +35,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api")
-@PreAuthorize("hasAnyRole('ADMIN', 'EXAMINER')")
+@PreAuthorize("hasAnyRole('ADMIN')")
 @Tag(name = "Question Bank", description = "Personal question bank management for admins. Requires JWT authentication.")
 @SecurityRequirement(name = "bearerAuth")
 public class QuestionBankController {

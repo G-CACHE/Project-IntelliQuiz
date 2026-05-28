@@ -28,7 +28,7 @@ export default function LoginPage() {
     if (authLoading) return;
     if (role === 'SUPER_ADMIN') {
       navigate('/superadmin', { replace: true });
-    } else if (role === 'ADMIN' || role === 'EXAMINER') {
+    } else if (role === 'ADMIN' || role === 'ADMIN') {
       const assignments = JSON.parse(localStorage.getItem('assignments') || '[]') as unknown[];
       navigate(assignments.length === 0 ? '/admin/no-permissions' : '/admin', { replace: true });
     }
@@ -67,7 +67,7 @@ export default function LoginPage() {
 
       if (response.role === 'SUPER_ADMIN') {
         navigate('/superadmin');
-      } else if (response.role === 'ADMIN' || response.role === 'EXAMINER') {
+      } else if (response.role === 'ADMIN' || response.role === 'ADMIN') {
         const assignments = JSON.parse(localStorage.getItem('assignments') || '[]') as unknown[];
         navigate(assignments.length === 0 ? '/admin/no-permissions' : '/admin');
       } else {

@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   { path: '/superadmin', label: 'Dashboard', icon: <Home size={18} /> },
   { path: '/superadmin/users', label: 'Users', icon: <User size={18} /> },
   { path: '/superadmin/permissions', label: 'Permissions', icon: <Shield size={18} /> },
-  { path: '/superadmin/backups', label: 'Backups', icon: <Database size={18} /> },
+  { path: '/superadmin/backups', label: 'Maintenance', icon: <Database size={18} /> },
 ];
 
 export default function SuperAdminLayout() {
@@ -44,9 +44,10 @@ export default function SuperAdminLayout() {
         setUsername(me.username);
 
         if (me.role !== 'SUPER_ADMIN') {
-          if (me.role === 'ADMIN' || me.role === 'EXAMINER') {
+          if (me.role === 'ADMIN') {
             navigate('/admin', { replace: true });
           } else {
+            // EXAMINER and other roles should not access SuperAdmin
             clearAuth();
             navigate('/portal', { replace: true });
           }
@@ -113,7 +114,7 @@ export default function SuperAdminLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-off-white)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: 'var(--font-body)' }}>
       {/* Top Navigation */}
       <header className="pb-nav">
         <div className="pb-nav-inner">
@@ -175,7 +176,7 @@ export default function SuperAdminLayout() {
 
       {/* Main Content */}
       <main style={{ minHeight: 'calc(100vh - 64px)' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 32px' }}>
           <Outlet />
         </div>
       </main>

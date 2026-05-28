@@ -8,8 +8,9 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Request DTO for creating a new admin user.
+ * Only EXAMINER role is allowed. SUPER_ADMIN users can only be created during system initialization.
  */
-@Schema(description = "Request body for creating a new admin user")
+@Schema(description = "Request body for creating a new admin user. Only EXAMINER role can be assigned.")
 public record CreateUserRequest(
     @Schema(description = "Username for the new user", example = "newadmin", maxLength = 50, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Username is required")
@@ -21,7 +22,7 @@ public record CreateUserRequest(
     @Size(min = 8, message = "Password must be at least 8 characters")
     String password,
     
-    @Schema(description = "System role for the user (SUPER_ADMIN, ADMIN, PROCTOR)", example = "ADMIN", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "System role for the user. Only EXAMINER is allowed. SUPER_ADMIN can only be created during system initialization.", example = "EXAMINER", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "Role is required")
     SystemRole role
 ) {}

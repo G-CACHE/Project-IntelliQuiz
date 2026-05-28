@@ -2,16 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomSelect from '../../components/common/CustomSelect';
 import {
-  BiUser,
-  BiPlus,
-  BiEdit,
-  BiTrash,
-  BiShield,
-  BiSearch,
-  BiX,
-  BiErrorCircle,
-  BiUserCircle,
-  BiCrown,
+  BiPlus, BiEdit, BiTrash, BiShield,
+  BiSearch, BiX, BiErrorCircle,
 } from 'react-icons/bi';
 import { usersApi, type User, type CreateUserRequest } from '../../services/api';
 
@@ -28,19 +20,16 @@ export default function UsersPage() {
   const [formData, setFormData] = useState<CreateUserRequest>({
     username: '',
     password: '',
-    role: 'EXAMINER',
+    role: 'ADMIN',
   });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  useEffect(() => { loadUsers(); }, []);
 
   useEffect(() => {
-    const filtered = users.filter((user) =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    setFilteredUsers(
+      users.filter((u) => u.username.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-    setFilteredUsers(filtered);
   }, [users, searchQuery]);
 
   const loadUsers = async () => {
@@ -57,30 +46,42 @@ export default function UsersPage() {
   };
 
   const handleCreate = async () => {
-    if (!formData.username.trim()) return setError('Username is required');
-    if (!formData.password.trim()) return setError('Password is required');
-    if (formData.password.length < 8) return setError('Password must be at least 8 characters');
+    // Clear previous errors
+    setError(null);
+
+    // Validate inputs
+    if (!formData.username.trim()) {
+      setError('Username is required');
+      return;
+    }
+    if (!formData.password.trim()) {
+      setError('Password is required');
+      return;
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
 
     try {
       const newUser = await usersApi.create(formData);
-      setUsers(prev => [...prev, newUser]);
+      setUsers((prev) => [...prev, newUser]);
       setShowCreateModal(false);
       resetForm();
+      setError(null); // Clear any errors after successful creation
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create user');
     }
   };
 
   const handleUpdate = async () => {
-    if (!selectedUser) return;
-    if (!formData.username.trim()) return setError('Username is required');
-
+    if (!selectedUser || !formData.username.trim()) return setError('Username is required');
     try {
-      const updatedUser = await usersApi.update(selectedUser.id, {
+      const updated = await usersApi.update(selectedUser.id, {
         username: formData.username,
         ...(formData.password && { password: formData.password }),
       });
-      setUsers(prev => prev.map(u => u.id === selectedUser.id ? updatedUser : u));
+      setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? updated : u)));
       setShowEditModal(false);
       setSelectedUser(null);
       resetForm();
@@ -93,7 +94,7 @@ export default function UsersPage() {
     if (!selectedUser) return;
     try {
       await usersApi.delete(selectedUser.id);
-      setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
+      setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
       setShowDeleteModal(false);
       setSelectedUser(null);
     } catch (err) {
@@ -108,80 +109,63 @@ export default function UsersPage() {
   };
 
   const resetForm = () => {
-    setFormData({ username: '', password: '', role: 'EXAMINER' });
+    setFormData({
+      username: '',
+      password: '',
+      role: 'ADMIN'  // Always default to ADMIN
+    });
     setError(null);
+    setSearchQuery(''); // Clear search when resetting form
   };
 
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner" />
-      </div>
-    );
+    return <div className="loading-container"><div className="loading-spinner" /></div>;
   }
 
   return (
     <div className="superadmin-page">
-      {/* Page Header with gradient background */}
+
+      {/* Hero */}
       <div className="sa-page-hero">
-        {/* Decorative shapes */}
-        <div className="sa-page-hero-orb orb-a" />
-        <div className="sa-page-hero-orb orb-b" />
-        <div className="sa-page-hero-orb orb-c" />
-        
         <div className="sa-page-hero-content">
-          <div className="sa-page-hero-left">
-            <div className="sa-page-hero-icon">
-              <BiUser size={28} />
-            </div>
-            <div>
-              <h1 className="sa-page-hero-title">User Management</h1>
-              <p className="sa-page-hero-subtitle">Manage admin users and their access permissions</p>
-            </div>
+          <div>
+            <h1 className="sa-page-hero-title">User Management</h1>
+            <p className="sa-page-hero-subtitle">Manage admin accounts and access permissions</p>
           </div>
           <button className="btn btn-primary" onClick={() => { resetForm(); setShowCreateModal(true); }}>
-            <BiPlus size={18} /> Create User
+            <BiPlus size={16} /> Create User
           </button>
         </div>
       </div>
 
-      {/* Error Alert */}
+      {/* Error */}
       {error && (
         <div className="alert alert-error">
-          <div className="alert-content">
-            <BiErrorCircle size={20} />
-            <span>{error}</span>
-          </div>
-          <button onClick={() => setError(null)} className="btn-icon">
-            <BiX size={20} />
-          </button>
+          <div className="alert-content"><BiErrorCircle size={18} /><span>{error}</span></div>
+          <button onClick={() => setError(null)} className="btn-icon"><BiX size={18} /></button>
         </div>
       )}
 
-      {/* Search Card */}
-      <div className="card sa-card-compact">
+      {/* Search */}
+      <div className="card" style={{ marginBottom: 24 }}>
         <div className="search-input-wrapper">
-          <BiSearch 
-            size={20}
-            className="search-icon"
-          />
+          <BiSearch size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search users by name..."
+            placeholder="Search by username…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="form-input"
-            style={{ paddingLeft: 48 }}
           />
         </div>
       </div>
 
-      {/* Users Table */}
+      {/* Table */}
       <div className="table-container">
         <table className="table">
           <thead>
             <tr>
-              <th>USER</th>
+              <th>USERNAME</th>
               <th>ROLE</th>
               <th style={{ textAlign: 'right' }}>ACTIONS</th>
             </tr>
@@ -191,26 +175,7 @@ export default function UsersPage() {
               filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-                      <div style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 'var(--radius-lg)',
-                        background: user.role === 'SUPER_ADMIN' 
-                          ? 'linear-gradient(120deg, #5f1027 0%, #7a1733 100%)'
-                          : 'linear-gradient(135deg, #d4a017 0%, #f2c84b 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: user.role === 'SUPER_ADMIN' ? '#fff' : '#2b1a00',
-                      }}>
-                        {user.role === 'SUPER_ADMIN' ? <BiCrown size={22} /> : <BiUserCircle size={22} />}
-                      </div>
-                      <div>
-                        <span style={{ fontWeight: 600, display: 'block', color: 'var(--text-primary)' }}>{user.username}</span>
-                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>ID: {user.id}</span>
-                      </div>
-                    </div>
+                    <span className="sa-table-username">{user.username}</span>
                   </td>
                   <td>
                     <span className={`badge ${user.role === 'SUPER_ADMIN' ? 'badge-primary' : 'badge-accent'}`}>
@@ -218,25 +183,25 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', justifyContent: 'flex-end' }}>
-                      <button className="btn-icon" onClick={() => openEditModal(user)} title="Edit">
-                        <BiEdit size={18} />
+                    <div className="sa-table-actions">
+                      <button className="btn-icon" onClick={() => openEditModal(user)} title="Edit user">
+                        <BiEdit size={16} />
                       </button>
-                      <button 
-                        className="btn-icon" 
-                        onClick={() => navigate(`/superadmin/permissions?userId=${user.id}`)} 
-                        title="Permissions"
+                      <button
+                        className="btn-icon"
+                        onClick={() => navigate(`/superadmin/permissions?userId=${user.id}`)}
+                        title="Manage permissions"
                       >
-                        <BiShield size={18} />
+                        <BiShield size={16} />
                       </button>
                       <button
                         className="btn-icon danger"
                         onClick={() => { setSelectedUser(user); setShowDeleteModal(true); }}
-                        title="Delete"
+                        title="Delete user"
                         disabled={user.role === 'SUPER_ADMIN'}
-                        style={{ opacity: user.role === 'SUPER_ADMIN' ? 0.4 : 1 }}
+                        style={{ opacity: user.role === 'SUPER_ADMIN' ? 0.35 : 1 }}
                       >
-                        <BiTrash size={18} />
+                        <BiTrash size={16} />
                       </button>
                     </div>
                   </td>
@@ -246,11 +211,8 @@ export default function UsersPage() {
               <tr>
                 <td colSpan={3}>
                   <div className="empty-state">
-                    <BiUserCircle size={56} className="empty-state-icon" />
-                    <p style={{ fontWeight: 600, marginTop: 'var(--spacing-md)' }}>No users found</p>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>
-                      {searchQuery ? 'Try a different search term' : 'Create your first admin user to get started'}
-                    </p>
+                    <h3>No users found</h3>
+                    <p>{searchQuery ? 'Try a different search term' : 'Create your first admin user to get started'}</p>
                   </div>
                 </td>
               </tr>
@@ -265,40 +227,31 @@ export default function UsersPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Create Admin User</h2>
-              <button onClick={() => setShowCreateModal(false)} className="btn-icon"><BiX size={20} /></button>
+              <button onClick={() => setShowCreateModal(false)} className="btn-icon"><BiX size={18} /></button>
             </div>
             <div className="modal-body">
+              {error && (
+                <div className="form-error-message" style={{ marginBottom: 16, padding: 12, backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, color: '#991b1b', fontSize: 13 }}>
+                  {error}
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Username</label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="form-input"
-                  placeholder="Enter username"
-                  autoFocus
-                />
+                <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="form-input" placeholder="Enter username" autoFocus />
               </div>
               <div className="form-group">
                 <label className="form-label">Password</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="form-input"
-                  placeholder="Minimum 8 characters"
-                />
+                <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="form-input" placeholder="Minimum 8 characters" />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Role</label>
                 <CustomSelect
                   value={formData.role}
-                  onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' | 'EXAMINER' | 'SUPER_ADMIN' })}
+                  onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' })}
                   options={[
-                    { value: 'EXAMINER', label: 'Admin' },
-                    { value: 'ADMIN', label: 'Admin (Legacy)' },
-                    { value: 'SUPER_ADMIN', label: 'Super Admin' },
+                    { value: 'ADMIN', label: 'Admin' },
                   ]}
+                  disabled
                 />
               </div>
             </div>
@@ -316,28 +269,16 @@ export default function UsersPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Edit User</h2>
-              <button onClick={() => setShowEditModal(false)} className="btn-icon"><BiX size={20} /></button>
+              <button onClick={() => setShowEditModal(false)} className="btn-icon"><BiX size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">Username</label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="form-input"
-                  autoFocus
-                />
+                <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="form-input" autoFocus />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">New Password</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="form-input"
-                  placeholder="Leave empty to keep current"
-                />
+                <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="form-input" placeholder="Leave empty to keep current" />
               </div>
             </div>
             <div className="modal-footer">
@@ -354,38 +295,21 @@ export default function UsersPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Delete User</h2>
-              <button onClick={() => setShowDeleteModal(false)} className="btn-icon"><BiX size={20} /></button>
+              <button onClick={() => setShowDeleteModal(false)} className="btn-icon"><BiX size={18} /></button>
             </div>
             <div className="modal-body">
-              <div style={{ textAlign: 'center', padding: 'var(--spacing-md)' }}>
-                <div style={{
-                  width: 64,
-                  height: 64,
-                  margin: '0 auto var(--spacing-md)',
-                  background: 'rgba(136, 0, 21, 0.1)',
-                  borderRadius: 'var(--radius-full)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#7a1733',
-                }}>
-                  <BiTrash size={28} />
-                </div>
-                <p style={{ color: 'var(--text-secondary)' }}>
-                  Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{selectedUser.username}</strong>?
-                </p>
-                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)', marginTop: 'var(--spacing-xs)' }}>
-                  This will also remove all their quiz assignments.
-                </p>
-              </div>
+              <p style={{ margin: 0, color: '#374151', lineHeight: 1.6 }}>
+                Delete <strong style={{ color: '#111111' }}>{selectedUser.username}</strong>? This will also remove all their quiz assignments.
+              </p>
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowDeleteModal(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={handleDelete} className="btn btn-danger">Delete User</button>
+              <button onClick={handleDelete} className="btn btn-danger">Delete</button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
