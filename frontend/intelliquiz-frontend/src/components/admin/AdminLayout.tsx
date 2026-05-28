@@ -31,6 +31,7 @@ export default function AdminLayout() {
   const navItems: NavItem[] = [
     { path: '/admin', label: 'Dashboard', icon: null },
     { path: '/admin/quizzes', label: 'My Quizzes', icon: null },
+    { path: '/admin/user-manual', label: 'User Manual', icon: null },
   ];
 
   useEffect(() => {
