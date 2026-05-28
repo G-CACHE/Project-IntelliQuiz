@@ -16,7 +16,7 @@ interface AdminUser {
 interface CreateUserRequest {
   username: string;
   password: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: 'ADMIN';
 }
 
 export default function UserManagementPage() {
@@ -262,10 +262,9 @@ export default function UserManagementPage() {
             </label>
             <CustomSelect
               value={formData.role}
-              onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' | 'SUPER_ADMIN' })}
+              onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' })}
               options={[
                 { value: 'ADMIN', label: 'Admin' },
-                { value: 'SUPER_ADMIN', label: 'Super Admin' },
               ]}
             />
           </div>

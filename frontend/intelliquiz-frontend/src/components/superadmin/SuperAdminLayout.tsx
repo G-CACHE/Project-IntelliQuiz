@@ -44,9 +44,10 @@ export default function SuperAdminLayout() {
         setUsername(me.username);
 
         if (me.role !== 'SUPER_ADMIN') {
-          if (me.role === 'ADMIN' || me.role === 'EXAMINER') {
+          if (me.role === 'ADMIN') {
             navigate('/admin', { replace: true });
           } else {
+            // EXAMINER and other roles should not access SuperAdmin
             clearAuth();
             navigate('/portal', { replace: true });
           }

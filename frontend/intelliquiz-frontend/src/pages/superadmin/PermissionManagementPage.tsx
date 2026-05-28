@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { BiLock, BiPlus, BiTrash, BiX, BiErrorCircle, BiShield } from 'react-icons/bi';
+import { useEffect, useMemo, useState } from 'react';
+import { BiLock, BiPlus, BiTrash, BiX, BiErrorCircle, BiShield, BiSave, BiEdit } from 'react-icons/bi';
 import CustomSelect from '../../components/common/CustomSelect';
 import { Loader } from '../../components/common/Loader';
+import { usersApi, quizzesApi } from '../../services/api';
 
 interface Quiz {
   id: number;
@@ -12,7 +13,7 @@ interface Quiz {
 interface AdminUser {
   id: number;
   username: string;
-  role: string;
+  role: 'ADMIN' | 'SUPER_ADMIN';
 }
 
 interface QuizAssignment {
@@ -38,15 +39,23 @@ const AVAILABLE_PERMISSIONS: AdminPermission[] = [
   { key: 'CAN_HOST_GAME', label: 'Host Game', description: 'Access live session controls and proctor PIN' },
 ];
 
+const normalizeAssignments = (assignments: QuizAssignment[]) =>
+  assignments
+    .filter((assignment) => assignment.quizId && assignment.quizTitle)
+    .sort((a, b) => a.quizTitle.localeCompare(b.quizTitle));
+
 export default function PermissionManagementPage() {
   const [assignments, setAssignments] = useState<QuizAssignment[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<QuizAssignment | null>(null);
+  const [pendingSaveAssignmentId, setPendingSaveAssignmentId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     adminId: 0,
     quizId: 0,
@@ -55,21 +64,27 @@ export default function PermissionManagementPage() {
 
   useEffect(() => { loadData(); }, []);
 
+  const selectedUser = useMemo(
+    () => admins.find((admin) => String(admin.id) === selectedUserId) ?? null,
+    [admins, selectedUserId],
+  );
+
+  const selectedAssignments = useMemo(() => {
+    if (!selectedUser) return [];
+    return normalizeAssignments(assignments.filter((assignment) => assignment.adminId === selectedUser.id));
+  }, [assignments, selectedUser]);
+
   const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [adminsRes, quizzesRes, assignmentsRes] = await Promise.all([
-        fetch('/api/users', { credentials: 'include' }),
-        fetch('/api/quizzes', { credentials: 'include' }),
-        fetch('/api/users/assignments', { credentials: 'include' }),
+      const [usersRes, quizzesRes] = await Promise.all([
+        usersApi.getAll(),
+        quizzesApi.getAll(),
       ]);
-      if (adminsRes.ok) {
-        const data = await adminsRes.json();
-        setAdmins(data.filter((u: AdminUser) => u.role === 'ADMIN'));
-      }
-      if (quizzesRes.ok) setQuizzes(await quizzesRes.json());
-      if (assignmentsRes.ok) setAssignments(await assignmentsRes.json());
+
+      setAdmins(usersRes.filter((user) => user.role === 'ADMIN'));
+      setQuizzes(quizzesRes);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
@@ -77,40 +92,86 @@ export default function PermissionManagementPage() {
     }
   };
 
-  const handleCreateAssignment = async () => {
+  const loadAssignmentsForUser = async (userId: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await usersApi.getUserAssignments(userId);
+      setAssignments(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load assignments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUserChange = async (value: string) => {
+    setSelectedUserId(value);
+    if (!value) {
+      setAssignments([]);
+      return;
+    }
+    await loadAssignmentsForUser(Number(value));
+  };
+
+  const openCreateModal = () => {
+    if (!selectedUser) {
+      setError('Select an admin user first');
+      return;
+    }
+    setFormData({ adminId: selectedUser.id, quizId: 0, permissions: [] });
+    setShowCreateModal(true);
+  };
+
+  const openEditAssignment = (assignment: QuizAssignment) => {
+    setFormData({
+      adminId: assignment.adminId,
+      quizId: assignment.quizId,
+      permissions: [...assignment.permissions],
+    });
+    setPendingSaveAssignmentId(assignment.id);
+    setShowCreateModal(true);
+  };
+
+  const handleCreateOrUpdateAssignment = async () => {
     if (!formData.adminId || !formData.quizId || formData.permissions.length === 0) {
       setError('Admin, quiz, and at least one permission are required');
       return;
     }
+
+    setSaving(true);
     try {
-      const response = await fetch(`/api/users/${formData.adminId}/permissions`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quizId: formData.quizId, permissions: formData.permissions }),
+      await usersApi.assignPermissions(formData.adminId, {
+        quizId: formData.quizId,
+        permissions: formData.permissions,
       });
-      if (!response.ok) throw new Error('Failed to create assignment');
       setShowCreateModal(false);
+      setPendingSaveAssignmentId(null);
       setFormData({ adminId: 0, quizId: 0, permissions: [] });
-      loadData();
+      if (selectedUserId) {
+        await loadAssignmentsForUser(Number(selectedUserId));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create assignment');
+      setError(err instanceof Error ? err.message : 'Failed to save permissions');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleRevokeAccess = async () => {
     if (!selectedAssignment) return;
+    setSaving(true);
     try {
-      const response = await fetch(
-        `/api/users/${selectedAssignment.adminId}/permissions/${selectedAssignment.quizId}`,
-        { method: 'DELETE', credentials: 'include' }
-      );
-      if (!response.ok) throw new Error('Failed to revoke access');
+      await usersApi.revokePermissions(selectedAssignment.adminId, selectedAssignment.quizId);
       setShowDeleteConfirm(false);
       setSelectedAssignment(null);
-      loadData();
+      if (selectedUserId) {
+        await loadAssignmentsForUser(Number(selectedUserId));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to revoke access');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -123,21 +184,17 @@ export default function PermissionManagementPage() {
     }));
   };
 
-  if (loading) return <Loader />;
+  if (loading && admins.length === 0 && quizzes.length === 0) return <Loader />;
 
   return (
     <div className="superadmin-page">
-      {/* Hero */}
       <div className="sa-page-hero">
         <div className="sa-page-hero-content">
           <div>
             <h1 className="sa-page-hero-title">Permission Management</h1>
-            <p className="sa-page-hero-subtitle">Assign quiz access and capabilities to admin users</p>
+            <p className="sa-page-hero-subtitle">Edit quiz-level permissions for each admin user</p>
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={() => { setFormData({ adminId: 0, quizId: 0, permissions: [] }); setShowCreateModal(true); }}
-          >
+          <button className="btn btn-primary" onClick={openCreateModal} disabled={!selectedUser}>
             <BiPlus size={18} /> Assign Permissions
           </button>
         </div>
@@ -150,17 +207,26 @@ export default function PermissionManagementPage() {
         </div>
       )}
 
-      {/* Permission Legend */}
+      <div className="card sa-card-compact" style={{ marginBottom: 16 }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">Select admin user</label>
+          <CustomSelect
+            value={selectedUserId}
+            onChange={handleUserChange}
+            placeholder="Choose an admin to manage"
+            options={admins.map((admin) => ({
+              value: String(admin.id),
+              label: `${admin.username} (${admin.role})`,
+            }))}
+          />
+        </div>
+      </div>
+
       <div className="grid-4">
         {AVAILABLE_PERMISSIONS.map((perm) => (
           <div key={perm.key} className="card sa-card-compact">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: '#faf2df', border: '1px solid #eadfc2',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#7a1733', flexShrink: 0,
-              }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: '#faf2df', border: '1px solid #eadfc2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7a1733', flexShrink: 0 }}>
                 <BiShield size={16} />
               </div>
               <p style={{ margin: 0, fontWeight: 700, color: '#111111', fontSize: 13 }}>{perm.label}</p>
@@ -170,12 +236,10 @@ export default function PermissionManagementPage() {
         ))}
       </div>
 
-      {/* Assignments Table */}
       <div className="table-container">
         <table className="table">
           <thead>
             <tr>
-              <th>ADMIN USER</th>
               <th>QUIZ</th>
               <th>PERMISSIONS</th>
               <th>ASSIGNED</th>
@@ -183,11 +247,10 @@ export default function PermissionManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {assignments.length > 0 ? (
-              assignments.map((assignment) => (
+            {selectedAssignments.length > 0 ? (
+              selectedAssignments.map((assignment) => (
                 <tr key={assignment.id}>
-                  <td style={{ fontWeight: 600, color: '#111111' }}>{assignment.adminUsername}</td>
-                  <td style={{ color: '#374151' }}>{assignment.quizTitle}</td>
+                  <td style={{ fontWeight: 600, color: '#111111' }}>{assignment.quizTitle}</td>
                   <td>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {assignment.permissions.map((perm) => (
@@ -197,10 +260,11 @@ export default function PermissionManagementPage() {
                       ))}
                     </div>
                   </td>
-                  <td style={{ color: '#6b6264', fontSize: 13 }}>
-                    {new Date(assignment.assignedAt).toLocaleDateString()}
-                  </td>
+                  <td style={{ color: '#6b6264', fontSize: 13 }}>{new Date(assignment.assignedAt).toLocaleDateString()}</td>
                   <td style={{ textAlign: 'right' }}>
+                    <button className="btn-icon" onClick={() => openEditAssignment(assignment)} title="Edit permissions">
+                      <BiEdit size={18} />
+                    </button>
                     <button
                       className="btn-icon danger"
                       onClick={() => { setSelectedAssignment(assignment); setShowDeleteConfirm(true); }}
@@ -213,11 +277,11 @@ export default function PermissionManagementPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={5}>
+                <td colSpan={4}>
                   <div className="empty-state">
                     <BiLock size={48} className="empty-state-icon" />
-                    <h3>No permissions assigned yet</h3>
-                    <p>Create your first assignment to get started</p>
+                    <h3>{selectedUser ? 'No permissions assigned for this admin yet' : 'Select an admin to view permissions'}</h3>
+                    <p>{selectedUser ? 'Use Assign Permissions to grant quiz access' : 'Choose a user from the dropdown above'}</p>
                   </div>
                 </td>
               </tr>
@@ -226,12 +290,11 @@ export default function PermissionManagementPage() {
         </table>
       </div>
 
-      {/* Create Assignment Modal */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 className="modal-title">Assign Quiz Permissions</h2>
+              <h2 className="modal-title">{pendingSaveAssignmentId ? 'Edit Quiz Permissions' : 'Assign Quiz Permissions'}</h2>
               <button onClick={() => setShowCreateModal(false)} className="btn-icon"><BiX size={20} /></button>
             </div>
             <div className="modal-body">
@@ -262,15 +325,7 @@ export default function PermissionManagementPage() {
                   {AVAILABLE_PERMISSIONS.map((perm) => (
                     <label
                       key={perm.key}
-                      style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12,
-                        padding: '12px 14px',
-                        border: `1.5px solid ${formData.permissions.includes(perm.key) ? '#c9a84c' : '#e2d7da'}`,
-                        borderRadius: 12,
-                        background: formData.permissions.includes(perm.key) ? '#faf2df' : '#ffffff',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', border: `1.5px solid ${formData.permissions.includes(perm.key) ? '#c9a84c' : '#e2d7da'}`, borderRadius: 12, background: formData.permissions.includes(perm.key) ? '#faf2df' : '#ffffff', cursor: 'pointer', transition: 'all 0.15s ease' }}
                     >
                       <input
                         type="checkbox"
@@ -289,13 +344,14 @@ export default function PermissionManagementPage() {
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowCreateModal(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={handleCreateAssignment} className="btn btn-primary">Assign</button>
+              <button onClick={handleCreateOrUpdateAssignment} className="btn btn-primary" disabled={saving}>
+                <BiSave size={18} /> {pendingSaveAssignmentId ? 'Save Changes' : 'Assign'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Revoke Confirmation Modal */}
       {showDeleteConfirm && selectedAssignment && (
         <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -305,12 +361,7 @@ export default function PermissionManagementPage() {
             </div>
             <div className="modal-body">
               <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
-                <div style={{
-                  width: 56, height: 56, margin: '0 auto 14px',
-                  background: '#f6e9ed', borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#7a1733',
-                }}>
+                <div style={{ width: 56, height: 56, margin: '0 auto 14px', background: '#f6e9ed', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7a1733' }}>
                   <BiTrash size={26} />
                 </div>
                 <p style={{ color: '#374151', margin: '0 0 4px' }}>
@@ -321,7 +372,7 @@ export default function PermissionManagementPage() {
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={handleRevokeAccess} className="btn btn-danger">Revoke</button>
+              <button onClick={handleRevokeAccess} className="btn btn-danger" disabled={saving}>Revoke</button>
             </div>
           </div>
         </div>

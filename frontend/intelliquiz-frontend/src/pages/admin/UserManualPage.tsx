@@ -734,7 +734,6 @@ function SecuritySection() {
           rows={[
             [<strong>Super Admin</strong>, 'Everything — manage all users, all quizzes, system backups'],
             [<strong>Admin</strong>,       'Create and manage own quizzes, register teams, host sessions'],
-            [<strong>Examiner</strong>,    'Same as Admin but may have restricted access to specific quizzes'],
             [<strong>Proctor</strong>,     'Monitor live sessions, manage violations, kick / approve teams'],
             [<strong>Participant</strong>, 'Join and answer questions in a live session only'],
           ]}

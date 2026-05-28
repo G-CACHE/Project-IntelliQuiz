@@ -131,7 +131,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void userUsernameCannotBeBlank(@ForAll("blankStrings") String blankUsername) {
-        User user = new User(blankUsername, "password123", SystemRole.EXAMINER);
+        User user = new User(blankUsername, "password123", SystemRole.ADMIN);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -143,7 +143,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void userPasswordMustMeetMinimumLength(@ForAll("shortPasswords") String shortPassword) {
-        User user = new User("validuser", shortPassword, SystemRole.EXAMINER);
+        User user = new User("validuser", shortPassword, SystemRole.ADMIN);
         
         assertThatThrownBy(user::validateCredentials)
                 .isInstanceOf(IllegalArgumentException.class)
@@ -157,7 +157,7 @@ public class EntityValidationPropertyTest {
     void userCredentialsValidationAcceptsValidCredentials(
             @ForAll("validUsernames") String username,
             @ForAll("validPasswords") String password) {
-        User user = new User(username, password, SystemRole.EXAMINER);
+        User user = new User(username, password, SystemRole.ADMIN);
         
         // Should not throw
         user.validateCredentials();

@@ -18,6 +18,8 @@ public class BackupProperties {
     private String postgresPassword = "mysecretpassword";
     private String dockerContainerName = "intelliquiz_db";
     private boolean useDockerExec = true;
+    /** Explicit path to the docker binary. If blank, auto-detected from common locations. */
+    private String dockerPath = "";
 
     public String getDirectory() {
         return directory;
@@ -81,5 +83,13 @@ public class BackupProperties {
 
     public void setUseDockerExec(boolean useDockerExec) {
         this.useDockerExec = useDockerExec;
+    }
+
+    public String getDockerPath() {
+        return dockerPath;
+    }
+
+    public void setDockerPath(String dockerPath) {
+        this.dockerPath = dockerPath;
     }
 }

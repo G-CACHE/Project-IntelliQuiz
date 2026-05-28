@@ -616,6 +616,8 @@
 
 .search-input-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .search-input-wrapper .search-icon {
@@ -625,10 +627,12 @@
   transform: translateY(-50%);
   color: #9ca3af;
   z-index: 1;
+  pointer-events: none;
 }
 
 .search-input-wrapper .form-input {
   padding-left: 50px;
+  width: 100%;
 }
 
 /* Form hint text */

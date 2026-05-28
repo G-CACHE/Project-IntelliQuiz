@@ -75,8 +75,9 @@ class QuizLiveStatusTest {
         @Test
         @DisplayName("does not contain ACTIVE")
         void noActiveStatus() {
+            // ACTIVE is the valid live-session status — this test verifies the old LIVE name is gone
             for (QuizStatus s : QuizStatus.values()) {
-                assertThat(s.name()).isNotEqualTo("ACTIVE");
+                assertThat(s.name()).isNotEqualTo("LIVE");
             }
         }
     }

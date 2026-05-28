@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('userId', String(user.id));
 
       // Fetch assignments if user is ADMIN
-      if (user.role === 'ADMIN' || user.role === 'EXAMINER') {
+      if (user.role === 'ADMIN' || user.role === 'ADMIN') {
         const freshAssignments = await currentUserApi.getMyAssignments();
         setAssignments(freshAssignments);
         localStorage.setItem('assignments', JSON.stringify(freshAssignments));
@@ -203,12 +203,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canViewQuiz = (quizId: number, createdByUserId?: number): boolean => {
     // Fallback for legacy/partial payloads where creator id is omitted.
-    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+    if ((role === 'ADMIN') && (createdByUserId === undefined || createdByUserId === null)) {
       return true;
     }
 
     // Check if user is the quiz creator (admins/examiners own their quizzes)
-    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+    if (createdByUserId && (role === 'ADMIN')) {
       const myId = localStorage.getItem('userId');
       if (myId && parseInt(myId) === createdByUserId) {
         return true;
@@ -219,12 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canEditQuiz = (quizId: number, createdByUserId?: number): boolean => {
     // Fallback for legacy/partial payloads where creator id is omitted.
-    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+    if ((role === 'ADMIN') && (createdByUserId === undefined || createdByUserId === null)) {
       return true;
     }
 
     // Check if user is the quiz creator (admins/examiners own their quizzes)
-    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+    if (createdByUserId && (role === 'ADMIN')) {
       const myId = localStorage.getItem('userId');
       if (myId && parseInt(myId) === createdByUserId) {
         return true;
@@ -235,12 +235,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canManageTeams = (quizId: number, createdByUserId?: number): boolean => {
     // Fallback for legacy/partial payloads where creator id is omitted.
-    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+    if ((role === 'ADMIN') && (createdByUserId === undefined || createdByUserId === null)) {
       return true;
     }
 
     // Check if user is the quiz creator (admins/examiners own their quizzes)
-    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+    if (createdByUserId && (role === 'ADMIN')) {
       const myId = localStorage.getItem('userId');
       if (myId && parseInt(myId) === createdByUserId) {
         return true;
@@ -251,12 +251,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canHostGame = (quizId: number, createdByUserId?: number): boolean => {
     // Fallback for legacy/partial payloads where creator id is omitted.
-    if ((role === 'ADMIN' || role === 'EXAMINER') && (createdByUserId === undefined || createdByUserId === null)) {
+    if ((role === 'ADMIN') && (createdByUserId === undefined || createdByUserId === null)) {
       return true;
     }
 
     // Check if user is the quiz creator (admins/examiners own their quizzes)
-    if (createdByUserId && (role === 'ADMIN' || role === 'EXAMINER')) {
+    if (createdByUserId && (role === 'ADMIN')) {
       const myId = localStorage.getItem('userId');
       if (myId && parseInt(myId) === createdByUserId) {
         return true;
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return hasPermissionForQuiz(quizId, PERMISSIONS.CAN_HOST_GAME);
   };
 
-  const isExaminer = (): boolean => role === 'EXAMINER';
+  const isExaminer = (): boolean => role === 'ADMIN';
   const isProctor = (): boolean => role === 'PROCTOR';
   const isParticipant = (): boolean => role === 'PARTICIPANT';
 

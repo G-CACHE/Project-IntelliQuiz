@@ -20,7 +20,7 @@ export default function UsersPage() {
   const [formData, setFormData] = useState<CreateUserRequest>({
     username: '',
     password: '',
-    role: 'EXAMINER',
+    role: 'ADMIN',
   });
   const navigate = useNavigate();
 
@@ -46,14 +46,29 @@ export default function UsersPage() {
   };
 
   const handleCreate = async () => {
-    if (!formData.username.trim()) return setError('Username is required');
-    if (!formData.password.trim()) return setError('Password is required');
-    if (formData.password.length < 8) return setError('Password must be at least 8 characters');
+    // Clear previous errors
+    setError(null);
+
+    // Validate inputs
+    if (!formData.username.trim()) {
+      setError('Username is required');
+      return;
+    }
+    if (!formData.password.trim()) {
+      setError('Password is required');
+      return;
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     try {
       const newUser = await usersApi.create(formData);
       setUsers((prev) => [...prev, newUser]);
       setShowCreateModal(false);
       resetForm();
+      setError(null); // Clear any errors after successful creation
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create user');
     }
@@ -94,8 +109,13 @@ export default function UsersPage() {
   };
 
   const resetForm = () => {
-    setFormData({ username: '', password: '', role: 'EXAMINER' });
+    setFormData({
+      username: '',
+      password: '',
+      role: 'ADMIN'  // Always default to ADMIN
+    });
     setError(null);
+    setSearchQuery(''); // Clear search when resetting form
   };
 
   if (loading) {
@@ -127,7 +147,7 @@ export default function UsersPage() {
       )}
 
       {/* Search */}
-      <div className="card sa-card-compact">
+      <div className="card" style={{ marginBottom: 24 }}>
         <div className="search-input-wrapper">
           <BiSearch size={18} className="search-icon" />
           <input
@@ -136,7 +156,6 @@ export default function UsersPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="form-input"
-            style={{ paddingLeft: 46 }}
           />
         </div>
       </div>
@@ -211,6 +230,11 @@ export default function UsersPage() {
               <button onClick={() => setShowCreateModal(false)} className="btn-icon"><BiX size={18} /></button>
             </div>
             <div className="modal-body">
+              {error && (
+                <div className="form-error-message" style={{ marginBottom: 16, padding: 12, backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, color: '#991b1b', fontSize: 13 }}>
+                  {error}
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Username</label>
                 <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="form-input" placeholder="Enter username" autoFocus />
@@ -223,12 +247,11 @@ export default function UsersPage() {
                 <label className="form-label">Role</label>
                 <CustomSelect
                   value={formData.role}
-                  onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' | 'EXAMINER' | 'SUPER_ADMIN' })}
+                  onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' })}
                   options={[
-                    { value: 'EXAMINER', label: 'Admin' },
-                    { value: 'ADMIN', label: 'Admin (Legacy)' },
-                    { value: 'SUPER_ADMIN', label: 'Super Admin' },
+                    { value: 'ADMIN', label: 'Admin' },
                   ]}
+                  disabled
                 />
               </div>
             </div>

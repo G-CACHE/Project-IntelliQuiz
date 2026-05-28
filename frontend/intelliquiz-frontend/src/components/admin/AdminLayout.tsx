@@ -45,7 +45,7 @@ export default function AdminLayout() {
           return;
         }
 
-        if (me.role !== 'ADMIN' && me.role !== 'EXAMINER') {
+        if (me.role !== 'ADMIN') {
           clearAuth();
           navigate('/portal', { replace: true });
           return;

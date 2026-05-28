@@ -513,7 +513,7 @@ export const violationApi = {
 };
 
 // Types
-export type SystemRole = 'ADMIN' | 'SUPER_ADMIN' | 'EXAMINER' | 'PROCTOR' | 'PARTICIPANT';
+export type SystemRole = 'SUPER_ADMIN' | 'ADMIN' | 'PROCTOR' | 'PARTICIPANT';
 
 export interface User {
   id: number;
@@ -524,7 +524,7 @@ export interface User {
 export interface CreateUserRequest {
   username: string;
   password: string;
-  role: SystemRole;
+  role: Exclude<SystemRole, 'SUPER_ADMIN' | 'PROCTOR' | 'PARTICIPANT'>; // Only ADMIN can be created via API
 }
 
 export interface UpdateUserRequest {

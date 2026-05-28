@@ -91,7 +91,7 @@ public class AccessResolutionPropertyTest {
         AccessResolutionResult result = service.resolve(proctorPin);
         
         assertThat(result.routeType()).isEqualTo(RouteType.INVALID);
-        assertThat(result.errorMessage()).containsIgnoringCase("expired");
+        assertThat(result.errorMessage()).containsIgnoringCase("draft");
     }
 
     /**

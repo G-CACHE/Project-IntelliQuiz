@@ -49,7 +49,7 @@ export default function DashboardPage() {
       setStats({
         totalQuizzes: quizzes.length,
         activeQuizzes: quizzes.filter((q) => q.status === 'ACTIVE').length,
-        totalAdmins: users.filter((u) => u.role === 'ADMIN' || u.role === 'EXAMINER').length,
+        totalAdmins: users.filter((u) => u.role === 'ADMIN' || u.role === 'ADMIN').length,
         draftQuizzes: quizzes.filter((q) => q.status === 'DRAFT').length,
       });
       setRecentQuizzes(quizzes.slice(0, 4));

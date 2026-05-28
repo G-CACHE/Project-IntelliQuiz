@@ -90,8 +90,17 @@ export default function BackupsPage() {
     try {
       const newBackup = await backupsApi.create();
       setBackups((prev) => [newBackup, ...prev]);
-      setSuccess('Backup created successfully');
-      appendLog('Database backup created: ' + newBackup.filename);
+      if (newBackup.status === 'FAILED') {
+        setError(
+          newBackup.errorMessage
+            ? `Backup failed: ${newBackup.errorMessage}`
+            : 'Backup failed. Check server configuration (pg_dump / docker exec).'
+        );
+        appendLog('Backup FAILED: ' + (newBackup.errorMessage ?? 'unknown error'));
+      } else {
+        setSuccess('Backup created successfully');
+        appendLog('Database backup created: ' + newBackup.filename);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create backup');
     } finally {

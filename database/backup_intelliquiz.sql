@@ -2,10 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict JjbdApKfXCDzG2xib6cVUeivf2hxgAumFnEu6KHRfu28nMeIErx2uqLdeq8KNm4
 
--- Dumped from database version 16.11
--- Dumped by pg_dump version 16.11
+-- Dumped from database version 16.14
+-- Dumped by pg_dump version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -18,17 +17,67 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+DROP INDEX IF EXISTS public.idx_vr_team_id;
+DROP INDEX IF EXISTS public.idx_vr_quiz_team;
+DROP INDEX IF EXISTS public.idx_vr_quiz_id;
+DROP INDEX IF EXISTS public.idx_scoreboard_team_id;
+DROP INDEX IF EXISTS public.idx_scoreboard_quiz_id;
+DROP INDEX IF EXISTS public.idx_rt_user_id;
+DROP INDEX IF EXISTS public.idx_rt_expires_at;
+DROP INDEX IF EXISTS public.idx_qbi_type;
+DROP INDEX IF EXISTS public.idx_qbi_owner;
+DROP INDEX IF EXISTS public.idx_qbi_difficulty;
+ALTER TABLE IF EXISTS ONLY public.violation_record DROP CONSTRAINT IF EXISTS violation_record_pkey;
+ALTER TABLE IF EXISTS ONLY public.quiz_assignment DROP CONSTRAINT IF EXISTS ukpvjve2c5x9nnix57smx4yceg6;
+ALTER TABLE IF EXISTS ONLY public.quiz DROP CONSTRAINT IF EXISTS uk_quiz_quiz_code;
+ALTER TABLE IF EXISTS ONLY public.refresh_tokens DROP CONSTRAINT IF EXISTS uk_o2mlirhldriil2y7krapq4frt;
+ALTER TABLE IF EXISTS ONLY public.refresh_tokens DROP CONSTRAINT IF EXISTS refresh_tokens_pkey;
+ALTER TABLE IF EXISTS public.violation_record ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public."user" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.team ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.submission ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.scoreboard_entries ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.refresh_tokens ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.quiz_assignment ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.quiz ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.question_bank_item ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.question ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.backup_record ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE IF EXISTS public.violation_record_id_seq;
+DROP TABLE IF EXISTS public.violation_record;
+DROP SEQUENCE IF EXISTS public.user_id_seq;
+DROP TABLE IF EXISTS public."user";
+DROP SEQUENCE IF EXISTS public.team_id_seq;
+DROP TABLE IF EXISTS public.team;
+DROP SEQUENCE IF EXISTS public.submission_id_seq;
+DROP TABLE IF EXISTS public.submission;
+DROP SEQUENCE IF EXISTS public.scoreboard_entries_id_seq;
+DROP TABLE IF EXISTS public.scoreboard_entries;
+DROP SEQUENCE IF EXISTS public.refresh_tokens_id_seq;
+DROP TABLE IF EXISTS public.refresh_tokens;
+DROP SEQUENCE IF EXISTS public.quiz_id_seq;
+DROP SEQUENCE IF EXISTS public.quiz_assignment_id_seq;
+DROP TABLE IF EXISTS public.quiz_assignment;
+DROP TABLE IF EXISTS public.quiz;
+DROP TABLE IF EXISTS public.question_option;
+DROP SEQUENCE IF EXISTS public.question_id_seq;
+DROP TABLE IF EXISTS public.question_bank_option;
+DROP SEQUENCE IF EXISTS public.question_bank_item_id_seq;
+DROP TABLE IF EXISTS public.question_bank_item;
+DROP TABLE IF EXISTS public.question;
+DROP SEQUENCE IF EXISTS public.backup_record_id_seq;
+DROP TABLE IF EXISTS public.backup_record;
+DROP TABLE IF EXISTS public.assignment_permission;
+-- *not* dropping schema, since initdb creates it
 --
--- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
 -- *not* creating schema, since initdb creates it
 
 
-ALTER SCHEMA public OWNER TO postgres;
-
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON SCHEMA public IS '';
@@ -39,7 +88,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: assignment_permission; Type: TABLE; Schema: public; Owner: postgres
+-- Name: assignment_permission; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.assignment_permission (
@@ -49,10 +98,8 @@ CREATE TABLE public.assignment_permission (
 );
 
 
-ALTER TABLE public.assignment_permission OWNER TO postgres;
-
 --
--- Name: backup_record; Type: TABLE; Schema: public; Owner: postgres
+-- Name: backup_record; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.backup_record (
@@ -69,10 +116,8 @@ CREATE TABLE public.backup_record (
 );
 
 
-ALTER TABLE public.backup_record OWNER TO postgres;
-
 --
--- Name: backup_record_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: backup_record_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.backup_record_id_seq
@@ -83,17 +128,15 @@ CREATE SEQUENCE public.backup_record_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.backup_record_id_seq OWNER TO postgres;
-
 --
--- Name: backup_record_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: backup_record_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.backup_record_id_seq OWNED BY public.backup_record.id;
 
 
 --
--- Name: question; Type: TABLE; Schema: public; Owner: postgres
+-- Name: question; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.question (
@@ -113,10 +156,8 @@ CREATE TABLE public.question (
 );
 
 
-ALTER TABLE public.question OWNER TO postgres;
-
 --
--- Name: question_bank_item; Type: TABLE; Schema: public; Owner: postgres
+-- Name: question_bank_item; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.question_bank_item (
@@ -131,15 +172,16 @@ CREATE TABLE public.question_bank_item (
     text text NOT NULL,
     time_limit integer,
     question_type character varying(255) NOT NULL,
-    CONSTRAINT question_bank_item_difficulty_check CHECK (((difficulty)::text = ANY ((ARRAY['EASY'::character varying, 'MEDIUM'::character varying, 'HARD'::character varying, 'TIE_BREAKER'::character varying])::text[]))),
-    CONSTRAINT question_bank_item_question_type_check CHECK (((question_type)::text = ANY ((ARRAY['MULTIPLE_CHOICE'::character varying, 'TRUE_FALSE'::character varying, 'IDENTIFICATION'::character varying])::text[])))
+    category character varying(255),
+    is_harvested boolean NOT NULL,
+    source_quiz_title character varying(255),
+    CONSTRAINT question_bank_item_difficulty_check CHECK (((difficulty)::text = ANY (ARRAY[('EASY'::character varying)::text, ('MEDIUM'::character varying)::text, ('HARD'::character varying)::text, ('TIE_BREAKER'::character varying)::text]))),
+    CONSTRAINT question_bank_item_question_type_check CHECK (((question_type)::text = ANY (ARRAY[('MULTIPLE_CHOICE'::character varying)::text, ('TRUE_FALSE'::character varying)::text, ('IDENTIFICATION'::character varying)::text])))
 );
 
 
-ALTER TABLE public.question_bank_item OWNER TO postgres;
-
 --
--- Name: question_bank_item_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: question_bank_item_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.question_bank_item_id_seq
@@ -150,17 +192,15 @@ CREATE SEQUENCE public.question_bank_item_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.question_bank_item_id_seq OWNER TO postgres;
-
 --
--- Name: question_bank_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: question_bank_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.question_bank_item_id_seq OWNED BY public.question_bank_item.id;
 
 
 --
--- Name: question_bank_option; Type: TABLE; Schema: public; Owner: postgres
+-- Name: question_bank_option; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.question_bank_option (
@@ -169,10 +209,8 @@ CREATE TABLE public.question_bank_option (
 );
 
 
-ALTER TABLE public.question_bank_option OWNER TO postgres;
-
 --
--- Name: question_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: question_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.question_id_seq
@@ -183,17 +221,15 @@ CREATE SEQUENCE public.question_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.question_id_seq OWNER TO postgres;
-
 --
--- Name: question_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: question_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.question_id_seq OWNED BY public.question.id;
 
 
 --
--- Name: question_option; Type: TABLE; Schema: public; Owner: postgres
+-- Name: question_option; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.question_option (
@@ -202,10 +238,8 @@ CREATE TABLE public.question_option (
 );
 
 
-ALTER TABLE public.question_option OWNER TO postgres;
-
 --
--- Name: quiz; Type: TABLE; Schema: public; Owner: postgres
+-- Name: quiz; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.quiz (
@@ -226,10 +260,8 @@ CREATE TABLE public.quiz (
 );
 
 
-ALTER TABLE public.quiz OWNER TO postgres;
-
 --
--- Name: quiz_assignment; Type: TABLE; Schema: public; Owner: postgres
+-- Name: quiz_assignment; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.quiz_assignment (
@@ -240,10 +272,8 @@ CREATE TABLE public.quiz_assignment (
 );
 
 
-ALTER TABLE public.quiz_assignment OWNER TO postgres;
-
 --
--- Name: quiz_assignment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: quiz_assignment_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.quiz_assignment_id_seq
@@ -254,17 +284,15 @@ CREATE SEQUENCE public.quiz_assignment_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.quiz_assignment_id_seq OWNER TO postgres;
-
 --
--- Name: quiz_assignment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: quiz_assignment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.quiz_assignment_id_seq OWNED BY public.quiz_assignment.id;
 
 
 --
--- Name: quiz_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: quiz_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.quiz_id_seq
@@ -275,17 +303,50 @@ CREATE SEQUENCE public.quiz_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.quiz_id_seq OWNER TO postgres;
-
 --
--- Name: quiz_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: quiz_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.quiz_id_seq OWNED BY public.quiz.id;
 
 
 --
--- Name: scoreboard_entries; Type: TABLE; Schema: public; Owner: postgres
+-- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.refresh_tokens (
+    id bigint NOT NULL,
+    created_at timestamp(6) with time zone NOT NULL,
+    expires_at timestamp(6) with time zone NOT NULL,
+    revoked boolean NOT NULL,
+    role character varying(255) NOT NULL,
+    token_hash character varying(255) NOT NULL,
+    user_id bigint NOT NULL,
+    username character varying(255) NOT NULL
+);
+
+
+--
+-- Name: refresh_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.refresh_tokens_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: refresh_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.refresh_tokens_id_seq OWNED BY public.refresh_tokens.id;
+
+
+--
+-- Name: scoreboard_entries; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.scoreboard_entries (
@@ -300,10 +361,8 @@ CREATE TABLE public.scoreboard_entries (
 );
 
 
-ALTER TABLE public.scoreboard_entries OWNER TO postgres;
-
 --
--- Name: scoreboard_entries_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: scoreboard_entries_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.scoreboard_entries_id_seq
@@ -314,17 +373,15 @@ CREATE SEQUENCE public.scoreboard_entries_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.scoreboard_entries_id_seq OWNER TO postgres;
-
 --
--- Name: scoreboard_entries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: scoreboard_entries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.scoreboard_entries_id_seq OWNED BY public.scoreboard_entries.id;
 
 
 --
--- Name: submission; Type: TABLE; Schema: public; Owner: postgres
+-- Name: submission; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.submission (
@@ -340,10 +397,8 @@ CREATE TABLE public.submission (
 );
 
 
-ALTER TABLE public.submission OWNER TO postgres;
-
 --
--- Name: submission_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: submission_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.submission_id_seq
@@ -354,17 +409,15 @@ CREATE SEQUENCE public.submission_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.submission_id_seq OWNER TO postgres;
-
 --
--- Name: submission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: submission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.submission_id_seq OWNED BY public.submission.id;
 
 
 --
--- Name: team; Type: TABLE; Schema: public; Owner: postgres
+-- Name: team; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.team (
@@ -373,14 +426,14 @@ CREATE TABLE public.team (
     name character varying(255) NOT NULL,
     total_score integer,
     quiz_id bigint NOT NULL,
-    deleted boolean DEFAULT false NOT NULL
+    deleted boolean DEFAULT false NOT NULL,
+    device_id character varying(255),
+    members text
 );
 
 
-ALTER TABLE public.team OWNER TO postgres;
-
 --
--- Name: team_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: team_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.team_id_seq
@@ -391,17 +444,15 @@ CREATE SEQUENCE public.team_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.team_id_seq OWNER TO postgres;
-
 --
--- Name: team_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: team_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.team_id_seq OWNED BY public.team.id;
 
 
 --
--- Name: user; Type: TABLE; Schema: public; Owner: postgres
+-- Name: user; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."user" (
@@ -410,14 +461,12 @@ CREATE TABLE public."user" (
     system_role character varying(255) NOT NULL,
     username character varying(255) NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
-    CONSTRAINT user_system_role_check CHECK (((system_role)::text = ANY (ARRAY[('SUPER_ADMIN'::character varying)::text, ('ADMIN'::character varying)::text])))
+    CONSTRAINT user_system_role_check CHECK (((system_role)::text = ANY (ARRAY['SUPER_ADMIN'::text, 'ADMIN'::text])))
 );
 
 
-ALTER TABLE public."user" OWNER TO postgres;
-
 --
--- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.user_id_seq
@@ -428,80 +477,126 @@ CREATE SEQUENCE public.user_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.user_id_seq OWNER TO postgres;
-
 --
--- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.user_id_seq OWNED BY public."user".id;
 
 
 --
--- Name: backup_record id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: violation_record; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.violation_record (
+    id bigint NOT NULL,
+    deleted boolean DEFAULT false NOT NULL,
+    detected_at timestamp(6) without time zone NOT NULL,
+    quiz_id bigint NOT NULL,
+    team_id bigint NOT NULL,
+    violation_type character varying(255) NOT NULL,
+    CONSTRAINT violation_record_violation_type_check CHECK (((violation_type)::text = ANY ((ARRAY['TAB_SWITCH'::character varying, 'COPY_ATTEMPT'::character varying, 'RIGHT_CLICK'::character varying, 'PRINT_SCREEN'::character varying])::text[])))
+);
+
+
+--
+-- Name: violation_record_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.violation_record_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: violation_record_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.violation_record_id_seq OWNED BY public.violation_record.id;
+
+
+--
+-- Name: backup_record id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.backup_record ALTER COLUMN id SET DEFAULT nextval('public.backup_record_id_seq'::regclass);
 
 
 --
--- Name: question id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: question id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.question ALTER COLUMN id SET DEFAULT nextval('public.question_id_seq'::regclass);
 
 
 --
--- Name: question_bank_item id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: question_bank_item id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.question_bank_item ALTER COLUMN id SET DEFAULT nextval('public.question_bank_item_id_seq'::regclass);
 
 
 --
--- Name: quiz id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: quiz id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.quiz ALTER COLUMN id SET DEFAULT nextval('public.quiz_id_seq'::regclass);
 
 
 --
--- Name: quiz_assignment id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: quiz_assignment id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.quiz_assignment ALTER COLUMN id SET DEFAULT nextval('public.quiz_assignment_id_seq'::regclass);
 
 
 --
--- Name: scoreboard_entries id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: refresh_tokens id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.refresh_tokens ALTER COLUMN id SET DEFAULT nextval('public.refresh_tokens_id_seq'::regclass);
+
+
+--
+-- Name: scoreboard_entries id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.scoreboard_entries ALTER COLUMN id SET DEFAULT nextval('public.scoreboard_entries_id_seq'::regclass);
 
 
 --
--- Name: submission id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: submission id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.submission ALTER COLUMN id SET DEFAULT nextval('public.submission_id_seq'::regclass);
 
 
 --
--- Name: team id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: team id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.team ALTER COLUMN id SET DEFAULT nextval('public.team_id_seq'::regclass);
 
 
 --
--- Name: user id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: user id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."user" ALTER COLUMN id SET DEFAULT nextval('public.user_id_seq'::regclass);
 
 
 --
--- Data for Name: assignment_permission; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Name: violation_record id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.violation_record ALTER COLUMN id SET DEFAULT nextval('public.violation_record_id_seq'::regclass);
+
+
+--
+-- Data for Name: assignment_permission; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.assignment_permission (assignment_id, permission) FROM stdin;
@@ -521,7 +616,7 @@ COPY public.assignment_permission (assignment_id, permission) FROM stdin;
 
 
 --
--- Data for Name: backup_record; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: backup_record; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.backup_record (id, created_at, error_message, file_size_bytes, filename, last_restored_at, status, created_by_user_id, deleted) FROM stdin;
@@ -531,26 +626,26 @@ COPY public.backup_record (id, created_at, error_message, file_size_bytes, filen
 
 
 --
--- Data for Name: question; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: question; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.question (id, correct_key, difficulty, order_index, points, text, time_limit, type, quiz_id, deleted) FROM stdin;
-1	A	EASY	0	20	1+1	1000	MULTIPLE_CHOICE	1	f
-2	B	EASY	0	1	1+1	30	MULTIPLE_CHOICE	3	f
-3	B	EASY	1	10	2+2	30	MULTIPLE_CHOICE	3	f
+COPY public.question (id, correct_key, difficulty, order_index, points, text, time_limit, type, quiz_id, case_sensitive, deleted) FROM stdin;
+1	A	EASY	0	20	1+1	1000	MULTIPLE_CHOICE	1	f	f
+2	B	EASY	0	1	1+1	30	MULTIPLE_CHOICE	3	f	f
+3	B	EASY	1	10	2+2	30	MULTIPLE_CHOICE	3	f	f
 \.
 
 
 --
--- Data for Name: question_bank_item; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: question_bank_item; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.question_bank_item (id, correct_key, created_at, difficulty, owner_user_id, points, source_question_id, source_quiz_id, text, time_limit, question_type) FROM stdin;
+COPY public.question_bank_item (id, correct_key, created_at, difficulty, owner_user_id, points, source_question_id, source_quiz_id, text, time_limit, question_type, category, is_harvested, source_quiz_title) FROM stdin;
 \.
 
 
 --
--- Data for Name: question_bank_option; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: question_bank_option; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.question_bank_option (question_bank_item_id, option_text) FROM stdin;
@@ -558,7 +653,7 @@ COPY public.question_bank_option (question_bank_item_id, option_text) FROM stdin
 
 
 --
--- Data for Name: question_option; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: question_option; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.question_option (question_id, option_text) FROM stdin;
@@ -578,18 +673,18 @@ COPY public.question_option (question_id, option_text) FROM stdin;
 
 
 --
--- Data for Name: quiz; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: quiz; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.quiz (id, description, is_live_session, proctor_pin, status, title, deleted, created_by_user_id) FROM stdin;
-1		f	101-513	DRAFT	Science Quiz Bee	f	\N
-2		f	601-436	DRAFT	Math	f	\N
-3		t	888-702	READY	Earth Science	f	\N
+COPY public.quiz (id, description, is_live_session, proctor_pin, quiz_code, status, title, deleted, created_by_user_id, access_mode, navigation_mode, global_time_limit_seconds, randomize_questions) FROM stdin;
+1		f	101-513	\N	DRAFT	Science Quiz Bee	f	\N	RESTRICTED	TOURNAMENT	0	f
+2		f	601-436	\N	DRAFT	Math	f	\N	RESTRICTED	TOURNAMENT	0	f
+3		t	888-702	\N	READY	Earth Science	f	\N	RESTRICTED	TOURNAMENT	0	f
 \.
 
 
 --
--- Data for Name: quiz_assignment; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: quiz_assignment; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.quiz_assignment (id, quiz_id, user_id, deleted) FROM stdin;
@@ -600,7 +695,15 @@ COPY public.quiz_assignment (id, quiz_id, user_id, deleted) FROM stdin;
 
 
 --
--- Data for Name: scoreboard_entries; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.refresh_tokens (id, created_at, expires_at, revoked, role, token_hash, user_id, username) FROM stdin;
+\.
+
+
+--
+-- Data for Name: scoreboard_entries; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.scoreboard_entries (id, is_tied, quiz_id, rank, score, team_id, team_name, deleted) FROM stdin;
@@ -609,7 +712,7 @@ COPY public.scoreboard_entries (id, is_tied, quiz_id, rank, score, team_id, team
 
 
 --
--- Data for Name: submission; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: submission; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.submission (id, awarded_points, is_correct, is_graded, submitted_answer, submitted_at, question_id, team_id, deleted) FROM stdin;
@@ -617,16 +720,16 @@ COPY public.submission (id, awarded_points, is_correct, is_graded, submitted_ans
 
 
 --
--- Data for Name: team; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: team; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.team (id, access_code, name, total_score, quiz_id, deleted) FROM stdin;
-1	TZV-7TV	Errawrs	0	3	f
+COPY public.team (id, access_code, name, total_score, quiz_id, deleted, device_id, members) FROM stdin;
+1	TZV-7TV	Errawrs	0	3	f	\N	\N
 \.
 
 
 --
--- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public."user" (id, password, system_role, username, deleted) FROM stdin;
@@ -637,142 +740,108 @@ COPY public."user" (id, password, system_role, username, deleted) FROM stdin;
 
 
 --
--- Name: backup_record_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: violation_record; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.backup_record_id_seq', 8, true);
+COPY public.violation_record (id, deleted, detected_at, quiz_id, team_id, violation_type) FROM stdin;
+\.
 
 
 --
--- Name: question_bank_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: backup_record_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.backup_record_id_seq', 1, false);
+
+
+--
+-- Name: question_bank_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.question_bank_item_id_seq', 1, false);
 
 
 --
--- Name: question_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: question_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.question_id_seq', 3, true);
-
-
---
--- Name: quiz_assignment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.quiz_assignment_id_seq', 3, true);
+SELECT pg_catalog.setval('public.question_id_seq', 1, false);
 
 
 --
--- Name: quiz_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: quiz_assignment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.quiz_id_seq', 3, true);
-
-
---
--- Name: scoreboard_entries_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.scoreboard_entries_id_seq', 1, true);
+SELECT pg_catalog.setval('public.quiz_assignment_id_seq', 1, false);
 
 
 --
--- Name: submission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: quiz_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.quiz_id_seq', 1, false);
+
+
+--
+-- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.refresh_tokens_id_seq', 1, false);
+
+
+--
+-- Name: scoreboard_entries_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.scoreboard_entries_id_seq', 1, false);
+
+
+--
+-- Name: submission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.submission_id_seq', 1, false);
 
 
 --
--- Name: team_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: team_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.team_id_seq', 1, true);
+SELECT pg_catalog.setval('public.team_id_seq', 1, false);
 
 
 --
--- Name: user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.user_id_seq', 3, true);
 
 
 --
--- Name: backup_record backup_record_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: violation_record_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.backup_record
-    ADD CONSTRAINT backup_record_pkey PRIMARY KEY (id);
-
-
---
--- Name: question_bank_item question_bank_item_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.question_bank_item
-    ADD CONSTRAINT question_bank_item_pkey PRIMARY KEY (id);
+SELECT pg_catalog.setval('public.violation_record_id_seq', 1, false);
 
 
 --
--- Name: question question_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.question
-    ADD CONSTRAINT question_pkey PRIMARY KEY (id);
-
-
---
--- Name: quiz_assignment quiz_assignment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.quiz_assignment
-    ADD CONSTRAINT quiz_assignment_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id);
 
 
 --
--- Name: quiz quiz_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: refresh_tokens uk_o2mlirhldriil2y7krapq4frt; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.quiz
-    ADD CONSTRAINT quiz_pkey PRIMARY KEY (id);
-
-
---
--- Name: scoreboard_entries scoreboard_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.scoreboard_entries
-    ADD CONSTRAINT scoreboard_entries_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT uk_o2mlirhldriil2y7krapq4frt UNIQUE (token_hash);
 
 
 --
--- Name: submission submission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.submission
-    ADD CONSTRAINT submission_pkey PRIMARY KEY (id);
-
-
---
--- Name: team team_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.team
-    ADD CONSTRAINT team_pkey PRIMARY KEY (id);
-
-
---
--- Name: scoreboard_entries uk_209tg1o0uit4frd88bpcmay1o; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.scoreboard_entries
-    ADD CONSTRAINT uk_209tg1o0uit4frd88bpcmay1o UNIQUE (team_id);
-
-
---
--- Name: quiz uk_quiz_quiz_code; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: quiz uk_quiz_quiz_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.quiz
@@ -780,23 +849,7 @@ ALTER TABLE ONLY public.quiz
 
 
 --
--- Name: user uk_sb8bbouer5wak8vyiiy4pf2bx; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."user"
-    ADD CONSTRAINT uk_sb8bbouer5wak8vyiiy4pf2bx UNIQUE (username);
-
-
---
--- Name: backup_record uk_seu5k8o0adwisaothfectynqk; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.backup_record
-    ADD CONSTRAINT uk_seu5k8o0adwisaothfectynqk UNIQUE (filename);
-
-
---
--- Name: quiz_assignment ukpvjve2c5x9nnix57smx4yceg6; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: quiz_assignment ukpvjve2c5x9nnix57smx4yceg6; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.quiz_assignment
@@ -804,197 +857,85 @@ ALTER TABLE ONLY public.quiz_assignment
 
 
 --
--- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: violation_record violation_record_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public."user"
-    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.violation_record
+    ADD CONSTRAINT violation_record_pkey PRIMARY KEY (id);
 
 
 --
--- Name: idx_qbi_difficulty; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_qbi_difficulty; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_qbi_difficulty ON public.question_bank_item USING btree (difficulty);
 
 
 --
--- Name: idx_qbi_owner; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_qbi_owner; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_qbi_owner ON public.question_bank_item USING btree (owner_user_id);
 
 
 --
--- Name: idx_qbi_type; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_qbi_type; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_qbi_type ON public.question_bank_item USING btree (question_type);
 
 
 --
--- Name: idx_scoreboard_quiz_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_rt_expires_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rt_expires_at ON public.refresh_tokens USING btree (expires_at);
+
+
+--
+-- Name: idx_rt_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rt_user_id ON public.refresh_tokens USING btree (user_id);
+
+
+--
+-- Name: idx_scoreboard_quiz_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_scoreboard_quiz_id ON public.scoreboard_entries USING btree (quiz_id);
 
 
 --
--- Name: idx_scoreboard_team_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_scoreboard_team_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_scoreboard_team_id ON public.scoreboard_entries USING btree (team_id);
 
 
 --
--- Name: backup_record fk5vi0ttd1g38h8yk1xdtfv1g6i; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: idx_vr_quiz_id; Type: INDEX; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.backup_record
-    ADD CONSTRAINT fk5vi0ttd1g38h8yk1xdtfv1g6i FOREIGN KEY (created_by_user_id) REFERENCES public."user"(id);
-
-
---
--- Name: assignment_permission fk6ef1m1cs1ioqdwlexuxb1880e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.assignment_permission
-    ADD CONSTRAINT fk6ef1m1cs1ioqdwlexuxb1880e FOREIGN KEY (assignment_id) REFERENCES public.quiz_assignment(id);
+CREATE INDEX idx_vr_quiz_id ON public.violation_record USING btree (quiz_id);
 
 
 --
--- Name: quiz_assignment fkammnyuufr9j6osu3agec84cvx; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: idx_vr_quiz_team; Type: INDEX; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.quiz_assignment
-    ADD CONSTRAINT fkammnyuufr9j6osu3agec84cvx FOREIGN KEY (quiz_id) REFERENCES public.quiz(id);
-
-
---
--- Name: question fkb0yh0c1qaxfwlcnwo9dms2txf; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.question
-    ADD CONSTRAINT fkb0yh0c1qaxfwlcnwo9dms2txf FOREIGN KEY (quiz_id) REFERENCES public.quiz(id);
+CREATE INDEX idx_vr_quiz_team ON public.violation_record USING btree (quiz_id, team_id);
 
 
 --
--- Name: team fkg5ffl41mlfyt7lasn0h4715m8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: idx_vr_team_id; Type: INDEX; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.team
-    ADD CONSTRAINT fkg5ffl41mlfyt7lasn0h4715m8 FOREIGN KEY (quiz_id) REFERENCES public.quiz(id);
-
-
---
--- Name: question_bank_option fkgnjl452ii5hhkspm85hmu7fwl; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.question_bank_option
-    ADD CONSTRAINT fkgnjl452ii5hhkspm85hmu7fwl FOREIGN KEY (question_bank_item_id) REFERENCES public.question_bank_item(id);
-
-
---
--- Name: submission fkjskf22duewv7lid6te7nnixdq; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.submission
-    ADD CONSTRAINT fkjskf22duewv7lid6te7nnixdq FOREIGN KEY (question_id) REFERENCES public.question(id);
-
-
---
--- Name: submission fkmgn97o68jw1xnlhje4luw2xmp; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.submission
-    ADD CONSTRAINT fkmgn97o68jw1xnlhje4luw2xmp FOREIGN KEY (team_id) REFERENCES public.team(id);
-
-
---
--- Name: question_option fkmmdv54rmm5hkgxbn1008ix87n; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.question_option
-    ADD CONSTRAINT fkmmdv54rmm5hkgxbn1008ix87n FOREIGN KEY (question_id) REFERENCES public.question(id);
-
-
---
--- Name: quiz_assignment fkq15xgwiqmg5qo6wypkrrkcc5k; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.quiz_assignment
-    ADD CONSTRAINT fkq15xgwiqmg5qo6wypkrrkcc5k FOREIGN KEY (user_id) REFERENCES public."user"(id);
-
-
---
--- JWT refresh token storage (added for auth token rotation support)
---
-
-CREATE TABLE IF NOT EXISTS public.refresh_tokens (
-    id bigint GENERATED BY DEFAULT AS IDENTITY NOT NULL,
-    token_hash text NOT NULL,
-    user_id bigint NOT NULL,
-    username text NOT NULL,
-    role text NOT NULL,
-    expires_at timestamp(6) with time zone NOT NULL,
-    revoked boolean DEFAULT false NOT NULL,
-    created_at timestamp(6) with time zone DEFAULT now() NOT NULL
-);
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'refresh_tokens_pkey'
-    ) THEN
-        ALTER TABLE ONLY public.refresh_tokens
-            ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id);
-    END IF;
-END
-$$;
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'uk_refresh_tokens_token_hash'
-    ) THEN
-        ALTER TABLE ONLY public.refresh_tokens
-            ADD CONSTRAINT uk_refresh_tokens_token_hash UNIQUE (token_hash);
-    END IF;
-END
-$$;
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'fk_refresh_tokens_user_id'
-    ) THEN
-        ALTER TABLE ONLY public.refresh_tokens
-            ADD CONSTRAINT fk_refresh_tokens_user_id
-            FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
-    END IF;
-END
-$$;
-
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON public.refresh_tokens USING btree (user_id);
-CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON public.refresh_tokens USING btree (expires_at);
-
-
---
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+CREATE INDEX idx_vr_team_id ON public.violation_record USING btree (team_id);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JjbdApKfXCDzG2xib6cVUeivf2hxgAumFnEu6KHRfu28nMeIErx2uqLdeq8KNm4
 
