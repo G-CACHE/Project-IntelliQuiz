@@ -23,7 +23,7 @@ const navItems: NavItem[] = [
   { path: '/superadmin', label: 'Dashboard', icon: <Home size={18} /> },
   { path: '/superadmin/users', label: 'Users', icon: <User size={18} /> },
   { path: '/superadmin/permissions', label: 'Permissions', icon: <Shield size={18} /> },
-  { path: '/superadmin/backups', label: 'Backups', icon: <Database size={18} /> },
+  { path: '/superadmin/backups', label: 'Maintenance', icon: <Database size={18} /> },
 ];
 
 export default function SuperAdminLayout() {
