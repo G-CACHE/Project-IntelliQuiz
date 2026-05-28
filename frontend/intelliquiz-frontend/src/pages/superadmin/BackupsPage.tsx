@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  BiData,
-  BiPlus,
-  BiDownload,
-  BiTrash,
-  BiX,
-  BiErrorCircle,
-  BiCheckCircle,
-  BiTime,
-  BiHistory,
+  BiPlus, BiDownload, BiTrash, BiX,
+  BiErrorCircle, BiCheckCircle, BiTime, BiHistory,
 } from 'react-icons/bi';
 import { backupsApi, type BackupRecord } from '../../services/api';
 
@@ -23,9 +16,7 @@ export default function BackupsPage() {
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<BackupRecord | null>(null);
 
-  useEffect(() => {
-    loadBackups();
-  }, []);
+  useEffect(() => { loadBackups(); }, []);
 
   const loadBackups = async () => {
     setLoading(true);
@@ -46,7 +37,7 @@ export default function BackupsPage() {
     setSuccess(null);
     try {
       const newBackup = await backupsApi.create();
-      setBackups(prev => [newBackup, ...prev]);
+      setBackups((prev) => [newBackup, ...prev]);
       setSuccess('Backup created successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create backup');
@@ -63,7 +54,7 @@ export default function BackupsPage() {
     setShowRestoreModal(false);
     try {
       await backupsApi.restore(selectedBackup.id);
-      setSuccess(`Database restored from backup "${selectedBackup.filename}"`);
+      setSuccess(`Database restored from "${selectedBackup.filename}"`);
       await loadBackups();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to restore backup');
@@ -73,15 +64,14 @@ export default function BackupsPage() {
     }
   };
 
-
   const handleDelete = async () => {
     if (!selectedBackup) return;
     try {
       await backupsApi.delete(selectedBackup.id);
-      setBackups(prev => prev.filter(b => b.id !== selectedBackup.id));
+      setBackups((prev) => prev.filter((b) => b.id !== selectedBackup.id));
       setShowDeleteModal(false);
       setSelectedBackup(null);
-      setSuccess('Backup deleted successfully');
+      setSuccess('Backup deleted');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete backup');
     }
@@ -89,26 +79,22 @@ export default function BackupsPage() {
 
   const handleDownload = (backup: BackupRecord) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    const url = `${baseUrl}/api/backups/${backup.id}/download`;
-    
-    fetch(url, {
-      credentials: 'include',
-    })
-      .then(response => response.blob())
-      .then(blob => {
-        const downloadUrl = window.URL.createObjectURL(blob);
+    fetch(`${baseUrl}/api/backups/${backup.id}/download`, { credentials: 'include' })
+      .then((r) => r.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = downloadUrl;
+        a.href = url;
         a.download = backup.filename;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(downloadUrl);
+        window.URL.revokeObjectURL(url);
         a.remove();
       })
       .catch(() => setError('Failed to download backup'));
   };
 
-  const formatFileSize = (bytes: number) => {
+  const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
@@ -116,100 +102,60 @@ export default function BackupsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString();
-  };
+  const formatDate = (d: string) => new Date(d).toLocaleString();
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'SUCCESS':
-        return <span className="badge badge-success"><BiCheckCircle size={14} /> Success</span>;
-      case 'FAILED':
-        return <span className="badge badge-danger"><BiErrorCircle size={14} /> Failed</span>;
-      case 'IN_PROGRESS':
-        return <span className="badge badge-warning"><BiTime size={14} /> In Progress</span>;
-      default:
-        return <span className="badge">{status}</span>;
-    }
+  const StatusBadge = ({ status }: { status: string }) => {
+    if (status === 'SUCCESS') return <span className="badge badge-success"><BiCheckCircle size={12} /> Success</span>;
+    if (status === 'FAILED') return <span className="badge badge-danger"><BiErrorCircle size={12} /> Failed</span>;
+    return <span className="badge badge-warning"><BiTime size={12} /> In Progress</span>;
   };
 
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner" />
-      </div>
-    );
+    return <div className="loading-container"><div className="loading-spinner" /></div>;
   }
-
 
   return (
     <div className="superadmin-page">
-      {/* Page Header */}
+
+      {/* Hero */}
       <div className="sa-page-hero">
-        <div className="sa-page-hero-orb orb-a" />
-        <div className="sa-page-hero-orb orb-b" />
-        <div className="sa-page-hero-orb orb-c" />
-        
         <div className="sa-page-hero-content">
-          <div className="sa-page-hero-left">
-            <div className="sa-page-hero-icon">
-              <BiData size={28} />
-            </div>
-            <div>
-              <h1 className="sa-page-hero-title">Database Backups</h1>
-              <p className="sa-page-hero-subtitle">Create, restore, and manage database backups</p>
-            </div>
+          <div>
+            <h1 className="sa-page-hero-title">Database Backups</h1>
+            <p className="sa-page-hero-subtitle">Create, restore, and manage database snapshots</p>
           </div>
-          <button 
-            className="btn btn-primary" 
-            onClick={handleCreate}
-            disabled={creating}
-          >
-            {creating ? (
-              <><div className="loading-spinner" style={{ width: 18, height: 18 }} /> Creating...</>
-            ) : (
-              <><BiPlus size={18} /> Create Backup</>
-            )}
+          <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
+            {creating
+              ? <><div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Creating…</>
+              : <><BiPlus size={16} /> Create Backup</>}
           </button>
         </div>
       </div>
 
       {/* Alerts */}
       {error && (
-        <div className="alert alert-error" style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div className="alert-content">
-            <BiErrorCircle size={20} />
-            <span>{error}</span>
-          </div>
-          <button onClick={() => setError(null)} className="btn-icon">
-            <BiX size={20} />
-          </button>
+        <div className="alert alert-error">
+          <div className="alert-content"><BiErrorCircle size={18} /><span>{error}</span></div>
+          <button onClick={() => setError(null)} className="btn-icon"><BiX size={18} /></button>
         </div>
       )}
-
       {success && (
-        <div className="alert alert-success" style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div className="alert-content">
-            <BiCheckCircle size={20} />
-            <span>{success}</span>
-          </div>
-          <button onClick={() => setSuccess(null)} className="btn-icon">
-            <BiX size={20} />
-          </button>
+        <div className="alert alert-success">
+          <div className="alert-content"><BiCheckCircle size={18} /><span>{success}</span></div>
+          <button onClick={() => setSuccess(null)} className="btn-icon"><BiX size={18} /></button>
         </div>
       )}
 
-
-      {/* Backups Table */}
+      {/* Table */}
       <div className="table-container">
         <table className="table">
           <thead>
             <tr>
-              <th>BACKUP</th>
+              <th>FILENAME</th>
               <th>STATUS</th>
               <th>SIZE</th>
               <th>CREATED BY</th>
-              <th>LAST RESTORED</th>
+              <th>DATE</th>
               <th style={{ textAlign: 'right' }}>ACTIONS</th>
             </tr>
           </thead>
@@ -218,88 +164,51 @@ export default function BackupsPage() {
               backups.map((backup) => (
                 <tr key={backup.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-                      <div style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 'var(--radius-lg)',
-                        background: backup.status === 'SUCCESS' 
-                          ? 'linear-gradient(135deg, #10b981, #059669)'
-                          : backup.status === 'FAILED'
-                          ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-                          : 'linear-gradient(135deg, #f59e0b, #d97706)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                      }}>
-                        <BiData size={22} />
-                      </div>
-                      <div>
-                        <span style={{ fontWeight: 600, display: 'block', color: 'var(--text-primary)' }}>
-                          {backup.filename}
-                        </span>
-                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
-                          {formatDate(backup.createdAt)}
-                        </span>
-                      </div>
-                    </div>
+                    <span className="sa-table-username">{backup.filename}</span>
+                    {backup.status === 'FAILED' && backup.errorMessage && (
+                      <span
+                        className="sa-table-sub"
+                        title={backup.errorMessage}
+                        style={{ color: '#b91c1c' }}
+                      >
+                        {backup.errorMessage.length > 48
+                          ? backup.errorMessage.slice(0, 48) + '…'
+                          : backup.errorMessage}
+                      </span>
+                    )}
                   </td>
+                  <td><StatusBadge status={backup.status} /></td>
+                  <td className="sa-table-muted">{formatSize(backup.fileSizeBytes)}</td>
+                  <td className="sa-table-muted">{backup.createdByUsername || '—'}</td>
+                  <td className="sa-table-muted">{formatDate(backup.createdAt)}</td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {getStatusBadge(backup.status)}
-                      {backup.status === 'FAILED' && backup.errorMessage && (
-                        <span style={{ 
-                          fontSize: '11px', 
-                          color: '#dc2626', 
-                          maxWidth: 200, 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          cursor: 'help',
-                        }} title={backup.errorMessage}>
-                          {backup.errorMessage.length > 50 
-                            ? backup.errorMessage.substring(0, 50) + '...' 
-                            : backup.errorMessage}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{formatFileSize(backup.fileSizeBytes)}</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{backup.createdByUsername || '-'}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
-                    {backup.lastRestoredAt ? formatDate(backup.lastRestoredAt) : '-'}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', justifyContent: 'flex-end' }}>
-                      <button 
-                        className="btn-icon" 
-                        onClick={() => handleDownload(backup)} 
+                    <div className="sa-table-actions">
+                      <button
+                        className="btn-icon"
+                        onClick={() => handleDownload(backup)}
                         title="Download"
                         disabled={backup.status !== 'SUCCESS'}
-                        style={{ opacity: backup.status !== 'SUCCESS' ? 0.4 : 1 }}
+                        style={{ opacity: backup.status !== 'SUCCESS' ? 0.35 : 1 }}
                       >
-                        <BiDownload size={18} />
+                        <BiDownload size={16} />
                       </button>
-                      <button 
-                        className="btn-icon" 
-                        onClick={() => { setSelectedBackup(backup); setShowRestoreModal(true); }} 
+                      <button
+                        className="btn-icon"
+                        onClick={() => { setSelectedBackup(backup); setShowRestoreModal(true); }}
                         title="Restore"
                         disabled={backup.status !== 'SUCCESS' || restoring !== null}
-                        style={{ opacity: backup.status !== 'SUCCESS' || restoring !== null ? 0.4 : 1 }}
+                        style={{ opacity: backup.status !== 'SUCCESS' || restoring !== null ? 0.35 : 1 }}
                       >
-                        {restoring === backup.id ? (
-                          <div className="loading-spinner" style={{ width: 18, height: 18 }} />
-                        ) : (
-                          <BiHistory size={18} />
-                        )}
+                        {restoring === backup.id
+                          ? <div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+                          : <BiHistory size={16} />}
                       </button>
                       <button
                         className="btn-icon danger"
                         onClick={() => { setSelectedBackup(backup); setShowDeleteModal(true); }}
                         title="Delete"
                       >
-                        <BiTrash size={18} />
+                        <BiTrash size={16} />
                       </button>
                     </div>
                   </td>
@@ -309,11 +218,8 @@ export default function BackupsPage() {
               <tr>
                 <td colSpan={6}>
                   <div className="empty-state">
-                    <BiData size={56} className="empty-state-icon" />
-                    <p style={{ fontWeight: 600, marginTop: 'var(--spacing-md)' }}>No backups found</p>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>
-                      Create your first backup to protect your data
-                    </p>
+                    <h3>No backups yet</h3>
+                    <p>Create your first backup to protect your data</p>
                   </div>
                 </td>
               </tr>
@@ -322,95 +228,53 @@ export default function BackupsPage() {
         </table>
       </div>
 
-
-      {/* Restore Confirmation Modal */}
+      {/* Restore Modal */}
       {showRestoreModal && selectedBackup && (
         <div className="modal-overlay" onClick={() => setShowRestoreModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Restore Database</h2>
-              <button onClick={() => setShowRestoreModal(false)} className="btn-icon"><BiX size={20} /></button>
+              <button onClick={() => setShowRestoreModal(false)} className="btn-icon"><BiX size={18} /></button>
             </div>
             <div className="modal-body">
-              <div style={{ textAlign: 'center', padding: 'var(--spacing-md)' }}>
-                <div style={{
-                  width: 64,
-                  height: 64,
-                  margin: '0 auto var(--spacing-md)',
-                  background: 'rgba(245, 158, 11, 0.1)',
-                  borderRadius: 'var(--radius-full)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#f59e0b',
-                }}>
-                  <BiHistory size={28} />
-                </div>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-sm)' }}>
-                  Are you sure you want to restore the database from:
+              <p style={{ margin: '0 0 12px', color: '#374151', lineHeight: 1.6 }}>
+                Restore from <strong style={{ color: '#111111' }}>{selectedBackup.filename}</strong>?
+              </p>
+              <div style={{ padding: '12px 14px', background: '#faf2df', border: '1px solid #eadfc2', borderRadius: 10 }}>
+                <p style={{ margin: 0, fontSize: 13, color: '#7a5a13', lineHeight: 1.5 }}>
+                  A pre-restore backup will be created automatically. This will replace all current data.
                 </p>
-                <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 'var(--spacing-md)' }}>
-                  {selectedBackup.filename}
-                </p>
-                <div style={{ 
-                  background: 'rgba(245, 158, 11, 0.1)', 
-                  padding: 'var(--spacing-md)', 
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                }}>
-                  <p style={{ fontSize: 'var(--font-size-sm)', color: '#b45309', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <BiErrorCircle size={16} />
-                    A pre-restore backup will be created automatically. This operation will replace all current data.
-                  </p>
-                </div>
               </div>
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowRestoreModal(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={handleRestore} className="btn btn-warning">Restore Database</button>
+              <button onClick={handleRestore} className="btn btn-warning">Restore</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       {showDeleteModal && selectedBackup && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">Delete Backup</h2>
-              <button onClick={() => setShowDeleteModal(false)} className="btn-icon"><BiX size={20} /></button>
+              <button onClick={() => setShowDeleteModal(false)} className="btn-icon"><BiX size={18} /></button>
             </div>
             <div className="modal-body">
-              <div style={{ textAlign: 'center', padding: 'var(--spacing-md)' }}>
-                <div style={{
-                  width: 64,
-                  height: 64,
-                  margin: '0 auto var(--spacing-md)',
-                  background: 'rgba(136, 0, 21, 0.1)',
-                  borderRadius: 'var(--radius-full)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#7a1733',
-                }}>
-                  <BiTrash size={28} />
-                </div>
-                <p style={{ color: 'var(--text-secondary)' }}>
-                  Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{selectedBackup.filename}</strong>?
-                </p>
-                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)', marginTop: 'var(--spacing-xs)' }}>
-                  This action cannot be undone.
-                </p>
-              </div>
+              <p style={{ margin: 0, color: '#374151', lineHeight: 1.6 }}>
+                Delete <strong style={{ color: '#111111' }}>{selectedBackup.filename}</strong>? This action cannot be undone.
+              </p>
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowDeleteModal(false)} className="btn btn-secondary">Cancel</button>
-              <button onClick={handleDelete} className="btn btn-danger">Delete Backup</button>
+              <button onClick={handleDelete} className="btn btn-danger">Delete</button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

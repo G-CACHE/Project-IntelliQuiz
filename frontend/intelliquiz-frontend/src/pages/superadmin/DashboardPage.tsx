@@ -10,12 +10,9 @@ import {
   BiTrophy,
   BiPlay,
   BiFile,
-  BiCheckCircle,
-  BiArchive,
   BiRocket,
   BiBoltCircle,
   BiStar,
-  BiPulse,
 } from 'react-icons/bi';
 import { quizzesApi, usersApi, type Quiz } from '../../services/api';
 import './DashboardPage.css';
@@ -64,11 +61,11 @@ export default function DashboardPage() {
   };
 
   const getStatusConfig = (status: Quiz['status']) => {
-    const config: Record<string, { class: string; icon: React.ReactNode; color: string }> = {
-      DRAFT: { class: 'status-draft', icon: <BiFile size={14} />, color: '#6f4e57' },
-      READY: { class: 'status-ready', icon: <BiCheckCircle size={14} />, color: '#7c4b00' },
-      ACTIVE: { class: 'status-active', icon: <BiPulse size={14} />, color: '#7a1733' },
-      ARCHIVED: { class: 'status-archived', icon: <BiArchive size={14} />, color: '#6f4e57' },
+    const config: Record<string, { class: string }> = {
+      DRAFT:    { class: 'status-draft' },
+      READY:    { class: 'status-ready' },
+      ACTIVE:   { class: 'status-active' },
+      ARCHIVED: { class: 'status-archived' },
     };
     return config[status] || config.DRAFT;
   };
@@ -214,10 +211,9 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <div className={`quiz-status ${statusConfig.class}`}>
-                      {statusConfig.icon}
-                      <span>{quiz.status}</span>
-                    </div>
+                    <span className={`quiz-status ${statusConfig.class}`}>
+                      {quiz.status === 'ACTIVE' ? 'LIVE' : quiz.status}
+                    </span>
                   </div>
                 );
               })

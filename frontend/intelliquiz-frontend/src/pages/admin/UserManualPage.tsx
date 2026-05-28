@@ -9,8 +9,6 @@ import {
   PlayCircle, PauseCircle, SkipForward, Eye, LogIn,
   Layers, FileQuestion, Clock, Database, GraduationCap,
   Globe, Cpu, MonitorCheck,
-  PanelLeftClose, PanelLeftOpen,
-  BookOpen, Sparkles, Layout,
 } from 'lucide-react';
 import '../../styles/admin.css';
 import './UserManualPage.css';

@@ -114,7 +114,7 @@ export default function SuperAdminLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-off-white)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: 'var(--font-body)' }}>
       {/* Top Navigation */}
       <header className="pb-nav">
         <div className="pb-nav-inner">
@@ -176,7 +176,7 @@ export default function SuperAdminLayout() {
 
       {/* Main Content */}
       <main style={{ minHeight: 'calc(100vh - 64px)' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 32px' }}>
           <Outlet />
         </div>
       </main>

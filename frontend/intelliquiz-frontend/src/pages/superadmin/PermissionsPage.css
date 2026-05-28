@@ -1,23 +1,20 @@
-/* Superadmin permissions - clean minimalist system */
+/* ── PERMISSIONS PAGE ─────────────────────────────────────── */
 
 .permissions-kahoot {
-  max-width: 1280px;
-  margin: 0 auto;
-  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+/* ── HERO ─────────────────────────────────────────────────── */
 .permissions-hero {
   border: 1px solid #e3d6d9;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 86% -20%, rgba(201, 168, 76, 0.2), transparent 34%),
+    radial-gradient(circle at 86% -20%, rgba(201, 168, 76, 0.18), transparent 34%),
     linear-gradient(135deg, #ffffff 0%, #fbf7f0 100%);
-  box-shadow: 0 16px 34px rgba(17, 17, 17, 0.08);
-  padding: 24px 28px;
-  margin-bottom: 0;
+  box-shadow: 0 8px 24px rgba(17, 17, 17, 0.06);
+  padding: 22px 28px;
 }
 
 .hero-bg,
@@ -36,8 +33,8 @@
 }
 
 .hero-icon-wrap {
-  width: 50px;
-  height: 50px;
+  width: 46px;
+  height: 46px;
   border: 1px solid #eadfc2;
   border-radius: 12px;
   background: #faf2df;
@@ -45,48 +42,46 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .permissions-hero h1 {
   margin: 0;
   color: #111111;
   font-family: var(--font-heading);
-  font-size: clamp(28px, 3.2vw, 40px);
+  font-size: clamp(22px, 2.6vw, 32px);
   line-height: 1.1;
   font-weight: 700;
 }
 
 .permissions-hero p {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: #5b4e51;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   font-family: var(--font-body);
   font-weight: 500;
 }
 
+/* ── SECTIONS ─────────────────────────────────────────────── */
 .permissions-section,
 .info-section,
 .how-it-works-section,
-.additional-info-section,
-.assignments-section {
+.additional-info-section {
   border: 1px solid #e2d7da;
   border-radius: 18px;
-  box-shadow: 0 12px 24px rgba(17, 17, 17, 0.06);
-  background: #ffffff !important;
-  padding: 18px;
-  margin: 0;
+  background: #ffffff;
+  padding: 20px 24px;
 }
 
-.section-title,
-.permissions-section h2,
-.how-it-works-section h2,
-.additional-info-section h3 {
-  margin: 0 0 14px;
-  color: #111111 !important;
-  font-family: var(--font-heading) !important;
-  font-size: clamp(24px, 2.4vw, 34px) !important;
-  line-height: 1.1;
+/* ── SECTION TITLE ────────────────────────────────────────── */
+.section-title {
+  margin: 0 0 16px;
+  color: #111111;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -94,12 +89,14 @@
 
 .title-icon-svg {
   color: #7a1733;
+  flex-shrink: 0;
 }
 
+/* ── PERMISSION CAPABILITY CARDS ──────────────────────────── */
 .permissions-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .permission-card {
@@ -107,90 +104,213 @@
   align-items: center;
   gap: 12px;
   border: 1px solid #e4d8db;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #fcf9f5 100%) !important;
-  padding: 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 14px 16px;
+  transition: box-shadow 0.2s ease;
+}
+
+.permission-card:hover {
+  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.06);
 }
 
 .permission-card .permission-icon {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .permission-card .permission-info h3 {
   margin: 0 0 2px;
   color: #111111;
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .permission-card .permission-info p {
   margin: 0;
   color: #6b6264;
-  font-size: 13px;
+  font-size: 12px;
   font-family: var(--font-body);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
-.info-section > div > div,
-.how-it-works-section > div > div {
-  border: 1px solid #e4d8db !important;
-  border-radius: 14px !important;
-  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.05) !important;
-  background: #ffffff !important;
+/* ── INFO CARD ────────────────────────────────────────────── */
+.perm-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.how-it-works-section ul,
-.additional-info-section ul {
+.perm-info-icon {
+  color: #7a1733;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #faf2df;
+  border: 1px solid #eadfc2;
+}
+
+.perm-info-title {
+  margin: 0 0 5px;
+  color: #111111;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.perm-info-text {
   margin: 0;
-  padding-left: 18px;
+  color: #5b4e51;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: var(--font-body);
 }
 
-.how-it-works-section li,
-.additional-info-section li {
-  margin-bottom: 7px;
-  color: #4f4548 !important;
+/* ── ROLES GRID ───────────────────────────────────────────── */
+.perm-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.perm-role-card {
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #e4d8db;
+  border-radius: 12px;
+}
+
+.perm-role-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.perm-role-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.perm-role-icon--maroon {
+  background: #f6e9ed;
+  color: #7a1733;
+  border: 1px solid #e5cad3;
+}
+
+.perm-role-icon--gold {
+  background: #faf2df;
+  color: #7a5a13;
+  border: 1px solid #eadfc2;
+}
+
+.perm-role-name {
+  margin: 0;
+  color: #111111;
   font-family: var(--font-body);
   font-size: 14px;
+  font-weight: 700;
+}
+
+.perm-role-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.perm-role-list li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #4f4548;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.perm-check {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.perm-x {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* ── KEY POINTS ───────────────────────────────────────────── */
+.perm-keypoints-title {
+  margin: 0 0 10px;
+  color: #111111;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.perm-keypoints-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.perm-keypoints-list li {
+  color: #4f4548;
+  font-family: var(--font-body);
+  font-size: 13px;
   line-height: 1.55;
 }
 
-@media (max-width: 980px) {
-  .permissions-grid {
-    grid-template-columns: 1fr;
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .perm-roles-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 640px) {
+  .permissions-grid,
+  .perm-roles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .perm-info-card {
+    flex-direction: column;
+  }
+
   .permissions-hero {
-    padding: 18px;
-    border-radius: 16px;
-  }
-
-  .hero-left {
-    align-items: flex-start;
-  }
-
-  .hero-icon-wrap {
-    width: 44px;
-    height: 44px;
-  }
-
-  .permissions-hero p {
-    font-size: 13px;
+    padding: 18px 20px;
   }
 
   .permissions-section,
   .info-section,
   .how-it-works-section,
-  .additional-info-section,
-  .assignments-section {
+  .additional-info-section {
+    padding: 16px 18px;
     border-radius: 14px;
   }
 }
