@@ -48,6 +48,13 @@ export const authApi = {
     return handleResponse<{ role: string; username: string }>(response);
   },
 
+  refresh: async () => {
+    const response = await apiFetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+    });
+    return handleResponse<{ role: string; username: string }>(response);
+  },
+
   logout: async () => {
     const response = await apiFetch(`${API_BASE_URL}/api/auth/logout`, {
       method: 'POST',
@@ -98,6 +105,23 @@ export const accessApi = {
       body: JSON.stringify({ name: newName, accessCode }),
     });
     return handleResponse<void>(response);
+  },
+};
+
+// Quiz runtime status (public — no auth required)
+export interface QuizRuntimeStatus {
+  state: string;
+  gameState: string;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  timeRemaining: number;
+  participantNavigationEnabled: boolean;
+}
+
+export const quizApi = {
+  getStatus: async (quizId: number): Promise<QuizRuntimeStatus> => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/status`);
+    return handleResponse<QuizRuntimeStatus>(response);
   },
 };
 

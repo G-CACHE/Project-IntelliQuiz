@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Trophy, Home, Volume2, VolumeX } from 'lucide-react';
+import { Trophy, Volume2, VolumeX } from 'lucide-react';
 import {
-  Pause, Play, BarChart3, ArrowRight, Gauge, Users, Timer as TimerIcon, 
   Hourglass, PauseCircle, MonitorPlay
 } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
@@ -213,6 +212,15 @@ const HostGame: React.FC = () => {
             <p className="proctor-host-submitted-count">
               {(submittedTeamsCount || submissions.length)} team(s) submitted
             </p>
+            {isClassMode && connectedTeams.length > 0 && (submittedTeamsCount || submissions.length) >= connectedTeams.length && (
+              <button
+                onClick={handleEndQuiz}
+                disabled={!connected}
+                className="proctor-btn-success proctor-btn-large"
+              >
+                End Quiz Early
+              </button>
+            )}
           </div>
         );
       
@@ -497,7 +505,16 @@ const HostGame: React.FC = () => {
               
               {currentQuestion.correctAnswer && (
                 <div className="proctor-correct-answer">
-                  <p>Correct Answer: {currentQuestion.correctAnswer}</p>
+                  {currentQuestion.type === 'IDENTIFICATION' ? (
+                    <>
+                      <p style={{ marginBottom: 4 }}>Accepted Answers:</p>
+                      {currentQuestion.correctAnswer.split('\n').filter(Boolean).map((ans, i) => (
+                        <p key={i} style={{ margin: '2px 0', fontWeight: 700 }}>{ans}</p>
+                      ))}
+                    </>
+                  ) : (
+                    <p>Correct Answer: {currentQuestion.correctAnswer}</p>
+                  )}
                 </div>
               )}
             </div>

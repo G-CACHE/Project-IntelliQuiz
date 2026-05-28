@@ -7,7 +7,6 @@ import {
   LogOut,
   ChevronDown,
   Database,
-  Sparkles,
 } from 'lucide-react';
 import '../../styles/superadmin.css';
 import { authApi, currentUserApi } from '../../services/api';

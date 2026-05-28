@@ -613,7 +613,7 @@ export default function AdminQuestionsPage() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="admin-modal-overlay" onClick={() => { setShowModal(false); resetForm(); }}>
           <div className="admin-modal questions-editor-modal" onClick={(e) => e.stopPropagation()}>
 
             {/* Header */}
@@ -629,7 +629,7 @@ export default function AdminQuestionsPage() {
                   <span className={`qe-step${modalStep === 2 ? ' active' : ''}`} title="Step 2: Answer" />
                 </div>
               </div>
-              <button onClick={() => setShowModal(false)} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
+              <button onClick={() => { setShowModal(false); resetForm(); }} className="admin-btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff' }}><BiX size={18} /></button>
             </div>
 
             {/* Body */}
@@ -812,7 +812,7 @@ export default function AdminQuestionsPage() {
             <div className="admin-modal-footer questions-editor-modal-footer">
               {modalStep === 1 ? (
                 <>
-                  <button onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+                  <button onClick={() => { setShowModal(false); resetForm(); }} className="admin-btn admin-btn-secondary">Cancel</button>
                   <button
                     className="admin-btn admin-btn-primary"
                     disabled={!formData.text.trim()}

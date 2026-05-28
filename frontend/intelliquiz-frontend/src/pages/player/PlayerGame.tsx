@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, CircleX, AlarmClock, ListChecks, Home, PauseCircle } from 'lucide-react';
+import { CheckCircle2, CircleX, AlarmClock, ListChecks, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
 import { getParticipantSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
@@ -383,7 +383,6 @@ const PlayerGame: React.FC = () => {
   const myRanking = rankings.find(r => r.teamId === session?.teamId);
   const currentStreak = myRanking?.streak || 0;
   const myTeamScore = myRanking?.score;
-  const myFinalResult = myRanking;
 
   if (!session) return null;
 
@@ -801,7 +800,11 @@ const PlayerGame: React.FC = () => {
                       Your answer: <strong>{entry.participantAnswer || 'No answer'}</strong>
                     </p>
                     <p className="participant-answer-review-line">
-                      Correct answer: <strong>{entry.correctAnswer}</strong>
+                      Correct answer: <strong>
+                        {entry.correctAnswer
+                          ? entry.correctAnswer.split('\n').filter(Boolean).join(', ')
+                          : '—'}
+                      </strong>
                     </p>
                     <p className={`participant-answer-review-score ${entry.isCorrect ? 'is-correct' : 'is-wrong'}`}>
                       {entry.isCorrect ? 'Correct' : 'Incorrect'} - {entry.pointsEarned}/{entry.maxPoints} pts
