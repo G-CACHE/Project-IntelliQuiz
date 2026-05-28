@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, TrendingUp, Award, Users } from 'lucide-react';
+import { Trophy, TrendingUp, Award, Users, Medal } from 'lucide-react';
 import { Loader } from '../../components/common/Loader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 
@@ -37,10 +37,10 @@ export default function ScoreboardPage({ quizId }: { quizId: number }) {
     try {
       const [quizRes, scoreboardRes] = await Promise.all([
         fetch(`/api/quizzes/${quizId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch(`/api/quizzes/${quizId}/scoreboard`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
@@ -106,7 +106,7 @@ export default function ScoreboardPage({ quizId }: { quizId: number }) {
                 <div className="relative">
                   <div className="bg-gradient-to-b from-gray-400 to-gray-500 rounded-lg p-6 text-center text-white h-full flex flex-col justify-between">
                     <div>
-                      <div className="text-6xl font-bold mb-2">2️⃣</div>
+                      <div className="text-6xl font-bold mb-2 flex justify-center"><Medal className="w-12 h-12" /></div>
                       <p className="text-2xl font-bold mb-2">{topThree[1].teamName}</p>
                     </div>
                     <div>
@@ -122,7 +122,7 @@ export default function ScoreboardPage({ quizId }: { quizId: number }) {
                 <div className="relative transform scale-105">
                   <div className="bg-gradient-to-b from-yellow-300 to-yellow-500 rounded-lg p-6 text-center text-gray-900 h-full flex flex-col justify-between shadow-2xl">
                     <div>
-                      <div className="text-6xl font-bold mb-2">🥇</div>
+                      <div className="text-6xl font-bold mb-2 flex justify-center"><Trophy className="w-12 h-12" /></div>
                       <p className="text-2xl font-bold mb-2">{topThree[0].teamName}</p>
                     </div>
                     <div>
@@ -138,7 +138,7 @@ export default function ScoreboardPage({ quizId }: { quizId: number }) {
                 <div className="relative">
                   <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-6 text-center text-white h-full flex flex-col justify-between">
                     <div>
-                      <div className="text-6xl font-bold mb-2">3️⃣</div>
+                      <div className="text-6xl font-bold mb-2 flex justify-center"><Medal className="w-12 h-12" /></div>
                       <p className="text-2xl font-bold mb-2">{topThree[2].teamName}</p>
                     </div>
                     <div>

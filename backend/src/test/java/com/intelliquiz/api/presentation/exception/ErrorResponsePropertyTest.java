@@ -1,10 +1,13 @@
 package com.intelliquiz.api.presentation.exception;
 
-import com.intelliquiz.api.domain.exceptions.*;
-import com.intelliquiz.api.presentation.dto.response.ErrorResponse;
+import com.intelliquiz.api.shared.exceptions.*;
+import com.intelliquiz.api.shared.dto.ErrorResponse;
+import com.intelliquiz.api.shared.exception.GlobalExceptionHandler;
 import net.jqwik.api.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,10 +33,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(404);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(404);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Property(tries = 10)
@@ -47,10 +50,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(409);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(409);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Property(tries = 10)
@@ -64,10 +67,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(403);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(403);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Property(tries = 10)
@@ -81,10 +84,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(401);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(401);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Property(tries = 10)
@@ -98,10 +101,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(400);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(400);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Property(tries = 10)
@@ -115,12 +118,12 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(500);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(500);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
         // Generic errors should not expose internal details
-        assertThat(response.getBody().message()).doesNotContain(message);
+        assertThat(body.message()).doesNotContain(message);
     }
 
     @Property(tries = 10)
@@ -134,10 +137,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(400);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(400);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Property(tries = 10)
@@ -151,10 +154,10 @@ class ErrorResponsePropertyTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(400);
-        assertThat(response.getBody().message()).isNotBlank();
-        assertThat(response.getBody().timestamp()).isNotBlank();
+        ErrorResponse body = Objects.requireNonNull(response.getBody());
+        assertThat(body.status()).isEqualTo(400);
+        assertThat(body.message()).isNotBlank();
+        assertThat(body.timestamp()).isNotBlank();
     }
 
     @Provide

@@ -1,47 +1,51 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  BiBarChartAlt2,
   BiBookOpen,
-  BiGroup,
-  BiPlay,
+  BiFile,
+  BiFolderOpen,
+  BiLayer,
   BiRightArrowAlt,
-  BiTime,
   BiRocket,
-  BiTrophy,
-  BiTargetLock,
 } from 'react-icons/bi';
 import { useQuizzes } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
+import CreateQuizModal from '../../components/admin/CreateQuizModal';
 import '../../styles/admin.css';
+import './DashboardPage.css';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { assignments, canEditQuiz } = useAuth();
-  const username = localStorage.getItem('username') || 'Admin';
+  const { canEditQuiz } = useAuth();
+  const [showCreateModal, setShowCreateModal] = useState(false);
   
   // React Query hook
   const { data: allQuizzes = [], isLoading } = useQuizzes();
 
-  // Filter quizzes to only show assigned quizzes
-  const quizzes = useMemo(() => {
-    const assignedQuizIds = assignments.map(a => a.quizId);
-    return allQuizzes.filter(q => assignedQuizIds.includes(q.id));
-  }, [allQuizzes, assignments]);
+  // No need to filter by assignments - backend already filters by createdByUserId
+  const quizzes = allQuizzes;
 
   const stats = useMemo(() => ({
     totalQuizzes: quizzes.length,
     activeQuizzes: quizzes.filter(q => q.status === 'ACTIVE').length,
     readyQuizzes: quizzes.filter(q => q.status === 'READY').length,
-    totalTeams: 0,
+    draftQuizzes: quizzes.filter(q => q.status === 'DRAFT').length,
   }), [quizzes]);
 
-  const recentQuizzes = useMemo(() => quizzes.slice(0, 5), [quizzes]);
+  const recentQuizzes = useMemo(() => quizzes.slice(0, 3), [quizzes]);
 
   const getStatusClass = (status: string) => {
     const map: Record<string, string> = {
-      DRAFT: 'draft', READY: 'ready', ACTIVE: 'active', ARCHIVED: 'archived'
+      DRAFT: 'draft', READY: 'ready', ACTIVE: 'live', ARCHIVED: 'archived'
     };
     return map[status] || 'draft';
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (status === 'ARCHIVED') return 'DONE';
+    if (status === 'ACTIVE') return 'LIVE';
+    return status;
   };
 
   if (isLoading) {
@@ -53,129 +57,127 @@ export default function AdminDashboardPage() {
     );
   }
 
+  const statItems = [
+    { key: 'total', label: 'Total Quizzes', value: stats.totalQuizzes, Icon: BiLayer },
+    { key: 'active', label: 'Live Now', value: stats.activeQuizzes, Icon: BiRocket },
+    { key: 'ready', label: 'Ready', value: stats.readyQuizzes, Icon: BiBarChartAlt2 },
+    { key: 'draft', label: 'Draft', value: stats.draftQuizzes, Icon: BiFile },
+  ] as const;
+
   return (
-    <div>
-      {/* Welcome Header */}
-      <div className="admin-page-header purple">
-        <div className="admin-page-header-bg">
-          <div className="admin-page-header-shape shape-1" />
-          <div className="admin-page-header-shape shape-2" />
-          <div className="admin-page-header-dots" />
-        </div>
-        <div className="admin-page-header-content">
-          <div className="admin-page-header-left">
-            <div className="admin-page-icon"><BiRocket size={26} /></div>
-            <div>
-              <h1 className="admin-page-title">Welcome back, {username}!</h1>
-              <p className="admin-page-subtitle">Here's what's happening with your quizzes</p>
-            </div>
+    <div className="admin-dashboard-shell admin-clean-dashboard">
+      <section className="admin-clean-hero">
+        <div className="admin-clean-hero-content">
+          <div className="admin-clean-hero-left">
+            <span className="admin-clean-chip">Admin Workspace</span>
+            <h1 className="admin-clean-title">Quiz Dashboard</h1>
+            <p className="admin-clean-subtitle">
+              Create, organize, and monitor quizzes from one workspace.
+            </p>
           </div>
 
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="admin-grid-4" style={{ marginBottom: 24 }}>
-        <div className="admin-stat-card red">
-          <div className="admin-stat-icon red"><BiBookOpen size={24} /></div>
-          <p className="admin-stat-value">{stats.totalQuizzes}</p>
-          <p className="admin-stat-label">Total Quizzes</p>
-        </div>
-        <div className="admin-stat-card yellow">
-          <div className="admin-stat-icon yellow"><BiTargetLock size={24} /></div>
-          <p className="admin-stat-value">{stats.readyQuizzes}</p>
-          <p className="admin-stat-label">Ready to Play</p>
-        </div>
-        <div className="admin-stat-card green">
-          <div className="admin-stat-icon green"><BiPlay size={24} /></div>
-          <p className="admin-stat-value">{stats.activeQuizzes}</p>
-          <p className="admin-stat-label">Live Now</p>
-        </div>
-        <div className="admin-stat-card blue">
-          <div className="admin-stat-icon blue"><BiGroup size={24} /></div>
-          <p className="admin-stat-value">{stats.totalTeams}</p>
-          <p className="admin-stat-label">Teams</p>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="admin-grid-2">
-        {/* Quick Actions */}
-        <div className="admin-card">
-          <h2 className="admin-card-title"><BiRocket size={18} /> Quick Actions</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/host')}>
-              <div className="admin-quick-action-icon green"><BiPlay size={20} /></div>
-              <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">Host a Game</p>
-                <p className="admin-quick-action-desc">Start a live quiz session</p>
-              </div>
-              <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
-            </div>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/teams')}>
-              <div className="admin-quick-action-icon yellow"><BiGroup size={20} /></div>
-              <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">Manage Teams</p>
-                <p className="admin-quick-action-desc">View and manage quiz teams</p>
-              </div>
-              <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
-            </div>
-            <div className="admin-quick-action" onClick={() => navigate('/admin/scoreboard')}>
-              <div className="admin-quick-action-icon blue"><BiTrophy size={20} /></div>
-              <div className="admin-quick-action-text">
-                <p className="admin-quick-action-title">View Scoreboard</p>
-                <p className="admin-quick-action-desc">Check quiz rankings</p>
-              </div>
-              <BiRightArrowAlt size={18} style={{ color: '#94a3b8' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Quizzes */}
-        <div className="admin-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 className="admin-card-title" style={{ margin: 0 }}><BiBookOpen size={18} /> Recent Quizzes</h2>
-            <button 
-              className="admin-btn admin-btn-secondary" 
-              style={{ padding: '8px 14px', fontSize: 12 }}
-              onClick={() => navigate('/admin/quizzes')}
-            >
-              View All
+          <div className="admin-clean-hero-right">
+            <button className="admin-clean-btn-primary" onClick={() => navigate('/admin/quizzes')}>
+              <BiFolderOpen size={18} /> Open Quizzes
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        </div>
+      </section>
+
+      <section className="admin-clean-stats" aria-label="Dashboard statistics">
+        {statItems.map(({ key, label, value, Icon }) => (
+          <div key={key} className="admin-clean-stat-card">
+            <div className="admin-clean-stat-icon">
+              <Icon size={22} />
+            </div>
+            <div className="admin-clean-stat-body">
+              <p className="admin-clean-stat-value">{value}</p>
+              <p className="admin-clean-stat-label">{label}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="admin-clean-main-grid">
+        <div className="admin-clean-panel admin-clean-panel-actions">
+          <div className="admin-clean-panel-head">
+            <h2>Quick Actions</h2>
+          </div>
+
+          <div className="admin-clean-actions-grid">
+            <button className="admin-clean-action" onClick={() => setShowCreateModal(true)}>
+              <span>
+                <strong>Create Quiz</strong>
+                <small>Build a new question set</small>
+              </span>
+            </button>
+
+            <button className="admin-clean-action secondary" onClick={() => navigate('/admin/quizzes')}>
+              <span>
+                <strong>Manage Quizzes</strong>
+                <small>Update and publish content</small>
+              </span>
+            </button>
+          </div>
+
+          <div className="admin-clean-actions-note">
+            <div className="admin-clean-actions-note-text">
+              <h3>Recommended flow</h3>
+              <p>Draft quizzes first, then mark them ready before launching live sessions for your teams.</p>
+            </div>
+            <div className="admin-clean-actions-steps">
+              <span>Draft</span>
+              <span>Ready</span>
+              <span>Live</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-clean-panel">
+          <div className="admin-clean-panel-head admin-clean-panel-head-row">
+            <h2>Recent Quizzes</h2>
+            <button className="admin-clean-btn-secondary" onClick={() => navigate('/admin/quizzes')}>
+              View All <BiRightArrowAlt size={18} />
+            </button>
+          </div>
+
+          <div className="admin-clean-recent-list">
             {recentQuizzes.length > 0 ? (
-              recentQuizzes.map((quiz) => (
-                <div 
-                  key={quiz.id} 
-                  className="admin-recent-item"
-                  onClick={() => canEditQuiz(quiz.id) ? navigate(`/admin/quizzes/${quiz.id}/questions`) : navigate('/admin/quizzes')}
+                recentQuizzes.map((quiz) => (
+                <button
+                  key={quiz.id}
+                  className="admin-clean-quiz-row"
+                  onClick={() =>
+                    canEditQuiz(quiz.id, quiz.createdByUserId)
+                      ? navigate(`/admin/quizzes/${quiz.id}`)
+                      : navigate('/admin/quizzes')
+                  }
                 >
-                  <div className="admin-recent-item-left">
-                    <div className="admin-recent-item-icon"><BiBookOpen size={16} /></div>
-                    <div>
-                      <p className="admin-recent-item-title">{quiz.title}</p>
-                      <p className="admin-recent-item-meta">
-                        <BiTime size={12} style={{ marginRight: 4 }} />
-                        {quiz.questionCount || 0} questions
-                      </p>
-                    </div>
-                  </div>
-                  <span className={`admin-badge-status ${getStatusClass(quiz.status)}`}>{quiz.status}</span>
-                </div>
+                  <span className="admin-clean-quiz-meta-wrap">
+                    <span className="admin-clean-quiz-title">{quiz.title}</span>
+                    <span className="admin-clean-quiz-meta">
+                      {quiz.questionCount || 0} questions
+                    </span>
+                  </span>
+                  <span className={`admin-clean-status status-${getStatusClass(quiz.status)}`}>
+                    {getStatusLabel(quiz.status)}
+                  </span>
+                </button>
               ))
             ) : (
-              <div className="admin-empty-state" style={{ padding: 32 }}>
-                <div className="admin-empty-icon" style={{ width: 56, height: 56 }}><BiBookOpen size={24} /></div>
-                <p className="admin-empty-title" style={{ fontSize: 15 }}>No quizzes yet</p>
-                <p className="admin-empty-text" style={{ marginBottom: 16 }}>
-                  No quizzes have been assigned to you yet
-                </p>
+              <div className="admin-clean-empty">
+                <div className="admin-clean-empty-icon"><BiBookOpen size={24} /></div>
+                <h3>No quizzes yet</h3>
+                <p>Create your first quiz to get started.</p>
+                <button className="admin-clean-btn-primary" onClick={() => setShowCreateModal(true)}>
+                  <BiBookOpen size={16} /> Create First Quiz
+                </button>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </section>
+      {showCreateModal && <CreateQuizModal onClose={() => setShowCreateModal(false)} />}
     </div>
   );
 }

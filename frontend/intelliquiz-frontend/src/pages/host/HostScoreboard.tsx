@@ -1,10 +1,151 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Trophy } from 'lucide-react';
+import { useSSE } from '../../hooks/useSSE';
+import { getProctorSession, clearSession } from '../../services/sessionStorage';
+import ScoreboardDisplay from '../../components/game/ScoreboardDisplay';
+import '../../styles/proctor.css';
 
 const HostScoreboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isFinal = searchParams.get('final') === 'true';
+  
+  // Get session data
+  const [session] = useState(() => {
+    const stored = getProctorSession();
+    if (stored) return stored;
+    
+    const quizId = searchParams.get('quizId');
+    if (quizId) {
+      return {
+        quizId: parseInt(quizId),
+        quizTitle: 'Quiz',
+        proctorPin: '',
+      };
+    }
+    return null;
+  });
+
+  // SSE connection - pass proctorPin as accessCode for authentication
+  const {
+    connected,
+    error,
+    questionNumber,
+    totalQuestions,
+    rankings,
+    sendCommand,
+    reconnect,
+    disconnect,
+  } = useSSE(
+    session?.quizId || 0,
+    'PROCTOR',
+    undefined,  // teamId (not used for proctor)
+    session?.proctorPin  // accessCode for SSE authentication
+  );
+
+  // Redirect to login if no session
+  useEffect(() => {
+    if (!session) {
+      navigate('/');
+    }
+  }, [session, navigate]);
+
+  const handleNextQuestion = () => {
+    sendCommand({ type: 'NEXT_QUESTION' });
+    navigate(`/host/game?quizId=${session?.quizId}`);
+  };
+
+  const handleEndQuiz = () => {
+    sendCommand({ type: 'END_QUIZ' });
+  };
+
+  const handleExitHome = () => {
+    disconnect();
+    clearSession();
+    navigate('/');
+  };
+
+  if (!session) return null;
+
   return (
-    <div className="min-h-screen bg-black p-8">
-      <h1 className="text-4xl font-black text-accent mb-8">Host Scoreboard</h1>
-      {/* Scoreboard display */}
+    <div className="proctor-page">
+      {/* Page Header */}
+      <div className="proctor-page-header">
+        <div className="proctor-header-decoration proctor-header-decoration-1"></div>
+        <div className="proctor-header-decoration proctor-header-decoration-2"></div>
+        <h1 className="proctor-page-title">{session.quizTitle}</h1>
+        <p className="proctor-page-subtitle">
+          {isFinal ? 'Final Results' : `Question ${questionNumber} of ${totalQuestions}`}
+        </p>
+        <div className="proctor-connection-badge">
+          <span className={`proctor-status-dot ${connected ? 'proctor-status-connected' : 'proctor-status-disconnected'}`}></span>
+          <span>{connected ? 'Live' : 'Disconnected'}</span>
+        </div>
+      </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="proctor-error-banner">
+          <div className="proctor-error-content">
+            <p>{error}</p>
+            <button onClick={reconnect} className="proctor-btn-danger proctor-btn-small">
+              Reconnect
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="proctor-content">
+        <div className="proctor-container proctor-container-narrow">
+          {/* Scoreboard */}
+          <ScoreboardDisplay
+            rankings={rankings}
+            isFinal={isFinal}
+            maxVisibleRows={isFinal ? 10 : undefined}
+          />
+
+          {/* Controls */}
+          <div className="proctor-scoreboard-controls">
+            {isFinal ? (
+              <div className="proctor-final-controls">
+                <p className="proctor-final-message">
+                  Quiz complete. Thank you for hosting.
+                </p>
+                <div className="proctor-actions">
+                  <button
+                    onClick={handleExitHome}
+                    className="proctor-btn-primary proctor-btn-large proctor-home-action"
+                  >
+                    Go Home
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="proctor-actions">
+                {questionNumber < totalQuestions ? (
+                  <button
+                    onClick={handleNextQuestion}
+                    disabled={!connected}
+                    className="proctor-btn-success proctor-btn-large"
+                  >
+                    Next Question →
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleEndQuiz}
+                    disabled={!connected}
+                    className="proctor-btn-primary proctor-btn-large"
+                  >
+                    <Trophy size={18} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Show Final Results
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

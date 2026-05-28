@@ -1,0 +1,574 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Archive, Download, CheckCircle2, Inbox, BookOpen } from 'lucide-react';
+import { questionBankApi, quizzesApi } from '../../services/api';
+import CustomSelect from '../../components/common/CustomSelect';
+import type { QuestionBankItem, Quiz } from '../../services/api';
+import '../../styles/admin.css';
+import './AdminRedesign.css';
+
+const QuestionBankPage: React.FC = () => {
+  const [bankItems, setBankItems] = useState<QuestionBankItem[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Harvest modal state
+  const [showHarvestModal, setShowHarvestModal] = useState(false);
+  const [selectedQuizForHarvest, setSelectedQuizForHarvest] = useState<number | null>(null);
+  const [harvesting, setHarvesting] = useState(false);
+
+  // Import modal state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [selectedQuizForImport, setSelectedQuizForImport] = useState<number | null>(null);
+  const [selectedBankItems, setSelectedBankItems] = useState<Set<number>>(new Set());
+  const [importing, setImporting] = useState(false);
+  const [deleteCandidateId, setDeleteCandidateId] = useState<number | null>(null);
+
+  // Fetch bank items and quizzes
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [items, quizList] = await Promise.all([
+        questionBankApi.getAll(),
+        quizzesApi.getAll(),
+      ]);
+      setBankItems(items);
+      setQuizzes(quizList);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  // Harvest questions from quiz
+  const handleHarvest = async () => {
+    if (!selectedQuizForHarvest) return;
+    try {
+      setHarvesting(true);
+      const harvested = await questionBankApi.harvestFromQuiz(selectedQuizForHarvest);
+      setBankItems(prev => [...prev, ...harvested]);
+      setSuccessMessage(`Harvested ${harvested.length} question(s) to the bank.`);
+      setShowHarvestModal(false);
+      setSelectedQuizForHarvest(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to harvest questions');
+    } finally {
+      setHarvesting(false);
+    }
+  };
+
+  // Import selected items to quiz
+  const handleImport = async () => {
+    if (!selectedQuizForImport || selectedBankItems.size === 0) return;
+    try {
+      setImporting(true);
+      const ids = Array.from(selectedBankItems);
+      await questionBankApi.importToQuiz(selectedQuizForImport, ids);
+      setSuccessMessage(`Imported ${ids.length} question(s) to quiz.`);
+      setShowImportModal(false);
+      setSelectedBankItems(new Set());
+      setSelectedQuizForImport(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import questions');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // Delete bank item
+  const handleDelete = async (id: number) => {
+    try {
+      await questionBankApi.delete(id);
+      setBankItems(prev => prev.filter(item => item.id !== id));
+      setSuccessMessage('Question removed from bank.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete question');
+    }
+  };
+
+  // Toggle bank item selection for import
+  const toggleBankItem = (id: number) => {
+    setSelectedBankItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Difficulty badge color
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'EASY': return { bg: '#d1fae5', text: '#065f46' };
+      case 'MEDIUM': return { bg: '#fef3c7', text: '#92400e' };
+      case 'HARD': return { bg: '#fee2e2', text: '#991b1b' };
+      default: return { bg: '#e5e7eb', text: '#374151' };
+    }
+  };
+
+  return (
+    <div style={{ padding: '0' }}>
+      {/* Page Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #880015 0%, #a50019 50%, #6b0012 100%)',
+        borderRadius: '20px',
+        padding: '24px 32px',
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        color: '#fff',
+        boxShadow: '0 10px 40px rgba(136, 0, 21, 0.3)',
+      }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, fontFamily: 'Montserrat, sans-serif' }}>
+            <BookOpen size={24} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Question Bank
+          </h1>
+          <p style={{ fontSize: '14px', opacity: 0.8, margin: '4px 0 0' }}>
+            Manage your harvested and reusable questions
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => setShowHarvestModal(true)}
+            style={{
+              background: '#f8c107',
+              color: '#1f2937',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 700,
+              fontFamily: 'Montserrat, sans-serif',
+            }}
+          >
+            <Archive size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Harvest from Quiz
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            disabled={bankItems.length === 0}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '10px',
+              padding: '10px 20px',
+              cursor: bankItems.length === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 700,
+              opacity: bankItems.length === 0 ? 0.5 : 1,
+              fontFamily: 'Montserrat, sans-serif',
+            }}
+          >
+            <Download size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />Import to Quiz
+          </button>
+        </div>
+      </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div style={{
+          background: '#d1fae5',
+          border: '1px solid #6ee7b7',
+          borderRadius: '12px',
+          padding: '12px 20px',
+          marginBottom: '16px',
+          color: '#065f46',
+          fontSize: '14px',
+          fontWeight: 600,
+        }}>
+          <CheckCircle2 size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />{successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #fecaca',
+          borderRadius: '12px',
+          padding: '12px 20px',
+          marginBottom: '16px',
+          color: '#991b1b',
+          fontSize: '14px',
+        }}>
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af' }}>
+          <p style={{ fontSize: '16px' }}>Loading question bank...</p>
+        </div>
+      ) : bankItems.length === 0 ? (
+        <div style={{
+          background: '#fff',
+          borderRadius: '16px',
+          padding: '48px',
+          textAlign: 'center',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+        }}>
+          <p style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}><Inbox size={40} color="#9ca3af" /></p>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
+            No Questions in Bank
+          </h3>
+          <p style={{ fontSize: '14px', color: '#6b7280', maxWidth: '400px', margin: '0 auto' }}>
+            Harvest questions from completed quizzes to build your reusable question bank.
+          </p>
+        </div>
+      ) : (
+        /* Question Bank Table */
+        <div style={{
+          background: '#fff',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+        }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <th style={{ padding: '14px 20px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Question</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Difficulty</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Points</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bankItems.map((item) => {
+                const diffColor = getDifficultyColor(item.difficulty);
+                return (
+                  <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '14px', color: '#1f2937', maxWidth: '400px' }}>
+                      <p style={{ margin: 0, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.text}
+                      </p>
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: '#4b5563',
+                        background: '#f3f4f6',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                      }}>
+                        {item.type.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: diffColor.text,
+                        background: diffColor.bg,
+                        padding: '3px 10px',
+                        borderRadius: '6px',
+                      }}>
+                        {item.difficulty}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
+                      {item.points}
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', fontSize: '13px', color: '#6b7280' }}>
+                      {item.category || '—'}
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <button
+                        onClick={() => setDeleteCandidateId(item.id)}
+                        style={{
+                          background: 'none',
+                          border: '1px solid #fecaca',
+                          color: '#ef4444',
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteCandidateId !== null && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '28px',
+            maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 10px', fontFamily: 'Montserrat, sans-serif' }}>
+              Delete Question?
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 20px' }}>
+              This question will be removed from the bank.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteCandidateId(null)}
+                style={{
+                  background: '#f3f4f6', color: '#374151', border: 'none',
+                  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const targetId = deleteCandidateId;
+                  if (targetId === null) return;
+                  await handleDelete(targetId);
+                  setDeleteCandidateId(null);
+                }}
+                style={{
+                  background: '#880015', color: '#fff', border: 'none', borderRadius: '8px',
+                  padding: '10px 20px', cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Harvest Modal */}
+      {showHarvestModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '32px',
+            maxWidth: '480px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+          }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px', fontFamily: 'Montserrat, sans-serif' }}>
+              <Archive size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />Harvest Questions
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '20px' }}>
+              Select a quiz to harvest its questions into the bank.
+            </p>
+            <div style={{ marginBottom: '20px' }}>
+              <CustomSelect
+                value={selectedQuizForHarvest ? String(selectedQuizForHarvest) : ''}
+                onChange={(v) => setSelectedQuizForHarvest(parseInt(v) || null)}
+                placeholder="Select a quiz..."
+                options={quizzes.map((q) => ({ value: String(q.id), label: q.title }))}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setShowHarvestModal(false); setSelectedQuizForHarvest(null); }}
+                style={{
+                  background: '#f3f4f6', color: '#374151', border: 'none',
+                  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleHarvest}
+                disabled={!selectedQuizForHarvest || harvesting}
+                style={{
+                  background: selectedQuizForHarvest ? '#880015' : '#d1d5db',
+                  color: '#fff', border: 'none', borderRadius: '8px',
+                  padding: '10px 20px', cursor: selectedQuizForHarvest ? 'pointer' : 'not-allowed',
+                  fontSize: '14px', fontWeight: 700,
+                }}
+              >
+                {harvesting ? 'Harvesting...' : 'Harvest'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '18px',
+            maxWidth: '650px', width: '100%', maxHeight: '85vh', overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+          }}>
+            {/* Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #7a1733 0%, #8d2144 54%, #b14062 100%)',
+              padding: '28px 32px', borderBottom: '1px solid #6b1028',
+              display: 'flex', alignItems: 'center', gap: '12px',
+            }}>
+              <Download size={20} style={{ color: '#fff', flexShrink: 0 }} />
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0, fontFamily: 'Montserrat, sans-serif' }}>
+                Import Questions from Bank
+              </h3>
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '32px' }}>
+              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px', margin: '0 0 24px 0' }}>
+                Select a target quiz and choose questions to import.
+              </p>
+
+              <div style={{ marginBottom: '24px' }}>
+                <CustomSelect
+                  value={selectedQuizForImport ? String(selectedQuizForImport) : ''}
+                  onChange={(v) => setSelectedQuizForImport(parseInt(v) || null)}
+                  placeholder="Select target quiz..."
+                  options={quizzes.map((q) => ({ value: String(q.id), label: q.title }))}
+                />
+              </div>
+
+              {/* Questions List */}
+              <div style={{ flex: 1, overflowY: 'auto', marginBottom: '24px', borderRadius: '10px', backgroundColor: '#f9fafb', padding: '16px' }}>
+                {bankItems.length > 0 ? (
+                  bankItems.map((item) => (
+                    <label
+                      key={item.id}
+                      style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '14px',
+                        padding: '16px 14px', borderRadius: '10px', cursor: 'pointer',
+                        background: selectedBankItems.has(item.id) ? '#fef3f7' : 'transparent',
+                        border: `1.5px solid ${selectedBankItems.has(item.id) ? '#c9a84c' : 'transparent'}`,
+                        marginBottom: '10px', transition: 'all 0.2s',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedBankItems.has(item.id)}
+                        onChange={() => toggleBankItem(item.id)}
+                        style={{ width: '20px', height: '20px', accentColor: '#880015', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#1f2937' }}>
+                          {item.text}
+                        </p>
+                        <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#9ca3af' }}>
+                          {item.type.replace('_', ' ')} · {item.difficulty} · {item.points} pts
+                        </p>
+                      </div>
+                    </label>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '14px', padding: '20px' }}>
+                    No questions available in the bank.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '28px 32px',
+              backgroundColor: '#f9fafb',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '20px',
+            }}>
+              <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
+                {selectedBankItems.size} selected
+              </span>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                {/* Cancel Button */}
+                <button
+                  onClick={() => { setShowImportModal(false); setSelectedBankItems(new Set()); setSelectedQuizForImport(null); }}
+                  style={{
+                    padding: '18px 52px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    height: '58px',
+                    backgroundColor: '#ffffff',
+                    color: '#374151',
+                    border: '1.5px solid #d1d5db',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                >
+                  Cancel
+                </button>
+                
+                {/* Import Button */}
+                <button
+                  onClick={handleImport}
+                  disabled={!selectedQuizForImport || selectedBankItems.size === 0 || importing}
+                  style={{
+                    padding: '18px 52px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    height: '58px',
+                    backgroundColor: (selectedQuizForImport && selectedBankItems.size > 0) ? '#c9a84c' : '#e5e7eb',
+                    color: (selectedQuizForImport && selectedBankItems.size > 0) ? '#1f2937' : '#9ca3af',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: (selectedQuizForImport && selectedBankItems.size > 0) ? 'pointer' : 'not-allowed',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s ease, color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedQuizForImport && selectedBankItems.size > 0) {
+                      e.currentTarget.style.backgroundColor = '#b8961c';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedQuizForImport && selectedBankItems.size > 0) {
+                      e.currentTarget.style.backgroundColor = '#c9a84c';
+                    }
+                  }}
+                >
+                  {importing ? 'Importing...' : `Import Selected (${selectedBankItems.size})`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default QuestionBankPage;

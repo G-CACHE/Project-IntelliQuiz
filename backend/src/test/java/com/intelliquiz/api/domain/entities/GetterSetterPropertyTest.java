@@ -1,5 +1,12 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+
 import net.jqwik.api.*;
 import org.junit.jupiter.api.Test;
 

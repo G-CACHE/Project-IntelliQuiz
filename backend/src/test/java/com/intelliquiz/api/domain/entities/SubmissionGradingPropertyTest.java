@@ -1,8 +1,13 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.QuizStatus;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.NotBlank;
 
@@ -27,9 +32,9 @@ public class SubmissionGradingPropertyTest {
             @ForAll @NotBlank String correctKey,
             @ForAll @NotBlank String submittedAnswer) {
         var context = createSubmissionContext(correctKey, 10);
-        Submission submission = new Submission(context.team, context.question, submittedAnswer);
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), submittedAnswer);
         
-        submission.grade();
+        submission.grade(correctKey, 10);
         
         boolean expectedCorrect = correctKey.equalsIgnoreCase(submittedAnswer.trim());
         assertThat(submission.isCorrect()).isEqualTo(expectedCorrect);
@@ -43,9 +48,9 @@ public class SubmissionGradingPropertyTest {
             @ForAll @NotBlank String correctKey,
             @ForAll("positivePoints") int points) {
         var context = createSubmissionContext(correctKey, points);
-        Submission submission = new Submission(context.team, context.question, correctKey);
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), correctKey);
         
-        submission.grade();
+        submission.grade(correctKey, points);
         
         assertThat(submission.isCorrect()).isTrue();
         assertThat(submission.getAwardedPoints()).isEqualTo(points);
@@ -62,9 +67,9 @@ public class SubmissionGradingPropertyTest {
         Assume.that(!correctKey.equalsIgnoreCase(wrongAnswer.trim()));
         
         var context = createSubmissionContext(correctKey, points);
-        Submission submission = new Submission(context.team, context.question, wrongAnswer);
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), wrongAnswer);
         
-        submission.grade();
+        submission.grade(correctKey, points);
         
         assertThat(submission.isCorrect()).isFalse();
         assertThat(submission.getAwardedPoints()).isEqualTo(0);
@@ -72,6 +77,8 @@ public class SubmissionGradingPropertyTest {
 
     /**
      * Property 6: Team.totalScore increases by awardedPoints after grading
+     * Note: grade() no longer updates team score directly; service layer handles this.
+     * This test verifies that after manual team score update, the score is correct.
      */
     @Property(tries = 20)
     void gradingUpdatesTeamScore(
@@ -81,8 +88,13 @@ public class SubmissionGradingPropertyTest {
         var context = createSubmissionContext(correctKey, points);
         context.team.setTotalScore(initialTeamScore);
         
-        Submission submission = new Submission(context.team, context.question, correctKey);
-        submission.grade();
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), correctKey);
+        submission.grade(correctKey, points);
+        
+        // Simulate service-layer team score update
+        if (submission.isCorrect()) {
+            context.team.addPoints(submission.getAwardedPoints());
+        }
         
         int expectedScore = initialTeamScore + points;
         assertThat(context.team.getTotalScore()).isEqualTo(expectedScore);
@@ -101,8 +113,13 @@ public class SubmissionGradingPropertyTest {
         var context = createSubmissionContext(correctKey, 10);
         context.team.setTotalScore(initialTeamScore);
         
-        Submission submission = new Submission(context.team, context.question, wrongAnswer);
-        submission.grade();
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), wrongAnswer);
+        submission.grade(correctKey, 10);
+        
+        // Simulate service-layer team score update
+        if (submission.isCorrect()) {
+            context.team.addPoints(submission.getAwardedPoints());
+        }
         
         assertThat(context.team.getTotalScore()).isEqualTo(initialTeamScore);
     }
@@ -115,7 +132,7 @@ public class SubmissionGradingPropertyTest {
         var context = createSubmissionContext("answer", 10);
         LocalDateTime before = LocalDateTime.now();
         
-        Submission submission = new Submission(context.team, context.question, answer);
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), answer);
         
         LocalDateTime after = LocalDateTime.now();
         assertThat(submission.getSubmittedAt())
@@ -129,7 +146,7 @@ public class SubmissionGradingPropertyTest {
     @Property(tries = 5)
     void validateSubmittedAtThrowsForFutureTimestamp() {
         var context = createSubmissionContext("answer", 10);
-        Submission submission = new Submission(context.team, context.question, "answer");
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), "answer");
         submission.setSubmittedAt(LocalDateTime.now().plusDays(1));
         
         assertThatThrownBy(submission::validateSubmittedAt)
@@ -143,7 +160,7 @@ public class SubmissionGradingPropertyTest {
     @Property(tries = 20)
     void validateSubmittedAtPassesForPastTimestamp() {
         var context = createSubmissionContext("answer", 10);
-        Submission submission = new Submission(context.team, context.question, "answer");
+        Submission submission = new Submission(context.team.getId(), context.question.getId(), "answer");
         submission.setSubmittedAt(LocalDateTime.now().minusMinutes(5));
         
         // Should not throw
@@ -162,7 +179,7 @@ public class SubmissionGradingPropertyTest {
 
     private SubmissionContext createSubmissionContext(String correctKey, int points) {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123-456", QuizStatus.READY);
-        Team team = new Team(quiz, "Test Team", "ABC-123");
+        Team team = new Team(quiz.getId(), "Test Team", "ABC-123");
         Question question = new Question(quiz, "What is the answer?", 
                 QuestionType.IDENTIFICATION, Difficulty.EASY, correctKey);
         question.setPoints(points);

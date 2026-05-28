@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BiGroup, BiPlus, BiTrash, BiRefresh, BiSearch, BiX, BiErrorCircle, BiCopy, BiCheck } from 'react-icons/bi';
 import { teamsApi, quizzesApi, type Team, type Quiz } from '../../services/api';
+import { parseSmartName } from '../../utils/nameUtils';
 import { useAuth } from '../../contexts/AuthContext';
 import CustomSelect from '../../components/common/CustomSelect';
 import '../../styles/admin.css';
@@ -21,7 +22,7 @@ export default function AdminTeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [teamName, setTeamName] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const { assignments, isSuperAdmin, canManageTeams } = useAuth();
+  const { assignments, isSuperAdmin } = useAuth();
 
   useEffect(() => { loadQuizzes(); }, []);
   useEffect(() => { if (selectedQuizId) loadTeams(); else setTeams([]); }, [selectedQuizId]);
@@ -107,7 +108,10 @@ export default function AdminTeamsPage() {
     }
   };
 
-  const filteredTeams = teams.filter((t) => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredTeams = teams.filter((t) => {
+    const { name } = parseSmartName(t.name);
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
   const selectedQuiz = quizzes.find((q) => q.id === selectedQuizId);
 
   if (loading && quizzes.length === 0) {
@@ -191,7 +195,7 @@ export default function AdminTeamsPage() {
               <h3 style={{ fontWeight: 700, color: '#fff', margin: 0 }}>{selectedQuiz.title}</h3>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: '4px 0 0' }}>{teams.length} teams registered</p>
             </div>
-            <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'active' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
+            <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'live' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
           </div>
         </div>
       )}
@@ -205,7 +209,6 @@ export default function AdminTeamsPage() {
                 <th>TEAM NAME</th>
                 <th>ACCESS CODE</th>
                 <th>SCORE</th>
-                <th>CREATED</th>
                 <th style={{ textAlign: 'right' }}>ACTIONS</th>
               </tr>
             </thead>
@@ -213,16 +216,26 @@ export default function AdminTeamsPage() {
               {filteredTeams.length > 0 ? filteredTeams.map((t) => (
                 <tr key={t.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ 
-                        width: 40, height: 40, borderRadius: 10, 
-                        background: 'linear-gradient(135deg, var(--admin-accent), var(--admin-accent-light))', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' 
-                      }}>
-                        <BiGroup size={20} />
-                      </div>
-                      <span style={{ fontWeight: 600 }}>{t.name}</span>
-                    </div>
+                    {(() => {
+                      const { name, avatarId } = parseSmartName(t.name);
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ 
+                            width: 40, height: 40, borderRadius: 10, 
+                            background: avatarId ? 'transparent' : 'linear-gradient(135deg, var(--admin-accent), var(--admin-accent-light))', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000',
+                            overflow: 'hidden'
+                          }}>
+                            {avatarId ? (
+                              <img src={`/avatars/${avatarId}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            ) : (
+                              <BiGroup size={20} />
+                            )}
+                          </div>
+                          <span style={{ fontWeight: 600 }}>{name}</span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -235,8 +248,7 @@ export default function AdminTeamsPage() {
                       </button>
                     </div>
                   </td>
-                  <td><span style={{ fontWeight: 800, color: 'var(--admin-accent)', fontSize: 18 }}>{t.score}</span></td>
-                  <td style={{ color: 'rgba(255,255,255,0.6)' }}>{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td><span style={{ fontWeight: 800, color: 'var(--admin-accent)', fontSize: 18 }}>{t.totalScore}</span></td>
                   <td style={{ textAlign: 'right' }}>
                     <button className="admin-btn-icon danger" onClick={() => { setSelectedTeam(t); setShowDeleteModal(true); }} title="Remove">
                       <BiTrash size={18} />
@@ -245,7 +257,7 @@ export default function AdminTeamsPage() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={4}>
                     <div className="admin-empty-state">
                       <div className="admin-empty-icon"><BiGroup size={40} /></div>
                       <h3 className="admin-empty-title">{searchQuery ? 'No teams match your search' : 'No teams registered yet'}</h3>
@@ -310,7 +322,7 @@ export default function AdminTeamsPage() {
                   <BiTrash size={32} />
                 </div>
                 <p style={{ color: 'rgba(255,255,255,0.8)' }}>
-                  Are you sure you want to remove <strong style={{ color: '#fff' }}>{selectedTeam.name}</strong>?
+                  Are you sure you want to remove <strong style={{ color: '#fff' }}>{parseSmartName(selectedTeam.name).name}</strong>?
                 </p>
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>
                   This will also delete all their submissions.

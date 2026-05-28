@@ -1,15 +1,21 @@
 package com.intelliquiz.api.domain.entities;
 
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.user.internal.domain.entities.QuizAssignment;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.intelliquiz.api.domain.enums.*;
+import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 import net.jqwik.spring.JqwikSpringSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Set;
@@ -56,7 +62,7 @@ public class JsonSerializationPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        QuizAssignment assignment = new QuizAssignment(user, quiz);
+        QuizAssignment assignment = new QuizAssignment(user, quiz.getId());
         assignment.setPermissions(permissions);
         user.addAssignment(assignment);
         entityManager.persistAndFlush(assignment);
@@ -116,8 +122,7 @@ public class JsonSerializationPropertyTest {
         quiz.addQuestion(question);
         entityManager.persistAndFlush(question);
         
-        Team team = new Team(quiz, teamName, accessCode);
-        quiz.addTeam(team);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         entityManager.clear();
         
@@ -174,15 +179,14 @@ public class JsonSerializationPropertyTest {
         Quiz quiz = new Quiz("Test Quiz", "Description", "123456", QuizStatus.DRAFT);
         entityManager.persistAndFlush(quiz);
         
-        Team team = new Team(quiz, teamName, accessCode);
+        Team team = new Team(quiz.getId(), teamName, accessCode);
         entityManager.persistAndFlush(team);
         
         Question question = new Question(quiz, "Test question?", QuestionType.MULTIPLE_CHOICE, 
                 Difficulty.EASY, "A");
         entityManager.persistAndFlush(question);
         
-        Submission submission = new Submission(team, question, submittedAnswer);
-        team.addSubmission(submission);
+        Submission submission = new Submission(team.getId(), question.getId(), submittedAnswer);
         entityManager.persistAndFlush(submission);
         entityManager.clear();
         

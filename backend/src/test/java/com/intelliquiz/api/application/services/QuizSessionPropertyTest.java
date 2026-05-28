@@ -1,11 +1,13 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.Question;
-import com.intelliquiz.api.domain.entities.Quiz;
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.QuizStatus;
-import com.intelliquiz.api.domain.ports.QuizRepository;
+import com.intelliquiz.api.quiz.internal.application.services.QuizSessionService;
+
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuizStatus;
+import com.intelliquiz.api.quiz.internal.domain.ports.QuizRepository;
 import net.jqwik.api.*;
 
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public class QuizSessionPropertyTest {
         when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of(currentlyActiveQuiz));
         when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
         
-        QuizSessionService service = new QuizSessionService(quizRepository);
+        QuizSessionService service = new QuizSessionService(quizRepository, mock(org.springframework.context.ApplicationEventPublisher.class));
         Quiz result = service.activateSession(quizToActivate.getId());
         
         // Verify the previously active quiz was deactivated
@@ -70,7 +72,7 @@ public class QuizSessionPropertyTest {
         when(quizRepository.findById(1L)).thenReturn(Optional.of(activeQuiz));
         when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
         
-        QuizSessionService service = new QuizSessionService(quizRepository);
+        QuizSessionService service = new QuizSessionService(quizRepository, mock(org.springframework.context.ApplicationEventPublisher.class));
         Quiz result = service.deactivateSession(1L);
         
         assertThat(result.isLiveSession()).isFalse();
@@ -87,7 +89,7 @@ public class QuizSessionPropertyTest {
         
         when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of(activeQuiz));
         
-        QuizSessionService service = new QuizSessionService(quizRepository);
+        QuizSessionService service = new QuizSessionService(quizRepository, mock(org.springframework.context.ApplicationEventPublisher.class));
         Optional<Quiz> result = service.getActiveSession();
         
         assertThat(result).isPresent();
@@ -103,7 +105,7 @@ public class QuizSessionPropertyTest {
         
         when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of());
         
-        QuizSessionService service = new QuizSessionService(quizRepository);
+        QuizSessionService service = new QuizSessionService(quizRepository, mock(org.springframework.context.ApplicationEventPublisher.class));
         Optional<Quiz> result = service.getActiveSession();
         
         assertThat(result).isEmpty();
@@ -122,7 +124,7 @@ public class QuizSessionPropertyTest {
         when(quizRepository.findByIsLiveSessionTrue()).thenReturn(List.of(quiz));
         when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
         
-        QuizSessionService service = new QuizSessionService(quizRepository);
+        QuizSessionService service = new QuizSessionService(quizRepository, mock(org.springframework.context.ApplicationEventPublisher.class));
         Quiz result = service.activateSession(1L);
         
         // Quiz should still be active

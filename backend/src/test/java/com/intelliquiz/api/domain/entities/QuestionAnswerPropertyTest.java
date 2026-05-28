@@ -1,10 +1,13 @@
 package com.intelliquiz.api.domain.entities;
 
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.QuizStatus;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+
+
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.QuizStatus;
 import net.jqwik.api.*;
-import net.jqwik.api.constraints.NotBlank;
 
 import java.util.List;
 

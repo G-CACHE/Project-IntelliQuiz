@@ -1,9 +1,16 @@
 package com.intelliquiz.api.presentation.dto;
 
-import com.intelliquiz.api.domain.enums.Difficulty;
-import com.intelliquiz.api.domain.enums.QuestionType;
-import com.intelliquiz.api.domain.enums.SystemRole;
-import com.intelliquiz.api.presentation.dto.request.*;
+import com.intelliquiz.api.auth.internal.presentation.dto.request.AccessCodeRequest;
+import com.intelliquiz.api.auth.internal.presentation.dto.request.LoginRequest;
+import com.intelliquiz.api.shared.enums.NavigationMode;
+import com.intelliquiz.api.shared.enums.Difficulty;
+import com.intelliquiz.api.shared.enums.QuizAccessMode;
+import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.submission.internal.presentation.dto.request.SubmitAnswerRequest;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuizRequest;
+import com.intelliquiz.api.quiz.internal.presentation.dto.request.CreateQuestionRequest;
+import com.intelliquiz.api.user.internal.presentation.dto.request.CreateUserRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -69,7 +76,14 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createQuizRequestRejectsBlankTitle(@ForAll("blankStrings") String title) {
-        CreateQuizRequest request = new CreateQuizRequest(title, "description");
+        CreateQuizRequest request = new CreateQuizRequest(
+                title,
+                "description",
+                QuizAccessMode.RESTRICTED,
+                NavigationMode.TOURNAMENT,
+                0,
+                false
+        );
         Set<ConstraintViolation<CreateQuizRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("title"));
@@ -77,7 +91,14 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createQuizRequestRejectsTitleOver200Chars(@ForAll("longStrings") String title) {
-        CreateQuizRequest request = new CreateQuizRequest(title, "description");
+        CreateQuizRequest request = new CreateQuizRequest(
+                title,
+                "description",
+                QuizAccessMode.RESTRICTED,
+                NavigationMode.TOURNAMENT,
+                0,
+                false
+        );
         Set<ConstraintViolation<CreateQuizRequest>> violations = validator.validate(request);
         assertThat(violations).isNotEmpty();
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("title"));
@@ -85,7 +106,14 @@ class RequestValidationPropertyTest {
 
     @Property(tries = 10)
     void createQuizRequestAcceptsValidTitle(@ForAll("validTitles") String title) {
-        CreateQuizRequest request = new CreateQuizRequest(title, "description");
+        CreateQuizRequest request = new CreateQuizRequest(
+                title,
+                "description",
+                QuizAccessMode.RESTRICTED,
+                NavigationMode.TOURNAMENT,
+                0,
+                false
+        );
         Set<ConstraintViolation<CreateQuizRequest>> violations = validator.validate(request);
         assertThat(violations).isEmpty();
     }
@@ -99,6 +127,7 @@ class RequestValidationPropertyTest {
                 QuestionType.MULTIPLE_CHOICE,
                 Difficulty.MEDIUM,
                 "A",
+                false,
                 points,
                 30,
                 List.of("A", "B", "C", "D")
@@ -115,6 +144,7 @@ class RequestValidationPropertyTest {
                 QuestionType.MULTIPLE_CHOICE,
                 Difficulty.MEDIUM,
                 "A",
+                false,
                 10,
                 timeLimit,
                 List.of("A", "B", "C", "D")

@@ -51,10 +51,10 @@ export default function HostControlsPage({ quizId }: { quizId: number }) {
     try {
       const [quizRes, scoreboardRes] = await Promise.all([
         fetch(`/api/quizzes/${quizId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch(`/api/quizzes/${quizId}/scoreboard`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
@@ -88,9 +88,7 @@ export default function HostControlsPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/quizzes/${quizId}/activate`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to activate quiz');
@@ -107,9 +105,7 @@ export default function HostControlsPage({ quizId }: { quizId: number }) {
     try {
       const response = await fetch(`/api/quizzes/${quizId}/deactivate`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to deactivate quiz');

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Plus, Edit2, Trash2, Lock } from 'lucide-react';
 import { Button } from '../../components/common/Button';
+import CustomSelect from '../../components/common/CustomSelect';
 import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
@@ -15,7 +16,7 @@ interface AdminUser {
 interface CreateUserRequest {
   username: string;
   password: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: 'ADMIN';
 }
 
 export default function UserManagementPage() {
@@ -41,9 +42,7 @@ export default function UserManagementPage() {
     setError(null);
     try {
       const response = await fetch('/api/users', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load users');
       const data = await response.json();
@@ -64,10 +63,8 @@ export default function UserManagementPage() {
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -90,10 +87,8 @@ export default function UserManagementPage() {
     try {
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: formData.username,
           password: formData.password,
@@ -117,9 +112,7 @@ export default function UserManagementPage() {
     try {
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to delete user');
@@ -267,14 +260,13 @@ export default function UserManagementPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Role
             </label>
-            <select
+            <CustomSelect
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'ADMIN' | 'SUPER_ADMIN' })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="ADMIN">Admin</option>
-              <option value="SUPER_ADMIN">Super Admin</option>
-            </select>
+              onChange={(v) => setFormData({ ...formData, role: v as 'ADMIN' })}
+              options={[
+                { value: 'ADMIN', label: 'Admin' },
+              ]}
+            />
           </div>
 
           <div className="flex gap-3 pt-4">

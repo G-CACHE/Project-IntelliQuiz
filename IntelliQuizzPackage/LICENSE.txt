@@ -1,0 +1,13 @@
+IntelliQuiz License Agreement
+
+Copyright (c) 2026 IntelliQuiz Team
+
+Permission is hereby granted to use this software for educational and 
+internal business purposes.
+
+This software is provided "as is", without warranty of any kind, express 
+or implied, including but not limited to the warranties of merchantability, 
+fitness for a particular purpose and noninfringement.
+
+For support and documentation, please refer to the included README.txt 
+and ACCESS_INFO.txt files.

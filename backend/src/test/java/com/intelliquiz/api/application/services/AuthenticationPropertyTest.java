@@ -1,11 +1,12 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.User;
-import com.intelliquiz.api.domain.enums.SystemRole;
-import com.intelliquiz.api.domain.ports.PasswordHashingService;
-import com.intelliquiz.api.domain.ports.UserRepository;
+import com.intelliquiz.api.auth.internal.application.services.AuthenticationResult;
+import com.intelliquiz.api.auth.internal.application.services.AuthenticationService;
+import com.intelliquiz.api.user.UserFacade;
+import com.intelliquiz.api.user.dto.UserCredentialsDto;
+import com.intelliquiz.api.shared.enums.SystemRole;
+import com.intelliquiz.api.shared.domain.ports.PasswordHashingService;
 import net.jqwik.api.*;
-import net.jqwik.api.constraints.NotBlank;
 
 import java.util.Optional;
 
@@ -21,28 +22,30 @@ import static org.mockito.Mockito.*;
 public class AuthenticationPropertyTest {
 
     /**
-     * Property 10: Valid credentials return success with User entity
+     * Property 10: Valid credentials return success with user info
      */
     @Property(tries = 20)
     void validCredentialsReturnSuccess(
             @ForAll("usernames") String username,
             @ForAll("passwords") String password) {
         // Setup mocks
-        UserRepository userRepository = mock(UserRepository.class);
+        UserFacade userFacade = mock(UserFacade.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
         
-        User user = new User(username, "hashedPassword", SystemRole.ADMIN);
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.ADMIN, false);
+        when(userFacade.findCredentials(username)).thenReturn(Optional.of(creds));
         when(passwordHashingService.matches(password, "hashedPassword")).thenReturn(true);
         
-        AuthenticationService authService = new AuthenticationService(userRepository, passwordHashingService);
+        AuthenticationService authService = new AuthenticationService(userFacade, passwordHashingService);
         
         // Execute
         AuthenticationResult result = authService.authenticate(username, password);
         
         // Verify
         assertThat(result.success()).isTrue();
-        assertThat(result.user()).isEqualTo(user);
+        assertThat(result.userId()).isEqualTo(1L);
+        assertThat(result.username()).isEqualTo(username);
+        assertThat(result.role()).isEqualTo(SystemRole.ADMIN);
         assertThat(result.errorMessage()).isNull();
     }
 
@@ -54,21 +57,21 @@ public class AuthenticationPropertyTest {
             @ForAll("usernames") String username,
             @ForAll("passwords") String password) {
         // Setup mocks
-        UserRepository userRepository = mock(UserRepository.class);
+        UserFacade userFacade = mock(UserFacade.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
         
-        User user = new User(username, "hashedPassword", SystemRole.ADMIN);
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.ADMIN, false);
+        when(userFacade.findCredentials(username)).thenReturn(Optional.of(creds));
         when(passwordHashingService.matches(password, "hashedPassword")).thenReturn(false);
         
-        AuthenticationService authService = new AuthenticationService(userRepository, passwordHashingService);
+        AuthenticationService authService = new AuthenticationService(userFacade, passwordHashingService);
         
         // Execute
         AuthenticationResult result = authService.authenticate(username, password);
         
         // Verify
         assertThat(result.success()).isFalse();
-        assertThat(result.user()).isNull();
+        assertThat(result.userId()).isNull();
         assertThat(result.errorMessage()).isNotNull();
     }
 
@@ -80,19 +83,19 @@ public class AuthenticationPropertyTest {
             @ForAll("usernames") String username,
             @ForAll("passwords") String password) {
         // Setup mocks
-        UserRepository userRepository = mock(UserRepository.class);
+        UserFacade userFacade = mock(UserFacade.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
         
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+        when(userFacade.findCredentials(username)).thenReturn(Optional.empty());
         
-        AuthenticationService authService = new AuthenticationService(userRepository, passwordHashingService);
+        AuthenticationService authService = new AuthenticationService(userFacade, passwordHashingService);
         
         // Execute
         AuthenticationResult result = authService.authenticate(username, password);
         
         // Verify
         assertThat(result.success()).isFalse();
-        assertThat(result.user()).isNull();
+        assertThat(result.userId()).isNull();
         assertThat(result.errorMessage()).isNotNull();
     }
 
@@ -105,21 +108,21 @@ public class AuthenticationPropertyTest {
             @ForAll("usernames") String username,
             @ForAll("passwords") String password) {
         // Setup mocks for wrong username scenario
-        UserRepository userRepository1 = mock(UserRepository.class);
+        UserFacade userFacade1 = mock(UserFacade.class);
         PasswordHashingService passwordHashingService1 = mock(PasswordHashingService.class);
-        when(userRepository1.findByUsername(username)).thenReturn(Optional.empty());
+        when(userFacade1.findCredentials(username)).thenReturn(Optional.empty());
         
-        AuthenticationService authService1 = new AuthenticationService(userRepository1, passwordHashingService1);
+        AuthenticationService authService1 = new AuthenticationService(userFacade1, passwordHashingService1);
         AuthenticationResult wrongUsernameResult = authService1.authenticate(username, password);
         
         // Setup mocks for wrong password scenario
-        UserRepository userRepository2 = mock(UserRepository.class);
+        UserFacade userFacade2 = mock(UserFacade.class);
         PasswordHashingService passwordHashingService2 = mock(PasswordHashingService.class);
-        User user = new User(username, "hashedPassword", SystemRole.ADMIN);
-        when(userRepository2.findByUsername(username)).thenReturn(Optional.of(user));
+        UserCredentialsDto creds = new UserCredentialsDto(1L, username, "hashedPassword", SystemRole.ADMIN, false);
+        when(userFacade2.findCredentials(username)).thenReturn(Optional.of(creds));
         when(passwordHashingService2.matches(password, "hashedPassword")).thenReturn(false);
         
-        AuthenticationService authService2 = new AuthenticationService(userRepository2, passwordHashingService2);
+        AuthenticationService authService2 = new AuthenticationService(userFacade2, passwordHashingService2);
         AuthenticationResult wrongPasswordResult = authService2.authenticate(username, password);
         
         // Both should have the same error message (generic)
@@ -132,9 +135,9 @@ public class AuthenticationPropertyTest {
      */
     @Property(tries = 5)
     void nullOrBlankCredentialsReturnFailure() {
-        UserRepository userRepository = mock(UserRepository.class);
+        UserFacade userFacade = mock(UserFacade.class);
         PasswordHashingService passwordHashingService = mock(PasswordHashingService.class);
-        AuthenticationService authService = new AuthenticationService(userRepository, passwordHashingService);
+        AuthenticationService authService = new AuthenticationService(userFacade, passwordHashingService);
         
         assertThat(authService.authenticate(null, "password").success()).isFalse();
         assertThat(authService.authenticate("username", null).success()).isFalse();

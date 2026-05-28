@@ -1,7 +1,11 @@
 package com.intelliquiz.api.application.services;
 
-import com.intelliquiz.api.domain.entities.*;
-import com.intelliquiz.api.domain.enums.*;
+import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.quiz.internal.domain.entities.Question;
+import com.intelliquiz.api.submission.internal.domain.entities.Submission;
+import com.intelliquiz.api.team.internal.domain.entities.Team;
+import com.intelliquiz.api.user.internal.domain.entities.User;
+import com.intelliquiz.api.shared.enums.*;
 import net.jqwik.api.*;
 
 import java.time.LocalDateTime;
@@ -75,7 +79,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void teamScoreCannotBeNegative(@ForAll("negativeIntegers") int negativeScore) {
-        Team team = new Team(null, "Team", "ABC-123");
+        Team team = new Team((Long) null, "Team", "ABC-123");
         team.setTotalScore(negativeScore);
         
         assertThatThrownBy(team::validateScore)
@@ -88,7 +92,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void teamScoreValidationAcceptsNonNegative(@ForAll("nonNegativeIntegers") int score) {
-        Team team = new Team(null, "Team", "ABC-123");
+        Team team = new Team((Long) null, "Team", "ABC-123");
         team.setTotalScore(score);
         
         // Should not throw
@@ -101,7 +105,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void submissionTimestampCannotBeInFuture(@ForAll("futureTimestamps") LocalDateTime futureTime) {
-        Submission submission = new Submission(null, null, "answer");
+        Submission submission = new Submission((Long) null, (Long) null, "answer");
         submission.setSubmittedAt(futureTime);
         
         assertThatThrownBy(submission::validateSubmittedAt)
@@ -114,7 +118,7 @@ public class EntityValidationPropertyTest {
      */
     @Property(tries = 20)
     void submissionTimestampValidationAcceptsPastOrPresent(@ForAll("pastTimestamps") LocalDateTime pastTime) {
-        Submission submission = new Submission(null, null, "answer");
+        Submission submission = new Submission((Long) null, (Long) null, "answer");
         submission.setSubmittedAt(pastTime);
         
         // Should not throw

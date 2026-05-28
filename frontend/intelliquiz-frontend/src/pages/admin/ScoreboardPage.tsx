@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BiTrophy, BiRefresh, BiX, BiErrorCircle, BiMedal, BiCrown } from 'react-icons/bi';
 import { scoreboardApi, quizzesApi, type ScoreboardEntry, type Quiz } from '../../services/api';
+import CustomSelect from '../../components/common/CustomSelect';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin.css';
 
@@ -111,10 +112,12 @@ export default function AdminScoreboardPage() {
       <div className="admin-card" style={{ marginBottom: 20, padding: 16 }}>
         <div className="admin-form-group" style={{ marginBottom: 0 }}>
           <label className="admin-form-label">Select Quiz</label>
-          <select value={selectedQuizId} onChange={(e) => setSelectedQuizId(parseInt(e.target.value))} className="admin-form-input admin-form-select">
-            <option value={0}>Select a quiz</option>
-            {quizzes.map((q) => <option key={q.id} value={q.id}>{q.title} ({q.status})</option>)}
-          </select>
+          <CustomSelect
+            value={String(selectedQuizId)}
+            onChange={(v) => setSelectedQuizId(parseInt(v) || 0)}
+            placeholder="Select a quiz"
+            options={quizzes.map((q) => ({ value: String(q.id), label: `${q.title} (${q.status})` }))}
+          />
         </div>
       </div>
 
@@ -133,7 +136,7 @@ export default function AdminScoreboardPage() {
                   Live
                 </span>
               )}
-              <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'active' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
+              <span className={`admin-badge-status ${selectedQuiz.status === 'ACTIVE' ? 'live' : selectedQuiz.status === 'READY' ? 'ready' : 'draft'}`}>{selectedQuiz.status}</span>
             </div>
           </div>
         </div>

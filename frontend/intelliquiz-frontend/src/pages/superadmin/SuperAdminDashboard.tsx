@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, BookOpen, Users, Trophy, Settings } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Trophy, Settings, Check } from 'lucide-react';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { Loader } from '../../components/common/Loader';
 
@@ -38,10 +38,10 @@ export default function SuperAdminDashboard() {
     try {
       const [quizzesRes, usersRes] = await Promise.all([
         fetch('/api/quizzes', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
         fetch('/api/users', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          credentials: 'include',
         }),
       ]);
 
@@ -184,18 +184,6 @@ export default function SuperAdminDashboard() {
               👤 Manage Users
             </a>
             <a
-              href="/superadmin/quizzes"
-              className="block px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-medium"
-            >
-              📋 Manage Quizzes
-            </a>
-            <a
-              href="/superadmin/editor"
-              className="block px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-            >
-              ✏️ Edit Quiz
-            </a>
-            <a
               href="/superadmin/permissions"
               className="block px-4 py-3 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium"
             >
@@ -247,10 +235,10 @@ export default function SuperAdminDashboard() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">System Overview</h3>
             <ul className="text-gray-700 text-sm space-y-1">
-              <li>✓ All admin users and permissions are managed from this dashboard</li>
-              <li>✓ You have full access to create and manage all quizzes</li>
-              <li>✓ Delegate quiz management to admin users with specific permissions</li>
-              <li>✓ Monitor all system activity and audit logs</li>
+              <li><Check className="inline w-4 h-4 mr-1" />All admin users and permissions are managed from this dashboard</li>
+              <li><Check className="inline w-4 h-4 mr-1" />You have full access to create and manage all quizzes</li>
+              <li><Check className="inline w-4 h-4 mr-1" />Delegate quiz management to admin users with specific permissions</li>
+              <li><Check className="inline w-4 h-4 mr-1" />Monitor all system activity and audit logs</li>
             </ul>
           </div>
         </div>

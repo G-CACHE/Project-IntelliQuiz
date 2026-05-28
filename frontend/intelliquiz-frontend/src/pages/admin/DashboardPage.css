@@ -1,0 +1,813 @@
+/* ============================================================
+   IntelliQuiz Admin Dashboard — Aurum v3
+   New stat card design: Left-accent floating icon, no top bars
+   ============================================================ */
+
+.admin-clean-dashboard {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── HERO ─────────────────────────────────────────────────── */
+.admin-clean-hero {
+  border-radius: 22px;
+  background: linear-gradient(135deg, #6b0f23 0%, #880015 55%, #a8002c 100%);
+  box-shadow: none;
+  padding: 30px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-clean-hero::before {
+  content: '';
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  right: -80px;
+  top: -120px;
+  pointer-events: none;
+}
+
+.admin-clean-hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-clean-hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-clean-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fce6eb;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-clean-title {
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.admin-clean-subtitle {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.admin-clean-hero-right {
+  flex-shrink: 0;
+}
+
+/* ── PRIMARY & SECONDARY BUTTONS ─────────────────────────── */
+.admin-clean-btn-primary,
+.admin-clean-btn-secondary {
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.admin-clean-btn-primary {
+  padding: 11px 22px;
+  min-height: 46px;
+  background: #fbbf24;
+  border: 1.5px solid #d97706;
+  color: #78350f;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+}
+
+.admin-clean-btn-primary:hover {
+  background: #fcd34d;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+  transform: translateY(-1px);
+}
+
+.admin-clean-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.admin-clean-btn-secondary {
+  padding: 7px 14px;
+  min-height: 36px;
+  background: #ffffff;
+  border: 1.5px solid #d1d5db;
+  color: #374151;
+  font-size: 13px;
+}
+
+.admin-clean-btn-secondary:hover {
+  border-color: #880015;
+  color: #880015;
+  background: #fff5f7;
+}
+
+.admin-clean-btn-primary:focus-visible,
+.admin-clean-btn-secondary:focus-visible,
+.admin-clean-action:focus-visible,
+.admin-clean-quiz-row:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+
+/* ── STATS ROW — Left-accent icon design ─────────────────── */
+.admin-clean-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-clean-stat-card {
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Remove the left colored strip */
+.admin-clean-stat-card::after {
+  display: none;
+}
+
+/* Teal/Cyan — Total Quizzes */
+.admin-clean-stat-card:nth-child(1) {
+  background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+  border-color: #67e8f9;
+}
+.admin-clean-stat-card:nth-child(1) .admin-clean-stat-icon {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0891b2;
+  border: 2px solid #22d3ee;
+}
+
+/* Red/Rose — Live Now */
+.admin-clean-stat-card:nth-child(2) {
+  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  border-color: #fda4af;
+}
+.admin-clean-stat-card:nth-child(2) .admin-clean-stat-icon {
+  background: rgba(255, 255, 255, 0.9);
+  color: #e11d48;
+  border: 2px solid #fb7185;
+}
+
+/* Green — Ready */
+.admin-clean-stat-card:nth-child(3) {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #6ee7b7;
+}
+.admin-clean-stat-card:nth-child(3) .admin-clean-stat-icon {
+  background: rgba(255, 255, 255, 0.9);
+  color: #059669;
+  border: 2px solid #34d399;
+}
+
+/* Purple/Indigo — Draft */
+.admin-clean-stat-card:nth-child(4) {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-color: #a5b4fc;
+}
+.admin-clean-stat-card:nth-child(4) .admin-clean-stat-icon {
+  background: rgba(255, 255, 255, 0.9);
+  color: #4f46e5;
+  border: 2px solid #818cf8;
+}
+
+.admin-clean-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.admin-clean-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-clean-stat-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.admin-clean-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-clean-stat-value {
+  margin: 0;
+  color: #111827;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.admin-clean-stat-label {
+  margin: 0;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* ── MAIN GRID ────────────────────────────────────────────── */
+.admin-clean-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.admin-clean-panel {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.admin-clean-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.admin-clean-panel-head {
+  margin-bottom: 14px;
+}
+
+.admin-clean-panel-head h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.admin-clean-panel-head h2 svg {
+  color: #880015;
+}
+
+.admin-clean-panel-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* ── QUICK ACTION BUTTONS ─────────────────────────────────── */
+.admin-clean-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-clean-action {
+  border: 1.5px solid #d97706;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-clean-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.admin-clean-action:hover::before {
+  opacity: 1;
+}
+
+.admin-clean-action:hover {
+  border-color: #ca8a04;
+  background: linear-gradient(135deg, #fcd34d 0%, #fde68a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.55);
+}
+
+.admin-clean-action:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.admin-clean-action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  color: #78350f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(120, 53, 15, 0.1);
+}
+
+.admin-clean-action:hover .admin-clean-action-icon {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.95);
+  color: #78350f;
+  transform: scale(1.05);
+}
+
+.admin-clean-action strong {
+  display: block;
+  color: #78350f;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.admin-clean-action small {
+  display: block;
+  margin-top: 3px;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Secondary action button variant - white style */
+.admin-clean-action.secondary {
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.admin-clean-action.secondary::before {
+  display: none;
+}
+
+.admin-clean-action.secondary:hover {
+  border-color: #880015;
+  background: #fff5f7;
+  box-shadow: 0 6px 16px rgba(136, 0, 21, 0.1);
+}
+
+.admin-clean-action.secondary .admin-clean-action-icon {
+  background: #fff0f3;
+  border-color: #ffcdd5;
+  color: #880015;
+  box-shadow: none;
+}
+
+.admin-clean-action.secondary:hover .admin-clean-action-icon {
+  background: #880015;
+  border-color: #880015;
+  color: #ffffff;
+}
+
+.admin-clean-action.secondary strong {
+  color: #111827;
+  text-shadow: none;
+}
+
+.admin-clean-action.secondary small {
+  color: #6b7280;
+}
+
+/* ── RECOMMENDED FLOW NOTE — Full width, maximized text ───── */
+.admin-clean-actions-note {
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-clean-actions-note-text {
+  min-width: 0;
+}
+
+.admin-clean-actions-note h3 {
+  margin: 0 0 4px;
+  color: #0c4a6e;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.admin-clean-actions-note p {
+  margin: 0;
+  color: #075985;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.admin-clean-actions-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.admin-clean-actions-steps span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.admin-clean-actions-steps span:nth-child(1) {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+}
+
+.admin-clean-actions-steps span:nth-child(2) {
+  background: #ecfdf5;
+  border: 1.5px solid #6ee7b7;
+  color: #065f46;
+}
+
+.admin-clean-actions-steps span:nth-child(3) {
+  background: #fff0f3;
+  border: 1.5px solid #ffcdd5;
+  color: #880015;
+}
+
+/* ── RECENT QUIZZES LIST ──────────────────────────────────── */
+.admin-clean-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.admin-clean-quiz-row {
+  width: 100%;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px 14px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+}
+
+.admin-clean-quiz-row:hover {
+  border-color: #880015;
+  background: #fff5f7;
+  box-shadow: 0 4px 12px rgba(136, 0, 21, 0.08);
+  transform: translateX(3px);
+}
+
+.admin-clean-quiz-meta-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-clean-quiz-title {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.admin-clean-quiz-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ── STATUS BADGES ────────────────────────────────────────── */
+.admin-clean-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1.5px solid transparent;
+  line-height: 1;
+}
+
+.admin-clean-status.status-draft {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.admin-clean-status.status-ready {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.admin-clean-status.status-live,
+.admin-clean-status.status-active {
+  background: #fff0f3;
+  border-color: #ffcdd5;
+  color: #880015;
+}
+
+.admin-clean-status.status-archived,
+.admin-clean-status.status-done {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+/* ── EMPTY STATE ──────────────────────────────────────────── */
+.admin-clean-empty {
+  border: 1.5px dashed #d1d5db;
+  border-radius: 14px;
+  background: #f9fafb;
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.admin-clean-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 14px;
+  background: #fff0f3;
+  border: 1.5px solid #ffcdd5;
+  color: #880015;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-clean-empty h3 {
+  margin: 0 0 6px;
+  color: #111827;
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.admin-clean-empty p {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .admin-clean-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-clean-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1050px) {
+  .admin-clean-hero-content {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .admin-clean-hero-right {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-clean-dashboard { gap: 14px; }
+  .admin-clean-hero { padding: 22px 20px; border-radius: 16px; }
+  .admin-clean-stats, .admin-clean-actions-grid { grid-template-columns: 1fr; }
+  .admin-clean-panel { border-radius: 14px; }
+  .admin-clean-actions-note { grid-template-columns: 1fr; }
+  .admin-clean-actions-steps { flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ── MODAL OVERRIDES - MATCH MY QUIZZES DESIGN ────────────────────────────────────────── */
+.admin-clean-dashboard .admin-modal {
+  max-width: 560px;
+  border-radius: 16px;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.14);
+  overflow: visible;
+}
+
+.admin-clean-dashboard .admin-modal-header {
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #7a1733 0%, #8d1f3f 100%);
+  padding: 18px 24px;
+}
+
+.admin-clean-dashboard .admin-modal-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.admin-clean-dashboard .admin-modal-footer {
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  background: #f9fafb;
+  border-top: 1.5px solid #f3f4f6;
+  padding: 14px 24px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.admin-clean-dashboard .admin-modal-body {
+  padding: 24px 24px 20px;
+  background: #ffffff;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.admin-clean-dashboard .admin-modal .admin-form-group {
+  margin-bottom: 14px;
+}
+
+.admin-clean-dashboard .admin-modal .admin-form-label {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn {
+  border-radius: 8px;
+  min-height: 40px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  border-width: 1.5px;
+  border-style: solid;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-secondary {
+  background: #ffffff;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-secondary:hover {
+  border-color: #880015;
+  color: #880015;
+  background: #fff5f7;
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-primary {
+  background: #880015;
+  color: #ffffff;
+  border-color: #6b0f23;
+  box-shadow: 0 4px 12px rgba(136, 0, 21, 0.3);
+}
+
+.admin-clean-dashboard .admin-modal-footer .admin-btn-primary:hover {
+  background: #6b0f23;
+  border-color: #5a0010;
+}
+
+.admin-clean-dashboard .admin-btn-icon {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  border-radius: 8px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.admin-clean-dashboard .admin-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: none;
+}
+
+.admin-clean-dashboard .admin-btn-icon:active {
+  transform: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* Force X button to stay fixed size in modal */
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  flex: 0 0 32px !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon:hover,
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon:active,
+.admin-clean-dashboard .admin-modal-header .admin-btn-icon:focus {
+  transform: none !important;
+  width: 32px !important;
+  height: 32px !important;
+}

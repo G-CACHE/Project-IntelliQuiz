@@ -1,5 +1,6 @@
 package com.intelliquiz.api.domain.services;
 
+import com.intelliquiz.api.shared.services.CodeGenerationService;
 import net.jqwik.api.*;
 
 import java.util.HashSet;
@@ -18,6 +19,7 @@ public class CodeGenerationPropertyTest {
     private static final String AMBIGUOUS_CHARS = "0O1IL";
     private static final String TEAM_CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     private static final String PROCTOR_CHARSET = "0123456789";
+    private static final String QUIZ_CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
     private final CodeGenerationService codeGenerationService = new CodeGenerationService();
 
@@ -160,5 +162,28 @@ public class CodeGenerationPropertyTest {
         assertThat(codeGenerationService.isProctorPinFormat("")).isFalse();
         assertThat(codeGenerationService.isProctorPinFormat("123")).isFalse();
         assertThat(codeGenerationService.isProctorPinFormat("1234567")).isFalse();
+    }
+
+    /**
+     * Property 4: Quiz codes are exactly 6 alphanumeric characters.
+     */
+    @Property(tries = 100)
+    void quizCodesFollowSixCharacterFormat() {
+        String quizCode = codeGenerationService.generateQuizCode();
+
+        assertThat(quizCode).hasSize(6);
+        assertThat(quizCode).matches("[A-Z0-9]{6}");
+    }
+
+    /**
+     * Property 4: Quiz codes use only the intended unambiguous charset.
+     */
+    @Property(tries = 100)
+    void quizCodesUseValidCharset() {
+        String quizCode = codeGenerationService.generateQuizCode();
+
+        for (char c : quizCode.toCharArray()) {
+            assertThat(QUIZ_CHARSET).contains(String.valueOf(c));
+        }
     }
 }

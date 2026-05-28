@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomSelect from '../../components/common/CustomSelect';
 import {
   BiPlay,
   BiPause,
@@ -14,6 +15,7 @@ import {
 } from 'react-icons/bi';
 import { quizzesApi, teamsApi, scoreboardApi, type Quiz, type Team, type ScoreboardEntry } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { parseSmartName } from '../../utils/nameUtils';
 import '../../styles/admin.css';
 
 export default function AdminHostPage() {
@@ -142,12 +144,12 @@ export default function AdminHostPage() {
       <div className="admin-card" style={{ marginBottom: 20, padding: 16 }}>
         <div className="admin-form-group" style={{ marginBottom: 0 }}>
           <label className="admin-form-label">Select Quiz to Host</label>
-          <select value={selectedQuizId} onChange={(e) => setSelectedQuizId(parseInt(e.target.value))} className="admin-form-input admin-form-select">
-            <option value={0}>Select a quiz</option>
-            {quizzes.filter(q => q.status === 'READY' || q.status === 'ACTIVE').map((q) => (
-              <option key={q.id} value={q.id}>{q.title} ({q.status})</option>
-            ))}
-          </select>
+          <CustomSelect
+            value={String(selectedQuizId)}
+            onChange={(v) => setSelectedQuizId(parseInt(v) || 0)}
+            placeholder="Select a quiz"
+            options={quizzes.filter(q => q.status === 'READY' || q.status === 'ACTIVE').map((q) => ({ value: String(q.id), label: `${q.title} (${q.status})` }))}
+          />
         </div>
       </div>
 
@@ -185,28 +187,40 @@ export default function AdminHostPage() {
             <div className="admin-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 className="admin-card-title" style={{ margin: 0 }}><BiGroup size={18} /> Teams</h3>
-                <button className="admin-btn admin-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={() => navigate(`/admin/teams?quizId=${selectedQuizId}`)}>Manage</button>
+                <button className="admin-btn admin-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={() => navigate(`/admin/quizzes/${selectedQuizId}#registration`)}>Manage</button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
-                {teams.length > 0 ? teams.map((team) => (
-                  <div key={team.id} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', background: '#f8fafc', borderRadius: 10
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
-                        <BiGroup size={16} />
+                {teams.length > 0 ? teams.map((team) => {
+                  const { name, avatarId } = parseSmartName(team.name);
+                  return (
+                    <div key={team.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px', background: '#f8fafc', borderRadius: 10
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ 
+                          width: 32, height: 32, borderRadius: 8, 
+                          background: avatarId ? 'transparent' : 'linear-gradient(135deg, #dbeafe, #bfdbfe)', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6',
+                          overflow: 'hidden'
+                        }}>
+                          {avatarId ? (
+                            <img src={`/avatars/${avatarId}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          ) : (
+                            <BiGroup size={16} />
+                          )}
+                        </div>
+                        <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 14 }}>{name}</span>
                       </div>
-                      <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 14 }}>{team.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <code style={{ padding: '4px 8px', background: '#fff', borderRadius: 6, color: '#6366f1', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #e2e8f0' }}>{team.accessCode}</code>
+                        <button onClick={() => copyAccessCode(team.accessCode)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+                          {copiedCode === team.accessCode ? <BiCheck size={14} style={{ color: '#22c55e' }} /> : <BiCopy size={14} />}
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <code style={{ padding: '4px 8px', background: '#fff', borderRadius: 6, color: '#6366f1', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, border: '1px solid #e2e8f0' }}>{team.accessCode}</code>
-                      <button onClick={() => copyAccessCode(team.accessCode)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
-                        {copiedCode === team.accessCode ? <BiCheck size={14} style={{ color: '#22c55e' }} /> : <BiCopy size={14} />}
-                      </button>
-                    </div>
-                  </div>
-                )) : (
+                  );
+                }) : (
                   <div className="admin-empty-state" style={{ padding: 32 }}>
                     <div className="admin-empty-icon" style={{ width: 56, height: 56 }}><BiGroup size={24} /></div>
                     <p className="admin-empty-title" style={{ fontSize: 14 }}>No teams registered yet</p>
@@ -219,28 +233,43 @@ export default function AdminHostPage() {
             <div className="admin-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 className="admin-card-title" style={{ margin: 0 }}><BiTrophy size={18} /> Live Scores</h3>
-                <button className="admin-btn admin-btn-secondary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={() => navigate('/admin/scoreboard')}>Full View</button>
+                <button
+                  className="admin-btn admin-btn-secondary"
+                  style={{ padding: '8px 14px', fontSize: 12 }}
+                  onClick={() => selectedQuizId && navigate(`/admin/quizzes/${selectedQuizId}#scoreboard`)}
+                  disabled={!selectedQuizId}
+                >
+                  Full View
+                </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 280, overflowY: 'auto' }}>
-                {scoreboard.length > 0 ? scoreboard.slice(0, 5).map((entry) => (
-                  <div key={entry.teamId} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', background: entry.rank === 1 ? '#fef3c7' : '#f8fafc', borderRadius: 10,
-                    border: entry.rank === 1 ? '1px solid #fcd34d' : '1px solid transparent'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        background: entry.rank === 1 ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' : entry.rank === 2 ? 'linear-gradient(135deg, #94a3b8, #cbd5e1)' : entry.rank === 3 ? 'linear-gradient(135deg, #ea580c, #fb923c)' : '#e2e8f0',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: entry.rank <= 3 ? '#fff' : '#64748b', fontWeight: 800, fontSize: 12
-                      }}>
-                        {entry.rank}
+                {scoreboard.length > 0 ? scoreboard.slice(0, 5).map((entry) => {
+                  const { name, avatarId } = parseSmartName(entry.teamName);
+                  return (
+                    <div key={entry.teamId} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px', background: entry.rank === 1 ? '#fef3c7' : '#f8fafc', borderRadius: 10,
+                      border: entry.rank === 1 ? '1px solid #fcd34d' : '1px solid transparent'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          background: entry.rank === 1 ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' : entry.rank === 2 ? 'linear-gradient(135deg, #94a3b8, #cbd5e1)' : entry.rank === 3 ? 'linear-gradient(135deg, #ea580c, #fb923c)' : '#e2e8f0',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: entry.rank <= 3 ? '#fff' : '#64748b', fontWeight: 800, fontSize: 12,
+                          overflow: 'hidden'
+                        }}>
+                          {avatarId ? (
+                            <img src={`/avatars/${avatarId}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          ) : (
+                            entry.rank
+                          )}
+                        </div>
+                        <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 14 }}>{name}</span>
                       </div>
-                      <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 14 }}>{entry.teamName}</span>
+                      <span style={{ fontWeight: 800, color: '#6366f1', fontSize: 16 }}>{entry.score}</span>
                     </div>
-                    <span style={{ fontWeight: 800, color: '#6366f1', fontSize: 16 }}>{entry.score}</span>
-                  </div>
-                )) : (
+                  );
+                }) : (
                   <div className="admin-empty-state" style={{ padding: 32 }}>
                     <div className="admin-empty-icon" style={{ width: 56, height: 56 }}><BiTrophy size={24} /></div>
                     <p className="admin-empty-title" style={{ fontSize: 14 }}>No scores yet</p>

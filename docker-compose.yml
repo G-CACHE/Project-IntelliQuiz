@@ -1,7 +1,9 @@
 services:
   # PostgreSQL Database Container
   db:
-    image: postgres:16-alpine
+    build:
+      context: ./database
+      dockerfile: ./Dockerfile
     container_name: intelliquiz_db
     restart: always
     environment:
@@ -34,6 +36,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: mysecretpassword
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+      SSL_ENABLED: "false"
       DISABLE_DOTENV: "true"
       TZ: Asia/Manila
       # Backup Configuration
