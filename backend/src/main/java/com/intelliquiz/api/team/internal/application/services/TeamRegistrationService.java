@@ -52,6 +52,10 @@ public class TeamRegistrationService {
         }
         assertQuizNotArchived(quizId);
 
+        if (teamRepository.existsByQuizIdAndNameIgnoreCase(quizId, teamName.trim())) {
+            throw new IllegalArgumentException("A team named \"" + teamName.trim() + "\" is already registered for this quiz");
+        }
+
         String accessCode = generateUniqueAccessCode();
         Team team = new Team(quizId, teamName, members, accessCode);
 

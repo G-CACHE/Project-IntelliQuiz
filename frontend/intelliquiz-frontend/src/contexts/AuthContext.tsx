@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
 import { type QuizAssignment, PERMISSIONS, currentUserApi, authApi } from '../services/api';
 
 interface AuthContextType {
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return isAdminRoute || hasAuthHint;
   };
 
-  const clearAuth = () => {
+  const clearAuth = useCallback(() => {
     localStorage.removeItem('role');
     localStorage.removeItem('username');
     localStorage.removeItem('userId');
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
     setUsername(null);
     setAssignments([]);
-  };
+  }, []);
 
   // Function to refresh auth state from backend
   const refreshAuth = async () => {

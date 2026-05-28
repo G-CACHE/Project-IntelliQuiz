@@ -108,6 +108,23 @@ export const accessApi = {
   },
 };
 
+// Quiz runtime status (public — no auth required)
+export interface QuizRuntimeStatus {
+  state: string;
+  gameState: string;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  timeRemaining: number;
+  participantNavigationEnabled: boolean;
+}
+
+export const quizApi = {
+  getStatus: async (quizId: number): Promise<QuizRuntimeStatus> => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/status`);
+    return handleResponse<QuizRuntimeStatus>(response);
+  },
+};
+
 // Current User API (for fetching own info and assignments)
 export const currentUserApi = {
   getMe: async () => {

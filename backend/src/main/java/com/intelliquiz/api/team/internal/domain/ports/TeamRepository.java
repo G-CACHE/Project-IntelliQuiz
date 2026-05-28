@@ -16,6 +16,8 @@ public interface TeamRepository {
 
     Optional<Team> findByAccessCode(String accessCode);
 
+    boolean existsByQuizIdAndNameIgnoreCase(Long quizId, String name);
+
     Optional<Team> findByQuizIdAndDeviceId(Long quizId, String deviceId);
 
     List<Team> findByQuizId(Long quizId);

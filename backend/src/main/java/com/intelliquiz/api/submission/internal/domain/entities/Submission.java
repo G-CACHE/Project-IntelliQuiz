@@ -141,20 +141,44 @@ public class Submission extends SoftDeletableEntity {
      * For other types, comparison keeps legacy case-insensitive behavior.
      */
     public void grade(String correctAnswer, int questionPoints, QuestionType questionType, boolean caseSensitive) {
-        String normalizedSubmitted = normalizeAnswer(this.submittedAnswer);
         if (questionType == QuestionType.IDENTIFICATION) {
-            this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
-                    .map(accepted -> normalizeIdentificationAnswer(accepted, caseSensitive))
-                    .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizeIdentificationAnswer(normalizedSubmitted, caseSensitive)));
+            // Case-sensitive: only trim leading/trailing whitespace, preserve internal spacing and case.
+            // Case-insensitive: also collapse internal whitespace and uppercase for comparison.
+            String submittedTrimmed = this.submittedAnswer == null ? "" : this.submittedAnswer.trim();
+            if (caseSensitive) {
+                this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
+                        .map(String::trim)
+                        .filter(accepted -> !accepted.isBlank())
+                        .anyMatch(accepted -> accepted.equals(submittedTrimmed));
+            } else {
+                String submittedNormalized = submittedTrimmed.replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+                this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
+                        .map(accepted -> accepted.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT))
+                        .filter(accepted -> !accepted.isBlank())
+                        .anyMatch(accepted -> accepted.equals(submittedNormalized));
+            }
         } else if (questionType == QuestionType.TRUE_FALSE) {
-            // TRUE_FALSE correctKey is stored as "True" or "False" (the text value).
-            // Submitted answer is also the text value from the frontend.
-            this.isCorrect = !normalizedSubmitted.isBlank()
-                    && normalizedSubmitted.equals(normalizeAnswer(correctAnswer));
+            // TRUE_FALSE correctKey is stored as "A" (True) or "B" (False) — same letter system as MCQ.
+            // Submitted answer is the text value ("True"/"False") from the frontend.
+            // Resolve submitted text to a letter before comparing.
+            String normalizedSubmitted = normalizeAnswer(this.submittedAnswer);
+            String submittedUpper = normalizedSubmitted.toUpperCase(Locale.ROOT).trim();
+            String submittedLetter;
+            if ("TRUE".equals(submittedUpper)) {
+                submittedLetter = "A";
+            } else if ("FALSE".equals(submittedUpper)) {
+                submittedLetter = "B";
+            } else {
+                // Already a letter (legacy or direct submission)
+                submittedLetter = submittedUpper;
+            }
+            String correctLetter = (correctAnswer == null ? "" : correctAnswer.trim().toUpperCase(Locale.ROOT));
+            this.isCorrect = !submittedLetter.isBlank() && submittedLetter.equals(correctLetter);
         } else {
             // MULTIPLE_CHOICE: correctKey is a letter (A/B/C/D).
             // Submitted answer is the letter of the selected option.
             // Primary: letter-to-letter comparison (always case-insensitive for letters).
+            String normalizedSubmitted = normalizeAnswer(this.submittedAnswer);
             String submittedLetter = normalizedSubmitted.toUpperCase(Locale.ROOT).trim();
             String correctLetter = (correctAnswer == null ? "" : correctAnswer.trim().toUpperCase(Locale.ROOT));
             boolean matchByLetter = !submittedLetter.isBlank() && submittedLetter.equals(correctLetter);

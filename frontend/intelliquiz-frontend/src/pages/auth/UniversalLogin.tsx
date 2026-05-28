@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Volume2, VolumeX } from 'lucide-react';
-import { accessApi, type QuizAccessResponse, type TeamResponse } from '../../services/api';
+import { accessApi, quizApi, type QuizAccessResponse, type TeamResponse } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
-import { saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
+import { getParticipantSession, saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
 import { formatSmartName, parseSmartName } from '../../utils/nameUtils';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   GiTrophyCup, 
   GiGamepad, 
@@ -19,6 +20,7 @@ import '../../styles/landing.css';
 
 const UniversalLogin: React.FC = () => {
   const navigate = useNavigate();
+  const { role, loading: authLoading } = useAuth();
   const [code, setCode] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [pendingPublicQuiz, setPendingPublicQuiz] = useState<QuizAccessResponse | null>(null);
@@ -43,6 +45,49 @@ const UniversalLogin: React.FC = () => {
     '9th-avatar.png',
     '10th-avatar.png',
   ];
+
+  // Redirect already-authenticated admin/superadmin users to their dashboard
+  useEffect(() => {
+    if (authLoading) return;
+    if (role === 'SUPER_ADMIN') {
+      navigate('/superadmin', { replace: true });
+    } else if (role === 'ADMIN' || role === 'EXAMINER') {
+      const assignments = JSON.parse(localStorage.getItem('assignments') || '[]') as unknown[];
+      navigate(assignments.length === 0 ? '/admin/no-permissions' : '/admin', { replace: true });
+    }
+  }, [role, authLoading, navigate]);
+
+  // Resume an existing participant session — redirect to the right page based on live quiz state.
+  // Use a ref to ensure this only fires once per mount, not on every re-render.
+  const sessionResumeRanRef = useRef(false);
+  useEffect(() => {
+    if (sessionResumeRanRef.current) return;
+    sessionResumeRanRef.current = true;
+
+    const session = getParticipantSession();
+    if (!session) return;
+
+    quizApi.getStatus(session.quizId).then((status) => {
+      const state = (status.state ?? status.gameState ?? '').toUpperCase();
+      if (state === 'ENDED') {
+        navigate('/player/scoreboard', { replace: true });
+      } else if (
+        state === 'ACTIVE' ||
+        state === 'BUFFER' ||
+        state === 'GRADING' ||
+        state === 'REVEAL' ||
+        state === 'ROUND_SUMMARY' ||
+        state === 'ANSWER_REVEAL'
+      ) {
+        navigate('/player/game', { replace: true });
+      } else {
+        // LOBBY, UNKNOWN, or anything else — go to lobby
+        navigate('/player/lobby', { replace: true });
+      }
+    }).catch(() => {
+      // Quiz no longer active or network error — let them re-enter a code
+    });
+  }, [navigate]);
 
   // Audio setup
   useEffect(() => {
@@ -269,6 +314,9 @@ const UniversalLogin: React.FC = () => {
   };
 
   return (
+    // Don't flash the page while checking if an admin session is already active.
+    // Only suppress render when there's a cached role hint — avoids blocking participants.
+    (authLoading && Boolean(localStorage.getItem('role'))) ? null :
     <div className="landing-page">
       <button 
         className="landing-audio-toggle" 
