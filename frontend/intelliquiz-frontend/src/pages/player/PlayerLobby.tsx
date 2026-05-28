@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BiErrorCircle } from 'react-icons/bi';
 import { useSSE } from '../../hooks/useSSE';
@@ -99,11 +99,19 @@ const PlayerLobby: React.FC = () => {
     }
   }, [kicked, kickReason, disconnect, navigate]);
 
-  // Navigate to game when quiz starts
+  // Navigate to game when quiz starts — only on a genuine LOBBY→ACTIVE transition.
+  // We track the previous gameState to avoid re-navigating on SSE reconnects
+  // that simply re-report an already-active state.
+  const prevGameStateRef = useRef<string>('LOBBY');
   useEffect(() => {
-    if (gameState === 'ACTIVE' || gameState === 'QUESTION' || gameState === 'BUFFER') {
+    const isNowActive = gameState === 'ACTIVE' || gameState === 'QUESTION' || gameState === 'BUFFER';
+    const wasInactive = prevGameStateRef.current === 'LOBBY' || prevGameStateRef.current === 'UNKNOWN';
+
+    if (isNowActive && wasInactive) {
       navigate(`/player/game?quizId=${session?.quizId}&teamId=${session?.teamId}`);
     }
+
+    prevGameStateRef.current = gameState;
   }, [gameState, session, navigate]);
 
   if (!session) {

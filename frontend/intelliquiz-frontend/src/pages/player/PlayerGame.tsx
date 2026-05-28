@@ -800,7 +800,11 @@ const PlayerGame: React.FC = () => {
                       Your answer: <strong>{entry.participantAnswer || 'No answer'}</strong>
                     </p>
                     <p className="participant-answer-review-line">
-                      Correct answer: <strong>{entry.correctAnswer}</strong>
+                      Correct answer: <strong>
+                        {entry.correctAnswer
+                          ? entry.correctAnswer.split('\n').filter(Boolean).join(', ')
+                          : '—'}
+                      </strong>
                     </p>
                     <p className={`participant-answer-review-score ${entry.isCorrect ? 'is-correct' : 'is-wrong'}`}>
                       {entry.isCorrect ? 'Correct' : 'Incorrect'} - {entry.pointsEarned}/{entry.maxPoints} pts

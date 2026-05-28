@@ -59,7 +59,8 @@ export default function AdminLayout() {
     };
 
     verifySessionAndRole();
-  }, [navigate, clearAuth]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

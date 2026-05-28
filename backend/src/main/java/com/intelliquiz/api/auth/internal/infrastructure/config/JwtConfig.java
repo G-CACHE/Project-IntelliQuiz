@@ -35,6 +35,14 @@ public class JwtConfig {
         return createToken(claims, username);
     }
 
+    /**
+     * Generates a new access token during a refresh flow.
+     * Role and userId are sourced from the validated refresh token record.
+     */
+    public String generateTokenForRefresh(String username, String role, Long userId) {
+        return generateToken(username, role, userId);
+    }
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .claims(claims)

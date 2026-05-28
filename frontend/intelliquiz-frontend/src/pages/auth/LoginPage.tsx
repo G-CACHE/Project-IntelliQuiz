@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BiLogIn, BiErrorCircle, BiShow, BiHide, BiUser, BiLock } from 'react-icons/bi';
 import { 
@@ -21,7 +21,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { refreshAuth } = useAuth();
+  const { refreshAuth, role, loading: authLoading } = useAuth();
+
+  // Redirect already-authenticated users to their dashboard
+  useEffect(() => {
+    if (authLoading) return;
+    if (role === 'SUPER_ADMIN') {
+      navigate('/superadmin', { replace: true });
+    } else if (role === 'ADMIN' || role === 'EXAMINER') {
+      const assignments = JSON.parse(localStorage.getItem('assignments') || '[]') as unknown[];
+      navigate(assignments.length === 0 ? '/admin/no-permissions' : '/admin', { replace: true });
+    }
+  }, [role, authLoading, navigate]);
+
+  // Don't flash the form while we're still checking the session
+  if (authLoading) return null;
 
   const extractErrorMessage = (err: unknown, fallback: string): string => {
     if (err instanceof Error && err.message) {

@@ -35,7 +35,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
   const getOptionClass = (option: string, letter: string) => {
     // MCQ: compare by letter position to avoid false matches on duplicate option text.
-    // TRUE_FALSE: compare by text value since correctKey is stored as "True"/"False".
+    // TRUE_FALSE: compare by text value ("True"/"False") — correctAnswer from reveal is already resolved to text.
     const isTrueFalse = questionType === 'TRUE_FALSE';
     const isSelected = isTrueFalse
       ? normalize(selectedOption) === normalize(option)
@@ -111,8 +111,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           </div>
           {showCorrectAnswer && correctAnswer && (
             <div className={`${prefix}-accepted-answer-card`}>
-              <div className={`${prefix}-accepted-label`}>Accepted Answer</div>
-              <div className={`${prefix}-accepted-value`}>{correctAnswer}</div>
+              <div className={`${prefix}-accepted-label`}>Accepted Answer{correctAnswer.includes('\n') ? 's' : ''}</div>
+              {correctAnswer.split('\n').filter(Boolean).map((ans, i) => (
+                <div key={i} className={`${prefix}-accepted-value`}>{ans}</div>
+              ))}
             </div>
           )}
         </div>

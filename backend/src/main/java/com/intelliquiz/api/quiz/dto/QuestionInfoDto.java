@@ -24,16 +24,23 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
         }
 
         if (type == QuestionType.IDENTIFICATION) {
+            // Return all accepted answers joined by newline for display.
+            // The frontend splits on newlines to render each answer separately.
             return correctKey.lines()
                     .map(String::trim)
                     .filter(line -> !line.isBlank())
-                    .findFirst()
+                    .reduce((a, b) -> a + "\n" + b)
                     .orElse(correctKey);
         }
 
-        // TRUE_FALSE: correctKey is stored as the text value ("True" / "False") directly.
+        // TRUE_FALSE: correctKey is stored as "A" (True) or "B" (False).
+        // Resolve to the text value for display purposes.
         if (type == QuestionType.TRUE_FALSE) {
-            return correctKey;
+            if (correctKey == null) return null;
+            String key = correctKey.trim().toUpperCase();
+            if ("A".equals(key)) return "True";
+            if ("B".equals(key)) return "False";
+            return correctKey; // fallback for legacy data stored as text
         }
 
         // MULTIPLE_CHOICE: correctKey is a letter (A/B/C/D).

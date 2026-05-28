@@ -35,6 +35,11 @@ public class TeamRepositoryImpl implements TeamRepository {
     }
 
     @Override
+    public boolean existsByQuizIdAndNameIgnoreCase(Long quizId, String name) {
+        return springTeamRepository.existsByQuizIdAndNameIgnoreCase(quizId, name);
+    }
+
+    @Override
     public Optional<Team> findByQuizIdAndDeviceId(Long quizId, String deviceId) {
         return springTeamRepository.findByQuizIdAndDeviceId(quizId, deviceId);
     }
