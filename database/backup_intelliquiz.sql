@@ -28,10 +28,22 @@ DROP INDEX IF EXISTS public.idx_qbi_type;
 DROP INDEX IF EXISTS public.idx_qbi_owner;
 DROP INDEX IF EXISTS public.idx_qbi_difficulty;
 ALTER TABLE IF EXISTS ONLY public.violation_record DROP CONSTRAINT IF EXISTS violation_record_pkey;
+ALTER TABLE IF EXISTS ONLY public."user" DROP CONSTRAINT IF EXISTS user_pkey;
 ALTER TABLE IF EXISTS ONLY public.quiz_assignment DROP CONSTRAINT IF EXISTS ukpvjve2c5x9nnix57smx4yceg6;
 ALTER TABLE IF EXISTS ONLY public.quiz DROP CONSTRAINT IF EXISTS uk_quiz_quiz_code;
 ALTER TABLE IF EXISTS ONLY public.refresh_tokens DROP CONSTRAINT IF EXISTS uk_o2mlirhldriil2y7krapq4frt;
+ALTER TABLE IF EXISTS ONLY public.team DROP CONSTRAINT IF EXISTS team_pkey;
+ALTER TABLE IF EXISTS ONLY public.submission DROP CONSTRAINT IF EXISTS submission_pkey;
+ALTER TABLE IF EXISTS ONLY public.scoreboard_entries DROP CONSTRAINT IF EXISTS scoreboard_entries_pkey;
 ALTER TABLE IF EXISTS ONLY public.refresh_tokens DROP CONSTRAINT IF EXISTS refresh_tokens_pkey;
+ALTER TABLE IF EXISTS ONLY public.quiz DROP CONSTRAINT IF EXISTS quiz_pkey;
+ALTER TABLE IF EXISTS ONLY public.quiz_assignment DROP CONSTRAINT IF EXISTS quiz_assignment_pkey;
+ALTER TABLE IF EXISTS ONLY public.question DROP CONSTRAINT IF EXISTS question_pkey;
+ALTER TABLE IF EXISTS ONLY public.question_option DROP CONSTRAINT IF EXISTS question_option_pkey;
+ALTER TABLE IF EXISTS ONLY public.question_bank_option DROP CONSTRAINT IF EXISTS question_bank_option_pkey;
+ALTER TABLE IF EXISTS ONLY public.question_bank_item DROP CONSTRAINT IF EXISTS question_bank_item_pkey;
+ALTER TABLE IF EXISTS ONLY public.backup_record DROP CONSTRAINT IF EXISTS backup_record_pkey;
+ALTER TABLE IF EXISTS ONLY public.assignment_permission DROP CONSTRAINT IF EXISTS assignment_permission_pkey;
 ALTER TABLE IF EXISTS public.violation_record ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public."user" ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.team ALTER COLUMN id DROP DEFAULT;
@@ -68,14 +80,6 @@ DROP TABLE IF EXISTS public.question;
 DROP SEQUENCE IF EXISTS public.backup_record_id_seq;
 DROP TABLE IF EXISTS public.backup_record;
 DROP TABLE IF EXISTS public.assignment_permission;
--- *not* dropping schema, since initdb creates it
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
@@ -93,7 +97,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.assignment_permission (
     assignment_id bigint NOT NULL,
-    permission character varying(255),
+    permission character varying(255) NOT NULL,
     CONSTRAINT assignment_permission_permission_check CHECK (((permission)::text = ANY (ARRAY[('CAN_VIEW_DETAILS'::character varying)::text, ('CAN_EDIT_CONTENT'::character varying)::text, ('CAN_MANAGE_TEAMS'::character varying)::text, ('CAN_HOST_GAME'::character varying)::text])))
 );
 
@@ -205,7 +209,7 @@ ALTER SEQUENCE public.question_bank_item_id_seq OWNED BY public.question_bank_it
 
 CREATE TABLE public.question_bank_option (
     question_bank_item_id bigint NOT NULL,
-    option_text character varying(255)
+    option_text character varying(255) NOT NULL
 );
 
 
@@ -234,7 +238,7 @@ ALTER SEQUENCE public.question_id_seq OWNED BY public.question.id;
 
 CREATE TABLE public.question_option (
     question_id bigint NOT NULL,
-    option_text character varying(255)
+    option_text character varying(255) NOT NULL
 );
 
 
@@ -495,7 +499,7 @@ CREATE TABLE public.violation_record (
     quiz_id bigint NOT NULL,
     team_id bigint NOT NULL,
     violation_type character varying(255) NOT NULL,
-    CONSTRAINT violation_record_violation_type_check CHECK (((violation_type)::text = ANY ((ARRAY['TAB_SWITCH'::character varying, 'COPY_ATTEMPT'::character varying, 'RIGHT_CLICK'::character varying, 'PRINT_SCREEN'::character varying])::text[])))
+    CONSTRAINT violation_record_violation_type_check CHECK (((violation_type)::text = ANY (ARRAY[('TAB_SWITCH'::character varying)::text, ('COPY_ATTEMPT'::character varying)::text, ('RIGHT_CLICK'::character varying)::text, ('PRINT_SCREEN'::character varying)::text])))
 );
 
 
@@ -622,6 +626,7 @@ COPY public.assignment_permission (assignment_id, permission) FROM stdin;
 COPY public.backup_record (id, created_at, error_message, file_size_bytes, filename, last_restored_at, status, created_by_user_id, deleted) FROM stdin;
 6	2026-03-01 04:22:39.980985	\N	23248	intelliquiz_backup_2026-03-01T04-22-39.sql	2026-03-01 04:26:12.80951	SUCCESS	1	t
 7	2026-03-01 04:26:12.823287	\N	23629	intelliquiz_backup_2026-03-01T04-26-12.sql	\N	SUCCESS	1	t
+1	2026-05-29 05:34:11.164454	\N	27609	intelliquiz_backup_2026-05-29T05-34-11.sql	\N	SUCCESS	1	f
 \.
 
 
@@ -677,9 +682,7 @@ COPY public.question_option (question_id, option_text) FROM stdin;
 --
 
 COPY public.quiz (id, description, is_live_session, proctor_pin, quiz_code, status, title, deleted, created_by_user_id, access_mode, navigation_mode, global_time_limit_seconds, randomize_questions) FROM stdin;
-1		f	101-513	\N	DRAFT	Science Quiz Bee	f	\N	RESTRICTED	TOURNAMENT	0	f
-2		f	601-436	\N	DRAFT	Math	f	\N	RESTRICTED	TOURNAMENT	0	f
-3		t	888-702	\N	READY	Earth Science	f	\N	RESTRICTED	TOURNAMENT	0	f
+1		f	635-058	SCEEKB	DRAFT	testing	f	2	PUBLIC	TOURNAMENT	0	f
 \.
 
 
@@ -699,6 +702,10 @@ COPY public.quiz_assignment (id, quiz_id, user_id, deleted) FROM stdin;
 --
 
 COPY public.refresh_tokens (id, created_at, expires_at, revoked, role, token_hash, user_id, username) FROM stdin;
+1	2026-05-29 05:33:47.021418+08	2026-06-05 05:33:47.021397+08	f	SUPER_ADMIN	fe28545b27840d4975a9c9dff9b5f58f9d8f9d4891c914996638141ddc1c5af5	1	superadmin
+2	2026-05-29 05:34:50.656481+08	2026-06-05 05:34:50.656472+08	f	ADMIN	809677af4758fd5bf59ad776e578350159b9dbe3e4ad67cfd03448bd1e139824	2	adminIT
+4	2026-05-29 07:47:25.952046+08	2026-06-05 07:47:25.95204+08	f	ADMIN	d9e040ee136948670ff8062111becf9668df010954a6170ff70a285de3d8a656	2	adminIT
+3	2026-05-29 05:45:41.828182+08	2026-06-05 05:45:41.828174+08	t	ADMIN	8c788bd7b526bd112257cd88451f68bffce8853507281279f743190483f6eb21	2	adminIT
 \.
 
 
@@ -751,63 +758,63 @@ COPY public.violation_record (id, deleted, detected_at, quiz_id, team_id, violat
 -- Name: backup_record_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.backup_record_id_seq', 1, false);
+SELECT pg_catalog.setval('public.backup_record_id_seq', 7, true);
 
 
 --
 -- Name: question_bank_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.question_bank_item_id_seq', 1, false);
+SELECT pg_catalog.setval('public.question_bank_item_id_seq', 1, true);
 
 
 --
 -- Name: question_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.question_id_seq', 1, false);
+SELECT pg_catalog.setval('public.question_id_seq', 3, true);
 
 
 --
 -- Name: quiz_assignment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.quiz_assignment_id_seq', 1, false);
+SELECT pg_catalog.setval('public.quiz_assignment_id_seq', 3, true);
 
 
 --
 -- Name: quiz_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.quiz_id_seq', 1, false);
+SELECT pg_catalog.setval('public.quiz_id_seq', 1, true);
 
 
 --
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.refresh_tokens_id_seq', 1, false);
+SELECT pg_catalog.setval('public.refresh_tokens_id_seq', 4, true);
 
 
 --
 -- Name: scoreboard_entries_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.scoreboard_entries_id_seq', 1, false);
+SELECT pg_catalog.setval('public.scoreboard_entries_id_seq', 1, true);
 
 
 --
 -- Name: submission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.submission_id_seq', 1, false);
+SELECT pg_catalog.setval('public.submission_id_seq', 1, true);
 
 
 --
 -- Name: team_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.team_id_seq', 1, false);
+SELECT pg_catalog.setval('public.team_id_seq', 1, true);
 
 
 --
@@ -825,11 +832,99 @@ SELECT pg_catalog.setval('public.violation_record_id_seq', 1, false);
 
 
 --
+-- Name: assignment_permission assignment_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assignment_permission
+    ADD CONSTRAINT assignment_permission_pkey PRIMARY KEY (assignment_id, permission);
+
+
+--
+-- Name: backup_record backup_record_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.backup_record
+    ADD CONSTRAINT backup_record_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: question_bank_item question_bank_item_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.question_bank_item
+    ADD CONSTRAINT question_bank_item_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: question_bank_option question_bank_option_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.question_bank_option
+    ADD CONSTRAINT question_bank_option_pkey PRIMARY KEY (question_bank_item_id, option_text);
+
+
+--
+-- Name: question_option question_option_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.question_option
+    ADD CONSTRAINT question_option_pkey PRIMARY KEY (question_id, option_text);
+
+
+--
+-- Name: question question_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.question
+    ADD CONSTRAINT question_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: quiz_assignment quiz_assignment_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.quiz_assignment
+    ADD CONSTRAINT quiz_assignment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: quiz quiz_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.quiz
+    ADD CONSTRAINT quiz_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.refresh_tokens
     ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: scoreboard_entries scoreboard_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scoreboard_entries
+    ADD CONSTRAINT scoreboard_entries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: submission submission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.submission
+    ADD CONSTRAINT submission_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: team team_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team
+    ADD CONSTRAINT team_pkey PRIMARY KEY (id);
 
 
 --
@@ -854,6 +949,14 @@ ALTER TABLE ONLY public.quiz
 
 ALTER TABLE ONLY public.quiz_assignment
     ADD CONSTRAINT ukpvjve2c5x9nnix57smx4yceg6 UNIQUE (user_id, quiz_id);
+
+
+--
+-- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."user"
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
 
 
 --
