@@ -53,19 +53,24 @@ public class SubmissionService {
             throw new EntityNotFoundException("Question", questionId);
         }
 
+        QuestionInfoDto questionInfo = quizFacade.getQuestionForGrading(questionId);
+        String normalizedAnswer = questionInfo.normalizeSubmissionOnSave(answer, teamId);
+
         // Check for existing submission
         var existingSubmission = submissionRepository.findByTeamIdAndQuestionId(teamId, questionId);
         
         if (existingSubmission.isPresent()) {
             // Update existing submission (answer change allowed)
             Submission submission = existingSubmission.get();
-            submission.setSubmittedAnswer(answer);
-            submission.setGraded(false); // Reset grading for new answer
+            submission.setSubmittedAnswer(normalizedAnswer);
+            submission.setGraded(false);
+            submission.setCorrect(false);
+            submission.setAwardedPoints(0);
             return submissionRepository.save(submission);
         }
 
         // Create new submission (don't grade yet - wait for timer)
-        Submission submission = new Submission(teamId, questionId, answer);
+        Submission submission = new Submission(teamId, questionId, normalizedAnswer);
         submission.validateSubmittedAt();
         
         return submissionRepository.save(submission);
@@ -97,12 +102,7 @@ public class SubmissionService {
         // Create and grade the submission
         Submission submission = new Submission(teamId, questionId, answer);
         submission.validateSubmittedAt();
-        submission.grade(
-            questionInfo.correctKey(),
-            questionInfo.points(),
-            questionInfo.type(),
-            questionInfo.caseSensitive()
-        );
+        gradeSubmission(submission, questionInfo);
 
         // Update team score if correct
         if (submission.isCorrect()) {
@@ -183,14 +183,11 @@ public class SubmissionService {
      * Grade a submission for a team/question using the provided correct answer and points.
      * Does NOT update team score — that is the caller's responsibility via TeamFacade.
      */
-    public Submission gradeSubmission(Long teamId, Long questionId,
-                           String correctKey, int points,
-                           com.intelliquiz.api.shared.enums.QuestionType questionType,
-                           boolean caseSensitive) {
+    public Submission gradeSubmission(Long teamId, Long questionId, QuestionInfoDto questionInfo) {
         Submission submission = submissionRepository.findByTeamIdAndQuestionId(teamId, questionId)
                 .orElseThrow(() -> new EntityNotFoundException("Submission", 0L));
         if (!submission.isGraded()) {
-            submission.grade(correctKey, points, questionType, caseSensitive);
+            gradeSubmission(submission, questionInfo);
             submission = submissionRepository.save(submission);
 
             eventPublisher.publishEvent(new SubmissionGradedEvent(
@@ -202,6 +199,14 @@ public class SubmissionService {
             ));
         }
         return submission;
+    }
+
+    private void gradeSubmission(Submission submission, QuestionInfoDto questionInfo) {
+        boolean correct = questionInfo.isCorrectSubmission(
+                submission.getSubmittedAnswer(), submission.getTeamId());
+        submission.setCorrect(correct);
+        submission.setAwardedPoints(correct ? questionInfo.points() : 0);
+        submission.setGraded(true);
     }
 
     /**

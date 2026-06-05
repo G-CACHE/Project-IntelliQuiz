@@ -121,6 +121,12 @@ export default function AdminQuestionsPage() {
         return setError('The correct answer must be one of the filled options');
       }
 
+      const lowerOptions = validOptions.map((o) => o.trim().toLowerCase());
+      const hasDuplicates = lowerOptions.some((o, i) => lowerOptions.indexOf(o) !== i);
+      if (hasDuplicates) {
+        return setError('Answer options must be unique — remove duplicate options before saving');
+      }
+
       payload = {
         ...formData,
         options: validOptions,

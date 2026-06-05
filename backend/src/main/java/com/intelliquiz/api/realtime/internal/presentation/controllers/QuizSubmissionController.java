@@ -169,19 +169,19 @@ public class QuizSubmissionController {
             List<ParticipantQuestionResult> results = orderedQuestions.stream()
                     .map(question -> {
                         var submission = submissionFacade.findByTeamAndQuestion(teamId, question.id());
-                        // Resolve raw stored answer (e.g. letter "A") to display text (e.g. "Paris")
-                        // so the review modal shows the same format as the correct answer.
                         String rawAnswer = submission.map(s -> s.submittedAnswer()).orElse(null);
-                        String participantAnswer = question.resolvedParticipantAnswer(rawAnswer);
-                        boolean isCorrect = submission.map(s -> s.isCorrect()).orElse(false);
-                        int pointsEarned = submission.map(s -> s.awardedPoints()).orElse(0);
+                        String participantAnswer = question.formatReviewAnswer(rawAnswer, teamId);
+                        String correctAnswer = question.formatCorrectReviewAnswer(teamId);
+                        boolean isCorrect = rawAnswer != null
+                                && question.isCorrectSubmission(rawAnswer, teamId);
+                        int pointsEarned = isCorrect ? question.points() : 0;
 
                         return new ParticipantQuestionResult(
                                 question.id(),
                                 question.orderIndex() + 1,
                                 question.text(),
                                 participantAnswer,
-                                question.resolvedCorrectAnswer(),
+                                correctAnswer,
                                 isCorrect,
                                 pointsEarned,
                                 question.points()

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, CircleX, AlarmClock, ListChecks, PauseCircle } from 'lucide-react';
 import { useSSE } from '../../hooks/useSSE';
-import { getParticipantSession } from '../../services/sessionStorage';
+import { getParticipantSession, clearSession } from '../../services/sessionStorage';
 import { quizResultsApi, type ParticipantQuestionResult } from '../../services/api';
 import { parseSmartName } from '../../utils/nameUtils';
 import Timer from '../../components/game/Timer';
@@ -493,6 +493,7 @@ const PlayerGame: React.FC = () => {
                   onSelectOption={handleSelectOption}
                   disabled={submitted || (!canNavigate && timeRemaining <= 0)}
                   variant="participant"
+                  teamId={session.teamId}
                 />
 
                 {/* Navigation Buttons for Participant-Navigated Quiz */}
@@ -638,6 +639,7 @@ const PlayerGame: React.FC = () => {
                 showCorrectAnswer={true}
                 disabled={true}
                 variant="participant"
+                teamId={session.teamId}
               />
 
               <div className="participant-waiting-message">
@@ -667,7 +669,7 @@ const PlayerGame: React.FC = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => { clearSession(); navigate('/'); }}
                     className="participant-btn-secondary participant-btn-large participant-home-action"
                   >
                     Go Home
@@ -730,7 +732,7 @@ const PlayerGame: React.FC = () => {
                   {reviewLoading ? 'Loading...' : 'Review Answers'}
                 </button>
                 <button
-                  onClick={() => navigate('/')}
+                  onClick={() => { clearSession(); navigate('/'); }}
                   className="participant-btn-secondary participant-btn-large participant-home-action"
                 >
                   Go Home
@@ -802,7 +804,9 @@ const PlayerGame: React.FC = () => {
                     <p className="participant-answer-review-line">
                       Correct answer: <strong>
                         {entry.correctAnswer
-                          ? entry.correctAnswer.split('\n').filter(Boolean).join(', ')
+                          ? entry.correctAnswer.includes('\n')
+                            ? entry.correctAnswer.split('\n').filter(Boolean).join(', ')
+                            : entry.correctAnswer
                           : '—'}
                       </strong>
                     </p>

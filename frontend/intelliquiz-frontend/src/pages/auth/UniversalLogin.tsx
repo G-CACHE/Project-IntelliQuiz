@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Volume2, VolumeX } from 'lucide-react';
 import { accessApi, quizApi, type QuizAccessResponse, type TeamResponse } from '../../services/api';
 import { getOrCreateDeviceId } from '../../services/deviceId';
-import { getParticipantSession, saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
+import { getParticipantSession, clearSession, saveParticipantSession, saveProctorSession } from '../../services/sessionStorage';
 import { formatSmartName, parseSmartName } from '../../utils/nameUtils';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
@@ -69,9 +69,7 @@ const UniversalLogin: React.FC = () => {
 
     quizApi.getStatus(session.quizId).then((status) => {
       const state = (status.state ?? status.gameState ?? '').toUpperCase();
-      if (state === 'ENDED') {
-        navigate('/player/scoreboard', { replace: true });
-      } else if (
+      if (
         state === 'ACTIVE' ||
         state === 'BUFFER' ||
         state === 'GRADING' ||
@@ -80,9 +78,11 @@ const UniversalLogin: React.FC = () => {
         state === 'ANSWER_REVEAL'
       ) {
         navigate('/player/game', { replace: true });
-      } else {
-        // LOBBY, UNKNOWN, or anything else — go to lobby
+      } else if (state === 'LOBBY' || state === 'WAITING') {
         navigate('/player/lobby', { replace: true });
+      } else {
+        // ENDED, ARCHIVED, FINAL_RESULTS, or anything else — quiz is over, clear session
+        clearSession();
       }
     }).catch(() => {
       // Quiz no longer active or network error — let them re-enter a code

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CheckCircle, XCircle, Check } from 'lucide-react';
 import type { QuestionData } from '../../services/api';
+import { getShuffledOptions } from '../../utils/optionOrder';
 
 interface QuestionDisplayProps {
   question: QuestionData;
@@ -12,6 +13,7 @@ interface QuestionDisplayProps {
   onSelectOption?: (option: string) => void;
   disabled?: boolean;
   variant?: 'proctor' | 'participant';
+  teamId?: number;
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -24,12 +26,24 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onSelectOption,
   disabled = false,
   variant = 'proctor',
+  teamId,
 }) => {
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
   const questionType = question.type || 'MULTIPLE_CHOICE';
-  const optionList = questionType === 'TRUE_FALSE'
+  const questionId = Number(question.id ?? 0);
+  const baseOptions = questionType === 'TRUE_FALSE'
     ? (question.options.length >= 2 ? question.options.slice(0, 2) : ['True', 'False'])
     : question.options;
+  const shouldShuffleOptions = variant === 'participant'
+    && questionType === 'MULTIPLE_CHOICE'
+    && teamId != null
+    && questionId > 0;
+  const optionList = useMemo(() => {
+    if (!shouldShuffleOptions) {
+      return baseOptions;
+    }
+    return getShuffledOptions(baseOptions, teamId, questionId);
+  }, [baseOptions, shouldShuffleOptions, teamId, questionId]);
 
   const normalize = (val: string | null | undefined) => (val || '').trim().toLowerCase();
 
@@ -39,7 +53,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const isTrueFalse = questionType === 'TRUE_FALSE';
     const isSelected = isTrueFalse
       ? normalize(selectedOption) === normalize(option)
-      : selectedOption != null && selectedOption.toUpperCase() === letter;
+      : selectedOption != null && selectedOption.toUpperCase() === letter.toUpperCase();
     const isCorrect = showCorrectAnswer && (
       isTrueFalse
         ? normalize(correctAnswer) === normalize(option)
@@ -128,8 +142,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           const isSelected = isTrueFalse
             ? normalize(selectedOption) === normalize(option)
             : selectedOption != null && (
-                selectedOption.toUpperCase() === letter ||
-                // fallback for legacy text-based submissions with no duplicate
+                selectedOption.toUpperCase() === letter.toUpperCase() ||
                 (selectedOption === option && !optionList.some((o, i) => i !== index && o === option))
               );
 
@@ -141,7 +154,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                 (normCorrect === normalize(option) && !optionList.some((o, i) => i !== index && normalize(o) === normCorrect))
           );
 
-          // What value to submit: text for TRUE_FALSE, letter for MCQ
           const submitValue = isTrueFalse ? option : letter;
 
           return (

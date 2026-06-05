@@ -3942,6 +3942,88 @@
   color: #b91c1c;
 }
 
+@media (max-width: 768px) {
+  .participant-answer-review-modal {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100vh - 24px);
+    border-radius: 14px;
+  }
+
+  .participant-answer-review-header {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .participant-answer-review-title {
+    font-size: 18px;
+    line-height: 1.25;
+  }
+
+  .participant-answer-review-close {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .participant-answer-review-list {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .participant-answer-review-item {
+    padding: 12px 10px;
+  }
+
+  .participant-answer-review-question {
+    font-size: 15px;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .participant-answer-review-line {
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .participant-answer-review-line strong {
+    display: inline-block;
+    margin-top: 2px;
+  }
+
+  .participant-answer-review-score {
+    font-size: 14px;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .participant-modal-overlay:has(.participant-answer-review-modal) {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .participant-answer-review-modal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 12px 12px 0 0;
+    align-self: flex-end;
+  }
+
+  .participant-answer-review-title {
+    font-size: 16px;
+  }
+
+  .participant-answer-review-question {
+    font-size: 14px;
+  }
+
+  .participant-answer-review-line,
+  .participant-answer-review-score {
+    font-size: 13px;
+  }
+}
+
 /* ==================== PHASE 12 FINAL POLISH ==================== */
 .participant-page {
   animation: participantRouteFadeIn 0.15s ease-out;

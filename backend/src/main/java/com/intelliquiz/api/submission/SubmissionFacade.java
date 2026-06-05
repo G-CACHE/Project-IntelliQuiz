@@ -1,6 +1,6 @@
 package com.intelliquiz.api.submission;
 
-import com.intelliquiz.api.shared.enums.QuestionType;
+import com.intelliquiz.api.quiz.dto.QuestionInfoDto;
 import com.intelliquiz.api.submission.dto.SubmissionInfoDto;
 import com.intelliquiz.api.submission.internal.application.services.SubmissionService;
 import com.intelliquiz.api.submission.internal.domain.entities.Submission;
@@ -82,11 +82,8 @@ public class SubmissionFacade {
      * Grade a specific submission given the correct answer and point value.
      * Returns the updated submission info.
      */
-    public SubmissionInfoDto gradeSubmission(Long teamId, Long questionId,
-                                              String correctKey, int points,
-                                              QuestionType questionType,
-                                              boolean caseSensitive) {
-        Submission s = submissionService.gradeSubmission(teamId, questionId, correctKey, points, questionType, caseSensitive);
+    public SubmissionInfoDto gradeSubmission(Long teamId, Long questionId, QuestionInfoDto questionInfo) {
+        Submission s = submissionService.gradeSubmission(teamId, questionId, questionInfo);
         return toDto(s);
     }
 
