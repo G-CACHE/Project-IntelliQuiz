@@ -172,7 +172,16 @@ public class Submission extends SoftDeletableEntity {
                 // Already a letter (legacy or direct submission)
                 submittedLetter = submittedUpper;
             }
-            String correctLetter = (correctAnswer == null ? "" : correctAnswer.trim().toUpperCase(Locale.ROOT));
+            // Normalize correctKey to a letter as well, to handle legacy data stored as "True"/"False" text.
+            String rawCorrectKey = (correctAnswer == null ? "" : correctAnswer.trim().toUpperCase(Locale.ROOT));
+            String correctLetter;
+            if ("TRUE".equals(rawCorrectKey)) {
+                correctLetter = "A";
+            } else if ("FALSE".equals(rawCorrectKey)) {
+                correctLetter = "B";
+            } else {
+                correctLetter = rawCorrectKey;
+            }
             this.isCorrect = !submittedLetter.isBlank() && submittedLetter.equals(correctLetter);
         } else {
             // MULTIPLE_CHOICE: correctKey is a letter (A/B/C/D).

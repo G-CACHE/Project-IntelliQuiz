@@ -14,6 +14,48 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
                                boolean caseSensitive) {
 
     /**
+     * Resolves a submitted answer (letter or text) to its human-readable display value.
+     * Used in the answer review modal so the participant sees the same format as the correct answer.
+     *
+     * <ul>
+     *   <li>MCQ: "A" → option text at index 0 (e.g. "Paris")</li>
+     *   <li>TRUE_FALSE: "A" → "True", "B" → "False"; text values are returned as-is</li>
+     *   <li>IDENTIFICATION: returned as-is</li>
+     * </ul>
+     */
+    public String resolvedParticipantAnswer(String submittedAnswer) {
+        if (submittedAnswer == null) {
+            return null;
+        }
+
+        if (type == QuestionType.IDENTIFICATION) {
+            return submittedAnswer;
+        }
+
+        if (type == QuestionType.TRUE_FALSE) {
+            String upper = submittedAnswer.trim().toUpperCase();
+            if ("A".equals(upper)) return "True";
+            if ("B".equals(upper)) return "False";
+            // Already stored as text (e.g. "True" / "False")
+            return submittedAnswer;
+        }
+
+        // MULTIPLE_CHOICE: resolve letter to option text
+        if (options == null || options.isEmpty()) {
+            return submittedAnswer;
+        }
+        String key = submittedAnswer.trim().toUpperCase();
+        if (key.length() == 1 && key.charAt(0) >= 'A' && key.charAt(0) <= 'Z') {
+            int index = key.charAt(0) - 'A';
+            if (index < options.size()) {
+                return options.get(index);
+            }
+        }
+        // Already stored as option text (legacy fallback)
+        return submittedAnswer;
+    }
+
+    /**
      * Resolves the letter-based correctKey (A/B/C/D) to the actual option text.
      * For MCQ: "B" with options ["Paris","London","Berlin","Rome"] → "London"
      * Falls back to the raw correctKey for identification-type questions or if resolution fails.
