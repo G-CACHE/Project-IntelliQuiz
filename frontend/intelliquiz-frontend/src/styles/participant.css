@@ -2289,12 +2289,19 @@
   font-size: 16px;
   font-weight: 800;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
 }
 
 .participant-answer-text {
   flex: 1;
+  min-width: 0;
   font-size: 22px;
   font-weight: 700;
+  color: inherit;
+  word-break: break-word;
+  position: relative;
+  z-index: 1;
 }
 
 .participant-answer-indicator {

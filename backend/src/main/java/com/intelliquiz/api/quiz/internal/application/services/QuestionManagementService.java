@@ -236,5 +236,38 @@ public class QuestionManagementService {
         }
 
         question.setCaseSensitive(false);
+
+        if (question.getType() == QuestionType.MULTIPLE_CHOICE && question.getOptions() != null) {
+            sanitizeMcqOptionsInPlace(question);
+        }
+    }
+
+    private void sanitizeMcqOptionsInPlace(Question question) {
+        List<String> rawOptions = question.getOptions();
+        List<Integer> keptOriginalIndices = new ArrayList<>();
+        List<String> cleaned = new ArrayList<>();
+        for (int i = 0; i < rawOptions.size(); i++) {
+            String trimmed = rawOptions.get(i) == null ? "" : rawOptions.get(i).trim();
+            if (!trimmed.isBlank()) {
+                keptOriginalIndices.add(i);
+                cleaned.add(trimmed);
+            }
+        }
+        question.setOptions(cleaned);
+
+        String correctKey = question.getCorrectKey();
+        if (correctKey == null || correctKey.isBlank() || rawOptions.isEmpty()) {
+            return;
+        }
+        String keyUpper = correctKey.trim().toUpperCase(Locale.ROOT);
+        if (keyUpper.length() == 1 && keyUpper.charAt(0) >= 'A' && keyUpper.charAt(0) < 'A' + rawOptions.size()) {
+            int originalIndex = keyUpper.charAt(0) - 'A';
+            for (int newIndex = 0; newIndex < keptOriginalIndices.size(); newIndex++) {
+                if (keptOriginalIndices.get(newIndex) == originalIndex) {
+                    question.setCorrectKey(String.valueOf((char) ('A' + newIndex)));
+                    return;
+                }
+            }
+        }
     }
 }

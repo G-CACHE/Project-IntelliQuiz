@@ -60,6 +60,10 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
             return submittedAnswer;
         }
 
+        if (type == QuestionType.TRUE_FALSE) {
+            return normalizeTrueFalseKey(submittedAnswer);
+        }
+
         if (type == QuestionType.MULTIPLE_CHOICE) {
             String upper = submittedAnswer.trim().toUpperCase(Locale.ROOT);
             if (upper.length() == 1 && upper.charAt(0) >= 'A' && upper.charAt(0) < 'A' + safeOptionCount()) {
@@ -184,7 +188,7 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
     }
 
     private String formatAdminKeyForParticipant(String adminKey, long teamId) {
-        if (adminKey == null || adminKey.isBlank() || options == null || options.isEmpty()) {
+        if (adminKey == null || adminKey.isBlank()) {
             return adminKey;
         }
 
@@ -193,6 +197,10 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
             String text = "A".equals(normalized) ? "True" : "False";
             String letter = normalized.toLowerCase(Locale.ROOT);
             return letter + ". " + text;
+        }
+
+        if (options == null || options.isEmpty()) {
+            return adminKey;
         }
 
         String normalized = adminKey.trim().toUpperCase(Locale.ROOT);
@@ -208,7 +216,11 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
                 options.size(), OptionOrderUtil.shuffleSeed(teamId, id));
         int displayIndex = OptionOrderUtil.originalToDisplay(originalIndex, permutation);
         String displayLetter = String.valueOf((char) ('a' + displayIndex));
-        return displayLetter + ". " + options.get(originalIndex);
+        String optionText = options.get(originalIndex);
+        if (optionText == null || optionText.isBlank()) {
+            optionText = "—";
+        }
+        return displayLetter + ". " + optionText;
     }
 
     private static String normalizeTrueFalseKey(String value) {

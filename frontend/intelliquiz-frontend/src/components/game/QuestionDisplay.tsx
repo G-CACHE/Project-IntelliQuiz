@@ -3,6 +3,13 @@ import { CheckCircle, XCircle, Check } from 'lucide-react';
 import type { QuestionData } from '../../services/api';
 import { getShuffledOptions } from '../../utils/optionOrder';
 
+const TRUE_FALSE_OPTIONS = ['True', 'False'] as const;
+
+const sanitizeMcqOptions = (options: string[]) =>
+  options
+    .map((option) => String(option ?? '').trim())
+    .filter((option) => option.length > 0);
+
 interface QuestionDisplayProps {
   question: QuestionData;
   questionNumber: number;
@@ -31,9 +38,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const prefix = variant === 'participant' ? 'participant' : 'proctor';
   const questionType = question.type || 'MULTIPLE_CHOICE';
   const questionId = Number(question.id ?? 0);
-  const baseOptions = questionType === 'TRUE_FALSE'
-    ? (question.options.length >= 2 ? question.options.slice(0, 2) : ['True', 'False'])
-    : question.options;
+  const baseOptions = useMemo(() => (
+    questionType === 'TRUE_FALSE'
+      ? [...TRUE_FALSE_OPTIONS]
+      : sanitizeMcqOptions(question.options ?? [])
+  ), [questionType, question.options]);
   const shouldShuffleOptions = variant === 'participant'
     && questionType === 'MULTIPLE_CHOICE'
     && teamId != null
@@ -170,7 +179,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
               {/* Option Text */}
               <div className={`${prefix}-answer-text`}>
-                {option}
+                {option?.trim() || '—'}
               </div>
 
               {/* Correct/Wrong Indicator */}

@@ -1,12 +1,13 @@
 /**
  * Deterministic option shuffle matching the backend OptionOrderUtil (Java Random + Collections.shuffle).
+ * Uses BigInt for nextInt so results match Java's 64-bit long arithmetic (JS bitwise ops are 32-bit).
  */
 
 class JavaRandom {
   private seed: bigint;
 
   constructor(seed: number) {
-    const seedBig = BigInt(seed);
+    const seedBig = BigInt(Math.trunc(seed));
     this.seed = (seedBig ^ 0x5deece66dn) & ((1n << 48n) - 1n);
   }
 
@@ -16,13 +17,17 @@ class JavaRandom {
   }
 
   nextInt(bound: number): number {
-    if (bound <= 0) return 0;
-    const r = this.next(31);
+    if (bound <= 0) {
+      return 0;
+    }
+
     const m = bound - 1;
     if ((bound & m) === 0) {
-      return ((bound * r) >> 31);
+      // Power-of-two bound: Java uses (n * (long) next(31)) >> 31
+      return Number((BigInt(bound) * BigInt(this.next(31))) >> 31n);
     }
-    let u = r;
+
+    let u = this.next(31);
     let result = u % bound;
     while (u - result + m < 0) {
       u = this.next(31);

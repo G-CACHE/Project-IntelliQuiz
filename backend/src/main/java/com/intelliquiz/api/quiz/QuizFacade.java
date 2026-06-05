@@ -7,6 +7,7 @@ import com.intelliquiz.api.quiz.internal.application.services.QuizManagementServ
 import com.intelliquiz.api.quiz.internal.application.services.QuizSessionService;
 import com.intelliquiz.api.quiz.internal.domain.entities.Question;
 import com.intelliquiz.api.quiz.internal.domain.entities.Quiz;
+import com.intelliquiz.api.shared.enums.QuestionType;
 import com.intelliquiz.api.shared.enums.SystemRole;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -117,13 +119,75 @@ public class QuizFacade {
         // Eagerly copy options to detach from Hibernate PersistentBag.
         // This prevents LazyInitializationException when the DTO is serialized
         // outside the transaction boundary (e.g., on timer scheduler threads).
-        List<String> optionsCopy = (q.getOptions() != null) ? new ArrayList<>(q.getOptions()) : List.of();
+        String correctKey = q.getCorrectKey();
+        List<String> optionsCopy;
+        if (q.getType() == QuestionType.TRUE_FALSE) {
+            optionsCopy = List.of("True", "False");
+            correctKey = normalizeTrueFalseCorrectKey(correctKey);
+        } else if (q.getType() == QuestionType.MULTIPLE_CHOICE) {
+            SanitizedOptions sanitized = sanitizeMcqOptions(q.getOptions(), correctKey);
+            optionsCopy = sanitized.options();
+            correctKey = sanitized.correctKey();
+        } else {
+            optionsCopy = (q.getOptions() != null) ? new ArrayList<>(q.getOptions()) : List.of();
+        }
         return new QuestionInfoDto(
                 q.getId(), q.getText(), q.getType(), optionsCopy,
-                q.getCorrectKey(), q.getPoints(), q.getTimeLimit(),
+                correctKey, q.getPoints(), q.getTimeLimit(),
                 q.getOrderIndex(),
             q.getDifficulty() != null ? q.getDifficulty().name() : null,
             q.isCaseSensitive());
+    }
+
+    private record SanitizedOptions(List<String> options, String correctKey) {}
+
+    private static String normalizeTrueFalseCorrectKey(String correctKey) {
+        if (correctKey == null || correctKey.isBlank()) {
+            return correctKey;
+        }
+        String upper = correctKey.trim().toUpperCase(Locale.ROOT);
+        if ("TRUE".equals(upper)) {
+            return "A";
+        }
+        if ("FALSE".equals(upper)) {
+            return "B";
+        }
+        return upper;
+    }
+
+    /**
+     * Drops blank MCQ options and remaps letter-based correct keys to the cleaned list.
+     */
+    private static SanitizedOptions sanitizeMcqOptions(List<String> rawOptions, String correctKey) {
+        if (rawOptions == null || rawOptions.isEmpty()) {
+            return new SanitizedOptions(List.of(), correctKey);
+        }
+
+        List<Integer> keptOriginalIndices = new ArrayList<>();
+        List<String> cleaned = new ArrayList<>();
+        for (int i = 0; i < rawOptions.size(); i++) {
+            String trimmed = rawOptions.get(i) == null ? "" : rawOptions.get(i).trim();
+            if (!trimmed.isBlank()) {
+                keptOriginalIndices.add(i);
+                cleaned.add(trimmed);
+            }
+        }
+
+        if (correctKey == null || correctKey.isBlank()) {
+            return new SanitizedOptions(cleaned, correctKey);
+        }
+
+        String keyUpper = correctKey.trim().toUpperCase(Locale.ROOT);
+        if (keyUpper.length() == 1 && keyUpper.charAt(0) >= 'A' && keyUpper.charAt(0) < 'A' + rawOptions.size()) {
+            int originalIndex = keyUpper.charAt(0) - 'A';
+            for (int newIndex = 0; newIndex < keptOriginalIndices.size(); newIndex++) {
+                if (keptOriginalIndices.get(newIndex) == originalIndex) {
+                    return new SanitizedOptions(cleaned, String.valueOf((char) ('A' + newIndex)));
+                }
+            }
+        }
+
+        return new SanitizedOptions(cleaned, correctKey);
     }
 
     /**

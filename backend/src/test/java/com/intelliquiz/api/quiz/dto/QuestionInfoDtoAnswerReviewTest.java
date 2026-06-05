@@ -73,4 +73,63 @@ class QuestionInfoDtoAnswerReviewTest {
         assertThat(question.isCorrectSubmission("PARIS", 1L)).isTrue();
         assertThat(question.isCorrectSubmission("London", 1L)).isFalse();
     }
+
+    @Test
+    void trueFalseReviewWorksWithEmptyOptionsList() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                13L,
+                "select false",
+                QuestionType.TRUE_FALSE,
+                List.of(),
+                "B",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        assertThat(question.formatReviewAnswer("B", 7L)).isEqualTo("b. False");
+        assertThat(question.formatCorrectReviewAnswer(7L)).isEqualTo("b. False");
+        assertThat(question.isCorrectSubmission("False", 7L)).isTrue();
+        assertThat(question.isCorrectSubmission("True", 7L)).isFalse();
+    }
+
+    @Test
+    void trueFalseReviewHandlesReversedLegacyOptions() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                14L,
+                "select true",
+                QuestionType.TRUE_FALSE,
+                List.of("False", "True"),
+                "A",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        assertThat(question.isCorrectSubmission("True", 1L)).isTrue();
+        assertThat(question.isCorrectSubmission("False", 1L)).isFalse();
+        assertThat(question.formatCorrectReviewAnswer(1L)).isEqualTo("a. True");
+    }
+
+    @Test
+    void mcqReviewShowsPlaceholderForBlankOptionText() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                15L,
+                "select correct",
+                QuestionType.MULTIPLE_CHOICE,
+                List.of("this is wrong", "correct", "wrong again", "other"),
+                "B",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        assertThat(question.formatCorrectReviewAnswer(1L)).contains("correct");
+    }
 }
