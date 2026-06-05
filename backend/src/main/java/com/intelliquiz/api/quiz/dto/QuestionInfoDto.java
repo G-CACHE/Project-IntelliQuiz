@@ -65,7 +65,12 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
         }
 
         if (type == QuestionType.MULTIPLE_CHOICE) {
-            String upper = submittedAnswer.trim().toUpperCase(Locale.ROOT);
+            String trimmed = submittedAnswer.trim();
+            String fromText = adminLetterForOptionText(trimmed);
+            if (fromText != null) {
+                return fromText;
+            }
+            String upper = trimmed.toUpperCase(Locale.ROOT);
             if (upper.length() == 1 && upper.charAt(0) >= 'A' && upper.charAt(0) < 'A' + safeOptionCount()) {
                 return displayLetterToAdminLetter(upper, teamId);
             }
@@ -75,7 +80,7 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
     }
 
     /**
-     * Normalizes a persisted submission to the admin answer key used for grading.
+     * Normalizes a persisted or incoming answer to the admin letter/key used for grading.
      */
     public String toAdminAnswerKey(String submittedAnswer, long teamId) {
         if (submittedAnswer == null || submittedAnswer.isBlank()) {
@@ -92,17 +97,18 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
 
         String trimmed = submittedAnswer.trim();
         String upper = trimmed.toUpperCase(Locale.ROOT);
+
+        // Preferred: option text (shuffle-independent)
+        String fromText = adminLetterForOptionText(trimmed);
+        if (fromText != null) {
+            return fromText;
+        }
+
+        // Letter submission: stored admin key, or legacy participant display letter
         if (upper.length() == 1 && upper.charAt(0) >= 'A' && upper.charAt(0) < 'A' + safeOptionCount()) {
             return upper;
         }
 
-        if (options != null) {
-            for (int i = 0; i < options.size(); i++) {
-                if (options.get(i).equalsIgnoreCase(trimmed)) {
-                    return String.valueOf((char) ('A' + i));
-                }
-            }
-        }
         return upper;
     }
 
@@ -125,8 +131,16 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
                     .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(submittedNormalized));
         }
 
-        String adminSubmitted = toAdminAnswerKey(submittedAnswer, teamId);
         String adminCorrect = normalizeTrueFalseKey(correctKey == null ? "" : correctKey);
+        if (adminCorrect.isBlank()) {
+            return false;
+        }
+
+        if (type == QuestionType.MULTIPLE_CHOICE) {
+            return matchesMcqAdminKey(submittedAnswer, adminCorrect, teamId);
+        }
+
+        String adminSubmitted = toAdminAnswerKey(submittedAnswer, teamId);
         return !adminSubmitted.isBlank() && adminSubmitted.equals(adminCorrect);
     }
 
@@ -140,7 +154,8 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
         if (type == QuestionType.IDENTIFICATION) {
             return submittedAnswer.trim();
         }
-        return formatAdminKeyForParticipant(toAdminAnswerKey(submittedAnswer, teamId), teamId);
+        String adminKey = resolveAdminKeyForReview(submittedAnswer, teamId);
+        return formatAdminKeyForParticipant(adminKey, teamId);
     }
 
     /**
@@ -165,10 +180,8 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
         }
 
         if (type == QuestionType.IDENTIFICATION) {
-            return correctKey.lines()
-                    .map(String::trim)
-                    .filter(line -> !line.isBlank())
-                    .reduce((a, b) -> a + "\n" + b)
+            return parseAcceptedAnswers(correctKey).stream()
+                    .reduce((a, b) -> a + ", " + b)
                     .orElse(correctKey);
         }
 
@@ -242,13 +255,82 @@ public record QuestionInfoDto(Long id, String text, QuestionType type,
         return caseSensitive ? normalized : normalized.toUpperCase(Locale.ROOT);
     }
 
+    private boolean matchesMcqAdminKey(String submittedAnswer, String adminCorrect, long teamId) {
+        if (submittedAnswer == null || submittedAnswer.isBlank()) {
+            return false;
+        }
+
+        String trimmed = submittedAnswer.trim();
+        String upper = trimmed.toUpperCase(Locale.ROOT);
+
+        String fromText = adminLetterForOptionText(trimmed);
+        if (fromText != null && fromText.equals(adminCorrect)) {
+            return true;
+        }
+
+        if (upper.length() == 1 && upper.charAt(0) >= 'A' && upper.charAt(0) < 'A' + safeOptionCount()) {
+            if (upper.equals(adminCorrect)) {
+                return true;
+            }
+            return displayLetterToAdminLetter(upper, teamId).equals(adminCorrect);
+        }
+
+        return false;
+    }
+
+    /**
+     * Resolves any stored MCQ/TF payload to the admin key for review formatting.
+     */
+    private String resolveAdminKeyForReview(String submittedAnswer, long teamId) {
+        if (type == QuestionType.TRUE_FALSE) {
+            return normalizeTrueFalseKey(submittedAnswer);
+        }
+
+        String trimmed = submittedAnswer.trim();
+        String fromText = adminLetterForOptionText(trimmed);
+        if (fromText != null) {
+            return fromText;
+        }
+
+        String upper = trimmed.toUpperCase(Locale.ROOT);
+        if (upper.length() != 1 || upper.charAt(0) < 'A' || upper.charAt(0) >= 'A' + safeOptionCount()) {
+            return toAdminAnswerKey(submittedAnswer, teamId);
+        }
+
+        String adminCorrect = normalizeTrueFalseKey(correctKey == null ? "" : correctKey);
+        String mappedFromDisplay = displayLetterToAdminLetter(upper, teamId);
+
+        if (matchesMcqAdminKey(trimmed, adminCorrect, teamId)) {
+            return upper.equals(adminCorrect) ? upper : mappedFromDisplay;
+        }
+
+        // Legacy participant display letter, or stored admin key for a wrong answer
+        if (!mappedFromDisplay.equals(upper)) {
+            return mappedFromDisplay;
+        }
+        return upper;
+    }
+
+    private String adminLetterForOptionText(String optionText) {
+        if (options == null || optionText == null || optionText.isBlank()) {
+            return null;
+        }
+        for (int i = 0; i < options.size(); i++) {
+            if (options.get(i).equalsIgnoreCase(optionText.trim())) {
+                return String.valueOf((char) ('A' + i));
+            }
+        }
+        return null;
+    }
+
     private static List<String> parseAcceptedAnswers(String correctAnswer) {
         if (correctAnswer == null || correctAnswer.isBlank()) {
             return List.of();
         }
-        return correctAnswer.lines()
+        return java.util.Arrays.stream(correctAnswer.split("[\\r\\n,;]+"))
                 .map(String::trim)
                 .filter(line -> !line.isBlank())
+                .distinct()
                 .toList();
     }
 

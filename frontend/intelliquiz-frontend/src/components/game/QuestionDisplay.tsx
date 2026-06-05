@@ -62,7 +62,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const isTrueFalse = questionType === 'TRUE_FALSE';
     const isSelected = isTrueFalse
       ? normalize(selectedOption) === normalize(option)
-      : selectedOption != null && selectedOption.toUpperCase() === letter.toUpperCase();
+      : selectedOption != null && (
+          normalize(selectedOption) === normalize(option) ||
+          selectedOption.toUpperCase() === letter.toUpperCase()
+        );
     const isCorrect = showCorrectAnswer && (
       isTrueFalse
         ? normalize(correctAnswer) === normalize(option)
@@ -151,8 +154,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           const isSelected = isTrueFalse
             ? normalize(selectedOption) === normalize(option)
             : selectedOption != null && (
-                selectedOption.toUpperCase() === letter.toUpperCase() ||
-                (selectedOption === option && !optionList.some((o, i) => i !== index && o === option))
+                normalize(selectedOption) === normalize(option) ||
+                selectedOption.toUpperCase() === letter.toUpperCase()
               );
 
           const normCorrect = normalize(correctAnswer);
@@ -163,7 +166,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
                 (normCorrect === normalize(option) && !optionList.some((o, i) => i !== index && normalize(o) === normCorrect))
           );
 
-          const submitValue = isTrueFalse ? option : letter;
+          const submitValue = option;
 
           return (
             <button

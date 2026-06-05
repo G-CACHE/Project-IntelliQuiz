@@ -223,10 +223,8 @@ public class QuestionManagementService {
             question.setOptions(new ArrayList<>());
             if (question.getCorrectKey() != null) {
                 boolean caseSensitive = question.isCaseSensitive();
-                String normalizedAnswers = question.getCorrectKey().lines()
-                        .map(String::trim)
+                String normalizedAnswers = parseIdentificationAcceptedAnswers(question.getCorrectKey()).stream()
                         .map(line -> caseSensitive ? line : line.toUpperCase(Locale.ROOT))
-                        .filter(line -> !line.isBlank())
                         .distinct()
                         .reduce((a, b) -> a + "\n" + b)
                         .orElse("");
@@ -269,5 +267,16 @@ public class QuestionManagementService {
                 }
             }
         }
+    }
+
+    private static List<String> parseIdentificationAcceptedAnswers(String correctAnswer) {
+        if (correctAnswer == null || correctAnswer.isBlank()) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(correctAnswer.split("[\\r\\n,;]+"))
+                .map(String::trim)
+                .filter(line -> !line.isBlank())
+                .distinct()
+                .toList();
     }
 }

@@ -130,6 +130,86 @@ class QuestionInfoDtoAnswerReviewTest {
                 false
         );
 
+        assertThat(question.formatReviewAnswer("B", 1L)).contains("correct");
         assertThat(question.formatCorrectReviewAnswer(1L)).contains("correct");
+    }
+
+    @Test
+    void mcqGradesByOptionTextRegardlessOfShuffle() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                16L,
+                "select correct",
+                QuestionType.MULTIPLE_CHOICE,
+                List.of("this is wrong", "wrong again", "correct", "wrong one"),
+                "C",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        long teamId = 5L;
+        assertThat(question.normalizeSubmissionOnSave("correct", teamId)).isEqualTo("C");
+        assertThat(question.isCorrectSubmission("correct", teamId)).isTrue();
+        assertThat(question.formatReviewAnswer("C", teamId)).contains("correct");
+    }
+
+    @Test
+    void mcqGradesLegacyDisplayLetterAfterShuffle() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                17L,
+                "select correct",
+                QuestionType.MULTIPLE_CHOICE,
+                List.of("this is wrong", "wrong again", "correct", "wrong one"),
+                "C",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        long teamId = 5L;
+        String displayLetterForCorrect = question.formatCorrectReviewAnswer(teamId).substring(0, 1).toUpperCase();
+        assertThat(question.isCorrectSubmission(displayLetterForCorrect, teamId)).isTrue();
+    }
+
+    @Test
+    void identificationAcceptsCommaSeparatedAnswersCaseInsensitive() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                18L,
+                "type paris any letter",
+                QuestionType.IDENTIFICATION,
+                List.of(),
+                "CITY OF PARIS, PARIS",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        assertThat(question.isCorrectSubmission("PaRis", 1L)).isTrue();
+        assertThat(question.isCorrectSubmission("city of paris", 1L)).isTrue();
+    }
+
+    @Test
+    void trueFalseGradesStoredAdminLetter() {
+        QuestionInfoDto question = new QuestionInfoDto(
+                19L,
+                "select true",
+                QuestionType.TRUE_FALSE,
+                List.of("True", "False"),
+                "A",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+
+        assertThat(question.isCorrectSubmission("A", 1L)).isTrue();
+        assertThat(question.isCorrectSubmission("B", 1L)).isFalse();
     }
 }
