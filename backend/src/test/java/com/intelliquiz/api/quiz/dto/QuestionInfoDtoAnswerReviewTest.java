@@ -212,4 +212,69 @@ class QuestionInfoDtoAnswerReviewTest {
         assertThat(question.isCorrectSubmission("A", 1L)).isTrue();
         assertThat(question.isCorrectSubmission("B", 1L)).isFalse();
     }
+
+    @Test
+    void validationQuizScenarioFromUserReport() {
+        QuestionInfoDto mcq = new QuestionInfoDto(
+                101L,
+                "select correct",
+                QuestionType.MULTIPLE_CHOICE,
+                List.of("this is wrong", "correct", "wrong again", "other"),
+                "B",
+                10,
+                30,
+                0,
+                "EASY",
+                false
+        );
+        long teamId = 99L;
+        assertThat(mcq.normalizeSubmissionOnSave("correct", teamId)).isEqualTo("B");
+        assertThat(mcq.isCorrectSubmission("correct", teamId)).isTrue();
+        assertThat(mcq.isCorrectSubmission("B", teamId)).isTrue();
+
+        QuestionInfoDto trueFalse = new QuestionInfoDto(
+                102L,
+                "select true",
+                QuestionType.TRUE_FALSE,
+                List.of("True", "False"),
+                "A",
+                10,
+                30,
+                1,
+                "EASY",
+                false
+        );
+        assertThat(trueFalse.isCorrectSubmission("True", teamId)).isTrue();
+        assertThat(trueFalse.isCorrectSubmission("False", teamId)).isFalse();
+
+        QuestionInfoDto parisSensitive = new QuestionInfoDto(
+                103L,
+                "paris sensitive",
+                QuestionType.IDENTIFICATION,
+                List.of(),
+                "Paris\nCity of Paris",
+                10,
+                30,
+                2,
+                "EASY",
+                true
+        );
+        assertThat(parisSensitive.isCorrectSubmission("Paris", teamId)).isTrue();
+        assertThat(parisSensitive.isCorrectSubmission("paris", teamId)).isFalse();
+
+        QuestionInfoDto parisInsensitive = new QuestionInfoDto(
+                104L,
+                "paris not sensitive",
+                QuestionType.IDENTIFICATION,
+                List.of(),
+                "PARIS\nCITY OF PARIS",
+                10,
+                30,
+                3,
+                "EASY",
+                false
+        );
+        assertThat(parisInsensitive.isCorrectSubmission("PaRis", teamId)).isTrue();
+        assertThat(parisInsensitive.isCorrectSubmission("paris", teamId)).isTrue();
+    }
 }

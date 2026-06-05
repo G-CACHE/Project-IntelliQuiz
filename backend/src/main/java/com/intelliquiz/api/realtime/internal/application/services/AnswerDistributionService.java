@@ -64,9 +64,6 @@ public class AnswerDistributionService {
             optionCounts.put(options.get(i), 0);
         }
         
-        // Resolve letter-based correctKey to option text
-        String resolvedCorrectAnswer = question.resolvedCorrectAnswer();
-        
         int correctCount = 0;
         int incorrectCount = 0;
         
@@ -74,14 +71,14 @@ public class AnswerDistributionService {
             String answer = submission.submittedAnswer();
             if (answer != null && !answer.isBlank()) {
                 String trimmedAnswer = answer.trim();
-                
-                // Count the option — submitted answers are option text
-                if (optionCounts.containsKey(trimmedAnswer)) {
-                    optionCounts.merge(trimmedAnswer, 1, (left, right) -> left + right);
+                long teamId = submission.teamId();
+
+                String optionText = resolveMcqOptionText(question, trimmedAnswer, teamId);
+                if (optionText != null && optionCounts.containsKey(optionText)) {
+                    optionCounts.merge(optionText, 1, Integer::sum);
                 }
-                
-                // Count correct/incorrect using resolved answer
-                if (isCorrectAnswer(trimmedAnswer, resolvedCorrectAnswer)) {
+
+                if (question.isCorrectSubmission(trimmedAnswer, teamId)) {
                     correctCount++;
                 } else {
                     incorrectCount++;
@@ -99,12 +96,11 @@ public class AnswerDistributionService {
      * Simply counts correct vs incorrect.
      */
     private AnswerDistribution calculateIdentificationDistribution(QuestionInfoDto question, List<SubmissionInfoDto> submissions) {
-        String resolvedCorrectAnswer = question.resolvedCorrectAnswer();
         int correctCount = 0;
         int incorrectCount = 0;
         
         for (SubmissionInfoDto submission : submissions) {
-            if (isCorrectAnswer(submission.submittedAnswer(), resolvedCorrectAnswer)) {
+            if (question.isCorrectSubmission(submission.submittedAnswer(), submission.teamId())) {
                 correctCount++;
             } else {
                 incorrectCount++;
@@ -116,19 +112,17 @@ public class AnswerDistributionService {
     }
 
     /**
-     * Checks if an answer matches the correct key (case-insensitive, trimmed).
+     * Maps a stored MCQ submission (letter or option text) to canonical option text for bar charts.
      */
-    private static boolean isCorrectAnswer(String answer, String correctKey) {
-        if (answer == null || correctKey == null) {
-            return false;
+    private static String resolveMcqOptionText(QuestionInfoDto question, String submittedAnswer, long teamId) {
+        String reviewLabel = question.formatReviewAnswer(submittedAnswer, teamId);
+        if (reviewLabel == null || reviewLabel.isBlank()) {
+            return null;
         }
-        String normalizedAnswer = normalize(answer);
-        return correctKey.lines()
-                .map(AnswerDistributionService::normalize)
-                .anyMatch(accepted -> !accepted.isBlank() && accepted.equals(normalizedAnswer));
-    }
-
-    private static String normalize(String value) {
-        return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase();
+        int separator = reviewLabel.indexOf(". ");
+        if (separator >= 0 && separator + 2 < reviewLabel.length()) {
+            return reviewLabel.substring(separator + 2);
+        }
+        return reviewLabel;
     }
 }
