@@ -172,9 +172,20 @@ public class QuizSubmissionController {
                         String rawAnswer = submission.map(s -> s.submittedAnswer()).orElse(null);
                         String participantAnswer = question.formatReviewAnswer(rawAnswer, teamId);
                         String correctAnswer = question.formatCorrectReviewAnswer(teamId);
-                        boolean isCorrect = rawAnswer != null
-                                && question.isCorrectSubmission(rawAnswer, teamId);
-                        int pointsEarned = isCorrect ? question.points() : 0;
+
+                        // Prefer the persisted graded result (set by the actual grading engine).
+                        // Fall back to on-the-fly re-grading only when the submission has not yet
+                        // been formally graded (e.g. participant-paced quiz still in progress).
+                        boolean isCorrect;
+                        int pointsEarned;
+                        if (submission.isPresent() && submission.get().isGraded()) {
+                            isCorrect = submission.get().isCorrect();
+                            pointsEarned = submission.get().awardedPoints();
+                        } else {
+                            isCorrect = rawAnswer != null
+                                    && question.isCorrectSubmission(rawAnswer, teamId);
+                            pointsEarned = isCorrect ? question.points() : 0;
+                        }
 
                         return new ParticipantQuestionResult(
                                 question.id(),
