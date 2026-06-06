@@ -146,16 +146,23 @@ public class Submission extends SoftDeletableEntity {
             // Case-insensitive: also collapse internal whitespace and uppercase for comparison.
             String submittedTrimmed = this.submittedAnswer == null ? "" : this.submittedAnswer.trim();
             if (caseSensitive) {
-                this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
-                        .map(String::trim)
-                        .filter(accepted -> !accepted.isBlank())
-                        .anyMatch(accepted -> accepted.equals(submittedTrimmed));
+                // Also try the whole correctAnswer as-is before splitting on delimiters,
+                // so an answer that contains a comma/semicolon/newline still matches itself.
+                String wholeKey = correctAnswer == null ? "" : correctAnswer.trim();
+                this.isCorrect = (!wholeKey.isBlank() && wholeKey.equals(submittedTrimmed))
+                        || parseAcceptedAnswers(correctAnswer).stream()
+                                .map(String::trim)
+                                .filter(accepted -> !accepted.isBlank())
+                                .anyMatch(accepted -> accepted.equals(submittedTrimmed));
             } else {
                 String submittedNormalized = submittedTrimmed.replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
-                this.isCorrect = parseAcceptedAnswers(correctAnswer).stream()
-                        .map(accepted -> accepted.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT))
-                        .filter(accepted -> !accepted.isBlank())
-                        .anyMatch(accepted -> accepted.equals(submittedNormalized));
+                String wholeKeyNormalized = correctAnswer == null ? ""
+                        : correctAnswer.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+                this.isCorrect = (!wholeKeyNormalized.isBlank() && wholeKeyNormalized.equals(submittedNormalized))
+                        || parseAcceptedAnswers(correctAnswer).stream()
+                                .map(accepted -> accepted.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT))
+                                .filter(accepted -> !accepted.isBlank())
+                                .anyMatch(accepted -> accepted.equals(submittedNormalized));
             }
         } else if (questionType == QuestionType.TRUE_FALSE) {
             // TRUE_FALSE correctKey is stored as "A" (True) or "B" (False) — same letter system as MCQ.

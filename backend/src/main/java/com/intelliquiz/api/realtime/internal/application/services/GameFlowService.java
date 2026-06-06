@@ -745,11 +745,47 @@ public class GameFlowService {
     }
 
     /**
+     * Grades all ungraded submissions for every question in the quiz.
+     * Called before final scoreboard to ensure scores are accurate even when
+     * per-question reveals were skipped (e.g. early END_QUIZ or global-timer expiry).
+     */
+    @Transactional
+    public void gradeAllUngradedSubmissions(Long quizId) {
+        List<QuestionInfoDto> questions = quizFacade.getOrderedQuestions(quizId);
+        List<TeamInfoDto> teams = teamFacade.getTeamsByQuiz(quizId);
+
+        for (QuestionInfoDto question : questions) {
+            for (TeamInfoDto team : teams) {
+                try {
+                    var submissionOpt = submissionFacade.findByTeamAndQuestion(team.id(), question.id());
+                    if (submissionOpt.isPresent() && !submissionOpt.get().isGraded()) {
+                        var graded = submissionFacade.gradeSubmission(team.id(), question.id(), question);
+                        if (graded.isCorrect()) {
+                            teamFacade.addPoints(team.id(), graded.awardedPoints());
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Error grading submission for team {} question {} on quiz end: {}",
+                            team.id(), question.id(), e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
      * Ends the quiz session.
      */
     public void endQuiz(Long quizId) {
         timerService.stopTimer(quizId);
-        
+
+        // Grade any submissions that were not graded during per-question reveals
+        // (e.g. host issued END_QUIZ early, or global-timer fired without per-question reveals).
+        try {
+            gradeAllUngradedSubmissions(quizId);
+        } catch (Exception e) {
+            logger.error("Error grading ungraded submissions on endQuiz for quiz {}: {}", quizId, e.getMessage(), e);
+        }
+
         // Build and broadcast final scoreboard before clearing session
         List<TeamInfoDto> leaderboard = teamFacade.getTeamsByQuiz(quizId).stream()
                 .sorted(Comparator.comparingInt(TeamInfoDto::totalScore).reversed())

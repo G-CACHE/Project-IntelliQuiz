@@ -155,7 +155,7 @@ public class AuthController {
 
         return ResponseEntity.noContent()
                 .headers(headers)
-con                .build();
+                .build();
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
