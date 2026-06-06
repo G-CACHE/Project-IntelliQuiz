@@ -109,6 +109,26 @@ public class AccessController {
                     }
                 }
 
+                // Enforce single-device restriction for restricted (non-public) team codes.
+                // If the team already has a device bound and the incoming device is different, reject.
+                if (team != null
+                        && quiz != null
+                        && quiz.accessMode() != QuizAccessMode.PUBLIC
+                        && normalizedDeviceId != null
+                        && !normalizedDeviceId.isBlank()) {
+                    String boundDeviceId = teamFacade.getTeamDeviceId(team.id());
+                    if (boundDeviceId != null && !boundDeviceId.isBlank()
+                            && !boundDeviceId.equals(normalizedDeviceId)) {
+                        yield AccessResolutionResponse.invalid(
+                                "This team code is already in use on another device. Please contact your proctor or examiner for help."
+                        );
+                    }
+                    // No device bound yet — bind this device now so future attempts from other devices are blocked.
+                    if (boundDeviceId == null || boundDeviceId.isBlank()) {
+                        teamFacade.bindDeviceId(team.id(), normalizedDeviceId);
+                    }
+                }
+
                 if (team == null
                         && quiz != null
                         && quiz.accessMode() == QuizAccessMode.PUBLIC

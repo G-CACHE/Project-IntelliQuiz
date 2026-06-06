@@ -8,9 +8,15 @@ interface AntiCheatWrapperProps {
 }
 
 /**
- * AntiCheatWrapper - Wraps participant game content to detect cheating attempts.
- * Monitors: tab switches (visibilitychange), copy, right-click, print-screen.
- * Calls onViolation callback (which reports to server via REST/SSE flow).
+ * AntiCheatWrapper - Wraps participant game content during an active quiz session.
+ *
+ * On top of the global security policy (right-click blocked, DevTools shortcuts
+ * blocked, print shortcuts blocked), this wrapper adds:
+ *   - Tab-switch detection  → reported as TAB_SWITCH violation
+ *   - Copy attempt          → blocked + reported as COPY_ATTEMPT violation
+ *   - Print-screen keys     → blocked + reported as PRINT_SCREEN violation
+ *   - CSS user-select:none  → prevents mouse-drag text selection
+ *   - -webkit-touch-callout:none → prevents long-press copy on iOS/Android
  */
 const AntiCheatWrapper: React.FC<AntiCheatWrapperProps> = ({
   children,
@@ -23,72 +29,115 @@ const AntiCheatWrapper: React.FC<AntiCheatWrapperProps> = ({
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden && enabled) {
       violationCountRef.current++;
-      console.warn(`[AntiCheat] Tab switch detected (count: ${violationCountRef.current})`);
       onViolation('TAB_SWITCH');
     }
   }, [enabled, onViolation]);
 
-  // Detect copy attempt
+  // Block all copy / cut attempts and report
   const handleCopy = useCallback((e: ClipboardEvent) => {
     if (enabled) {
       e.preventDefault();
       violationCountRef.current++;
-      console.warn(`[AntiCheat] Copy attempt detected (count: ${violationCountRef.current})`);
       onViolation('COPY_ATTEMPT');
     }
   }, [enabled, onViolation]);
 
-  // Detect right-click
-  const handleContextMenu = useCallback((e: MouseEvent) => {
+  const handleCut = useCallback((e: ClipboardEvent) => {
     if (enabled) {
       e.preventDefault();
-      console.warn('[AntiCheat] Right-click detected (logged only, not counted as violation)');
     }
   }, [enabled]);
 
-  // Detect print-screen and other suspicious key combos
+  // Block drag-start (another way to extract text)
+  const handleDragStart = useCallback((e: DragEvent) => {
+    if (enabled) {
+      e.preventDefault();
+    }
+  }, [enabled]);
+
+  // Block selection via selectstart
+  const handleSelectStart = useCallback((e: Event) => {
+    if (enabled) {
+      e.preventDefault();
+    }
+  }, [enabled]);
+
+  // Key-level blocks for print-screen and copy shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!enabled) return;
 
-    // PrintScreen key
-    if (e.key === 'PrintScreen') {
+    const ctrl = e.ctrlKey || e.metaKey;
+    const key  = e.key;
+    const code = e.code;
+
+    // PrintScreen (all variants)
+    if (key === 'PrintScreen' || code === 'PrintScreen') {
       e.preventDefault();
-      console.warn('[AntiCheat] Print screen detected (logged only, not counted as violation)');
+      violationCountRef.current++;
+      onViolation('PRINT_SCREEN');
       return;
     }
 
-    // Ctrl+P (print), Ctrl+C (copy), Ctrl+Shift+I (devtools), F12 (devtools)
-    if (
-      (e.ctrlKey && e.key === 'p') ||
-      (e.ctrlKey && e.key === 'c') ||
-      (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-      e.key === 'F12'
-    ) {
+    // Ctrl/Cmd+C  (copy)
+    if (ctrl && (key === 'c' || key === 'C')) {
       e.preventDefault();
-      console.warn(`[AntiCheat] Suspicious key combo: ${e.key} (logged only, not counted as violation)`);
+      violationCountRef.current++;
+      onViolation('COPY_ATTEMPT');
+      return;
     }
-  }, [enabled]);
+
+    // Ctrl/Cmd+X  (cut)
+    if (ctrl && (key === 'x' || key === 'X')) {
+      e.preventDefault();
+      return;
+    }
+
+    // Ctrl/Cmd+A  (select all — prevents mass-select then copy)
+    if (ctrl && (key === 'a' || key === 'A')) {
+      e.preventDefault();
+      return;
+    }
+
+    // macOS screenshot shortcuts: Cmd+Shift+3/4/5, Cmd+Ctrl+Shift+3/4
+    if (ctrl && e.shiftKey && (key === '3' || key === '4' || key === '5')) {
+      e.preventDefault();
+      onViolation('PRINT_SCREEN');
+      return;
+    }
+  }, [enabled, onViolation]);
 
   useEffect(() => {
     if (!enabled) return;
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    document.addEventListener('copy', handleCopy);
-    document.addEventListener('contextmenu', handleContextMenu as EventListener);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('copy',        handleCopy        as EventListener);
+    document.addEventListener('cut',         handleCut         as EventListener);
+    document.addEventListener('dragstart',   handleDragStart   as EventListener);
+    document.addEventListener('selectstart', handleSelectStart as EventListener);
+    document.addEventListener('keydown',     handleKeyDown,    { capture: true });
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('copy', handleCopy);
-      document.removeEventListener('contextmenu', handleContextMenu as EventListener);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('copy',        handleCopy        as EventListener);
+      document.removeEventListener('cut',         handleCut         as EventListener);
+      document.removeEventListener('dragstart',   handleDragStart   as EventListener);
+      document.removeEventListener('selectstart', handleSelectStart as EventListener);
+      document.removeEventListener('keydown',     handleKeyDown,    { capture: true });
     };
-  }, [enabled, handleVisibilityChange, handleCopy, handleContextMenu, handleKeyDown]);
+  }, [enabled, handleVisibilityChange, handleCopy, handleCut, handleDragStart, handleSelectStart, handleKeyDown]);
 
   return (
     <div
       className="anti-cheat-wrapper"
-      style={{ userSelect: enabled ? 'none' : 'auto' }}
+      style={{
+        userSelect:             enabled ? 'none' : 'auto',
+        WebkitUserSelect:       enabled ? 'none' : 'auto',
+        // @ts-expect-error — non-standard but widely supported on mobile
+        WebkitTouchCallout:     enabled ? 'none' : 'default',
+        MozUserSelect:          enabled ? 'none' : 'auto',
+        msUserSelect:           enabled ? 'none' : 'auto',
+        pointerEvents:          'auto',
+      } as React.CSSProperties}
     >
       {children}
     </div>

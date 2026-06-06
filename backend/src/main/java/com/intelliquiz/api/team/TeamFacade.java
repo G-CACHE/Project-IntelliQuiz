@@ -101,6 +101,15 @@ public class TeamFacade {
     }
 
     /**
+     * Returns the device ID currently bound to the given team, or null if none.
+     */
+    public String getTeamDeviceId(Long teamId) {
+        return teamRepository.findById(teamId)
+                .map(team -> team.getDeviceId())
+                .orElse(null);
+    }
+
+    /**
      * Updates a team's name if the provided access code matches.
      */
     public void updateTeamNameWithAccessCode(Long teamId, String newName, String accessCode) {

@@ -253,6 +253,26 @@ export default function AdminQuestionsPage() {
     setFormData((prev) => ({ ...prev, type, correctKey: '', options: [] }));
   };
 
+  const DIFFICULTY_POINTS: Record<string, number> = {
+    EASY: 1,
+    MEDIUM: 5,
+    HARD: 10,
+    TIE_BREAKER: 5,
+  };
+
+  const DIFFICULTY_TIME: Record<string, number> = {
+    EASY: 10,
+    MEDIUM: 30,
+    HARD: 60,
+    TIE_BREAKER: 30,
+  };
+
+  const handleDifficultyChange = (difficulty: string) => {
+    const points = DIFFICULTY_POINTS[difficulty] ?? formData.points;
+    const timeLimit = DIFFICULTY_TIME[difficulty] ?? formData.timeLimit;
+    setFormData((prev) => ({ ...prev, difficulty: difficulty as CreateQuestionRequest['difficulty'], points, timeLimit }));
+  };
+
   const normalizeText = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
 
   const buildQuestionFingerprint = (item: Pick<Question, 'text' | 'type' | 'difficulty' | 'correctKey' | 'options'>) => {
@@ -670,7 +690,7 @@ export default function AdminQuestionsPage() {
                       <label className="admin-form-label">Difficulty *</label>
                       <CustomSelect
                         value={formData.difficulty}
-                        onChange={(v) => setFormData({ ...formData, difficulty: v as 'EASY' | 'MEDIUM' | 'HARD' | 'TIE_BREAKER' })}
+                        onChange={(v) => handleDifficultyChange(v)}
                         options={[
                           { value: 'EASY', label: 'Easy' },
                           { value: 'MEDIUM', label: 'Medium' },

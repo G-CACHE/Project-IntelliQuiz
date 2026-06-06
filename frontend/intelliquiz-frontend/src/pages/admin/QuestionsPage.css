@@ -423,9 +423,14 @@
 
 .questions-editor-option-row {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-columns: 46px minmax(0, 1fr) 36px;
   gap: 10px;
   align-items: center;
+}
+
+/* When there's no remove button (only 2 options), let the input span the last column too */
+.questions-editor-option-row .questions-editor-option-input:last-child {
+  grid-column: 2 / -1;
 }
 
 .questions-editor-option-toggle {

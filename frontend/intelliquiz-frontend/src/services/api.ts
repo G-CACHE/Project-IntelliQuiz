@@ -510,6 +510,15 @@ export const violationApi = {
     });
     return handleResponse<ViolationLogRecord[]>(response);
   },
+
+  resetTeamDevice: async (quizId: number, teamId: number): Promise<{ status: string; message: string }> => {
+    const response = await apiFetch(`${API_BASE_URL}/api/quiz/${quizId}/reset-device`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ teamId: String(teamId) }),
+    });
+    return handleResponse<{ status: string; message: string }>(response);
+  },
 };
 
 // Types

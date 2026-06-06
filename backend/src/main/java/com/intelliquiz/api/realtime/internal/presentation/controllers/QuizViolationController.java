@@ -425,6 +425,49 @@ public class QuizViolationController {
             LocalDateTime detectedAt
         ) {}
 
+    /**
+     * Reset the device lock for a team, allowing them to join from a different device.
+     *
+     * Request: POST /api/quiz/{quizId}/reset-device
+     * Body: { "teamId": "..." }
+     */
+    @PostMapping("/{quizId}/reset-device")
+    public ResponseEntity<?> resetTeamDevice(
+            @PathVariable Long quizId,
+            @RequestBody ApproveReentryRequest request) {
+
+        try {
+            Long parsedTeamId = Long.parseLong(request.teamId());
+
+            if (!teamFacade.teamExists(parsedTeamId)) {
+                return ResponseEntity.badRequest().body(new ApproveReentryResponse(
+                        "failed",
+                        "Team not found"
+                ));
+            }
+
+            teamFacade.bindDeviceId(parsedTeamId, null);
+
+            log.info("Device lock reset for team {} in quiz {} by proctor", parsedTeamId, quizId);
+
+            return ResponseEntity.ok(new ApproveReentryResponse(
+                    "reset",
+                    "Device lock cleared. The team can now join from any device."
+            ));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(new ApproveReentryResponse(
+                    "failed",
+                    "Invalid team ID"
+            ));
+        } catch (Exception e) {
+            log.error("Error resetting device lock: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApproveReentryResponse(
+                    "failed",
+                    "Server error resetting device lock"
+            ));
+        }
+    }
+
     private String formatKickReason(Long teamId, Long quizId) {
         String rawName = teamFacade.getTeamInfo(teamId)
                 .map(t -> t.name() != null && !t.name().isBlank() ? t.name() : "User")

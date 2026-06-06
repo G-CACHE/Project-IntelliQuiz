@@ -35,6 +35,7 @@ const ProctorDashboard: React.FC = () => {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [noticeModal, setNoticeModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [resettingDeviceTeamId, setResettingDeviceTeamId] = useState<number | null>(null);
 
   const [session] = useState(() => {
     const stored = getProctorSession();
@@ -246,6 +247,18 @@ const ProctorDashboard: React.FC = () => {
     void refreshProctorSnapshot();
   }, [approveReentry, refreshProctorSnapshot]);
 
+  const handleResetDevice = useCallback(async (teamId: number) => {
+    if (!session?.quizId) return;
+    setResettingDeviceTeamId(teamId);
+    try {
+      await violationApi.resetTeamDevice(session.quizId, teamId);
+    } catch {
+      // ignore — the action is best-effort; the team can try again
+    } finally {
+      setResettingDeviceTeamId(null);
+    }
+  }, [session?.quizId]);
+
   const backRoute = gameState === 'LOBBY' ? '/host/lobby' : '/host/game';
   const backLabel = gameState === 'LOBBY' ? 'Back to Lobby' : 'Back to Game';
 
@@ -402,9 +415,20 @@ const ProctorDashboard: React.FC = () => {
                                 </p>
                               )}
                             </div>
-                            <button onClick={() => setShowKickConfirm({ teamId: team.id, teamName: name })} className="proctor-btn proctor-btn-danger" style={{ padding: '6px 12px', fontSize: 12 }}>
-                              Kick
-                            </button>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button
+                                onClick={() => handleResetDevice(team.id)}
+                                disabled={resettingDeviceTeamId === team.id}
+                                className="proctor-btn proctor-btn-info"
+                                style={{ padding: '6px 12px', fontSize: 12 }}
+                                title="Clear the device lock so this team can log in from a different device"
+                              >
+                                {resettingDeviceTeamId === team.id ? 'Resetting…' : 'Reset Device'}
+                              </button>
+                              <button onClick={() => setShowKickConfirm({ teamId: team.id, teamName: name })} className="proctor-btn proctor-btn-danger" style={{ padding: '6px 12px', fontSize: 12 }}>
+                                Kick
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
